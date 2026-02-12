@@ -1,10 +1,16 @@
-import React from 'react';
+import { academicProgramsData } from "../data/academicProgramsData";
+import AcademicProgramCard from "../components/ui/AcademicProgramCard";
+import CategoryPage from "../components/templates/CategoryPage";
 
-export default function AcademicGuide() {
-    return (
-        <div className="academic-guide">
-            <h1>Academic Guide</h1>
-            <p>Welcome to the Academic Guide page.</p>
-        </div>
-    );
-}
+const AcademicGuide = () => (
+  <CategoryPage
+    title="Academic Guide: IT Programs in Nepal"
+    description="Compare CSIT, BCA, BIT, and other IT degrees. Understand curriculum, duration, and university affiliations."
+    data={academicProgramsData}
+    CardComponent={AcademicProgramCard}
+    filterKey="level"
+    filterOptions={["All", "Bachelor", "Master", "Diploma"]}
+  />
+);
+
+export default AcademicGuide;
