@@ -1,6 +1,15 @@
 const express = require("express");
 const cors = require("cors");
-const pool = require("./db/pool"); // Ensure this path correctly points to your pool.js
+const path = require("path");
+const authRoutes = require("./routes/authRoutes");
+const itRoutes = require("./routes/itRoutes");
+const userRoutes = require("./routes/userRoutes");
+const adminRoutes = require("./routes/adminRoutes");
+const roadmapRoutes = require("./routes/roadmapRoutes");
+
+const programRoutes = require("./routes/programRoutes");
+
+const pool = require("./config/db");
 require("dotenv").config();
 
 const app = express();
@@ -10,65 +19,71 @@ const PORT = process.env.PORT || 5000;
 app.use(cors());
 app.use(express.json());
 
-// 1. Test Route
+// 🚀 Database Verification & Health Check (New Verification Logic)
+app.get("/api/health", async (req, res) => {
+  try {
+    // This query confirms the .env search_path is working and sees your tables
+    const dbCheck = await pool.query(`
+      SELECT 
+        current_setting('search_path') as path,
+        (SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = 'auth') as auth_tables,
+        (SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = 'portal') as portal_tables
+    `);
+
+    res.json({
+      status: "online",
+      message: "VISION Server is synchronized with Neon Cloud",
+      database: {
+        searchPath: dbCheck.rows[0].path,
+        authTablesFound: dbCheck.rows[0].auth_tables,
+        portalTablesFound: dbCheck.rows[0].portal_tables,
+      },
+    });
+  } catch (err) {
+    res.status(500).json({
+      status: "error",
+      message: "Database connection failed",
+      error: err.message,
+    });
+  }
+});
+// 🚀 Use the Modular Routes
+// This means all routes in itRoutes will now start with /api
+app.use("/api", itRoutes);
+app.use("/api/auth", authRoutes);
+app.use("/api", programRoutes);
+app.use("/api", userRoutes);
+app.use("/api", adminRoutes);
+app.use("/api/roadmaps", roadmapRoutes);
+
+// 🔐 Protected Portal Route
+const {
+  verifyJWT,
+  requireApprovedStudent,
+} = require("./middleware/authMiddleware");
+
+app.get(
+  "/api/portal/dashboard",
+  verifyJWT,
+  requireApprovedStudent,
+  (req, res) => {
+    res.json({ message: "Welcome to VISION Portal 🚀" });
+  },
+);
+
+// Root Test Route
 app.get("/", (req, res) => {
-  res.send("🚀 Server is running and ready for VISION!");
+  res.send(
+    "🚀 VISION Server is structured, modular, and ready for the market!",
+  );
 });
 
-// 2. IT Fields Route (Matches it_fields.csv)
-app.get("/api/it-fields", async (req, res) => {
-  try {
-    const result = await pool.query("SELECT * FROM it_fields ORDER BY id ASC");
-    res.json(result.rows);
-  } catch (err) {
-    console.error("Database error:", err.message);
-    res.status(500).json({ error: "Failed to fetch IT fields" });
-  }
-});
-
-// 3. Academic Degrees Route (Matches academic_degrees.csv)
-app.get("/api/academic-degrees", async (req, res) => {
-  try {
-    const result = await pool.query(
-      "SELECT * FROM academic_degrees ORDER BY id ASC",
-    );
-    res.json(result.rows);
-  } catch (err) {
-    console.error("Database error:", err.message);
-    res.status(500).json({ error: "Failed to fetch academic degrees" });
-  }
-});
-
-// 4. Job Market Route (Matches job_market_insights.csv)
-app.get("/api/job-market", async (req, res) => {
-  try {
-    const result = await pool.query(
-      "SELECT * FROM job_market_insights ORDER BY id ASC",
-    );
-    res.json(result.rows);
-  } catch (err) {
-    console.error("Database error:", err.message);
-    res.status(500).json({ error: "Failed to fetch job market data" });
-  }
-});
-
-// 5. IT Clubs Route (Matches it_clubs.csv)
-app.get("/api/it-clubs", async (req, res) => {
-  try {
-    const result = await pool.query("SELECT * FROM it_clubs ORDER BY id ASC");
-    res.json(result.rows);
-  } catch (err) {
-    console.error("Database error:", err.message);
-    res.status(500).json({ error: "Failed to fetch IT clubs" });
-  }
-});
-
-// IMPORTANT: This allows the server to run locally
+// Start server locally
 if (process.env.NODE_ENV !== "production") {
   app.listen(PORT, () => {
     console.log(`⭐ Server flowing on http://localhost:${PORT}`);
   });
 }
 
-// IMPORTANT: This allows Vercel to use the app
+// Export for Vercel
 module.exports = app;
