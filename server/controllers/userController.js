@@ -3,7 +3,6 @@ const pool = require("../config/db");
 exports.getMe = async (req, res) => {
   try {
     const { auth_user_id } = req.user;
-
     const result = await pool.query(
       `SELECT 
         a.email,
@@ -19,12 +18,14 @@ exports.getMe = async (req, res) => {
       [auth_user_id],
     );
 
-    if (result.rows.length === 0)
+    if (result.rows.length === 0) {
+      console.warn(`No user found for auth_user_id: ${auth_user_id}`);
       return res.status(404).json({ error: "User not found" });
+    }
 
     res.json(result.rows[0]);
   } catch (err) {
-    console.error(err);
+    console.error("Error in /me:", err);
     res.status(500).json({ error: "Failed to fetch profile" });
   }
 };

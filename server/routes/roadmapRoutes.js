@@ -11,5 +11,14 @@ router.get(
   verifyJWT,
   roadmapController.getStepResources,
 );
+// Mark a step as completed
+router.post(
+  "/steps/:stepId/complete",
+  verifyJWT,
+  roadmapController.completeStep,
+);
+
+// Get progress for a roadmap
+router.get("/:id/progress", verifyJWT, roadmapController.getRoadmapProgress);
 
 module.exports = router;

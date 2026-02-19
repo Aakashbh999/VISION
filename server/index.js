@@ -6,8 +6,16 @@ const itRoutes = require("./routes/itRoutes");
 const userRoutes = require("./routes/userRoutes");
 const adminRoutes = require("./routes/adminRoutes");
 const roadmapRoutes = require("./routes/roadmapRoutes");
-
+const resourceInteractionRoutes = require("./routes/resourceInteractionRoutes");
+const recommendationRoutes = require("./routes/recommendationRoutes");
+const dashboardRoutes = require("./routes/dashboardRoutes");
+const notificationRoutes = require("./routes/notificationRoutes");
+const feedRoutes = require("./routes/feedRoutes");
 const programRoutes = require("./routes/programRoutes");
+const discussionRoutes = require("./routes/discussionRoutes");
+const clubRoutes = require("./routes/clubRoutes");
+const groupRoutes = require("./routes/groupRoutes");
+const studyGroupRoutes = require("./routes/studyGroupRoutes");
 
 const pool = require("./config/db");
 require("dotenv").config();
@@ -55,6 +63,15 @@ app.use("/api", programRoutes);
 app.use("/api", userRoutes);
 app.use("/api", adminRoutes);
 app.use("/api/roadmaps", roadmapRoutes);
+app.use("/api", resourceInteractionRoutes);
+app.use("/api/recommendations", recommendationRoutes);
+app.use("/api/portal/dashboard", dashboardRoutes);
+app.use("/api/notifications", notificationRoutes);
+app.use("/api/feed", feedRoutes);
+app.use("/api/discussions", discussionRoutes);
+app.use("/api/clubs", clubRoutes);
+app.use("/api/groups", groupRoutes);
+app.use("/api/study-groups", studyGroupRoutes);
 
 // 🔐 Protected Portal Route
 const {
