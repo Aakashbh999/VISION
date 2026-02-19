@@ -1,38 +1,73 @@
-@import "tailwindcss";
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
-/* Optional: Add custom styles below */
-/* Custom CSS Classes */
-.gradient-text {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+/* Layout */
+.app-layout {
+  display: flex;
 }
 
-.mobile-menu {
-  transform: translateX(-100%);
-  transition: transform 0.3s ease-in-out;
+.main-area {
+  flex: 1;
+  margin-left: 240px;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
 }
 
-.mobile-menu.open {
-  transform: translateX(0);
+.page-content {
+  padding: 30px;
+  flex: 1;
 }
 
-.float-animation {
-  animation: float 5s ease-in-out infinite;
+/* Sidebar */
+.sidebar {
+  width: 240px;
+  height: 100vh;
+  position: fixed;
+  background: #ffffff;
+  border-right: 1px solid #ddd;
+  padding: 20px;
 }
 
-@keyframes float {
-  0%,
-  100% {
-    transform: translateY(0px);
-  }
-  50% {
-    transform: translateY(-10px);
-  }
+.sidebar h2 {
+  color: #6c3df4;
 }
 
-/* Base styles */
-body {
-  font-family: "Inter", sans-serif;
+.sidebar a {
+  display: block;
+  margin: 15px 0;
+  text-decoration: none;
+  color: #333;
+}
+
+/* Card */
+.card {
+  background: white;
+  padding: 20px;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+}
+
+/* Grids */
+.grid-3 {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+}
+
+.grid-2 {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20px;
+}
+
+/* Badge */
+.badge {
+  margin-top: 10px;
+  color: white;
+  background: #6c3df4;
+  padding: 5px 10px;
+  border-radius: 6px;
+  display: inline-block;
 }
