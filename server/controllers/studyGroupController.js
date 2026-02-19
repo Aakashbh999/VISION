@@ -1,0 +1,181 @@
+const pool = require("../config/db");
+
+/* =====================================================
+   CREATE STUDY GROUP
+   ===================================================== */
+exports.createGroup = async (req, res) => {
+  try {
+    const { name, description, max_members = 8 } = req.body;
+
+    // Directly use portal_user_id from the authenticated user object
+    const portalUserId = req.user.portal_user_id;
+
+    if (!portalUserId) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    // create group
+    const groupRes = await pool.query(
+      `INSERT INTO portal.groups (name, description, owner_id, max_members, created_at)
+       VALUES ($1, $2, $3, $4, NOW())
+       RETURNING *`,
+      [name, description, portalUserId, max_members],
+    );
+
+    const group = groupRes.rows[0];
+
+    // owner auto joins
+    await pool.query(
+      `INSERT INTO portal.group_members (group_id, user_id, role)
+       VALUES ($1, $2, 'owner')`,
+      [group.group_id, portalUserId],
+    );
+
+    res.json({ message: "Study group created", group });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Failed to create group" });
+  }
+};
+
+/* =====================================================
+   JOIN GROUP
+   ===================================================== */
+exports.joinGroup = async (req, res) => {
+  try {
+    const { groupId } = req.params;
+
+    // Directly use portal_user_id from the authenticated user object
+    const portalUserId = req.user.portal_user_id;
+
+    if (!portalUserId) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    // check capacity
+    const capacity = await pool.query(
+      `SELECT max_members,
+              (SELECT COUNT(*) FROM portal.group_members WHERE group_id=$1) AS total
+       FROM portal.groups WHERE group_id=$1`,
+      [groupId],
+    );
+
+    if (capacity.rows.length === 0)
+      return res.status(404).json({ error: "Group not found" });
+
+    if (capacity.rows[0].total >= capacity.rows[0].max_members)
+      return res.status(400).json({ error: "Group is full" });
+
+    await pool.query(
+      `INSERT INTO portal.group_members (group_id, user_id, role)
+       VALUES ($1,$2,'member')
+       ON CONFLICT DO NOTHING`,
+      [groupId, portalUserId],
+    );
+
+    res.json({ message: "Joined group" });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Failed to join group" });
+  }
+};
+
+/* =====================================================
+   LEAVE GROUP
+   ===================================================== */
+exports.leaveGroup = async (req, res) => {
+  try {
+    const { groupId } = req.params;
+
+    // Directly use portal_user_id from the authenticated user object
+    const portalUserId = req.user.portal_user_id;
+
+    if (!portalUserId) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    await pool.query(
+      `DELETE FROM portal.group_members WHERE group_id=$1 AND user_id=$2`,
+      [groupId, portalUserId],
+    );
+
+    res.json({ message: "Left group" });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Failed to leave group" });
+  }
+};
+
+/* =====================================================
+   LIST GROUP MEMBERS
+   ===================================================== */
+exports.getMembers = async (req, res) => {
+  try {
+    const { groupId } = req.params;
+
+    const members = await pool.query(
+      `SELECT u.user_id, u.full_name, gm.role
+       FROM portal.group_members gm
+       JOIN portal.users u ON u.user_id = gm.user_id
+       WHERE gm.group_id = $1`,
+      [groupId],
+    );
+
+    res.json(members.rows);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Failed to fetch members" });
+  }
+};
+
+/* =====================================================
+   SEND MESSAGE
+   ===================================================== */
+exports.createPost = async (req, res) => {
+  try {
+    const { groupId } = req.params;
+    const { content } = req.body;
+
+    // Directly use portal_user_id from the authenticated user object
+    const portalUserId = req.user.portal_user_id;
+
+    if (!portalUserId) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    const post = await pool.query(
+      `INSERT INTO portal.group_posts (group_id, user_id, content, created_at)
+       VALUES ($1,$2,$3,NOW())
+       RETURNING *`,
+      [groupId, portalUserId, content],
+    );
+
+    res.json(post.rows[0]);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Failed to send message" });
+  }
+};
+
+/* =====================================================
+   GET MESSAGES
+   ===================================================== */
+exports.getPosts = async (req, res) => {
+  try {
+    const { groupId } = req.params;
+
+    const posts = await pool.query(
+      `SELECT gp.post_id, gp.content, gp.created_at, u.full_name
+       FROM portal.group_posts gp
+       JOIN portal.users u ON u.user_id = gp.user_id
+       WHERE gp.group_id = $1
+       ORDER BY gp.created_at ASC`,
+      [groupId],
+    );
+
+    res.json(posts.rows);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Failed to fetch messages" });
+  }
+};
