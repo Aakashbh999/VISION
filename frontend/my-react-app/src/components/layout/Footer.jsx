@@ -25,7 +25,7 @@ const Footer = () => {
         </div>
         <div className="text-center mt-4 sm:mt-6">
           <p className="text-xs text-gray-500">
-            © 2023 VISION. Made for +2 graduates in Nepal.
+            © 2026 VISION. Made for +2 graduates in Nepal.
           </p>
         </div>
       </div>

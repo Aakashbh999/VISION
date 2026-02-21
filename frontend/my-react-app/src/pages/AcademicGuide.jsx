@@ -4,6 +4,52 @@ import LoadingSpinner from "../components/ui/LoadingSpinner";
 import Pagination from "../components/ui/Pagination";
 import Badge from "../components/ui/Badge";
 
+// Component to display eligibility in structured format
+const EligibilityDisplay = ({ eligibility }) => {
+  if (!eligibility) return null;
+
+  if (typeof eligibility === "string") {
+    return <p>{eligibility}</p>;
+  }
+
+  if (typeof eligibility === "object") {
+    return (
+      <div className="space-y-1 text-sm">
+        {eligibility.level && (
+          <p>
+            <span className="font-medium">Level:</span> {eligibility.level}
+          </p>
+        )}
+        {eligibility.stream && (
+          <p>
+            <span className="font-medium">Stream:</span> {eligibility.stream}
+          </p>
+        )}
+        {eligibility.subjects?.length > 0 && (
+          <p>
+            <span className="font-medium">Subjects:</span>{" "}
+            {eligibility.subjects.join(", ")}
+          </p>
+        )}
+        {eligibility.minAggregate && (
+          <p>
+            <span className="font-medium">Minimum Aggregate:</span>{" "}
+            {eligibility.minAggregate}%
+          </p>
+        )}
+        {eligibility.aLevelEquivalent && (
+          <p>
+            <span className="font-medium">A-Level:</span>{" "}
+            {String(eligibility.aLevelEquivalent)}
+          </p>
+        )}
+      </div>
+    );
+  }
+
+  return <p>{String(eligibility)}</p>;
+};
+
 const AcademicGuide = () => {
   const [page, setPage] = useState(1);
   const { data, isLoading, error } = useAcademicDegrees(page, 9);
@@ -30,7 +76,7 @@ const AcademicGuide = () => {
         {degrees.map((degree) => (
           <div
             key={degree.id}
-            className="bg-white rounded-2xl border border-gray-200 p-6"
+            className="bg-white rounded-2xl border border-gray-200 p-6 shadow-sm hover:shadow-md transition"
           >
             <div className="flex justify-between items-start">
               <h2 className="text-xl font-semibold text-gray-900">
@@ -39,17 +85,25 @@ const AcademicGuide = () => {
               <Badge variant="blue">{degree.university}</Badge>
             </div>
             <p className="text-gray-500 text-sm mt-1">{degree.full_name}</p>
+
             <div className="mt-4 space-y-2 text-sm">
               <p>
                 <span className="font-medium">Duration:</span> {degree.duration}
               </p>
-              <p>
-                <span className="font-medium">Eligibility:</span>{" "}
-                {degree.eligibility}
-              </p>
-              <p>
-                <span className="font-medium">Focus:</span> {degree.focus_area}
-              </p>
+              <div>
+                <span className="font-medium">Eligibility:</span>
+                <EligibilityDisplay eligibility={degree.eligibility} />
+              </div>
+              <div>
+                <span className="font-medium">Focus:</span>
+                <div className="flex flex-wrap gap-2 mt-1">
+                  {degree.focus_area?.split(",").map((focus, i) => (
+                    <Badge key={i} variant="green">
+                      {focus.trim()}
+                    </Badge>
+                  ))}
+                </div>
+              </div>
             </div>
           </div>
         ))}
