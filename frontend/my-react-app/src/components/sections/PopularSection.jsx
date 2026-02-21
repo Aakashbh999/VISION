@@ -46,24 +46,23 @@ const PopularSection = () => {
   ];
 
   return (
-    <section>
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4 sm:mb-6 gap-2">
-        <h2 className="text-xl sm:text-2xl font-bold text-gray-900">
+    <section className="">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-8 gap-4">
+        <h2 className="text-2xl sm:text-3xl font-bold text-gray-900">
           Popular Right Now
         </h2>
         <a
           href="#"
-          className="text-sm text-blue-600 hover:text-blue-800 font-medium flex items-center gap-1 hover:gap-2 transition-all duration-300"
+          className="text-sm text-blue-600 hover:text-blue-800 font-medium flex items-center gap-2 transition-all duration-300"
         >
-          View all trends
-          <span>→</span>
+          View all trends →
         </a>
       </div>
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
         {popularItems.map((item, index) => (
           <div
             key={index}
-            className={`group bg-gradient-to-br from-white ${item.bgClass} p-5 sm:p-6 rounded-2xl border ${item.borderClass} ${item.hoverBorderClass} hover:shadow-lg transform transition-all duration-300 hover:-translate-y-1 cursor-pointer`}
+            className={`group bg-gradient-to-br from-white ${item.bgClass} p-6 rounded-2xl border ${item.borderClass} ${item.hoverBorderClass} hover:shadow-lg transform transition-all duration-300 hover:-translate-y-1 cursor-pointer`}
           >
             <div className="flex items-center justify-between mb-3 sm:mb-4">
               <div
@@ -91,4 +90,3 @@ const PopularSection = () => {
 };
 
 export default PopularSection;
-    

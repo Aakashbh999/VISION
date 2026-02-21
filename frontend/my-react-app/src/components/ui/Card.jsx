@@ -1,3 +1,5 @@
+import { Link } from "react-router-dom";
+
 const Card = ({
   title,
   description,
@@ -13,24 +15,28 @@ const Card = ({
       border: "hover:border-blue-200",
       bg: "bg-gradient-to-br from-blue-100 to-purple-100",
       text: "text-blue-600",
+      hoverText: "text-blue-800",
     },
     green: {
       gradient: "from-green-500 to-blue-500",
       border: "hover:border-green-200",
       bg: "bg-gradient-to-br from-green-100 to-blue-100",
       text: "text-green-600",
+      hoverText: "text-green-800",
     },
     orange: {
       gradient: "from-orange-500 to-red-500",
       border: "hover:border-orange-200",
       bg: "bg-gradient-to-br from-orange-100 to-red-100",
       text: "text-orange-600",
+      hoverText: "text-orange-800",
     },
     purple: {
       gradient: "from-purple-500 to-pink-500",
       border: "hover:border-purple-200",
       bg: "bg-gradient-to-br from-purple-100 to-pink-100",
       text: "text-purple-600",
+      hoverText: "text-purple-800",
     },
   };
 
@@ -56,16 +62,21 @@ const Card = ({
           {description}
         </p>
         {link && linkText && (
-          <div className="mt-4 sm:mt-5 pt-3 sm:pt-4 border-t border-gray-100 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-            <a
-              href={link}
-              className={`${variant.text} text-xs sm:text-sm font-medium hover:${variant.text.replace("600", "800")} flex items-center gap-1`}
+          <div
+            className={`mt-4 sm:mt-5 pt-3 sm:pt-4 border-t border-gray-100 transition-all duration-300 ${
+              // On mobile (< lg) it's always visible, on desktop it fades in on hover
+              "lg:opacity-0 lg:group-hover:opacity-100"
+            }`}
+          >
+            <Link
+              to={link}
+              className={`${variant.text} text-xs sm:text-sm font-medium hover:${variant.hoverText} flex items-center gap-1`}
             >
               {linkText}
               <span className="transform group-hover:translate-x-1 transition-transform duration-300">
                 →
               </span>
-            </a>
+            </Link>
           </div>
         )}
       </div>

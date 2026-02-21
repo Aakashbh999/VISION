@@ -35,6 +35,7 @@ import CreateGroup from "./pages/portal/CreateGroup";
 import Clubs from "./pages/portal/Clubs";
 import ClubDetail from "./pages/portal/ClubDetail";
 import RedirectIfAuthenticated from "./components/RedirectIfAuthenticated";
+import CareerPaths from "./pages/CareerPaths";
 
 function AppContent() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -83,6 +84,7 @@ function AppContent() {
             <Route path="/academic-guide" element={<AcademicGuide />} />
             <Route path="/it-jobs" element={<ITJobs />} />
             <Route path="/it-clubs" element={<ITClubs />} />
+            <Route path="/career-paths" element={<CareerPaths />} />
 
             {/* Auth routes with PublicRoute protection */}
             <Route

@@ -3,7 +3,7 @@ import Card from "../ui/Card";
 const FeatureGrid = () => {
   const features = [
     {
-      title: "Explore IT Fields",
+      title: "Explore Fields",
       description:
         "Learn about different IT fields, required skills, and future scope.",
       icon: "🔍",
@@ -12,7 +12,7 @@ const FeatureGrid = () => {
       linkText: "Start exploring",
     },
     {
-      title: "Academic Guide",
+      title: "Compare Degrees",
       description:
         "Compare CSIT, BCA, and BIT to choose the right academic path.",
       icon: "📚",
@@ -21,7 +21,7 @@ const FeatureGrid = () => {
       linkText: "Compare degrees",
     },
     {
-      title: "IT Jobs & Market",
+      title: "Career Roles & Demand",
       description:
         "Understand job roles, demand, and industry expectations in Nepal.",
       icon: "💼",
