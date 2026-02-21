@@ -4,6 +4,7 @@ const Button = ({
   size = "medium",
   fullWidth = false,
   className = "",
+  as: Component = "button", // Allow custom component, default to button
   ...props
 }) => {
   const variants = {
@@ -21,7 +22,7 @@ const Button = ({
   };
 
   return (
-    <button
+    <Component
       className={`
         rounded-xl font-medium transition-all duration-300 transform
         ${variants[variant]} 
@@ -32,7 +33,7 @@ const Button = ({
       {...props}
     >
       {children}
-    </button>
+    </Component>
   );
 };
 
