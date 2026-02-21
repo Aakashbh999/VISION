@@ -262,7 +262,7 @@ const Register = () => {
                 className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
               />
             </div>
-            <p className="text-xs text-gray-500 mt-1">Max 2MB, JPG or PNG</p>
+            <p className="text-xs text-gray-500 mt-1">Max 700KB, JPG or PNG</p>
           </div>
 
           <button

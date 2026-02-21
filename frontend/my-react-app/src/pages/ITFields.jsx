@@ -19,7 +19,7 @@ const ITFields = () => {
   return (
     <div className="space-y-8">
       <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">
-        IT Career Fields
+        Career Fields
       </h1>
       <p className="text-gray-600">
         Explore various IT fields and find the right path for your career.

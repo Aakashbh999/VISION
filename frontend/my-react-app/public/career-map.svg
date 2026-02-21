@@ -1,0 +1,10 @@
+<svg viewBox="0 0 400 200" xmlns="http://www.w3.org/2000/svg">
+  <!-- Wavy road -->
+  <path d="M40,150 Q120,100 200,150 T360,150" stroke="#3b82f6" stroke-width="4" fill="none" class="road-path" />
+  
+  <!-- Steps as circles -->
+  <circle cx="80" cy="145" r="8" fill="#8b5cf6" class="step" />
+  <circle cx="160" cy="110" r="8" fill="#8b5cf6" class="step" />
+  <circle cx="240" cy="155" r="8" fill="#8b5cf6" class="step" />
+  <circle cx="320" cy="130" r="8" fill="#8b5cf6" class="step" />
+</svg>

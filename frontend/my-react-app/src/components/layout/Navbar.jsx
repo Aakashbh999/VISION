@@ -4,6 +4,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import { useUnreadCount } from "../../hooks/useUnreadCount";
 import { useClickOutside } from "../../hooks/useClickOutside";
+import visionLogo from "../../assets/vision-logo.png";
 
 const Navbar = ({ onMobileMenuToggle, variant, user }) => {
   const navigate = useNavigate();
@@ -49,10 +50,7 @@ const Navbar = ({ onMobileMenuToggle, variant, user }) => {
           <Menu className="w-6 h-6 text-gray-700" />
         </button>
         <Link to={homeLink} className="relative">
-          <div className="absolute -inset-1 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg blur opacity-20"></div>
-          <span className="relative text-xl sm:text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-            VISION
-          </span>
+          <img src={visionLogo} alt="VISION Logo" className="h-40 w-auto" />
         </Link>
       </div>
 
