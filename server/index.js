@@ -96,11 +96,9 @@ app.get("/", (req, res) => {
 });
 
 // Start server locally
-if (process.env.NODE_ENV !== "production") {
-  app.listen(PORT, () => {
-    console.log(`⭐ Server flowing on http://localhost:${PORT}`);
-  });
-}
+app.listen(PORT, () => {
+  console.log(`🚀 VISION Server running on port ${PORT}`);
+});
 
 // Export for Vercel
 module.exports = app;
