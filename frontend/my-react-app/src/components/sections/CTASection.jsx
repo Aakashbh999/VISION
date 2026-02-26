@@ -78,7 +78,7 @@ const CTASection = () => {
             </div>
 
             {/* Message */}
-            <p className="text-gray-700 mb-8 text-base leading-relaxed">
+            <p className="text-gray-700 mb-8 text-sm leading-normal text-justify">
               Be part of a growing network of IT students and mentors in Nepal.
               By creating a free account, you’ll unlock access to career
               roadmaps, discussions, and guidance tailored to your academic
