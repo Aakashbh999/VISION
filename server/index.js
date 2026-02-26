@@ -95,10 +95,7 @@ app.get("/", (req, res) => {
   );
 });
 
-// Start server locally
+// Start server (Render will set PORT automatically)
 app.listen(PORT, () => {
   console.log(`🚀 VISION Server running on port ${PORT}`);
 });
-
-// Export for Vercel
-module.exports = app;
