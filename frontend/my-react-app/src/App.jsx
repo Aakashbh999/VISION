@@ -12,7 +12,6 @@ import Sidebar from "./components/layout/Sidebar";
 import PortalSidebar from "./components/portal/PortalSidebar";
 import MobileMenu from "./components/layout/MobileMenu";
 import Footer from "./components/layout/Footer";
-import Home from "./pages/Home";
 import ITFields from "./pages/ITFields";
 import AcademicGuide from "./pages/AcademicGuide";
 import ITJobs from "./pages/ITJobs";
