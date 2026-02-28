@@ -4,18 +4,21 @@ const pool = require("../config/db");
 exports.verifyJWT = async (req, res, next) => {
   try {
     const authHeader = req.headers.authorization;
+
     if (!authHeader || !authHeader.startsWith("Bearer ")) {
       return res.status(401).json({ error: "Unauthorized" });
     }
+
     const token = authHeader.split(" ")[1];
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-    // Fetch user data
     const userData = await pool.query(
       `SELECT 
          p.user_id,
          p.student_status,
-         a.email_status
+         p.is_suspended,
+         a.email_status,
+         a.role
        FROM auth.users a
        JOIN portal.users p ON a.auth_user_id = p.auth_user_id
        WHERE a.auth_user_id = $1`,
@@ -26,11 +29,18 @@ exports.verifyJWT = async (req, res, next) => {
       return res.status(401).json({ error: "User not found" });
     }
 
-    const { user_id, student_status, email_status } = userData.rows[0];
+    const { user_id, student_status, email_status, is_suspended, role } =
+      userData.rows[0];
+
+    if (is_suspended) {
+      return res.status(403).json({
+        error: "Your account has been suspended. Contact admin.",
+      });
+    }
 
     req.user = {
       auth_user_id: decoded.auth_user_id,
-      role: decoded.role,
+      role,
       portal_user_id: user_id,
       student_status,
       email_status,

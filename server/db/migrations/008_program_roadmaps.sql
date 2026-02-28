@@ -1,18 +1,30 @@
--- ============================================
--- program_roadmaps : maps academic degrees to career roadmaps
--- ============================================
+CREATE TYPE "portal"."resource_type_enum" AS ENUM('notes', 'book', 'link', 'project');
 
-CREATE TABLE IF NOT EXISTS portal.program_roadmaps (
-    program_id INT NOT NULL REFERENCES portal.programs(program_id) ON DELETE CASCADE,
-    roadmap_id INT NOT NULL REFERENCES portal.roadmaps(roadmap_id) ON DELETE CASCADE,
-    is_primary BOOLEAN DEFAULT FALSE,
-    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-    PRIMARY KEY (program_id, roadmap_id)
+CREATE TABLE "portal"."resources" (
+    "resource_id" integer PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
+    "program_id" integer REFERENCES "portal"."programs"("program_id") ON DELETE SET NULL,
+    "semester" integer,
+    "subject_name" varchar(150),
+    "title" varchar(255) NOT NULL,
+    "resource_type" "portal"."resource_type_enum",
+    "url" text,
+    "description" text
 );
 
--- Helpful index for dashboard queries
-CREATE INDEX IF NOT EXISTS idx_program_roadmaps_program
-ON portal.program_roadmaps(program_id);
+CREATE TABLE "portal"."program_roadmaps" (
+    "program_id" integer REFERENCES "portal"."programs"("program_id") ON DELETE CASCADE,
+    "roadmap_id" integer REFERENCES "portal"."roadmaps"("roadmap_id") ON DELETE CASCADE,
+    "is_primary" boolean DEFAULT false,
+    PRIMARY KEY("program_id", "roadmap_id")
+);
 
-CREATE INDEX IF NOT EXISTS idx_program_roadmaps_roadmap
-ON portal.program_roadmaps(roadmap_id);
+CREATE TABLE "portal"."step_resource_map" (
+    "step_id" integer REFERENCES "portal"."roadmap_steps"("step_id") ON DELETE CASCADE,
+    "resource_id" integer REFERENCES "portal"."resources"("resource_id") ON DELETE CASCADE,
+    "is_required" boolean DEFAULT true,
+    PRIMARY KEY("step_id", "resource_id")
+);
+
+-- Add missing Foreign Keys to interaction tables now that resources exist
+ALTER TABLE "portal"."user_resource_interactions" ADD CONSTRAINT "fk_res_interact" FOREIGN KEY ("resource_id") REFERENCES "portal"."resources"("resource_id") ON DELETE CASCADE;
+ALTER TABLE "portal"."resource_scores" ADD CONSTRAINT "fk_res_score" FOREIGN KEY ("resource_id") REFERENCES "portal"."resources"("resource_id") ON DELETE CASCADE;

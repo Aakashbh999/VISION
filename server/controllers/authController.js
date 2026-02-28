@@ -88,7 +88,7 @@ exports.login = async (req, res) => {
     const { email, password } = req.body;
 
     const result = await pool.query(
-      "SELECT * FROM auth.users WHERE email = $1",
+      "SELECT auth_user_id, password_hash, role FROM auth.users WHERE email = $1",
       [email],
     );
 
@@ -98,16 +98,21 @@ exports.login = async (req, res) => {
     const user = result.rows[0];
 
     const isMatch = await bcrypt.compare(password, user.password_hash);
-
     if (!isMatch) return res.status(400).json({ error: "Invalid credentials" });
 
     const token = jwt.sign(
-      { auth_user_id: user.auth_user_id },
+      {
+        auth_user_id: user.auth_user_id,
+        role: user.role, // ✅ include role
+      },
       process.env.JWT_SECRET,
       { expiresIn: "7d" },
     );
 
-    res.json({ token });
+    res.json({
+      token,
+      role: user.role,
+    });
   } catch (err) {
     res.status(500).json({ error: "Login failed" });
   }
