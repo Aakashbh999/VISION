@@ -7,7 +7,7 @@ async function ensureTablesExist() {
   console.log("🏗️ Building tables in the cloud...");
   const queries = [
     // 1. IT FIELDS
-    `CREATE TABLE IF NOT EXISTS it_fields (
+    `CREATE TABLE IF NOT EXISTS portal.it_fields (
     id SERIAL PRIMARY KEY,
     slug TEXT UNIQUE,
     field_name TEXT,
@@ -19,7 +19,7 @@ async function ensureTablesExist() {
   );`,
 
     // 2. ACADEMIC DEGREES
-    `CREATE TABLE IF NOT EXISTS academic_degrees (
+    `CREATE TABLE IF NOT EXISTS portal.academic_degrees (
     id SERIAL PRIMARY KEY,
     slug TEXT UNIQUE,
     degree_code TEXT,
@@ -32,7 +32,7 @@ async function ensureTablesExist() {
   );`,
 
     // 3. JOB MARKET INSIGHTS
-    `CREATE TABLE IF NOT EXISTS job_market_insights (
+    `CREATE TABLE IF NOT EXISTS portal.job_market_insights (
     id SERIAL PRIMARY KEY,
     slug TEXT UNIQUE,
     role_name TEXT,
@@ -44,7 +44,7 @@ async function ensureTablesExist() {
   );`,
 
     // 4. IT CLUBS
-    `CREATE TABLE IF NOT EXISTS it_clubs (
+    `CREATE TABLE IF NOT EXISTS portal.it_clubs (
     id SERIAL PRIMARY KEY,
     slug TEXT UNIQUE,
     club_name TEXT,
@@ -108,10 +108,10 @@ async function run() {
     // THIS IS THE MISSING STEP: Create the "rooms" before moving in the "furniture"
     await ensureTablesExist();
 
-    await seedTable("it_fields.csv", "it_fields");
-    await seedTable("academic_degrees.csv", "academic_degrees");
-    await seedTable("job_market_insights.csv", "job_market_insights");
-    await seedTable("it_clubs.csv", "it_clubs");
+    await seedTable("it_fields.csv", "portal.it_fields");
+    await seedTable("academic_degrees.csv", "portal.academic_degrees");
+    await seedTable("job_market_insights.csv", "portal.job_market_insights");
+    await seedTable("it_clubs.csv", "portal.it_clubs");
 
     console.log("⭐ Neon Cloud is now perfectly in sync!");
   } catch (error) {

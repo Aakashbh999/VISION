@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { login as apiLogin } from "../services/auth";
@@ -10,7 +10,18 @@ const Login = () => {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
-  const { login } = useAuth();
+  const { user, login } = useAuth();
+
+  // Redirect when user becomes available after login
+  useEffect(() => {
+    if (user) {
+      if (user.role === "admin") {
+        navigate("/admin/dashboard", { replace: true });
+      } else {
+        navigate("/portal/dashboard", { replace: true });
+      }
+    }
+  }, [user, navigate]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -19,8 +30,7 @@ const Login = () => {
 
     try {
       const token = await apiLogin(email, password);
-      login(token); // sets token in context and localStorage
-      navigate("/portal/dashboard");
+      login(token); // sets token and triggers user fetch
     } catch (err) {
       setError(err.response?.data?.error || "Invalid email or password");
     } finally {

@@ -10,6 +10,7 @@ import PublicRoute from "./components/PublicRoute";
 import Navbar from "./components/layout/Navbar";
 import Sidebar from "./components/layout/Sidebar";
 import PortalSidebar from "./components/portal/PortalSidebar";
+import AdminSidebar from "./components/admin/AdminSidebar"; // import admin sidebar
 import MobileMenu from "./components/layout/MobileMenu";
 import Footer from "./components/layout/Footer";
 import ITFields from "./pages/ITFields";
@@ -21,6 +22,7 @@ import Register from "./pages/Register";
 import VerifyEmail from "./pages/VerifyEmail";
 import PendingApproval from "./pages/PendingApproval";
 import ProtectedRoute from "./components/ProtectedRoute";
+import AdminRoute from "./components/AdminRoute";
 import Dashboard from "./pages/portal/Dashboard";
 import Notifications from "./pages/portal/Notifications";
 import Roadmaps from "./pages/portal/Roadmaps";
@@ -35,6 +37,11 @@ import Clubs from "./pages/portal/Clubs";
 import ClubDetail from "./pages/portal/ClubDetail";
 import RedirectIfAuthenticated from "./components/RedirectIfAuthenticated";
 import CareerPaths from "./pages/CareerPaths";
+// Admin pages
+import AdminDashboard from "./pages/admin/Dashboard";
+import AdminPending from "./pages/admin/PendingStudents";
+import AdminStudents from "./pages/admin/StudentsList";
+import AdminReports from "./pages/admin/Reports";
 
 function AppContent() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -50,30 +57,42 @@ function AppContent() {
     );
   }
 
-  // Show portal layout for approved users on ALL pages
-  const showPortalLayout = user?.student_status === "approved";
+  const isAdminRoute = location.pathname.startsWith("/admin");
+  const isPortalRoute = location.pathname.startsWith("/portal");
+  const showPortalLayout = !isAdminRoute && user?.student_status === "approved";
+
+  // Determine navbar variant
+  const navbarVariant = isAdminRoute
+    ? "admin"
+    : showPortalLayout
+      ? "portal"
+      : "public";
+
   return (
     <div className="min-h-screen flex flex-col bg-gradient-to-br from-gray-50 to-blue-50 text-gray-800">
       <Navbar
         onMobileMenuToggle={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-        variant={showPortalLayout ? "portal" : "public"}
-        user={showPortalLayout ? user : null}
+        variant={navbarVariant}
+        user={user}
       />
       <MobileMenu
         isOpen={isMobileMenuOpen}
         onClose={() => setIsMobileMenuOpen(false)}
-        variant={showPortalLayout ? "portal" : "public"}
-        user={showPortalLayout ? user : null}
+        variant={navbarVariant}
+        user={user}
       />
 
       {/* Main content area – grows to push footer down */}
       <div className="flex-1 flex pt-16">
-        {/* Show portal sidebar for approved users, otherwise public sidebar */}
-        {showPortalLayout ? <PortalSidebar /> : <Sidebar />}
+        {/* Sidebar conditional */}
+        {isAdminRoute && <AdminSidebar />}
+        {!isAdminRoute && showPortalLayout && <PortalSidebar />}
+        {!isAdminRoute && !showPortalLayout && <Sidebar />}
 
         <main
           className={`w-full px-4 sm:px-6 lg:px-8 py-6 sm:py-8 lg:py-10 ${
-            showPortalLayout ? "lg:ml-64" : "lg:ml-64"
+            // All sidebars are fixed with w-64, so always apply margin on desktop
+            "lg:ml-64"
           }`}
         >
           <Routes>
@@ -104,6 +123,48 @@ function AppContent() {
             />
             <Route path="/verify-email" element={<VerifyEmail />} />
             <Route path="/pending-approval" element={<PendingApproval />} />
+
+            {/* Admin routes (protected by AdminRoute) */}
+            <Route
+              path="/admin/dashboard"
+              element={
+                <AdminRoute>
+                  <AdminDashboard />
+                </AdminRoute>
+              }
+            />
+            <Route
+              path="/admin/pending"
+              element={
+                <AdminRoute>
+                  <AdminPending />
+                </AdminRoute>
+              }
+            />
+            <Route
+              path="/admin/students"
+              element={
+                <AdminRoute>
+                  <AdminStudents />
+                </AdminRoute>
+              }
+            />
+            <Route
+              path="/admin/reports"
+              element={
+                <AdminRoute>
+                  <AdminReports />
+                </AdminRoute>
+              }
+            />
+            <Route
+              path="/admin"
+              element={
+                <AdminRoute>
+                  <AdminDashboard />
+                </AdminRoute>
+              }
+            />
 
             {/* Protected portal routes */}
             <Route

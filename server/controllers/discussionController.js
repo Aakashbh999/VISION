@@ -1,8 +1,8 @@
 const pool = require("../config/db");
 
 /* ===============================
-   GET ALL DISCUSSIONS
-================================ */
+    GET ALL DISCUSSIONS
+  ================================ */
 exports.getAllDiscussions = async (req, res) => {
   try {
     const result = await pool.query(`
@@ -16,6 +16,7 @@ exports.getAllDiscussions = async (req, res) => {
       JOIN portal.users u ON u.user_id = d.user_id
       LEFT JOIN portal.discussion_likes dl
         ON dl.discussion_id = d.discussion_id
+      WHERE d.is_deleted = FALSE
       GROUP BY d.discussion_id, u.full_name
       ORDER BY d.created_at DESC
     `);
@@ -28,8 +29,8 @@ exports.getAllDiscussions = async (req, res) => {
 };
 
 /* ===============================
-   DISCUSSION DETAILS
-================================ */
+    DISCUSSION DETAILS
+  ================================ */
 exports.getDiscussionDetails = async (req, res) => {
   try {
     const { id } = req.params;
@@ -38,7 +39,7 @@ exports.getDiscussionDetails = async (req, res) => {
       `SELECT d.*, u.full_name AS author
        FROM portal.discussions d
        JOIN portal.users u ON u.user_id = d.user_id
-       WHERE d.discussion_id = $1`,
+       WHERE d.discussion_id = $1 AND d.is_deleted = FALSE`,
       [id],
     );
 
@@ -65,8 +66,8 @@ exports.getDiscussionDetails = async (req, res) => {
 };
 
 /* ===============================
-   CREATE DISCUSSION
-================================ */
+    CREATE DISCUSSION
+  ================================ */
 exports.createDiscussion = async (req, res) => {
   try {
     const { title, content } = req.body;
@@ -74,7 +75,7 @@ exports.createDiscussion = async (req, res) => {
 
     const result = await pool.query(
       `INSERT INTO portal.discussions (user_id, title, content)
-       VALUES ($1,$2,$3) RETURNING *`,
+        VALUES ($1,$2,$3) RETURNING *`,
       [userId, title, content],
     );
 
@@ -86,8 +87,8 @@ exports.createDiscussion = async (req, res) => {
 };
 
 /* ===============================
-   REPLY
-================================ */
+    REPLY
+  ================================ */
 exports.replyDiscussion = async (req, res) => {
   try {
     const { id } = req.params;
@@ -96,7 +97,7 @@ exports.replyDiscussion = async (req, res) => {
 
     await pool.query(
       `INSERT INTO portal.discussion_replies (discussion_id,user_id,content)
-       VALUES ($1,$2,$3)`,
+        VALUES ($1,$2,$3)`,
       [id, userId, content],
     );
 
@@ -108,8 +109,8 @@ exports.replyDiscussion = async (req, res) => {
 };
 
 /* ===============================
-   TOGGLE LIKE
-================================ */
+    TOGGLE LIKE
+  ================================ */
 exports.toggleLike = async (req, res) => {
   try {
     const { id } = req.params;
@@ -117,14 +118,14 @@ exports.toggleLike = async (req, res) => {
 
     const exists = await pool.query(
       `SELECT 1 FROM portal.discussion_likes
-       WHERE discussion_id=$1 AND user_id=$2`,
+        WHERE discussion_id=$1 AND user_id=$2`,
       [id, userId],
     );
 
     if (exists.rows.length) {
       await pool.query(
         `DELETE FROM portal.discussion_likes
-         WHERE discussion_id=$1 AND user_id=$2`,
+          WHERE discussion_id=$1 AND user_id=$2`,
         [id, userId],
       );
       return res.json({ liked: false });
@@ -132,7 +133,7 @@ exports.toggleLike = async (req, res) => {
 
     await pool.query(
       `INSERT INTO portal.discussion_likes (discussion_id,user_id)
-       VALUES ($1,$2)`,
+        VALUES ($1,$2)`,
       [id, userId],
     );
 

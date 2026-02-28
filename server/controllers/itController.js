@@ -26,13 +26,13 @@ exports.getItFields = async (req, res) => {
 
     const dataQuery = `
       SELECT *
-      FROM public.it_fields
+      FROM portal.it_fields
       ORDER BY id ASC
       LIMIT $1 OFFSET $2
     `;
 
     const countQuery = `
-      SELECT COUNT(*) FROM public.it_fields
+      SELECT COUNT(*) FROM portal.it_fields
     `;
 
     const data = await pool.query(dataQuery, [limit, offset]);
@@ -66,13 +66,13 @@ exports.getDegrees = async (req, res) => {
 
     const dataQuery = `
       SELECT *
-      FROM public.academic_degrees
+      FROM portal.academic_degrees
       ORDER BY id ASC
       LIMIT $1 OFFSET $2
     `;
 
     const countQuery = `
-      SELECT COUNT(*) FROM public.academic_degrees
+      SELECT COUNT(*) FROM portal.academic_degrees
     `;
 
     const data = await pool.query(dataQuery, [limit, offset]);
@@ -106,13 +106,13 @@ exports.getJobMarket = async (req, res) => {
 
     const dataQuery = `
       SELECT *
-      FROM public.job_market_insights
+      FROM portal.job_market_insights
       ORDER BY id ASC
       LIMIT $1 OFFSET $2
     `;
 
     const countQuery = `
-      SELECT COUNT(*) FROM public.job_market_insights
+      SELECT COUNT(*) FROM portal.job_market_insights
     `;
 
     const data = await pool.query(dataQuery, [limit, offset]);
@@ -146,13 +146,13 @@ exports.getItClubs = async (req, res) => {
 
     const dataQuery = `
       SELECT *
-      FROM public.it_clubs
+      FROM portal.it_clubs
       ORDER BY id ASC
       LIMIT $1 OFFSET $2
     `;
 
     const countQuery = `
-      SELECT COUNT(*) FROM public.it_clubs
+      SELECT COUNT(*) FROM portal.it_clubs
     `;
 
     const data = await pool.query(dataQuery, [limit, offset]);

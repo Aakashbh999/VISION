@@ -14,11 +14,11 @@ exports.getClubs = async (req, res) => {
         c.location,
         c.institution,
         c.specialty,
-        c.is_public,
+        c.is_public,  
         c.contact_info,
         c.slug,
         COUNT(cm.user_id) AS members
-      FROM public.it_clubs c
+      FROM portal.it_clubs c
       LEFT JOIN portal.club_members cm
         ON cm.club_id = c.club_id
       WHERE 1=1
@@ -63,7 +63,7 @@ exports.getClubDetails = async (req, res) => {
     const { id } = req.params;
 
     const club = await pool.query(
-      `SELECT * FROM public.it_clubs WHERE club_id = $1`,
+      `SELECT * FROM portal.it_clubs WHERE club_id = $1`,
       [id],
     );
 

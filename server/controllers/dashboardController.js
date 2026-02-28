@@ -76,6 +76,7 @@ exports.getDashboard = async (req, res) => {
    FROM portal.discussions d
    LEFT JOIN portal.discussion_likes dl
      ON dl.discussion_id = d.discussion_id
+   WHERE d.is_deleted = FALSE
    GROUP BY d.discussion_id
    ORDER BY likes DESC, d.created_at DESC
    LIMIT 5`,
