@@ -75,8 +75,10 @@ const getFieldOverview = async (fieldId) => {
       entry: parseInt(field.entry_jobs),
       mid: parseInt(field.mid_jobs),
       senior: parseInt(field.senior_jobs),
-      entry_percentage: totalJobs > 0 ? Math.round((field.entry_jobs / totalJobs) * 100) : 0,
-      senior_percentage: totalJobs > 0 ? Math.round((field.senior_jobs / totalJobs) * 100) : 0,
+      entry_percentage:
+        totalJobs > 0 ? Math.round((field.entry_jobs / totalJobs) * 100) : 0,
+      senior_percentage:
+        totalJobs > 0 ? Math.round((field.senior_jobs / totalJobs) * 100) : 0,
     },
   };
 };
@@ -299,7 +301,9 @@ const searchJobs = async ({
   }
 
   if (search) {
-    conditions.push(`(j.title ILIKE $${paramIndex} OR j.company ILIKE $${paramIndex} OR j.description ILIKE $${paramIndex})`);
+    conditions.push(
+      `(j.title ILIKE $${paramIndex} OR j.company ILIKE $${paramIndex} OR j.description ILIKE $${paramIndex})`,
+    );
     params.push(`%${search}%`);
     paramIndex++;
   }
@@ -430,10 +434,13 @@ const compareFields = async (fieldId1, fieldId2) => {
     field1,
     field2,
     comparison: {
-      salary_difference: (field1.calculated_avg_salary || 0) - (field2.calculated_avg_salary || 0),
-      job_count_difference: parseInt(field1.total_jobs) - parseInt(field2.total_jobs),
-      common_skills: field1.top_skills.filter(s1 =>
-        field2.top_skills.some(s2 => s2.skill_id === s1.skill_id)
+      salary_difference:
+        (field1.calculated_avg_salary || 0) -
+        (field2.calculated_avg_salary || 0),
+      job_count_difference:
+        parseInt(field1.total_jobs) - parseInt(field2.total_jobs),
+      common_skills: field1.top_skills.filter((s1) =>
+        field2.top_skills.some((s2) => s2.skill_id === s1.skill_id),
       ),
     },
   };
