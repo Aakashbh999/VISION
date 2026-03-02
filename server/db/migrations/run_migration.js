@@ -14,7 +14,11 @@ async function runAllMigrations() {
     "007_recommendation_engine.sql",
     "008_program_roadmaps.sql",
     "009_groups.sql",
-    "010_add_role_column.sql"
+    "010_add_role_column.sql",
+    "011_it_reference_tables.sql",
+    "012_add_unique_auth_user_constraint.sql",
+    "013_password_reset_tokens.sql",
+    "014_sync_schema.sql",
   ];
 
   const client = await pool.connect();
@@ -46,7 +50,6 @@ async function runAllMigrations() {
     if (res.rows.length > 0) {
       console.log("✅ Role column verified in auth.users");
     }
-
   } catch (err) {
     await client.query("ROLLBACK");
     console.error("❌ Migration failed! Changes rolled back.", err.message);

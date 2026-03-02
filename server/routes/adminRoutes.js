@@ -109,4 +109,47 @@ router.get(
   adminController.getModerationLogs,
 );
 
+/* ===============================
+   COMPREHENSIVE AUDIT LOGS
+================================ */
+
+router.get(
+  "/admin/audit-logs",
+  verifyJWT,
+  verifyAdmin,
+  adminController.getAuditLogs,
+);
+
+router.get(
+  "/admin/audit-logs/summary",
+  verifyJWT,
+  verifyAdmin,
+  adminController.getAuditLogsSummary,
+);
+
+router.get(
+  "/admin/audit-logs/user/:userId",
+  verifyJWT,
+  verifyAdmin,
+  adminController.getUserActivity,
+);
+
+/* ===============================
+   SESSION MANAGEMENT
+================================ */
+
+router.get(
+  "/admin/sessions",
+  verifyJWT,
+  verifyAdmin,
+  adminController.getActiveSessions,
+);
+
+router.post(
+  "/admin/users/:userId/force-logout",
+  verifyJWT,
+  verifyAdmin,
+  adminController.forceLogoutUser,
+);
+
 module.exports = router;

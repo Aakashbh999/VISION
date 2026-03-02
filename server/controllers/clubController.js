@@ -9,7 +9,7 @@ exports.getClubs = async (req, res) => {
 
     let query = `
       SELECT
-        c.club_id,
+        c.id,
         c.club_name,
         c.location,
         c.institution,
@@ -19,9 +19,9 @@ exports.getClubs = async (req, res) => {
         c.slug,
         COUNT(cm.user_id) AS members
       FROM portal.it_clubs c
-      LEFT JOIN portal.club_members cm
-        ON cm.club_id = c.club_id
-      WHERE 1=1
+      LEFT JOIN portal.it_club_members cm
+        ON cm.club_id = c.id
+      WHERE (c.is_public IS NULL OR c.is_public = 'true' OR c.is_public = true)
     `;
 
     const values = [];
@@ -43,7 +43,7 @@ exports.getClubs = async (req, res) => {
     }
 
     query += `
-      GROUP BY c.club_id
+      GROUP BY c.id
       ORDER BY members DESC, c.club_name
     `;
 
@@ -63,7 +63,9 @@ exports.getClubDetails = async (req, res) => {
     const { id } = req.params;
 
     const club = await pool.query(
-      `SELECT * FROM portal.it_clubs WHERE club_id = $1`,
+      `SELECT id, slug, club_name, location, institution, specialty, is_public, contact_info
+       FROM portal.it_clubs 
+       WHERE id = $1 AND (is_public IS NULL OR is_public = 'true' OR is_public = true)`,
       [id],
     );
 
@@ -72,7 +74,7 @@ exports.getClubDetails = async (req, res) => {
 
     const members = await pool.query(
       `SELECT u.user_id, u.full_name
-       FROM portal.club_members cm
+       FROM portal.it_club_members cm
        JOIN portal.users u ON u.user_id = cm.user_id
        WHERE cm.club_id = $1`,
       [id],
@@ -97,7 +99,7 @@ exports.joinClub = async (req, res) => {
     const userId = req.user.portal_user_id;
 
     await pool.query(
-      `INSERT INTO portal.club_members (club_id, user_id)
+      `INSERT INTO portal.it_club_members (club_id, user_id)
        VALUES ($1, $2)
        ON CONFLICT DO NOTHING`,
       [id, userId],
@@ -119,7 +121,7 @@ exports.leaveClub = async (req, res) => {
     const userId = req.user.portal_user_id;
 
     await pool.query(
-      `DELETE FROM portal.club_members
+      `DELETE FROM portal.it_club_members
        WHERE club_id = $1 AND user_id = $2`,
       [id, userId],
     );

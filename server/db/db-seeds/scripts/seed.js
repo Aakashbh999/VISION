@@ -15,7 +15,8 @@ async function ensureTablesExist() {
     description_full TEXT,
     tech_stack_hint TEXT,
     demand_level TEXT,
-    icon_name TEXT
+    icon_name TEXT,
+    is_public BOOLEAN DEFAULT true
   );`,
 
     // 2. ACADEMIC DEGREES
@@ -28,7 +29,8 @@ async function ensureTablesExist() {
     duration TEXT,
     eligibility TEXT,
     focus_area TEXT,
-    admission_process TEXT
+    admission_process TEXT,
+    is_public BOOLEAN DEFAULT true
   );`,
 
     // 3. JOB MARKET INSIGHTS
@@ -40,7 +42,8 @@ async function ensureTablesExist() {
     market_demand TEXT,
     key_skills TEXT,
     job_summary TEXT,
-    description TEXT
+    description TEXT,
+    is_public BOOLEAN DEFAULT true
   );`,
 
     // 4. IT CLUBS
@@ -51,8 +54,15 @@ async function ensureTablesExist() {
     location TEXT,
     institution TEXT,
     specialty TEXT,
-    is_public TEXT, 
+    is_public BOOLEAN DEFAULT true, 
     contact_info TEXT
+  );`,
+
+    // 5. IT CLUB MEMBERS
+    `CREATE TABLE IF NOT EXISTS portal.it_club_members (
+    club_id INTEGER NOT NULL REFERENCES portal.it_clubs(id) ON DELETE CASCADE,
+    user_id INTEGER NOT NULL REFERENCES portal.users(user_id) ON DELETE CASCADE,
+    PRIMARY KEY (club_id, user_id)
   );`,
   ];
   for (let q of queries) {
