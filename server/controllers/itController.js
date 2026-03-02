@@ -40,14 +40,12 @@ const fetchPaginatedData = async (req, res, tableName, orderColumn = "id") => {
     const dataQuery = `
       SELECT ${columns}
       FROM portal.${tableName}
-      WHERE is_public IS NULL OR is_public = 'true' OR is_public = true
       ORDER BY ${orderColumn} ASC
       LIMIT $1 OFFSET $2
     `;
 
     const countQuery = `
       SELECT COUNT(*) FROM portal.${tableName}
-      WHERE is_public IS NULL OR is_public = 'true' OR is_public = true
     `;
 
     const data = await pool.query(dataQuery, [limit, offset]);
@@ -83,7 +81,7 @@ const fetchBySlug = async (req, res, tableName, labelName) => {
     const query = `
       SELECT ${columns}
       FROM portal.${tableName}
-      WHERE slug = $1 AND (is_public IS NULL OR is_public = 'true' OR is_public = true)
+      WHERE slug = $1
     `;
 
     const result = await pool.query(query, [slug]);
