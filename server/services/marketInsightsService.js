@@ -180,7 +180,6 @@ const getTrendingFields = async (limit = 10) => {
       COALESCE(AVG((j.salary_min + j.salary_max) / 2), 0)::INTEGER as calculated_avg_salary
     FROM portal.it_fields f
     LEFT JOIN portal.jobs j ON j.field_id = f.id AND j.is_active = true
-    WHERE f.is_public IS NULL OR f.is_public = true
     GROUP BY f.id
     ORDER BY 
       job_count DESC,
@@ -206,7 +205,7 @@ const getTrendingFields = async (limit = 10) => {
 const getAllFields = async ({ page = 1, limit = 10, demandLevel = null }) => {
   const offset = (page - 1) * limit;
 
-  let whereClause = "WHERE (f.is_public IS NULL OR f.is_public = true)";
+  let whereClause = "WHERE 1=1";
   const params = [limit, offset];
 
   if (demandLevel) {
@@ -403,7 +402,7 @@ const getMarketStats = async () => {
   const query = `
     SELECT 
       (SELECT COUNT(*) FROM portal.jobs WHERE is_active = true) as total_jobs,
-      (SELECT COUNT(*) FROM portal.it_fields WHERE is_public IS NULL OR is_public = true) as total_fields,
+      (SELECT COUNT(*) FROM portal.it_fields) as total_fields,
       (SELECT COUNT(*) FROM portal.skills) as total_skills,
       (SELECT COUNT(DISTINCT company) FROM portal.jobs WHERE is_active = true) as total_companies,
       (SELECT AVG((salary_min + salary_max) / 2)::INTEGER FROM portal.jobs WHERE is_active = true AND salary_min IS NOT NULL) as avg_salary,
