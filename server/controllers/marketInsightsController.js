@@ -70,7 +70,10 @@ exports.getFieldSkills = async (req, res) => {
       return res.status(400).json({ error: "Valid field ID required" });
     }
 
-    const result = await marketInsightsService.getTopSkillsByField(fieldId, limit);
+    const result = await marketInsightsService.getTopSkillsByField(
+      fieldId,
+      limit,
+    );
     res.json({ skills: result });
   } catch (error) {
     console.error("Error fetching field skills:", error);
@@ -205,14 +208,21 @@ exports.compareFields = async (req, res) => {
     const fieldId2 = parseInt(req.query.field2);
 
     if (!fieldId1 || !fieldId2 || isNaN(fieldId1) || isNaN(fieldId2)) {
-      return res.status(400).json({ error: "Two valid field IDs required (field1, field2)" });
+      return res
+        .status(400)
+        .json({ error: "Two valid field IDs required (field1, field2)" });
     }
 
     if (fieldId1 === fieldId2) {
-      return res.status(400).json({ error: "Cannot compare a field with itself" });
+      return res
+        .status(400)
+        .json({ error: "Cannot compare a field with itself" });
     }
 
-    const result = await marketInsightsService.compareFields(fieldId1, fieldId2);
+    const result = await marketInsightsService.compareFields(
+      fieldId1,
+      fieldId2,
+    );
 
     if (!result) {
       return res.status(404).json({ error: "One or both fields not found" });
