@@ -1,5 +1,7 @@
 const express = require("express");
 const cors = require("cors");
+const helmet = require("helmet");
+const rateLimit = require("express-rate-limit");
 const path = require("path");
 const authRoutes = require("./routes/authRoutes");
 const itRoutes = require("./routes/itRoutes");
@@ -16,6 +18,7 @@ const discussionRoutes = require("./routes/discussionRoutes");
 const clubRoutes = require("./routes/clubRoutes");
 const groupRoutes = require("./routes/groupRoutes");
 const studyGroupRoutes = require("./routes/studyGroupRoutes");
+const marketInsightsRoutes = require("./routes/marketInsightsRoutes");
 
 const pool = require("./config/db");
 require("dotenv").config();
@@ -24,8 +27,33 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 
 // Middleware
+app.use(helmet()); // Security headers
 app.use(cors());
 app.use(express.json());
+
+// Rate limiting for auth routes (prevents brute force attacks)
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 20, // 20 attempts per IP per window
+  message: { error: "Too many attempts. Try again later." },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+// Stricter rate limiting for password reset (prevents email enumeration)
+const passwordResetLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 5, // 5 attempts per IP per window
+  message: { error: "Too many password reset attempts. Try again later." },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+// Apply rate limiting to auth endpoints
+app.use("/api/auth/login", authLimiter);
+app.use("/api/auth/register", authLimiter);
+app.use("/api/auth/forgot-password", passwordResetLimiter);
+app.use("/api/auth/reset-password", passwordResetLimiter);
 
 // 🚀 Database Verification & Health Check (New Verification Logic)
 app.get("/api/health", async (req, res) => {
@@ -72,6 +100,7 @@ app.use("/api/discussions", discussionRoutes);
 app.use("/api/clubs", clubRoutes);
 app.use("/api/groups", groupRoutes);
 app.use("/api/study-groups", studyGroupRoutes);
+app.use("/api/market", marketInsightsRoutes);
 
 // 🔐 Protected Portal Route
 const {

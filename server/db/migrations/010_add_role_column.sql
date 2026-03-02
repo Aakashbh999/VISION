@@ -18,3 +18,12 @@ CREATE TABLE "portal"."reports" (
     "status" varchar(30) DEFAULT 'open',
     "created_at" timestamp DEFAULT CURRENT_TIMESTAMP
 );
+
+CREATE TABLE "portal"."moderation_logs" (
+    "log_id" integer PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
+    "admin_user_id" integer REFERENCES "portal"."users"("user_id") ON DELETE SET NULL,
+    "action_type" varchar(50),
+    "target_type" varchar(50),
+    "target_id" integer,
+    "created_at" timestamp without time zone DEFAULT CURRENT_TIMESTAMP
+);

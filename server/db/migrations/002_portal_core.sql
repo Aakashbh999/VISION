@@ -20,5 +20,15 @@ CREATE TABLE "portal"."users" (
     "student_status" "portal"."student_status_type" DEFAULT 'pending_review',
     "verified_by_admin_id" integer REFERENCES "portal"."users"("user_id") ON DELETE SET NULL,
     "is_suspended" boolean DEFAULT false,
-    "created_at" timestamp with time zone DEFAULT CURRENT_TIMESTAMP
+    "created_at" timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
+    "profile_image" text,
+    "profile_image_public_id" text,
+    "cover_image" text,
+    "cover_image_public_id" text,
+    "is_verified" boolean DEFAULT false,
+    "reset_password_token" text,
+    "reset_password_expires" timestamp without time zone,
+    "role" varchar(20) DEFAULT 'student',
+    "status" varchar(20) DEFAULT 'active',
+    "updated_at" timestamp without time zone DEFAULT now()
 );

@@ -6,7 +6,9 @@ CREATE TABLE "portal"."discussions" (
     "content" text NOT NULL,
     "like_count" integer DEFAULT 0,
     "is_deleted" boolean DEFAULT false,
-    "created_at" timestamp with time zone DEFAULT CURRENT_TIMESTAMP
+    "created_at" timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
+    "image_url" text,
+    "image_public_id" text
 );
 
 CREATE TABLE "portal"."discussion_replies" (

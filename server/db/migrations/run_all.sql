@@ -32,4 +32,16 @@ SET client_min_messages TO WARNING;
 \echo 'Step 10: Notifications & Reports'
 \i 010_add_role_column.sql
 
-\echo '--- ✅ All 10 Migrations Completed Successfully ---'
+\echo 'Step 11: IT Reference Tables'
+\i 011_it_reference_tables.sql
+
+\echo 'Step 12: Unique Auth User Constraint'
+\i 012_add_unique_auth_user_constraint.sql
+
+\echo 'Step 13: Password Reset Tokens (skip if exists)'
+\i 013_password_reset_tokens.sql
+
+\echo 'Step 14: Sync Schema (add missing columns/tables)'
+\i 014_sync_schema.sql
+
+\echo '--- ✅ All 14 Migrations Completed Successfully ---'
