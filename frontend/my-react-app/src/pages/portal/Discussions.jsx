@@ -1,7 +1,10 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useDiscussions } from "../../hooks/useDiscussions";
 import { useDiscussionTags } from "../../hooks/useDiscussionFilters";
 import { Link, useSearchParams } from "react-router-dom";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { toggleLike, toggleSave } from "../../services/discussion";
+import { useAuth } from "../../context/AuthContext";
 import LoadingSpinner from "../../components/ui/LoadingSpinner";
 import {
   MessageSquare,
@@ -10,6 +13,7 @@ import {
   Filter,
   X,
   Bookmark,
+  BookmarkCheck,
   Search,
   Share2,
   MoreHorizontal,
@@ -20,6 +24,11 @@ import api from "../../services/api";
 const Discussions = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const [showFilters, setShowFilters] = useState(false);
+  const [searchInput, setSearchInput] = useState(
+    searchParams.get("search") || "",
+  );
+  const { user } = useAuth();
+  const queryClient = useQueryClient();
 
   const [filters, setFilters] = useState({
     specialization: searchParams.get("specialization") || "",
@@ -34,6 +43,46 @@ const Discussions = () => {
   const [degrees, setDegrees] = useState([]);
   const { data: tags } = useDiscussionTags();
   const { data, isLoading, error } = useDiscussions(filters);
+
+  // Debounce search input - only update filters after 500ms of no typing
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (searchInput !== filters.search) {
+        setFilters((prev) => ({ ...prev, search: searchInput, page: 1 }));
+      }
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [searchInput]);
+
+  // Like mutation
+  const likeMutation = useMutation({
+    mutationFn: toggleLike,
+    onSuccess: () => {
+      queryClient.invalidateQueries(["discussions"]);
+    },
+  });
+
+  // Save mutation
+  const saveMutation = useMutation({
+    mutationFn: toggleSave,
+    onSuccess: () => {
+      queryClient.invalidateQueries(["discussions"]);
+    },
+  });
+
+  const handleLike = (e, discId) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!user) return alert("Please login to like discussions");
+    likeMutation.mutate(discId);
+  };
+
+  const handleSave = (e, discId) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!user) return alert("Please login to save discussions");
+    saveMutation.mutate(discId);
+  };
 
   useEffect(() => {
     const fetchReferenceData = async () => {
@@ -91,17 +140,27 @@ const Discussions = () => {
             <input
               type="text"
               placeholder="Search VISION Discussions"
-              value={filters.search}
-              onChange={(e) => updateFilter("search", e.target.value)}
+              value={searchInput}
+              onChange={(e) => setSearchInput(e.target.value)}
               className="w-full pl-10 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-full focus:outline-none focus:ring-1 focus:ring-blue-500 focus:bg-white transition-all text-sm"
             />
           </div>
-          <Link
-            to="/portal/discussions/new"
-            className="px-6 py-2 bg-blue-600 text-white text-sm font-bold rounded-full hover:bg-blue-700 transition-colors text-center"
-          >
-            Create Post
-          </Link>
+          <div className="flex gap-2">
+            {user && (
+              <Link
+                to="/portal/discussions/saved"
+                className="px-4 py-2 border border-gray-300 text-gray-700 text-sm font-bold rounded-full hover:bg-gray-50 transition-colors text-center flex items-center gap-1"
+              >
+                <BookmarkCheck className="w-4 h-4" /> Saved
+              </Link>
+            )}
+            <Link
+              to="/portal/discussions/new"
+              className="px-6 py-2 bg-blue-600 text-white text-sm font-bold rounded-full hover:bg-blue-700 transition-colors text-center"
+            >
+              Create Post
+            </Link>
+          </div>
         </div>
 
         <div className="flex items-center justify-between border-t border-gray-100 pt-3">
@@ -135,6 +194,7 @@ const Discussions = () => {
             {/* Voting Rail */}
             <div className="w-10 bg-gray-50 flex flex-col items-center py-2 gap-1">
               <button
+                onClick={(e) => handleLike(e, disc.discussion_id)}
                 className={`hover:bg-gray-200 p-1 rounded ${disc.user_liked ? "text-orange-600" : "text-gray-500"}`}
               >
                 <ArrowBigUp
@@ -187,11 +247,14 @@ const Discussions = () => {
                 >
                   <Share2 className="w-4 h-4" /> Share
                 </button>
-                <button className="flex items-center gap-1.5 px-2 py-1.5 hover:bg-gray-100 rounded text-xs font-bold text-gray-500">
+                <button
+                  onClick={(e) => handleSave(e, disc.discussion_id)}
+                  className={`flex items-center gap-1.5 px-2 py-1.5 hover:bg-gray-100 rounded text-xs font-bold ${disc.user_saved ? "text-yellow-600" : "text-gray-500"}`}
+                >
                   <Bookmark
                     className={`w-4 h-4 ${disc.user_saved ? "fill-yellow-500 text-yellow-500" : ""}`}
                   />
-                  Save
+                  {disc.user_saved ? "Saved" : "Save"}
                 </button>
               </div>
             </div>

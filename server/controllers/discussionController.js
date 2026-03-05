@@ -421,6 +421,10 @@ exports.toggleSave = async (req, res) => {
     res.json(result);
   } catch (err) {
     console.error(err);
+    // Check if it's a max limit error
+    if (err.message && err.message.includes("Maximum")) {
+      return res.status(400).json({ error: err.message });
+    }
     res.status(500).json({ error: "Save failed" });
   }
 };

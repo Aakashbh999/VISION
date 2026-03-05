@@ -172,4 +172,30 @@ CREATE INDEX IF NOT EXISTS idx_discussions_created ON portal.discussions(created
 CREATE INDEX IF NOT EXISTS idx_discussion_tags_discussion ON portal.discussion_tags(discussion_id);
 CREATE INDEX IF NOT EXISTS idx_discussion_tags_tag ON portal.discussion_tags(tag_id);
 
+-- ============================================
+-- 8. Fix NULL values and sync counters
+-- ============================================
+-- Set NULL comment_count to 0
+UPDATE portal.discussions SET comment_count = 0 WHERE comment_count IS NULL;
+
+-- Set NULL like_count to 0
+UPDATE portal.discussions SET like_count = 0 WHERE like_count IS NULL;
+
+-- Sync comment_count with actual comments
+UPDATE portal.discussions d 
+SET comment_count = (
+  SELECT COUNT(*) 
+  FROM portal.discussion_comments c 
+  WHERE c.discussion_id = d.discussion_id 
+  AND (c.is_deleted IS NULL OR c.is_deleted = FALSE)
+);
+
+-- Sync like_count with actual likes
+UPDATE portal.discussions d 
+SET like_count = (
+  SELECT COUNT(*) 
+  FROM portal.discussion_likes l 
+  WHERE l.discussion_id = d.discussion_id
+);
+
 DO $$ BEGIN RAISE NOTICE 'Discussion system schema ensured successfully'; END $$;
