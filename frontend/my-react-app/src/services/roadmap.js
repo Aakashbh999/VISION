@@ -13,8 +13,8 @@ export const getRoadmap = async (id) => {
 };
 
 // Get resources for a specific step
-export const getStepResources = async (stepId) => {
-  const response = await api.get(`/roadmaps/steps/${stepId}/resources`);
+export const getStepResources = async (id, stepId) => {
+  const response = await api.get(`/roadmaps/${id}/steps/${stepId}/resources`);
   return response.data;
 };
 

@@ -17,6 +17,11 @@ router.post("/refresh-token", authController.refreshToken);
 router.post("/logout", authController.logout);
 
 // Protected routes (require valid access token)
+router.post(
+  "/resend-verification",
+  verifyJWT,
+  authController.resendVerificationEmail,
+);
 router.post("/logout-all", verifyJWT, authController.logoutAllDevices);
 router.get("/sessions", verifyJWT, authController.getSessions);
 router.delete("/sessions/:id", verifyJWT, authController.revokeSessionById);

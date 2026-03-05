@@ -1,4 +1,10 @@
-import { createContext, useContext, useEffect, useState } from "react";
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+  useCallback,
+} from "react";
 import { getUserProfile } from "../services/auth";
 import { useQuery } from "@tanstack/react-query";
 
@@ -6,6 +12,9 @@ const AuthContext = createContext(null);
 
 export const AuthProvider = ({ children }) => {
   const [token, setToken] = useState(localStorage.getItem("token"));
+  const [refreshToken, setRefreshToken] = useState(
+    localStorage.getItem("refreshToken"),
+  );
   const [user, setUser] = useState(null);
 
   // Fetch user profile if token exists
@@ -14,27 +23,72 @@ export const AuthProvider = ({ children }) => {
     queryFn: () => getUserProfile(token),
     enabled: !!token,
     retry: false,
+    staleTime: 5 * 60 * 1000, // Consider data fresh for 5 minutes
   });
+
+  // Logout function
+  const logout = useCallback(() => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("refreshToken");
+    setToken(null);
+    setRefreshToken(null);
+    setUser(null);
+  }, []);
+
+  // Listen for logout events from api interceptor
+  useEffect(() => {
+    const handleLogout = () => {
+      logout();
+    };
+
+    window.addEventListener("auth:logout", handleLogout);
+    return () => {
+      window.removeEventListener("auth:logout", handleLogout);
+    };
+  }, [logout]);
+
+  // Sync token from localStorage (in case it was refreshed by interceptor)
+  useEffect(() => {
+    const handleStorageChange = () => {
+      const newToken = localStorage.getItem("token");
+      const newRefreshToken = localStorage.getItem("refreshToken");
+      if (newToken !== token) {
+        setToken(newToken);
+      }
+      if (newRefreshToken !== refreshToken) {
+        setRefreshToken(newRefreshToken);
+      }
+    };
+
+    window.addEventListener("storage", handleStorageChange);
+    return () => {
+      window.removeEventListener("storage", handleStorageChange);
+    };
+  }, [token, refreshToken]);
 
   useEffect(() => {
     if (data) {
       setUser(data);
     } else if (error) {
-      // Token invalid – logout
+      // Token invalid and refresh failed – logout
       logout();
     }
-  }, [data, error]);
+  }, [data, error, logout]);
 
-  const login = (newToken) => {
-    localStorage.setItem("token", newToken);
-    setToken(newToken);
+  const login = (tokens) => {
+    // Support both old format (string) and new format (object with tokens)
+    if (typeof tokens === "string") {
+      localStorage.setItem("token", tokens);
+      setToken(tokens);
+    } else {
+      localStorage.setItem("token", tokens.accessToken);
+      if (tokens.refreshToken) {
+        localStorage.setItem("refreshToken", tokens.refreshToken);
+        setRefreshToken(tokens.refreshToken);
+      }
+      setToken(tokens.accessToken);
+    }
     refetch();
-  };
-
-  const logout = () => {
-    localStorage.removeItem("token");
-    setToken(null);
-    setUser(null);
   };
 
   const value = {

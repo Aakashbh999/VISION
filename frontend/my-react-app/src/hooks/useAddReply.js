@@ -1,12 +1,16 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { replyToDiscussion } from "../services/discussion";
+import { addComment } from "../services/discussion";
 
-export const useAddReply = (discussionId) => {
+// Renamed from useAddReply to useAddComment
+export const useAddComment = (discussionId) => {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (content) => replyToDiscussion(discussionId, content),
+    mutationFn: (content) => addComment(discussionId, content),
     onSuccess: () => {
       queryClient.invalidateQueries(["discussion", discussionId]);
     },
   });
 };
+
+// Keep old name for backwards compatibility
+export const useAddReply = useAddComment;

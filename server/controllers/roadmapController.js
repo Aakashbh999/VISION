@@ -92,10 +92,21 @@ exports.getStepResources = async (req, res) => {
 
     const resources = await pool.query(
       `
-      SELECT r.resource_id, r.title, r.url, r.resource_type
+      SELECT 
+        r.resource_id, 
+        r.title, 
+        r.description,
+        r.url, 
+        r.resource_type,
+        r.difficulty_level,
+        srm.is_required,
+        COALESCE(AVG(rs.score), 0) AS avg_score
       FROM portal.step_resource_map srm
       JOIN portal.resources r ON r.resource_id = srm.resource_id
+      LEFT JOIN portal.resource_scores rs ON rs.resource_id = r.resource_id
       WHERE srm.step_id = $1
+      GROUP BY r.resource_id, srm.is_required
+      ORDER BY avg_score DESC, r.resource_id ASC
     `,
       [stepId],
     );

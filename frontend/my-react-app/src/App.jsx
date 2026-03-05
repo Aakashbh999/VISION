@@ -22,6 +22,7 @@ import Register from "./pages/Register";
 import VerifyEmail from "./pages/VerifyEmail";
 import PendingApproval from "./pages/PendingApproval";
 import ProtectedRoute from "./components/ProtectedRoute";
+import RequireAuth from "./components/RequireAuth";
 import AdminRoute from "./components/AdminRoute";
 import Dashboard from "./pages/portal/Dashboard";
 import Notifications from "./pages/portal/Notifications";
@@ -30,6 +31,9 @@ import RoadmapDetail from "./pages/portal/RoadmapDetail";
 import Discussions from "./pages/portal/Discussions";
 import DiscussionDetail from "./pages/portal/DiscussionDetail";
 import CreateDiscussion from "./pages/portal/CreateDiscussion";
+import EditDiscussion from "./pages/portal/EditDiscussion";
+import MyPosts from "./pages/portal/MyPosts";
+import SavedDiscussions from "./pages/portal/SavedDiscussions";
 import Groups from "./pages/portal/Groups";
 import GroupDetail from "./pages/portal/GroupDetail";
 import CreateGroup from "./pages/portal/CreateGroup";
@@ -121,8 +125,22 @@ function AppContent() {
                 </PublicRoute>
               }
             />
-            <Route path="/verify-email" element={<VerifyEmail />} />
-            <Route path="/pending-approval" element={<PendingApproval />} />
+            <Route
+              path="/verify-email"
+              element={
+                <RequireAuth>
+                  <VerifyEmail />
+                </RequireAuth>
+              }
+            />
+            <Route
+              path="/pending-approval"
+              element={
+                <RequireAuth>
+                  <PendingApproval />
+                </RequireAuth>
+              }
+            />
 
             {/* Admin routes (protected by AdminRoute) */}
             <Route
@@ -212,6 +230,30 @@ function AppContent() {
               element={
                 <ProtectedRoute>
                   <CreateDiscussion />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/portal/discussions/my-posts"
+              element={
+                <ProtectedRoute>
+                  <MyPosts />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/portal/discussions/saved"
+              element={
+                <ProtectedRoute>
+                  <SavedDiscussions />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/portal/discussions/:id/edit"
+              element={
+                <ProtectedRoute>
+                  <EditDiscussion />
                 </ProtectedRoute>
               }
             />
