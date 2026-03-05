@@ -3,21 +3,26 @@ import { useSavedDiscussions } from "../../hooks/useSavedDiscussions";
 import { useToggleSave } from "../../hooks/useToggleSave";
 import { Link } from "react-router-dom";
 import LoadingSpinner from "../../components/ui/LoadingSpinner";
+import ButtonLoader from "../../components/ui/ButtonLoader";
 import { MessageCircle, ThumbsUp, ChevronLeft, Bookmark } from "lucide-react";
 
 const SavedDiscussions = () => {
   const [page, setPage] = useState(1);
+  const [loadingUnsave, setLoadingUnsave] = useState(null);
   const { data, isLoading, error, refetch } = useSavedDiscussions(page, 20);
 
   const handleUnsave = async (discussionId, e) => {
     e.preventDefault();
     e.stopPropagation();
+    setLoadingUnsave(discussionId);
     try {
       const { toggleSave } = await import("../../services/discussion");
       await toggleSave(discussionId);
       refetch();
     } catch (err) {
       console.error("Failed to unsave:", err);
+    } finally {
+      setLoadingUnsave(null);
     }
   };
 
@@ -101,10 +106,15 @@ const SavedDiscussions = () => {
                   </div>
                   <button
                     onClick={(e) => handleUnsave(disc.discussion_id, e)}
-                    className="p-1.5 text-yellow-500 hover:text-gray-500 rounded"
+                    disabled={loadingUnsave === disc.discussion_id}
+                    className={`p-1.5 text-yellow-500 hover:text-gray-500 rounded transition-all ${loadingUnsave === disc.discussion_id ? "opacity-50 cursor-wait" : ""}`}
                     title="Remove from saved"
                   >
-                    <Bookmark className="w-5 h-5 fill-yellow-500" />
+                    {loadingUnsave === disc.discussion_id ? (
+                      <ButtonLoader size={20} />
+                    ) : (
+                      <Bookmark className="w-5 h-5 fill-yellow-500" />
+                    )}
                   </button>
                 </div>
               </div>

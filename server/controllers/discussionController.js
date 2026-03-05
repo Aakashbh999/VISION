@@ -387,25 +387,30 @@ exports.toggleLike = async (req, res) => {
 
     const result = await discussionService.toggleLike(id, userId);
 
-    // Send notification if liked (not unliked)
+    // Send notification if liked (not unliked) - don't fail if notification fails
     if (result.liked) {
-      const discussion = await discussionService.getDiscussionById(id);
-      if (discussion && discussion.author_id !== userId) {
-        await discussionService.createNotification(
-          discussion.author_id,
-          "like",
-          `Someone liked your discussion "${discussion.title}"`,
-          userId,
-          id,
-          "discussion",
-        );
+      try {
+        const discussion = await discussionService.getDiscussionById(id);
+        if (discussion && discussion.author_id !== userId) {
+          await discussionService.createNotification(
+            discussion.author_id,
+            "like",
+            `Someone liked your discussion "${discussion.title}"`,
+            userId,
+            id,
+            "discussion",
+          );
+        }
+      } catch (notifErr) {
+        console.error("Failed to send like notification:", notifErr.message);
+        // Continue - notification failure shouldn't break the like
       }
     }
 
     res.json(result);
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "Like failed" });
+    console.error("Toggle like error:", err.message);
+    res.status(500).json({ error: "Like failed", details: err.message });
   }
 };
 

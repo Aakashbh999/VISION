@@ -6,6 +6,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toggleLike, toggleSave } from "../../services/discussion";
 import { useAuth } from "../../context/AuthContext";
 import LoadingSpinner from "../../components/ui/LoadingSpinner";
+import ButtonLoader from "../../components/ui/ButtonLoader";
 import {
   MessageSquare,
   ArrowBigUp,
@@ -27,6 +28,8 @@ const Discussions = () => {
   const [searchInput, setSearchInput] = useState(
     searchParams.get("search") || "",
   );
+  const [loadingLike, setLoadingLike] = useState(null); // Track which discussion is being liked
+  const [loadingSave, setLoadingSave] = useState(null); // Track which discussion is being saved
   const { user } = useAuth();
   const queryClient = useQueryClient();
 
@@ -54,19 +57,34 @@ const Discussions = () => {
     return () => clearTimeout(timer);
   }, [searchInput]);
 
-  // Like mutation
+  // Like mutation with loading state tracking
   const likeMutation = useMutation({
     mutationFn: toggleLike,
+    onMutate: (discId) => {
+      setLoadingLike(discId);
+    },
     onSuccess: () => {
       queryClient.invalidateQueries(["discussions"]);
     },
+    onSettled: () => {
+      setLoadingLike(null);
+    },
   });
 
-  // Save mutation
+  // Save mutation with loading state tracking
   const saveMutation = useMutation({
     mutationFn: toggleSave,
+    onMutate: (discId) => {
+      setLoadingSave(discId);
+    },
     onSuccess: () => {
       queryClient.invalidateQueries(["discussions"]);
+    },
+    onSettled: () => {
+      setLoadingSave(null);
+    },
+    onError: (error) => {
+      alert(error.response?.data?.error || "Failed to save discussion");
     },
   });
 
@@ -195,11 +213,20 @@ const Discussions = () => {
             <div className="w-10 bg-gray-50 flex flex-col items-center py-2 gap-1">
               <button
                 onClick={(e) => handleLike(e, disc.discussion_id)}
-                className={`hover:bg-gray-200 p-1 rounded ${disc.user_liked ? "text-orange-600" : "text-gray-500"}`}
+                disabled={loadingLike === disc.discussion_id}
+                className={`hover:bg-gray-200 p-1 rounded transition-all ${
+                  loadingLike === disc.discussion_id
+                    ? "opacity-50 cursor-wait"
+                    : ""
+                } ${disc.user_liked ? "text-orange-600" : "text-gray-500"}`}
               >
-                <ArrowBigUp
-                  className={`w-6 h-6 ${disc.user_liked ? "fill-orange-600" : ""}`}
-                />
+                {loadingLike === disc.discussion_id ? (
+                  <ButtonLoader size={24} />
+                ) : (
+                  <ArrowBigUp
+                    className={`w-6 h-6 ${disc.user_liked ? "fill-orange-600" : ""}`}
+                  />
+                )}
               </button>
               <span className="text-xs font-bold">{disc.like_count || 0}</span>
               <button className="hover:bg-gray-200 p-1 rounded text-gray-500">
@@ -249,11 +276,20 @@ const Discussions = () => {
                 </button>
                 <button
                   onClick={(e) => handleSave(e, disc.discussion_id)}
-                  className={`flex items-center gap-1.5 px-2 py-1.5 hover:bg-gray-100 rounded text-xs font-bold ${disc.user_saved ? "text-yellow-600" : "text-gray-500"}`}
+                  disabled={loadingSave === disc.discussion_id}
+                  className={`flex items-center gap-1.5 px-2 py-1.5 hover:bg-gray-100 rounded text-xs font-bold transition-all ${
+                    loadingSave === disc.discussion_id
+                      ? "opacity-50 cursor-wait"
+                      : ""
+                  } ${disc.user_saved ? "text-yellow-600" : "text-gray-500"}`}
                 >
-                  <Bookmark
-                    className={`w-4 h-4 ${disc.user_saved ? "fill-yellow-500 text-yellow-500" : ""}`}
-                  />
+                  {loadingSave === disc.discussion_id ? (
+                    <ButtonLoader size={16} />
+                  ) : (
+                    <Bookmark
+                      className={`w-4 h-4 ${disc.user_saved ? "fill-yellow-500 text-yellow-500" : ""}`}
+                    />
+                  )}
                   {disc.user_saved ? "Saved" : "Save"}
                 </button>
               </div>
