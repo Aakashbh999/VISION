@@ -530,7 +530,10 @@ exports.deleteComment = async (commentId, userId, isAdmin = false) => {
 
 /**
  * Toggle save/unsave a discussion
+ * Max 50 saved discussions per user
  */
+const MAX_SAVED_DISCUSSIONS = 50;
+
 exports.toggleSave = async (discussionId, userId) => {
   const exists = await pool.query(
     `SELECT 1 FROM portal.saved_discussions WHERE discussion_id = $1 AND user_id = $2`,
@@ -544,11 +547,28 @@ exports.toggleSave = async (discussionId, userId) => {
     );
     return { saved: false };
   } else {
+    // Check max saved limit before saving
+    const countResult = await pool.query(
+      `SELECT COUNT(*) as count FROM portal.saved_discussions WHERE user_id = $1`,
+      [userId],
+    );
+    const currentCount = parseInt(countResult.rows[0].count);
+
+    if (currentCount >= MAX_SAVED_DISCUSSIONS) {
+      throw new Error(
+        `Maximum ${MAX_SAVED_DISCUSSIONS} saved discussions allowed. Please unsave some to save more.`,
+      );
+    }
+
     await pool.query(
       `INSERT INTO portal.saved_discussions (discussion_id, user_id) VALUES ($1, $2)`,
       [discussionId, userId],
     );
-    return { saved: true };
+    return {
+      saved: true,
+      savedCount: currentCount + 1,
+      maxSaved: MAX_SAVED_DISCUSSIONS,
+    };
   }
 };
 
