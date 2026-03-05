@@ -180,16 +180,8 @@ exports.login = async (req, res) => {
       return res.status(400).json({ error: "Invalid credentials" });
     }
 
-    // 🚫 Block unverified email
-    if (user.email_status !== "verified") {
-      await logAuthEvent(
-        req,
-        AuditActions.LOGIN_FAILED,
-        { authUserId: user.auth_user_id, reason: "email_not_verified" },
-        AuditStatus.FAILURE,
-      );
-      return res.status(403).json({ error: "Please verify your email first." });
-    }
+    // Note: We now allow unverified users to login but with limited access
+    // The frontend will handle showing verification prompts
 
     // 🚫 Block suspended user
     const portalUser = await pool.query(
@@ -309,6 +301,65 @@ exports.verifyEmail = async (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(400).json({ error: "Verification failed" });
+  }
+};
+
+exports.resendVerificationEmail = async (req, res) => {
+  try {
+    const { auth_user_id } = req.user;
+
+    // Get user info
+    const userResult = await pool.query(
+      `SELECT a.email, a.email_status, p.full_name
+       FROM auth.users a
+       JOIN portal.users p ON a.auth_user_id = p.auth_user_id
+       WHERE a.auth_user_id = $1`,
+      [auth_user_id],
+    );
+
+    if (!userResult.rows.length) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    const { email, email_status, full_name } = userResult.rows[0];
+
+    // Check if already verified
+    if (email_status === "verified") {
+      return res.status(400).json({ error: "Email is already verified" });
+    }
+
+    // Delete any existing tokens for this user
+    await pool.query(
+      `DELETE FROM auth.email_verification_tokens WHERE auth_user_id = $1`,
+      [auth_user_id],
+    );
+
+    // Generate new verification token
+    const emailToken = jwt.sign({ auth_user_id }, process.env.JWT_SECRET, {
+      expiresIn: "24h",
+    });
+
+    // Save token in DB
+    await pool.query(
+      `INSERT INTO auth.email_verification_tokens
+       (auth_user_id, token, expires_at)
+       VALUES ($1, $2, NOW() + INTERVAL '24 hours')`,
+      [auth_user_id, emailToken],
+    );
+
+    // Send verification email
+    const verificationLink = `${process.env.BASE_URL}/api/auth/verify-email?token=${emailToken}`;
+
+    await sendVerificationEmail({
+      to: email,
+      userName: full_name,
+      verificationLink,
+    });
+
+    res.json({ message: "Verification email sent successfully" });
+  } catch (err) {
+    console.error("Resend verification error:", err);
+    res.status(500).json({ error: "Failed to resend verification email" });
   }
 };
 

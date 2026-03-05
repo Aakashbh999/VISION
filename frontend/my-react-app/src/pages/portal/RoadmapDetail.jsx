@@ -13,6 +13,7 @@ const RoadmapDetail = () => {
   const completeStepMutation = useCompleteStep(id);
   const [selectedStep, setSelectedStep] = useState(null);
   const { data: resources, isLoading: resourcesLoading } = useStepResources(
+    id,
     selectedStep?.step_id,
   );
 
@@ -129,10 +130,46 @@ const RoadmapDetail = () => {
                         rel="noopener noreferrer"
                         className="flex items-center justify-between p-3 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors group"
                       >
-                        <span className="text-sm text-gray-800">
-                          {resource.title}
-                        </span>
-                        <ExternalLink className="w-4 h-4 text-gray-400 group-hover:text-blue-600" />
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2">
+                            <span className="text-sm font-medium text-gray-800">
+                              {resource.title}
+                            </span>
+                            {resource.is_required && (
+                              <span className="text-xs px-1.5 py-0.5 rounded bg-red-100 text-red-700">
+                                Required
+                              </span>
+                            )}
+                          </div>
+                          {resource.description && (
+                            <p className="text-xs text-gray-500 mt-1">
+                              {resource.description}
+                            </p>
+                          )}
+                          <div className="flex items-center gap-2 mt-1">
+                            <span
+                              className={`text-xs px-1.5 py-0.5 rounded ${
+                                resource.difficulty_level === "advanced"
+                                  ? "bg-red-50 text-red-600"
+                                  : resource.difficulty_level === "intermediate"
+                                    ? "bg-yellow-50 text-yellow-700"
+                                    : "bg-green-50 text-green-600"
+                              }`}
+                            >
+                              {resource.difficulty_level || "Beginner"}
+                            </span>
+                            <span className="text-xs px-1.5 py-0.5 rounded bg-blue-50 text-blue-600">
+                              {resource.resource_type}
+                            </span>
+                            {parseFloat(resource.avg_score) > 0 && (
+                              <span className="text-xs text-gray-500">
+                                Score:{" "}
+                                {parseFloat(resource.avg_score).toFixed(1)}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                        <ExternalLink className="w-4 h-4 text-gray-400 group-hover:text-blue-600 flex-shrink-0 ml-2" />
                       </a>
                     ))}
                     {(!resources || resources.length === 0) && (

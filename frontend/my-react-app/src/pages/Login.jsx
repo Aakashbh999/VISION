@@ -17,6 +17,10 @@ const Login = () => {
     if (user) {
       if (user.role === "admin") {
         navigate("/admin/dashboard", { replace: true });
+      } else if (user.email_status !== "verified") {
+        navigate("/verify-email", { replace: true });
+      } else if (user.student_status !== "approved") {
+        navigate("/pending-approval", { replace: true });
       } else {
         navigate("/portal/dashboard", { replace: true });
       }

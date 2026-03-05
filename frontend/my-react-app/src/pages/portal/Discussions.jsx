@@ -1,162 +1,202 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useDiscussions } from "../../hooks/useDiscussions";
-import { Link } from "react-router-dom";
+import { useDiscussionTags } from "../../hooks/useDiscussionFilters";
+import { Link, useSearchParams } from "react-router-dom";
 import LoadingSpinner from "../../components/ui/LoadingSpinner";
-import { MessageCircle, ThumbsUp, Filter, X } from "lucide-react";
+import {
+  MessageSquare,
+  ArrowBigUp,
+  ArrowBigDown,
+  Filter,
+  X,
+  Bookmark,
+  Search,
+  Share2,
+  MoreHorizontal,
+} from "lucide-react";
 import Badge from "../../components/ui/Badge";
+import api from "../../services/api";
 
 const Discussions = () => {
-  const [filters, setFilters] = useState({
-    program: "",
-    tag: "",
-    answered: "",
-  });
+  const [searchParams, setSearchParams] = useSearchParams();
   const [showFilters, setShowFilters] = useState(false);
 
-  const { data: discussions, isLoading, error } = useDiscussions(filters);
+  const [filters, setFilters] = useState({
+    specialization: searchParams.get("specialization") || "",
+    degree: searchParams.get("degree") || "",
+    tag: searchParams.get("tag") || "",
+    sort: searchParams.get("sort") || "latest",
+    search: searchParams.get("search") || "",
+    page: parseInt(searchParams.get("page")) || 1,
+  });
+
+  const [specializations, setSpecializations] = useState([]);
+  const [degrees, setDegrees] = useState([]);
+  const { data: tags } = useDiscussionTags();
+  const { data, isLoading, error } = useDiscussions(filters);
+
+  useEffect(() => {
+    const fetchReferenceData = async () => {
+      try {
+        const [specsRes, degreesRes] = await Promise.all([
+          api.get("/discussions/specializations"),
+          api.get("/discussions/degrees"),
+        ]);
+        setSpecializations(specsRes.data || []);
+        setDegrees(degreesRes.data || []);
+      } catch (err) {
+        console.error("Failed to fetch reference data:", err);
+      }
+    };
+    fetchReferenceData();
+  }, []);
+
+  useEffect(() => {
+    const params = new URLSearchParams();
+    Object.entries(filters).forEach(([key, value]) => {
+      if (value && value !== "latest" && value !== 1) params.set(key, value);
+    });
+    setSearchParams(params);
+  }, [filters, setSearchParams]);
+
+  const updateFilter = (key, value) => {
+    setFilters((prev) => ({ ...prev, [key]: value, page: 1 }));
+  };
+
+  const handleShare = (e, discId) => {
+    e.preventDefault();
+    const url = `${window.location.origin}/portal/discussions/${discId}`;
+    navigator.clipboard.writeText(url);
+    // Add toast notification here if available
+  };
 
   if (isLoading) return <LoadingSpinner />;
   if (error)
-    return <div className="p-8 text-red-500">Failed to load discussions</div>;
+    return (
+      <div className="p-8 text-red-500 text-center">
+        Failed to load discussions
+      </div>
+    );
 
-  // Hardcoded filter options (can be fetched from API later)
-  const programs = ["CSIT", "BIT", "BCA"];
-  const tags = ["Web", "AI", "DB", "Security", "Mobile", "Other"];
-
-  const clearFilters = () => {
-    setFilters({ program: "", tag: "", answered: "" });
-  };
-
-  const hasActiveFilters = filters.program || filters.tag || filters.answered;
+  const discussions = data?.discussions || [];
+  const pagination = data?.pagination || { page: 1, totalPages: 1 };
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">
-            Discussions
-          </h1>
-          <p className="text-gray-600 mt-1">
-            Ask questions, share knowledge, and learn together.
-          </p>
+    <div className="max-w-5xl mx-auto space-y-4">
+      {/* Header & Controls */}
+      <div className="bg-white border border-gray-200 rounded-md p-4 space-y-4">
+        <div className="flex flex-col md:flex-row justify-between gap-4">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+            <input
+              type="text"
+              placeholder="Search VISION Discussions"
+              value={filters.search}
+              onChange={(e) => updateFilter("search", e.target.value)}
+              className="w-full pl-10 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-full focus:outline-none focus:ring-1 focus:ring-blue-500 focus:bg-white transition-all text-sm"
+            />
+          </div>
+          <Link
+            to="/portal/discussions/new"
+            className="px-6 py-2 bg-blue-600 text-white text-sm font-bold rounded-full hover:bg-blue-700 transition-colors text-center"
+          >
+            Create Post
+          </Link>
         </div>
-        <Link
-          to="/portal/discussions/new"
-          className="px-5 py-2.5 bg-gradient-to-r from-blue-600 to-purple-600 text-white font-medium rounded-lg hover:shadow-lg transition-all duration-300 text-center"
-        >
-          + New Discussion
-        </Link>
-      </div>
 
-      {/* Filter toggle (mobile) */}
-      <div className="flex items-center justify-between">
-        <button
-          onClick={() => setShowFilters(!showFilters)}
-          className="lg:hidden flex items-center gap-2 text-sm text-gray-600 hover:text-blue-600"
-        >
-          <Filter className="w-4 h-4" />{" "}
-          {showFilters ? "Hide filters" : "Show filters"}
-        </button>
-        {hasActiveFilters && (
-          <button
-            onClick={clearFilters}
-            className="text-sm text-gray-500 hover:text-red-600 flex items-center gap-1"
-          >
-            <X className="w-4 h-4" /> Clear filters
-          </button>
-        )}
-      </div>
-
-      {/* Filters panel */}
-      <div
-        className={`${showFilters ? "block" : "hidden lg:block"} bg-white rounded-xl border border-gray-200 p-4`}
-      >
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <select
-            value={filters.program}
-            onChange={(e) =>
-              setFilters({ ...filters, program: e.target.value })
-            }
-            className="px-3 py-2 border border-gray-300 rounded-lg text-sm"
-          >
-            <option value="">All Programs</option>
-            {programs.map((p) => (
-              <option key={p} value={p}>
-                {p}
-              </option>
-            ))}
-          </select>
-          <select
-            value={filters.tag}
-            onChange={(e) => setFilters({ ...filters, tag: e.target.value })}
-            className="px-3 py-2 border border-gray-300 rounded-lg text-sm"
-          >
-            <option value="">All Tags</option>
-            {tags.map((t) => (
-              <option key={t} value={t}>
-                {t}
-              </option>
-            ))}
-          </select>
-          <select
-            value={filters.answered}
-            onChange={(e) =>
-              setFilters({ ...filters, answered: e.target.value })
-            }
-            className="px-3 py-2 border border-gray-300 rounded-lg text-sm"
-          >
-            <option value="">All</option>
-            <option value="true">Answered</option>
-            <option value="false">Unanswered</option>
-          </select>
-        </div>
-      </div>
-
-      {/* Discussions list */}
-      <div className="space-y-4">
-        {discussions?.length === 0 ? (
-          <p className="text-center text-gray-500 py-12">
-            No discussions yet. Be the first to start one!
-          </p>
-        ) : (
-          discussions?.map((disc) => (
-            <Link
-              key={disc.discussion_id}
-              to={`/portal/discussions/${disc.discussion_id}`}
-              className="block bg-white rounded-xl border border-gray-200 p-5 hover:shadow-md transition-shadow"
+        <div className="flex items-center justify-between border-t border-gray-100 pt-3">
+          <div className="flex gap-4">
+            <button
+              onClick={() => setShowFilters(!showFilters)}
+              className="flex items-center gap-1 text-xs font-bold text-gray-500 hover:bg-gray-100 px-2 py-1 rounded"
             >
-              <div className="flex items-start justify-between">
-                <div className="flex-1">
-                  <h2 className="text-lg font-semibold text-gray-900 mb-1">
-                    {disc.title}
-                  </h2>
-                  <p className="text-sm text-gray-600 mb-2 line-clamp-2">
-                    {disc.content}
-                  </p>
-                  <div className="flex items-center gap-4 text-xs text-gray-500">
-                    <span>by {disc.author}</span>
-                    <span>
-                      {new Date(disc.created_at).toLocaleDateString()}
-                    </span>
-                    {disc.program && (
-                      <Badge variant="blue">{disc.program}</Badge>
-                    )}
-                  </div>
-                </div>
-                <div className="flex items-center gap-3 text-sm text-gray-500">
-                  <span className="flex items-center gap-1">
-                    <ThumbsUp className="w-4 h-4" /> {disc.likes || 0}
-                  </span>
-                  <span className="flex items-center gap-1">
-                    <MessageCircle className="w-4 h-4" />{" "}
-                    {disc.reply_count || 0}
-                  </span>
-                </div>
+              <Filter className="w-4 h-4" /> Filters
+            </button>
+            <select
+              value={filters.sort}
+              onChange={(e) => updateFilter("sort", e.target.value)}
+              className="text-xs font-bold text-gray-500 bg-transparent cursor-pointer focus:outline-none"
+            >
+              <option value="latest">New</option>
+              <option value="popular">Top</option>
+              <option value="trending">Hot</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      {/* Discussion List */}
+      <div className="space-y-3">
+        {discussions.map((disc) => (
+          <div
+            key={disc.discussion_id}
+            className="flex bg-white border border-gray-200 rounded-md hover:border-gray-400 transition-colors overflow-hidden group"
+          >
+            {/* Voting Rail */}
+            <div className="w-10 bg-gray-50 flex flex-col items-center py-2 gap-1">
+              <button
+                className={`hover:bg-gray-200 p-1 rounded ${disc.user_liked ? "text-orange-600" : "text-gray-500"}`}
+              >
+                <ArrowBigUp
+                  className={`w-6 h-6 ${disc.user_liked ? "fill-orange-600" : ""}`}
+                />
+              </button>
+              <span className="text-xs font-bold">{disc.like_count || 0}</span>
+              <button className="hover:bg-gray-200 p-1 rounded text-gray-500">
+                <ArrowBigDown className="w-6 h-6" />
+              </button>
+            </div>
+
+            {/* Content Area */}
+            <div className="flex-1 p-3">
+              <div className="flex items-center gap-2 text-[11px] text-gray-500 mb-1">
+                <span className="font-bold text-gray-900 hover:underline">
+                  v/
+                  {disc.specialization_name
+                    ?.replace(/\s+/g, "")
+                    .toLowerCase() || "general"}
+                </span>
+                <span>• Posted by u/{disc.author}</span>
+                <span>• {new Date(disc.created_at).toLocaleDateString()}</span>
               </div>
-            </Link>
-          ))
-        )}
+
+              <Link
+                to={`/portal/discussions/${disc.discussion_id}`}
+                className="block"
+              >
+                <h2 className="text-lg font-medium text-gray-900 leading-tight mb-2 group-hover:text-blue-600">
+                  {disc.title}
+                </h2>
+                <p className="text-sm text-gray-600 line-clamp-3 mb-3 leading-normal">
+                  {disc.content}
+                </p>
+              </Link>
+
+              {/* Action Bar */}
+              <div className="flex items-center gap-2">
+                <Link
+                  to={`/portal/discussions/${disc.discussion_id}`}
+                  className="flex items-center gap-1.5 px-2 py-1.5 hover:bg-gray-100 rounded text-xs font-bold text-gray-500"
+                >
+                  <MessageSquare className="w-4 h-4" />
+                  {disc.comment_count || 0} Comments
+                </Link>
+                <button
+                  onClick={(e) => handleShare(e, disc.discussion_id)}
+                  className="flex items-center gap-1.5 px-2 py-1.5 hover:bg-gray-100 rounded text-xs font-bold text-gray-500"
+                >
+                  <Share2 className="w-4 h-4" /> Share
+                </button>
+                <button className="flex items-center gap-1.5 px-2 py-1.5 hover:bg-gray-100 rounded text-xs font-bold text-gray-500">
+                  <Bookmark
+                    className={`w-4 h-4 ${disc.user_saved ? "fill-yellow-500 text-yellow-500" : ""}`}
+                  />
+                  Save
+                </button>
+              </div>
+            </div>
+          </div>
+        ))}
       </div>
     </div>
   );
