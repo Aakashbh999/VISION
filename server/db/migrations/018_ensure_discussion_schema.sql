@@ -173,7 +173,41 @@ CREATE INDEX IF NOT EXISTS idx_discussion_tags_discussion ON portal.discussion_t
 CREATE INDEX IF NOT EXISTS idx_discussion_tags_tag ON portal.discussion_tags(tag_id);
 
 -- ============================================
--- 8. Fix NULL values and sync counters
+-- 8. Ensure discussion_likes table exists
+-- ============================================
+CREATE TABLE IF NOT EXISTS portal.discussion_likes (
+    user_id INTEGER REFERENCES portal.users(user_id) ON DELETE CASCADE,
+    discussion_id INTEGER REFERENCES portal.discussions(discussion_id) ON DELETE CASCADE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (user_id, discussion_id)
+);
+
+-- ============================================
+-- 9. Ensure notifications table has required columns
+-- ============================================
+DO $$
+BEGIN
+    -- Add actor_user_id if not exists
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns 
+                   WHERE table_schema = 'portal' AND table_name = 'notifications' AND column_name = 'actor_user_id') THEN
+        ALTER TABLE portal.notifications ADD COLUMN actor_user_id INTEGER REFERENCES portal.users(user_id) ON DELETE SET NULL;
+    END IF;
+    
+    -- Add reference_id if not exists
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns 
+                   WHERE table_schema = 'portal' AND table_name = 'notifications' AND column_name = 'reference_id') THEN
+        ALTER TABLE portal.notifications ADD COLUMN reference_id INTEGER;
+    END IF;
+    
+    -- Add reference_type if not exists
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns 
+                   WHERE table_schema = 'portal' AND table_name = 'notifications' AND column_name = 'reference_type') THEN
+        ALTER TABLE portal.notifications ADD COLUMN reference_type VARCHAR(50);
+    END IF;
+END $$;
+
+-- ============================================
+-- 10. Fix NULL values and sync counters
 -- ============================================
 -- Set NULL comment_count to 0
 UPDATE portal.discussions SET comment_count = 0 WHERE comment_count IS NULL;
