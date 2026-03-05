@@ -412,31 +412,41 @@ exports.deleteDiscussion = async (discussionId, userId, isAdmin = false) => {
  * Toggle like on a discussion
  */
 exports.toggleLike = async (discussionId, userId) => {
+  // Ensure IDs are integers
+  const discId = parseInt(discussionId);
+  const uId = parseInt(userId);
+
+  if (isNaN(discId) || isNaN(uId)) {
+    throw new Error(
+      `Invalid IDs: discussionId=${discussionId}, userId=${userId}`,
+    );
+  }
+
   const exists = await pool.query(
     `SELECT 1 FROM portal.discussion_likes WHERE discussion_id = $1 AND user_id = $2`,
-    [discussionId, userId],
+    [discId, uId],
   );
 
   if (exists.rows.length > 0) {
     // Unlike
     await pool.query(
       `DELETE FROM portal.discussion_likes WHERE discussion_id = $1 AND user_id = $2`,
-      [discussionId, userId],
+      [discId, uId],
     );
     await pool.query(
-      `UPDATE portal.discussions SET like_count = GREATEST(0, like_count - 1) WHERE discussion_id = $1`,
-      [discussionId],
+      `UPDATE portal.discussions SET like_count = GREATEST(0, COALESCE(like_count, 0) - 1) WHERE discussion_id = $1`,
+      [discId],
     );
     return { liked: false };
   } else {
     // Like
     await pool.query(
       `INSERT INTO portal.discussion_likes (discussion_id, user_id) VALUES ($1, $2)`,
-      [discussionId, userId],
+      [discId, uId],
     );
     await pool.query(
-      `UPDATE portal.discussions SET like_count = like_count + 1 WHERE discussion_id = $1`,
-      [discussionId],
+      `UPDATE portal.discussions SET like_count = COALESCE(like_count, 0) + 1 WHERE discussion_id = $1`,
+      [discId],
     );
     return { liked: true };
   }
@@ -535,22 +545,32 @@ exports.deleteComment = async (commentId, userId, isAdmin = false) => {
 const MAX_SAVED_DISCUSSIONS = 50;
 
 exports.toggleSave = async (discussionId, userId) => {
+  // Ensure IDs are integers
+  const discId = parseInt(discussionId);
+  const uId = parseInt(userId);
+
+  if (isNaN(discId) || isNaN(uId)) {
+    throw new Error(
+      `Invalid IDs: discussionId=${discussionId}, userId=${userId}`,
+    );
+  }
+
   const exists = await pool.query(
     `SELECT 1 FROM portal.saved_discussions WHERE discussion_id = $1 AND user_id = $2`,
-    [discussionId, userId],
+    [discId, uId],
   );
 
   if (exists.rows.length > 0) {
     await pool.query(
       `DELETE FROM portal.saved_discussions WHERE discussion_id = $1 AND user_id = $2`,
-      [discussionId, userId],
+      [discId, uId],
     );
     return { saved: false };
   } else {
     // Check max saved limit before saving
     const countResult = await pool.query(
       `SELECT COUNT(*) as count FROM portal.saved_discussions WHERE user_id = $1`,
-      [userId],
+      [uId],
     );
     const currentCount = parseInt(countResult.rows[0].count);
 
@@ -562,7 +582,7 @@ exports.toggleSave = async (discussionId, userId) => {
 
     await pool.query(
       `INSERT INTO portal.saved_discussions (discussion_id, user_id) VALUES ($1, $2)`,
-      [discussionId, userId],
+      [discId, uId],
     );
     return {
       saved: true,

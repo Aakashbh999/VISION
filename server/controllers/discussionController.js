@@ -383,7 +383,19 @@ exports.deleteComment = async (req, res) => {
 exports.toggleLike = async (req, res) => {
   try {
     const { id } = req.params;
-    const userId = req.user.portal_user_id;
+    const userId = req.user?.portal_user_id;
+
+    // Validate inputs
+    if (!id || !userId) {
+      console.error("toggleLike: Missing params", {
+        id,
+        userId,
+        user: req.user,
+      });
+      return res
+        .status(400)
+        .json({ error: "Invalid request - missing discussion ID or user" });
+    }
 
     const result = await discussionService.toggleLike(id, userId);
 
@@ -409,7 +421,7 @@ exports.toggleLike = async (req, res) => {
 
     res.json(result);
   } catch (err) {
-    console.error("Toggle like error:", err.message);
+    console.error("Toggle like error:", err.message, err.stack);
     res.status(500).json({ error: "Like failed", details: err.message });
   }
 };
