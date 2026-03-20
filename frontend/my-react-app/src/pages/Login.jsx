@@ -22,7 +22,7 @@ const Login = () => {
       } else if (user.student_status !== "approved") {
         navigate("/pending-approval", { replace: true });
       } else {
-        navigate("/portal/dashboard", { replace: true });
+        navigate("/dashboard", { replace: true });
       }
     }
   }, [user, navigate]);

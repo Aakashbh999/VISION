@@ -18,11 +18,11 @@ const HeroSection = () => {
           Explore IT fields, understand degree options like CSIT, BCA, and BIT,
           and discover real IT career opportunities in Nepal — all in one place.
         </p>
-        <div className="flex flex-col sm:flex-row gap-4">
-          <Button as={Link} to="/it-fields" variant="primary" size="medium">
+        <div className="flex flex-col sm:flex-row gap-4 md:gap-7 lg:gap-12 ">
+          <Button as={Link} to="/it-fields" variant="gradient" size="lg">
             Explore IT Fields →
           </Button>
-          <Button as={Link} to="/register" variant="secondary" size="medium">
+          <Button as={Link} to="/register" variant="secondary" size="md">
             Register Now
           </Button>
         </div>

@@ -4,6 +4,7 @@
  */
 
 const pool = require("../config/db");
+const XPService = require("./xpService");
 
 /**
  * Build dynamic WHERE conditions for filtering
@@ -11,18 +12,18 @@ const pool = require("../config/db");
  * @returns {Object} - { whereClause, params, paramIndex }
  */
 const buildFilterConditions = (filters, startParamIndex = 1) => {
-  const conditions = ["d.is_deleted = FALSE"];
+  const conditions = ["d.deleted_at IS NULL"];
   const params = [];
   let paramIndex = startParamIndex;
 
   if (filters.specialization) {
-    conditions.push(`d.id = $${paramIndex}`);
+    conditions.push(`d.specialization_id = $${paramIndex}`);
     params.push(parseInt(filters.specialization));
     paramIndex++;
   }
 
   if (filters.degree) {
-    conditions.push(`d.id = $${paramIndex}`);
+    conditions.push(`d.degree_id = $${paramIndex}`);
     params.push(parseInt(filters.degree));
     paramIndex++;
   }
@@ -53,11 +54,13 @@ const buildFilterConditions = (filters, startParamIndex = 1) => {
   }
 
   if (filters.search) {
+    // Use trigram similarity operator (%) for fuzzy matching + ILIKE for prefix/exact matching
     conditions.push(
-      `(d.title ILIKE $${paramIndex} OR d.content ILIKE $${paramIndex})`,
+      `(d.title % $${paramIndex} OR d.content % $${paramIndex} OR d.title ILIKE $${paramIndex + 1} OR d.content ILIKE $${paramIndex + 1})`
     );
+    params.push(filters.search);
     params.push(`%${filters.search}%`);
-    paramIndex++;
+    paramIndex += 2;
   }
 
   if (filters.userId) {
@@ -75,21 +78,29 @@ const buildFilterConditions = (filters, startParamIndex = 1) => {
 
 /**
  * Build ORDER BY clause based on sort parameter
+ * Defaults to prioritizing active boosts
  * @param {string} sort - Sort option
  * @returns {string} - ORDER BY clause
  */
-const buildSortClause = (sort) => {
+const buildSortClause = (sort, search = null) => {
+  const boostPriority = `CASE WHEN d.is_boosted = TRUE AND d.boosted_until > NOW() THEN 0 ELSE 1 END ASC`;
+
+  // If searching and no specific sort is requested, prioritize by similarity score
+  if (search && (!sort || sort === "latest")) {
+    return `ORDER BY ${boostPriority}, similarity(d.title, $1) DESC, d.created_at DESC`;
+  }
+
   switch (sort) {
     case "popular":
-      return "ORDER BY d.like_count DESC, d.created_at DESC";
+      return `ORDER BY ${boostPriority}, d.like_count DESC, d.created_at DESC`;
     case "discussed":
-      return "ORDER BY d.comment_count DESC, d.created_at DESC";
+      return `ORDER BY ${boostPriority}, d.comment_count DESC, d.created_at DESC`;
     case "trending":
-      return "ORDER BY (d.like_count * 2 + d.comment_count) DESC, d.created_at DESC";
+      return `ORDER BY ${boostPriority}, (d.like_count * 2 + d.comment_count) DESC, d.created_at DESC`;
     case "oldest":
       return "ORDER BY d.created_at ASC";
     default:
-      return "ORDER BY d.created_at DESC";
+      return `ORDER BY ${boostPriority}, d.created_at DESC`;
   }
 };
 
@@ -97,13 +108,41 @@ const buildSortClause = (sort) => {
  * Get all discussions with filters, sorting, and pagination
  */
 exports.getDiscussions = async (filters = {}, currentUserId = null) => {
-  const { whereClause, params, paramIndex } = buildFilterConditions(filters);
-  const sortClause = buildSortClause(filters.sort);
+  const {
+    whereClause,
+    params,
+    paramIndex: filterParamIndex,
+  } = buildFilterConditions(filters);
+  const sortClause = buildSortClause(filters.sort, filters.search);
 
   // Pagination
   const page = parseInt(filters.page) || 1;
   const limit = parseInt(filters.limit) || 20;
   const offset = (page - 1) * limit;
+
+  // Track param index for user-specific queries
+  let paramIndex = filterParamIndex;
+  let userLikedSavedClause = "";
+
+  if (currentUserId) {
+    // Use parameterized queries instead of string interpolation to prevent SQL injection
+    userLikedSavedClause = `,
+        EXISTS(
+          SELECT 1 FROM portal.discussion_likes dl 
+          WHERE dl.discussion_id = d.discussion_id AND dl.user_id = $${paramIndex} AND dl.vote_type = 1
+        ) AS user_liked,
+        EXISTS(
+          SELECT 1 FROM portal.saved_discussions sd 
+          WHERE sd.discussion_id = d.discussion_id AND sd.user_id = $${paramIndex}
+        ) AS user_saved,
+        COALESCE((
+          SELECT vote_type FROM portal.discussion_likes dl
+          WHERE dl.discussion_id = d.discussion_id AND dl.user_id = $${paramIndex}
+        ), 0) AS user_vote
+      `;
+    params.push(parseInt(currentUserId));
+    paramIndex++;
+  }
 
   params.push(limit, offset);
 
@@ -117,6 +156,9 @@ exports.getDiscussions = async (filters = {}, currentUserId = null) => {
       d.like_count,
       d.comment_count,
       d.image_url,
+      d.image_caption,
+      d.is_boosted,
+      d.boosted_until,
       d.specialization_id,
       d.degree_id,
       d.job_role_id,
@@ -136,20 +178,7 @@ exports.getDiscussions = async (filters = {}, currentUserId = null) => {
           WHERE dt.discussion_id = d.discussion_id
         ), '[]'
       ) AS tags
-      ${
-        currentUserId
-          ? `,
-        EXISTS(
-          SELECT 1 FROM portal.discussion_likes dl 
-          WHERE dl.discussion_id = d.discussion_id AND dl.user_id = ${currentUserId}
-        ) AS user_liked,
-        EXISTS(
-          SELECT 1 FROM portal.saved_discussions sd 
-          WHERE sd.discussion_id = d.discussion_id AND sd.user_id = ${currentUserId}
-        ) AS user_saved
-      `
-          : ""
-      }
+      ${userLikedSavedClause}
     FROM portal.discussions d
     JOIN portal.users u ON u.user_id = d.user_id
     LEFT JOIN portal.it_fields f ON f.id = d.specialization_id
@@ -167,9 +196,12 @@ exports.getDiscussions = async (filters = {}, currentUserId = null) => {
     WHERE ${whereClause}
   `;
 
+  // For count query, exclude limit, offset, and currentUserId params (if present)
+  const countParams = currentUserId ? params.slice(0, -3) : params.slice(0, -2);
+
   const [discussions, countResult] = await Promise.all([
     pool.query(query, params),
-    pool.query(countQuery, params.slice(0, -2)), // Remove limit/offset params
+    pool.query(countQuery, countParams),
   ]);
 
   return {
@@ -187,6 +219,30 @@ exports.getDiscussions = async (filters = {}, currentUserId = null) => {
  * Get single discussion by ID with full details
  */
 exports.getDiscussionById = async (discussionId, currentUserId = null) => {
+  // Build user-specific clause with parameterized query to prevent SQL injection
+  const params = [discussionId];
+  let userLikedSavedClause = "";
+
+  if (currentUserId) {
+    userLikedSavedClause = `,
+        EXISTS(
+          SELECT 1 FROM portal.discussion_likes dl 
+          WHERE dl.discussion_id = d.discussion_id AND dl.user_id = $2 AND dl.vote_type = 1
+        ) AS user_liked,
+        EXISTS(
+          SELECT 1 FROM portal.saved_discussions sd 
+          WHERE sd.discussion_id = d.discussion_id AND sd.user_id = $2
+        ) AS user_saved,
+        COALESCE((
+          SELECT vote_type FROM portal.discussion_likes dl
+          WHERE dl.discussion_id = d.discussion_id AND dl.user_id = $2
+        ), 0) AS user_vote
+      `;
+    params.push(parseInt(currentUserId));
+  } else {
+    userLikedSavedClause = `, FALSE AS user_liked, FALSE AS user_saved, 0 AS user_vote`;
+  }
+
   const query = `
     SELECT 
       d.*,
@@ -205,30 +261,17 @@ exports.getDiscussionById = async (discussionId, currentUserId = null) => {
           WHERE dt.discussion_id = d.discussion_id
         ), '[]'
       ) AS tags
-      ${
-        currentUserId
-          ? `,
-        EXISTS(
-          SELECT 1 FROM portal.discussion_likes dl 
-          WHERE dl.discussion_id = d.discussion_id AND dl.user_id = ${currentUserId}
-        ) AS user_liked,
-        EXISTS(
-          SELECT 1 FROM portal.saved_discussions sd 
-          WHERE sd.discussion_id = d.discussion_id AND sd.user_id = ${currentUserId}
-        ) AS user_saved
-      `
-          : ""
-      }
+      ${userLikedSavedClause}
     FROM portal.discussions d
     JOIN portal.users u ON u.user_id = d.user_id
     LEFT JOIN portal.it_fields f ON f.id = d.specialization_id
     LEFT JOIN portal.academic_degrees ad ON ad.id = d.degree_id
     LEFT JOIN portal.job_market_insights jm ON jm.id = d.job_role_id
     LEFT JOIN portal.programs p ON p.program_id = d.program_id
-    WHERE d.discussion_id = $1 AND d.is_deleted = FALSE
+    WHERE d.discussion_id = $1 AND d.deleted_at IS NULL
   `;
 
-  const result = await pool.query(query, [discussionId]);
+  const result = await pool.query(query, params);
   return result.rows[0] || null;
 };
 
@@ -244,8 +287,8 @@ exports.createDiscussion = async (discussionData) => {
     // Insert discussion
     const discussionResult = await client.query(
       `INSERT INTO portal.discussions 
-        (user_id, title, content, specialization_id, degree_id, job_role_id, program_id, image_url, image_public_id)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+        (user_id, title, content, specialization_id, degree_id, job_role_id, program_id, image_url, image_public_id, image_caption)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
        RETURNING *`,
       [
         discussionData.userId,
@@ -257,6 +300,7 @@ exports.createDiscussion = async (discussionData) => {
         discussionData.programId || null,
         discussionData.imageUrl || null,
         discussionData.imagePublicId || null,
+        discussionData.imageCaption || null,
       ],
     );
 
@@ -278,6 +322,14 @@ exports.createDiscussion = async (discussionData) => {
     }
 
     await client.query("COMMIT");
+
+    // Grant XP for post creation
+    await XPService.updateUserXP(
+      discussionData.userId,
+      5,
+      "Discussion Post Creation",
+    );
+
     return discussion;
   } catch (error) {
     await client.query("ROLLBACK");
@@ -298,7 +350,7 @@ exports.updateDiscussion = async (
 ) => {
   // First, check ownership and edit window
   const checkResult = await pool.query(
-    `SELECT user_id, created_at FROM portal.discussions WHERE discussion_id = $1 AND is_deleted = FALSE`,
+    `SELECT user_id, created_at FROM portal.discussions WHERE discussion_id = $1 AND deleted_at IS NULL`,
     [discussionId],
   );
 
@@ -384,11 +436,11 @@ exports.updateDiscussion = async (
 };
 
 /**
- * Soft delete a discussion
+ * Delete a discussion (Soft or Hard)
  */
 exports.deleteDiscussion = async (discussionId, userId, isAdmin = false) => {
   const checkResult = await pool.query(
-    `SELECT user_id FROM portal.discussions WHERE discussion_id = $1 AND is_deleted = FALSE`,
+    `SELECT user_id FROM portal.discussions WHERE discussion_id = $1`,
     [discussionId],
   );
 
@@ -396,23 +448,56 @@ exports.deleteDiscussion = async (discussionId, userId, isAdmin = false) => {
     throw new Error("Discussion not found");
   }
 
-  if (checkResult.rows[0].user_id !== userId && !isAdmin) {
+  const post = checkResult.rows[0];
+
+  if (isAdmin) {
+    // Admin performs HARD DELETE
+    await pool.query(
+      `DELETE FROM portal.discussions WHERE discussion_id = $1`,
+      [discussionId],
+    );
+  } else if (post.user_id === userId) {
+    // Owner performs SOFT DELETE
+    await pool.query(
+      `UPDATE portal.discussions SET deleted_at = NOW() WHERE discussion_id = $1`,
+      [discussionId],
+    );
+  } else {
     throw new Error("Not authorized to delete this discussion");
   }
-
-  await pool.query(
-    `UPDATE portal.discussions SET is_deleted = TRUE WHERE discussion_id = $1`,
-    [discussionId],
-  );
 
   return true;
 };
 
 /**
- * Toggle like on a discussion
+ * Hard delete a discussion (permanently remove)
  */
-exports.toggleLike = async (discussionId, userId) => {
-  // Ensure IDs are integers
+exports.hardDeleteDiscussion = async (discussionId, userId) => {
+  const checkResult = await pool.query(
+    `SELECT user_id FROM portal.discussions WHERE discussion_id = $1`,
+    [discussionId],
+  );
+
+  if (checkResult.rows.length === 0) {
+    throw new Error("Discussion not found");
+  }
+
+  if (checkResult.rows[0].user_id !== userId) {
+    throw new Error("Not authorized to hard delete this discussion");
+  }
+
+  // Permanently remove from DB
+  await pool.query(`DELETE FROM portal.discussions WHERE discussion_id = $1`, [
+    discussionId,
+  ]);
+
+  return true;
+};
+
+/**
+ * Handle voting (Upvote/Downvote) on a discussion
+ */
+exports.handleVote = async (discussionId, userId, voteType) => {
   const discId = parseInt(discussionId);
   const uId = parseInt(userId);
 
@@ -422,50 +507,118 @@ exports.toggleLike = async (discussionId, userId) => {
     );
   }
 
-  const exists = await pool.query(
-    `SELECT 1 FROM portal.discussion_likes WHERE discussion_id = $1 AND user_id = $2`,
-    [discId, uId],
-  );
+  const client = await pool.connect();
+  try {
+    await client.query("BEGIN");
 
-  if (exists.rows.length > 0) {
-    // Unlike
-    await pool.query(
-      `DELETE FROM portal.discussion_likes WHERE discussion_id = $1 AND user_id = $2`,
+    // 1. Get existing vote
+    const existingRes = await client.query(
+      `SELECT vote_type FROM portal.discussion_likes WHERE discussion_id = $1 AND user_id = $2`,
       [discId, uId],
     );
-    await pool.query(
-      `UPDATE portal.discussions SET like_count = GREATEST(0, COALESCE(like_count, 0) - 1) WHERE discussion_id = $1`,
+
+    const oldVoteType =
+      existingRes.rows.length > 0 ? existingRes.rows[0].vote_type : 0;
+
+    // YouTube-style toggle: clicking same button removes the vote
+    const newVoteType = oldVoteType === voteType ? 0 : voteType;
+
+    // 2. Update discussion_likes table
+    if (oldVoteType === 0 && newVoteType !== 0) {
+      // Insert new vote
+      await client.query(
+        `INSERT INTO portal.discussion_likes (discussion_id, user_id, vote_type) 
+         VALUES ($1, $2, $3)
+         ON CONFLICT (discussion_id, user_id) 
+         DO UPDATE SET vote_type = EXCLUDED.vote_type`,
+        [discId, uId, newVoteType],
+      );
+    } else if (newVoteType === 0) {
+      // Remove vote entirely
+      await client.query(
+        `DELETE FROM portal.discussion_likes WHERE discussion_id = $1 AND user_id = $2`,
+        [discId, uId],
+      );
+    } else {
+      // Update existing vote
+      await client.query(
+        `UPDATE portal.discussion_likes SET vote_type = $1 WHERE discussion_id = $2 AND user_id = $3`,
+        [newVoteType, discId, uId],
+      );
+    }
+
+    // 3. Count only upvotes for display (YouTube-style)
+    await client.query(
+      `UPDATE portal.discussions 
+       SET like_count = (
+         SELECT COUNT(*) 
+         FROM portal.discussion_likes 
+         WHERE discussion_id = $1 AND vote_type = 1
+       )
+       WHERE discussion_id = $1`,
       [discId],
     );
-    return { liked: false };
-  } else {
-    // Like
-    await pool.query(
-      `INSERT INTO portal.discussion_likes (discussion_id, user_id) VALUES ($1, $2)`,
-      [discId, uId],
-    );
-    await pool.query(
-      `UPDATE portal.discussions SET like_count = COALESCE(like_count, 0) + 1 WHERE discussion_id = $1`,
+    const diff = newVoteType - oldVoteType;
+
+    // 4. XP Logic
+    const authorRes = await client.query(
+      "SELECT user_id FROM portal.discussions WHERE discussion_id = $1",
       [discId],
     );
-    return { liked: true };
+    const authorId = authorRes.rows[0]?.user_id;
+
+    if (authorId && authorId !== uId) {
+      // Grant +10 XP for NEW upvote
+      if (newVoteType === 1 && oldVoteType !== 1) {
+        await XPService.updateUserXP(
+          authorId,
+          10,
+          "Received a Discussion Upvote",
+          client,
+        );
+      }
+      // Deduct 10 XP if removing upvote (toggle off or switch to downvote)
+      else if (oldVoteType === 1 && newVoteType !== 1) {
+        await XPService.updateUserXP(
+          authorId,
+          -10,
+          "Discussion Upvote Removed",
+          client,
+        );
+      }
+    }
+
+    await client.query("COMMIT");
+    return { voteType: newVoteType, scoreDiff: diff };
+  } catch (error) {
+    await client.query("ROLLBACK");
+    throw error;
+  } finally {
+    client.release();
   }
+};
+
+/**
+ * Toggle like on a discussion (Legacy/Compatibility)
+ */
+exports.toggleLike = async (discussionId, userId) => {
+  return exports.handleVote(discussionId, userId, 1);
 };
 
 /**
  * Add a comment to a discussion
  */
-exports.addComment = async (discussionId, userId, content) => {
+exports.addComment = async (discussionId, userId, content, parentId = null) => {
   const client = await pool.connect();
 
   try {
     await client.query("BEGIN");
 
     const result = await client.query(
-      `INSERT INTO portal.discussion_comments (discussion_id, user_id, content)
-       VALUES ($1, $2, $3)
+      `INSERT INTO portal.discussion_comments (discussion_id, user_id, content, parent_id)
+       VALUES ($1, $2, $3, $4)
        RETURNING *`,
-      [discussionId, userId, content],
+      [discussionId, userId, content, parentId],
     );
 
     // Update comment count
@@ -485,28 +638,149 @@ exports.addComment = async (discussionId, userId, content) => {
 };
 
 /**
- * Get comments for a discussion
+ * Handle voting (Upvote/Downvote) on a comment
+ * Grants +2 XP for upvotes, deducts 2 XP if switching from UP to DOWN
  */
-exports.getComments = async (discussionId) => {
+exports.handleCommentVote = async (commentId, userId, voteType) => {
+  const commId = parseInt(commentId);
+  const uId = parseInt(userId);
+
+  if (isNaN(commId) || isNaN(uId)) {
+    throw new Error(`Invalid IDs: commentId=${commentId}, userId=${userId}`);
+  }
+
+  const client = await pool.connect();
+  try {
+    await client.query("BEGIN");
+
+    // 1. Get existing vote
+    const existingRes = await client.query(
+      `SELECT vote_type FROM portal.comment_likes WHERE comment_id = $1 AND user_id = $2`,
+      [commId, uId],
+    );
+
+    const oldVoteType =
+      existingRes.rows.length > 0 ? existingRes.rows[0].vote_type : 0;
+
+    // YouTube-style toggle: clicking same button removes the vote
+    const newVoteType = oldVoteType === voteType ? 0 : voteType;
+
+    // 2. Update comment_likes table
+    if (oldVoteType === 0 && newVoteType !== 0) {
+      // Insert new vote
+      await client.query(
+        `INSERT INTO portal.comment_likes (comment_id, user_id, vote_type) VALUES ($1, $2, $3)`,
+        [commId, uId, newVoteType],
+      );
+    } else if (newVoteType === 0) {
+      // Remove vote entirely
+      await client.query(
+        `DELETE FROM portal.comment_likes WHERE comment_id = $1 AND user_id = $2`,
+        [commId, uId],
+      );
+    } else {
+      // Update existing vote
+      await client.query(
+        `UPDATE portal.comment_likes SET vote_type = $1 WHERE comment_id = $2 AND user_id = $3`,
+        [newVoteType, commId, uId],
+      );
+    }
+
+    // 3. Count only upvotes for display (YouTube-style)
+    await client.query(
+      `UPDATE portal.discussion_comments 
+       SET likes_count = (
+         SELECT COUNT(*) 
+         FROM portal.comment_likes 
+         WHERE comment_id = $1 AND vote_type = 1
+       )
+       WHERE comment_id = $1`,
+      [commId],
+    );
+    const diff = newVoteType - oldVoteType;
+
+    // 4. XP Logic: Author gets +2 VXP
+    const authorRes = await client.query(
+      "SELECT user_id FROM portal.discussion_comments WHERE comment_id = $1",
+      [commId],
+    );
+    const authorId = authorRes.rows[0]?.user_id;
+
+    if (authorId && authorId !== uId) {
+      // Grant +2 XP for NEW upvote
+      if (newVoteType === 1 && oldVoteType !== 1) {
+        await XPService.updateUserXP(
+          authorId,
+          2,
+          "Comment received an Upvote",
+          client,
+        );
+      }
+      // Deduct 2 XP if removing upvote (toggle off or switch to downvote)
+      else if (oldVoteType === 1 && newVoteType !== 1) {
+        await XPService.updateUserXP(
+          authorId,
+          -2,
+          "Comment Upvote Removed",
+          client,
+        );
+      }
+    }
+
+    await client.query("COMMIT");
+    return { voteType: newVoteType, scoreDiff: diff };
+  } catch (error) {
+    await client.query("ROLLBACK");
+    throw error;
+  } finally {
+    client.release();
+  }
+};
+
+/**
+ * Get comments for a discussion with optional sorting
+ */
+exports.getComments = async (
+  discussionId,
+  currentUserId = null,
+  sort = "newest",
+) => {
+  const dId = parseInt(discussionId);
+  const params = [dId];
+  let userVoteClause = "0";
+
+  if (currentUserId) {
+    userVoteClause = `COALESCE((SELECT vote_type FROM portal.comment_likes cl WHERE cl.comment_id = c.comment_id AND cl.user_id = $2), 0)`;
+    params.push(parseInt(currentUserId));
+  }
+
+  const orderBy =
+    sort === "top"
+      ? "c.likes_count DESC, c.created_at DESC"
+      : "c.created_at DESC";
+
   const result = await pool.query(
     `SELECT 
       c.comment_id,
       c.content,
       c.created_at,
+      c.parent_id,
+      c.likes_count,
+      ${userVoteClause} AS user_vote,
       u.user_id,
       u.full_name,
       u.profile_image
      FROM portal.discussion_comments c
      JOIN portal.users u ON u.user_id = c.user_id
-     WHERE c.discussion_id = $1 AND (c.is_deleted IS NULL OR c.is_deleted = FALSE)
-     ORDER BY c.created_at ASC`,
-    [discussionId],
+     WHERE c.discussion_id = $1 AND c.deleted_at IS NULL
+     ORDER BY ${orderBy}`,
+    params,
   );
   return result.rows;
 };
 
 /**
- * Delete a comment (soft delete)
+ * Delete a comment (Soft or Hard)
  */
 exports.deleteComment = async (commentId, userId, isAdmin = false) => {
   const checkResult = await pool.query(
@@ -518,21 +792,28 @@ exports.deleteComment = async (commentId, userId, isAdmin = false) => {
     throw new Error("Comment not found");
   }
 
-  if (checkResult.rows[0].user_id !== userId && !isAdmin) {
+  const comment = checkResult.rows[0];
+
+  if (isAdmin) {
+    // Admin performs HARD DELETE
+    await pool.query(
+      `DELETE FROM portal.discussion_comments WHERE comment_id = $1`,
+      [commentId],
+    );
+  } else if (comment.user_id === userId) {
+    // Owner performs SOFT DELETE
+    await pool.query(
+      `UPDATE portal.discussion_comments SET deleted_at = NOW() WHERE comment_id = $1`,
+      [commentId],
+    );
+  } else {
     throw new Error("Not authorized to delete this comment");
   }
-
-  const discussionId = checkResult.rows[0].discussion_id;
-
-  await pool.query(
-    `UPDATE portal.discussion_comments SET is_deleted = TRUE WHERE comment_id = $1`,
-    [commentId],
-  );
 
   // Update comment count
   await pool.query(
     `UPDATE portal.discussions SET comment_count = GREATEST(0, comment_count - 1) WHERE discussion_id = $1`,
-    [discussionId],
+    [comment.discussion_id],
   );
 
   return true;
@@ -592,6 +873,73 @@ exports.toggleSave = async (discussionId, userId) => {
   }
 };
 
+exports.boostDiscussion = async (discussionId, userId) => {
+  const client = await pool.connect();
+
+  try {
+    await client.query("BEGIN");
+
+    // 1. Check if user has enough reputation points
+    const userRes = await client.query(
+      `SELECT reputation_points FROM portal.users WHERE user_id = $1`,
+      [userId],
+    );
+
+    if (userRes.rows.length === 0) {
+      throw new Error("User not found");
+    }
+
+    const { reputation_points } = userRes.rows[0];
+    if ((reputation_points || 0) < 50) {
+      throw new Error(
+        "Insufficient reputation points (50 points required to boost)",
+      );
+    }
+
+    // 2. Check if discussion exists and is not already actively boosted
+    const discussionRes = await client.query(
+      `SELECT is_boosted, boosted_until FROM portal.discussions WHERE discussion_id = $1 AND deleted_at IS NULL`,
+      [discussionId],
+    );
+
+    if (discussionRes.rows.length === 0) {
+      throw new Error("Discussion not found");
+    }
+
+    const discussion = discussionRes.rows[0];
+    if (
+      discussion.is_boosted &&
+      new Date(discussion.boosted_until) > new Date()
+    ) {
+      throw new Error("Discussion is already actively boosted");
+    }
+
+    // 3. Deduct points
+    await client.query(
+      `UPDATE portal.users SET reputation_points = reputation_points - 50 WHERE user_id = $1`,
+      [userId],
+    );
+
+    // 4. Boost discussion
+    const boostRes = await client.query(
+      `UPDATE portal.discussions 
+       SET is_boosted = TRUE, 
+           boosted_until = NOW() + INTERVAL '24 hours' 
+       WHERE discussion_id = $1
+       RETURNING *`,
+      [discussionId],
+    );
+
+    await client.query("COMMIT");
+    return boostRes.rows[0];
+  } catch (error) {
+    await client.query("ROLLBACK");
+    throw error;
+  } finally {
+    client.release();
+  }
+};
+
 /**
  * Get user's saved discussions
  */
@@ -611,7 +959,7 @@ exports.getSavedDiscussions = async (userId, page = 1, limit = 20) => {
     FROM portal.saved_discussions sd
     JOIN portal.discussions d ON d.discussion_id = sd.discussion_id
     JOIN portal.users u ON u.user_id = d.user_id
-    WHERE sd.user_id = $1 AND d.is_deleted = FALSE
+    WHERE sd.user_id = $1 AND d.deleted_at IS NULL
     ORDER BY sd.saved_at DESC
     LIMIT $2 OFFSET $3
   `;
@@ -620,7 +968,7 @@ exports.getSavedDiscussions = async (userId, page = 1, limit = 20) => {
     SELECT COUNT(*) AS total
     FROM portal.saved_discussions sd
     JOIN portal.discussions d ON d.discussion_id = sd.discussion_id
-    WHERE sd.user_id = $1 AND d.is_deleted = FALSE
+    WHERE sd.user_id = $1 AND d.deleted_at IS NULL
   `;
 
   const [discussions, countResult] = await Promise.all([
@@ -665,7 +1013,7 @@ exports.getMyPosts = async (userId, page = 1, limit = 20) => {
       ) AS tags,
       CASE WHEN (NOW() - d.created_at) < INTERVAL '24 hours' THEN true ELSE false END AS can_edit
     FROM portal.discussions d
-    WHERE d.user_id = $1 AND d.is_deleted = FALSE
+    WHERE d.user_id = $1 AND d.deleted_at IS NULL
     ORDER BY d.created_at DESC
     LIMIT $2 OFFSET $3
   `;
@@ -673,7 +1021,7 @@ exports.getMyPosts = async (userId, page = 1, limit = 20) => {
   const countQuery = `
     SELECT COUNT(*) AS total
     FROM portal.discussions d
-    WHERE d.user_id = $1 AND d.is_deleted = FALSE
+    WHERE d.user_id = $1 AND d.deleted_at IS NULL
   `;
 
   const [discussions, countResult] = await Promise.all([
@@ -709,7 +1057,7 @@ exports.getTrendingDiscussions = async (limit = 10) => {
       u.profile_image AS author_avatar
     FROM portal.discussions d
     JOIN portal.users u ON u.user_id = d.user_id
-    WHERE d.is_deleted = FALSE
+    WHERE d.deleted_at IS NULL
       AND d.created_at > NOW() - INTERVAL '7 days'
     ORDER BY trending_score DESC, d.created_at DESC
     LIMIT $1

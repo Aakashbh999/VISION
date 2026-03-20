@@ -29,9 +29,15 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
-// Response interceptor to handle token refresh
+// Response interceptor to handle token refresh and unwrap standard responses
 api.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    // If the response follows our standard { success: true, data: ... } format, unwrap it
+    if (response.data && response.data.success === true && 'data' in response.data) {
+      return { ...response, data: response.data.data };
+    }
+    return response;
+  },
   async (error) => {
     const originalRequest = error.config;
 

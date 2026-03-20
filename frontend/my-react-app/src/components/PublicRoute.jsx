@@ -1,4 +1,4 @@
-import { Navigate } from "react-router-dom";
+import { Navigate, Outlet } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import LoadingSpinner from "./ui/LoadingSpinner";
 
@@ -13,12 +13,12 @@ const PublicRoute = ({ children }) => {
     user.email_status === "verified" &&
     user.student_status === "approved"
   ) {
-    return <Navigate to="/portal/dashboard" replace />;
+    return <Navigate to="/dashboard" replace />;
   }
 
   // If user is logged in but not verified/approved, they should stay on public pages
   // but maybe we want to show a message? For now, allow access to public pages.
-  return children;
+  return children ? children : <Outlet />;
 };
 
 export default PublicRoute;

@@ -1,4 +1,5 @@
 const pool = require("../config/db");
+const XPService = require("../services/xpService");
 
 exports.getMe = async (req, res) => {
   try {
@@ -6,6 +7,8 @@ exports.getMe = async (req, res) => {
 
     const result = await pool.query(
       `SELECT 
+        a.auth_user_id,
+        p.user_id as portal_user_id,
         a.email,
         a.email_status,
         a.role,
@@ -13,6 +16,9 @@ exports.getMe = async (req, res) => {
         p.semester,
         p.student_status,
         p.is_suspended,
+        p.reputation_points,
+        p.is_moderator,
+        p.academic_degree_id,
         pr.program_name
        FROM auth.users a
        LEFT JOIN portal.users p 
@@ -27,9 +33,38 @@ exports.getMe = async (req, res) => {
       return res.status(404).json({ error: "User not found" });
     }
 
-    res.json(result.rows[0]);
+    const userData = result.rows[0];
+
+    // Fetch user badges (only select existing columns)
+    const badgesRes = await pool.query(
+      `SELECT badge_name, earned_at
+       FROM portal.user_badges
+       WHERE user_id = $1
+       ORDER BY earned_at DESC`,
+      [userData.portal_user_id],
+    );
+
+    res.json({
+      ...userData,
+      badges: badgesRes.rows,
+    });
   } catch (err) {
     console.error("Error in /me:", err);
     res.status(500).json({ error: "Failed to fetch profile" });
+  }
+};
+exports.getUserStats = async (req, res) => {
+  try {
+    const userId = req.user.portal_user_id;
+    const stats = await XPService.getUserStats(userId);
+    
+    if (!stats) {
+      return res.status(404).json({ error: "Stats not found" });
+    }
+
+    res.json(stats);
+  } catch (err) {
+    console.error("Error in getUserStats:", err);
+    res.status(500).json({ error: "Failed to fetch user stats" });
   }
 };

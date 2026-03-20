@@ -56,7 +56,7 @@ const NotificationsWidget = ({ notifications }) => {
         ))}
       </div>
       <Link
-        to="/portal/notifications"
+        to="/notifications"
         className="block text-center text-sm text-blue-600 hover:text-blue-800 mt-4"
       >
         View all notifications

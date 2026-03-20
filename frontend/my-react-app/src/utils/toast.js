@@ -28,3 +28,9 @@ export const toastError = (message, options) =>
   showOnce("error", message, options);
 export const toastInfo = (message, options) =>
   showOnce("info", message, options);
+
+export const showToast = {
+  success: toastSuccess,
+  error: toastError,
+  info: toastInfo,
+};

@@ -34,7 +34,7 @@ const ActivityFeedWidget = ({ feed }) => {
         ))}
       </div>
       <Link
-        to="/portal/feed"
+        to="/feed"
         className="block text-center text-sm text-blue-600 hover:text-blue-800 mt-4"
       >
         View full feed

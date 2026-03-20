@@ -18,6 +18,9 @@ router.post(
   roadmapController.completeStep,
 );
 
+// Get roadmap path (subway map data)
+router.get("/:id/path", verifyJWT, roadmapController.getRoadmapPath);
+
 // Get progress for a roadmap
 router.get("/:id/progress", verifyJWT, roadmapController.getRoadmapProgress);
 

@@ -44,4 +44,61 @@ SET client_min_messages TO WARNING;
 \echo 'Step 14: Sync Schema (add missing columns/tables)'
 \i 014_sync_schema.sql
 
-\echo '--- ✅ All 14 Migrations Completed Successfully ---'
+\echo 'Step 15: Job Market Analytics'
+\i 015_job_market_analytics.sql
+
+\echo 'Step 16: Discussion System Upgrade'
+\i 016_discussion_system_upgrade.sql
+
+\echo 'Step 16b: Fix Tags Table'
+\i 016b_fix_tags_table.sql
+
+\echo 'Step 17: Resource Schema Cleanup'
+\i 017_resource_schema_cleanup.sql
+
+\echo 'Step 18: Ensure Discussion Schema'
+\i 018_ensure_discussion_schema.sql
+
+\echo 'Step 19: Add Reputation Points'
+\i 019_add_reputation_points.sql
+
+\echo 'Step 20: Enhance Groups Schema'
+\i 020_enhance_groups_schema.sql
+
+\echo 'Step 21: IT Clubs Directory Model'
+\i 021_it_clubs_directory_model.sql
+
+\echo 'Step 22: Feature Upgrades (degree filtering, moderation, gamification, boost)'
+\i 022_feature_upgrades.sql
+
+\echo 'Step 23: Add created_by to resources'
+\i 023_add_created_by_to_resources.sql
+
+\echo 'Step 24: Add cloudinary columns to resources'
+\i 024_add_cloudinary_columns_to_resources.sql
+
+\echo 'Step 25: Add original filename to resources'
+\i 025_add_original_filename_to_resources.sql
+
+\echo 'Step 26: Reporting and discussion upgrades'
+\i 026_reporting_and_discussion_upgrades.sql
+
+\echo 'Step 27a: Add image caption to discussions'
+\i 027_add_image_caption_to_discussions.sql
+
+\echo 'Step 27b: Add vote type to likes'
+\i 027_add_vote_type_to_likes.sql
+
+\echo 'Step 28: Comment likes and counters'
+\i 028_comment_likes_and_counters.sql
+
+\echo 'Step 29: Group Sectional Architecture'
+\i 029_group_sectional_architecture.sql
+
+\echo 'Step 30: Profile management'
+\i 030_profile_management.sql
+
+\echo 'Step 31: Group advanced schema'
+\i 031_group_advanced_schema.sql
+
+\echo '--- ✅ All 31 Migrations Completed Successfully ---'

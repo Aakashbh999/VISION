@@ -33,7 +33,7 @@ const RoadmapDetail = () => {
       {/* Back button and title */}
       <div>
         <Link
-          to="/portal/roadmaps"
+          to="/roadmaps"
           className="inline-flex items-center gap-1 text-sm text-gray-600 hover:text-blue-600 mb-4"
         >
           <ChevronLeft className="w-4 h-4" /> Back to Roadmaps

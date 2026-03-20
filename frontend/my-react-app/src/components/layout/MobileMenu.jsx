@@ -54,43 +54,43 @@ const MobileMenu = ({ isOpen, onClose, variant, user }) => {
       id: "dashboard",
       label: "Dashboard",
       icon: <BarChart className="w-5 h-5" />,
-      href: "/portal/dashboard",
+      href: "/dashboard",
     },
     {
       id: "roadmaps",
       label: "Roadmaps",
       icon: <BookOpen className="w-5 h-5" />,
-      href: "/portal/roadmaps",
+      href: "/roadmaps",
     },
     {
       id: "discussions",
       label: "Discussions",
       icon: <MessageCircle className="w-5 h-5" />,
-      href: "/portal/discussions",
+      href: "/discussions",
     },
     {
       id: "groups",
       label: "Groups",
       icon: <Users2 className="w-5 h-5" />,
-      href: "/portal/groups",
+      href: "/groups",
     },
     {
       id: "clubs",
       label: "Clubs",
       icon: <Users className="w-5 h-5" />,
-      href: "/portal/clubs",
+      href: "/clubs",
     },
     {
       id: "resources",
       label: "Resources",
       icon: <FolderOpen className="w-5 h-5" />,
-      href: "/portal/resources",
+      href: "/resources",
     },
     {
       id: "profile",
       label: "Profile",
       icon: <User className="w-5 h-5" />,
-      href: "/portal/profile",
+      href: "/profile",
     },
   ];
 
@@ -107,14 +107,14 @@ const MobileMenu = ({ isOpen, onClose, variant, user }) => {
     <div
       className={`mobile-menu fixed inset-0 z-40 lg:hidden ${isOpen ? "open" : ""}`}
     >
-      <div className="absolute inset-0 bg-black/20" onClick={onClose}></div>
-      <div className="absolute left-0 top-16 bottom-0 w-64 bg-white shadow-xl p-6 overflow-y-auto">
+      <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onClose}></div>
+      <div className="absolute left-0 top-16 bottom-0 w-64 bg-bg-main shadow-xl p-6 overflow-y-auto border-r border-border-main transition-colors duration-300">
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 p-2 rounded-lg hover:bg-gray-100"
+          className="absolute top-4 right-4 p-2 rounded-lg hover:bg-sidebar-hover-bg"
           aria-label="Close menu"
         >
-          <X className="w-5 h-5 text-gray-600" />
+          <X className="w-5 h-5 text-text-muted" />
         </button>
 
         {variant === "portal" && user ? (
@@ -126,7 +126,7 @@ const MobileMenu = ({ isOpen, onClose, variant, user }) => {
                   key={item.id}
                   to={item.href}
                   onClick={onClose}
-                  className="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-gradient-to-r hover:from-gray-50 hover:to-blue-50 text-gray-600 hover:text-blue-600 hover:font-medium hover:border hover:border-gray-200 transition-all duration-300 w-full text-left"
+                  className="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-sidebar-hover-bg text-text-muted hover:text-blue-600 dark:hover:text-blue-400 hover:font-medium hover:border hover:border-border-main transition-all duration-300 w-full text-left"
                 >
                   {item.icon}
                   <span>{item.label}</span>
@@ -135,8 +135,8 @@ const MobileMenu = ({ isOpen, onClose, variant, user }) => {
             </nav>
 
             {/* Public section for portal users */}
-            <div className="mt-8 pt-6 border-t border-gray-200">
-              <h4 className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-3 px-4">
+            <div className="mt-8 pt-6 border-t border-border-main">
+              <h4 className="text-xs font-medium text-text-muted uppercase tracking-wider mb-3 px-4">
                 Public Pages
               </h4>
               <nav className="space-y-2">
@@ -145,7 +145,7 @@ const MobileMenu = ({ isOpen, onClose, variant, user }) => {
                     key={link.href}
                     to={link.href}
                     onClick={onClose}
-                    className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-lg"
+                    className="block px-4 py-2 text-sm text-text-main hover:bg-sidebar-hover-bg rounded-lg"
                   >
                     {link.label}
                   </Link>
@@ -162,14 +162,14 @@ const MobileMenu = ({ isOpen, onClose, variant, user }) => {
                   key={item.id}
                   to={item.href}
                   onClick={onClose}
-                  className="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-gradient-to-r hover:from-gray-50 hover:to-blue-50 text-gray-600 hover:text-blue-600 hover:font-medium hover:border hover:border-gray-200 transition-all duration-300 w-full text-left"
+                  className="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-sidebar-hover-bg text-text-muted hover:text-blue-600 dark:hover:text-blue-400 hover:font-medium hover:border hover:border-border-main transition-all duration-300 w-full text-left"
                 >
                   {item.icon}
                   <span>{item.label}</span>
                 </Link>
               ))}
             </nav>
-            <div className="mt-8 pt-6 border-t border-gray-200">
+            <div className="mt-8 pt-6 border-t border-border-main">
               <Link
                 to="/register"
                 onClick={onClose}
@@ -180,7 +180,7 @@ const MobileMenu = ({ isOpen, onClose, variant, user }) => {
               <Link
                 to="/login"
                 onClick={onClose}
-                className="block w-full text-center px-4 py-3 border border-gray-300 text-gray-700 rounded-lg font-medium"
+                className="block w-full text-center px-4 py-3 border border-border-main text-text-main hover:bg-sidebar-hover-bg rounded-lg font-medium"
               >
                 Login
               </Link>

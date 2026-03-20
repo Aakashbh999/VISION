@@ -6,7 +6,9 @@ exports.getFeed = async (req, res) => {
       `SELECT af.*, u.full_name AS actor_name
        FROM portal.activity_feed af
        JOIN portal.users u ON u.user_id = af.actor_user_id
-       ORDER BY af.created_at DESC
+       ORDER BY 
+         CASE WHEN af.action_type = 'boost' AND af.created_at > NOW() - INTERVAL '24 hours' THEN 0 ELSE 1 END ASC,
+         af.created_at DESC
        LIMIT 50`,
     );
 

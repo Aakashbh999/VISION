@@ -5,19 +5,19 @@ const actions = [
   {
     label: "Browse Roadmaps",
     icon: BookOpen,
-    href: "/portal/roadmaps",
+    href: "/roadmaps",
     color: "blue",
   },
   {
     label: "Join Discussion",
     icon: MessageCircle,
-    href: "/portal/discussions",
+    href: "/discussions",
     color: "green",
   },
   {
     label: "Explore Clubs",
     icon: Users,
-    href: "/portal/clubs",
+    href: "/clubs",
     color: "purple",
   },
 ];

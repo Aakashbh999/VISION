@@ -1,8 +1,8 @@
-import { useState } from "react";
-import { useMyPosts } from "../../hooks/useMyPosts";
-import { useDeleteDiscussion } from "../../hooks/useDiscussionMutations";
+import { useState, useCallback } from "react";
+import { useMyPosts } from "../../hooks/useDiscussionHooks";
 import { Link } from "react-router-dom";
 import LoadingSpinner from "../../components/ui/LoadingSpinner";
+import DeleteAction from "../../components/DeleteAction";
 import {
   MessageCircle,
   ThumbsUp,
@@ -16,15 +16,6 @@ import Badge from "../../components/ui/Badge";
 const MyPosts = () => {
   const [page, setPage] = useState(1);
   const { data, isLoading, error } = useMyPosts(page, 20);
-  const deleteDiscussionMutation = useDeleteDiscussion();
-
-  const handleDelete = (discussionId, e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    if (window.confirm("Are you sure you want to delete this discussion?")) {
-      deleteDiscussionMutation.mutate(discussionId);
-    }
-  };
 
   if (isLoading) return <LoadingSpinner />;
   if (error)
@@ -38,7 +29,7 @@ const MyPosts = () => {
       {/* Header */}
       <div className="flex items-center gap-4">
         <Link
-          to="/portal/discussions"
+          to="/discussions"
           className="inline-flex items-center gap-1 text-sm text-gray-600 hover:text-blue-600"
         >
           <ChevronLeft className="w-4 h-4" /> Back
@@ -54,7 +45,7 @@ const MyPosts = () => {
               You haven't posted any discussions yet.
             </p>
             <Link
-              to="/portal/discussions/new"
+              to="/discussions/new"
               className="mt-4 inline-block text-blue-600 hover:underline"
             >
               Create your first discussion!
@@ -64,7 +55,7 @@ const MyPosts = () => {
           discussions.map((disc) => (
             <Link
               key={disc.discussion_id}
-              to={`/portal/discussions/${disc.discussion_id}`}
+              to={`/discussions/${disc.discussion_id}`}
               className="block bg-white rounded-xl border border-gray-200 p-5 hover:shadow-md transition-shadow"
             >
               <div className="flex items-start justify-between">
@@ -107,19 +98,20 @@ const MyPosts = () => {
                   <div className="flex items-center gap-2">
                     {disc.can_edit && (
                       <Link
-                        to={`/portal/discussions/${disc.discussion_id}/edit`}
+                        to={`/discussions/${disc.discussion_id}/edit`}
                         onClick={(e) => e.stopPropagation()}
                         className="p-1.5 text-gray-500 hover:text-blue-600 rounded"
                       >
                         <Edit className="w-4 h-4" />
                       </Link>
                     )}
-                    <button
-                      onClick={(e) => handleDelete(disc.discussion_id, e)}
-                      className="p-1.5 text-gray-500 hover:text-red-600 rounded"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
+                    <DeleteAction
+                      targetType="discussion"
+                      targetId={disc.discussion_id}
+                      itemName={disc.title}
+                      buttonClassName="p-1.5 text-gray-500 hover:text-red-600 rounded"
+                      iconClassName="w-4 h-4"
+                    />
                   </div>
                 </div>
               </div>

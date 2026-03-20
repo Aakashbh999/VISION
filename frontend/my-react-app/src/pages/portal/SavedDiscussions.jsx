@@ -1,6 +1,7 @@
-import { useState } from "react";
-import { useSavedDiscussions } from "../../hooks/useSavedDiscussions";
-import { useToggleSave } from "../../hooks/useToggleSave";
+import { useState, useEffect } from "react";
+import { useSavedDiscussions, useToggleSave } from "../../hooks/useDiscussionHooks";
+
+import { useAuth } from "../../context/AuthContext";
 import { Link } from "react-router-dom";
 import LoadingSpinner from "../../components/ui/LoadingSpinner";
 import ButtonLoader from "../../components/ui/ButtonLoader";
@@ -19,8 +20,8 @@ const SavedDiscussions = () => {
       const { toggleSave } = await import("../../services/discussion");
       await toggleSave(discussionId);
       refetch();
-    } catch (err) {
-      console.error("Failed to unsave:", err);
+    } catch (error) {
+      console.error("Failed to unsave:", error);
     } finally {
       setLoadingUnsave(null);
     }
@@ -40,7 +41,7 @@ const SavedDiscussions = () => {
       {/* Header */}
       <div className="flex items-center gap-4">
         <Link
-          to="/portal/discussions"
+          to="/discussions"
           className="inline-flex items-center gap-1 text-sm text-gray-600 hover:text-blue-600"
         >
           <ChevronLeft className="w-4 h-4" /> Back
@@ -61,7 +62,7 @@ const SavedDiscussions = () => {
               Save discussions to read them later!
             </p>
             <Link
-              to="/portal/discussions"
+              to="/discussions"
               className="mt-4 inline-block text-blue-600 hover:underline"
             >
               Browse discussions
@@ -71,7 +72,7 @@ const SavedDiscussions = () => {
           discussions.map((disc) => (
             <Link
               key={disc.discussion_id}
-              to={`/portal/discussions/${disc.discussion_id}`}
+              to={`/discussions/${disc.discussion_id}`}
               className="block bg-white rounded-xl border border-gray-200 p-5 hover:shadow-md transition-shadow"
             >
               <div className="flex items-start justify-between">
