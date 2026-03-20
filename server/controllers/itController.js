@@ -30,7 +30,7 @@ const COLUMNS = {
     "id, slug, role_name, salary_range, market_demand, key_skills, job_summary, description",
 
   it_clubs:
-    "id, slug, club_name, location, institution, specialty, contact_info",
+    "id, slug, club_name, location, institution, specialty, contact_info, logo_url, website_url, facebook_url, linkedin_url, discord_url, github_url, banner_url, founded_year, description_full",
 };
 
 /* ============================================

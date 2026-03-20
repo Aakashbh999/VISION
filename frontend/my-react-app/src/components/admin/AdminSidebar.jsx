@@ -4,7 +4,7 @@ import { useAuth } from "../../context/AuthContext";
 
 const AdminSidebar = () => {
   const location = useLocation();
-  const { logout } = useAuth();
+  const { logout, user } = useAuth();
 
   const navItems = [
     {
@@ -27,6 +27,16 @@ const AdminSidebar = () => {
     },
     { id: "reports", label: "Reports", icon: FileText, href: "/admin/reports" },
   ];
+
+  if (user?.is_moderator || user?.role === "admin") {
+    navItems.splice(2, 0, {
+      id: "pending-resources",
+      label: "Resource Queue",
+      icon: FileText,
+      href: "/admin/resources/pending",
+    });
+  }
+
 
   return (
     <aside className="hidden lg:block fixed left-0 top-16 h-[calc(100vh-4rem)] w-64 bg-white/80 backdrop-blur-sm border-r border-gray-200 px-5 py-8 shadow-sm">

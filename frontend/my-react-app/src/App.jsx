@@ -3,14 +3,15 @@ import {
   Routes,
   Route,
   useLocation,
+  Navigate,
 } from "react-router-dom";
 import { useState } from "react";
 import { useAuth } from "./context/AuthContext";
 import PublicRoute from "./components/PublicRoute";
 import Navbar from "./components/layout/Navbar";
 import Sidebar from "./components/layout/Sidebar";
-import PortalSidebar from "./components/portal/PortalSidebar";
-import AdminSidebar from "./components/admin/AdminSidebar"; // import admin sidebar
+import MainLayout from "./components/layout/MainLayout";
+import AdminSidebar from "./components/admin/AdminSidebar";
 import MobileMenu from "./components/layout/MobileMenu";
 import Footer from "./components/layout/Footer";
 import ITFields from "./pages/ITFields";
@@ -27,7 +28,7 @@ import AdminRoute from "./components/AdminRoute";
 import Dashboard from "./pages/portal/Dashboard";
 import Notifications from "./pages/portal/Notifications";
 import Roadmaps from "./pages/portal/Roadmaps";
-import RoadmapDetail from "./pages/portal/RoadmapDetail";
+import RoadmapView from "./pages/portal/RoadmapView";
 import Discussions from "./pages/portal/Discussions";
 import DiscussionDetail from "./pages/portal/DiscussionDetail";
 import CreateDiscussion from "./pages/portal/CreateDiscussion";
@@ -36,6 +37,7 @@ import MyPosts from "./pages/portal/MyPosts";
 import SavedDiscussions from "./pages/portal/SavedDiscussions";
 import Groups from "./pages/portal/Groups";
 import GroupDetail from "./pages/portal/GroupDetail";
+import GroupProfile from "./pages/portal/GroupProfile";
 import CreateGroup from "./pages/portal/CreateGroup";
 import Clubs from "./pages/portal/Clubs";
 import ClubDetail from "./pages/portal/ClubDetail";
@@ -46,34 +48,91 @@ import AdminDashboard from "./pages/admin/Dashboard";
 import AdminPending from "./pages/admin/PendingStudents";
 import AdminStudents from "./pages/admin/StudentsList";
 import AdminReports from "./pages/admin/Reports";
+import AdminPendingResources from "./pages/admin/PendingResources";
+import ModeratorRoute from "./components/ModeratorRoute";
+import Resources from "./pages/portal/Resources";
+import MyResources from "./pages/portal/MyResources";
+import Profile from "./pages/portal/Profile";
+import PendingAccessMessage from "./components/portal/PendingAccessMessage";
 
-function AppContent() {
+// Route Configurations
+const publicRoutes = [
+  { path: "/", element: <RedirectIfAuthenticated /> },
+  { path: "/it-fields", element: <ITFields /> },
+  { path: "/academic-guide", element: <AcademicGuide /> },
+  { path: "/it-jobs", element: <ITJobs /> },
+  { path: "/it-clubs", element: <ITClubs /> },
+  { path: "/career-paths", element: <CareerPaths /> },
+];
+
+const authRoutes = [
+  { path: "/login", element: <Login /> },
+  { path: "/register", element: <Register /> },
+];
+
+const requireAuthRoutes = [
+  { path: "/verify-email", element: <VerifyEmail /> },
+  { path: "/pending-approval", element: <PendingApproval /> },
+];
+
+const adminRoutes = [
+  { path: "/admin/dashboard", element: <AdminDashboard /> },
+  { path: "/admin/pending", element: <AdminPending /> },
+  { path: "/admin/students", element: <AdminStudents /> },
+  { path: "/admin/reports", element: <AdminReports /> },
+  { path: "/admin", element: <AdminDashboard /> },
+];
+
+const moderatorRoutes = [
+  { path: "/admin/resources/pending", element: <AdminPendingResources /> },
+];
+
+import ManageContent from "./pages/portal/ManageContent";
+
+const portalContentRoutes = [
+  { path: "/dashboard", element: <Dashboard /> },
+  { path: "/notifications", element: <Notifications /> },
+  { path: "/roadmaps", element: <Roadmaps /> },
+  { path: "/roadmaps/:id", element: <RoadmapView /> },
+  { path: "/discussions", element: <Discussions /> },
+  { path: "/discussions/new", element: <CreateDiscussion /> },
+  { path: "/discussions/my-posts", element: <MyPosts /> },
+  { path: "/discussions/saved", element: <SavedDiscussions /> },
+  { path: "/discussions/:id/edit", element: <EditDiscussion /> },
+  { path: "/discussions/:id", element: <DiscussionDetail /> },
+  { path: "/groups", element: <Groups /> },
+  { path: "/groups/new", element: <CreateGroup /> },
+  { path: "/groups/:id", element: <GroupDetail /> },
+  { path: "/groups/:id/profile", element: <GroupProfile /> },
+  { path: "/clubs", element: <Clubs /> },
+  { path: "/clubs/:slug", element: <ClubDetail /> },
+  { path: "/resources", element: <Resources /> },
+  { path: "/resources/my", element: <MyResources /> },
+  { path: "/manage", element: <ManageContent /> },
+  { path: "/profile/:userId", element: <Profile /> },
+];
+
+// Loading spinner component
+const LoadingSpinner = () => (
+  <div className="min-h-screen flex items-center justify-center bg-bg-main">
+    <div className="flex flex-col items-center gap-3">
+      <div className="animate-spin rounded-full h-10 w-10 border-2 border-purple-200 border-t-purple-600"></div>
+      <p className="text-sm text-text-muted">Loading...</p>
+    </div>
+  </div>
+);
+
+// Layout for public/non-portal pages
+function PublicLayout() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const location = useLocation();
-  const { user, isLoading } = useAuth();
-
-  // Show a full-page spinner while checking authentication
-  if (isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-      </div>
-    );
-  }
+  const { user } = useAuth();
 
   const isAdminRoute = location.pathname.startsWith("/admin");
-  const isPortalRoute = location.pathname.startsWith("/portal");
-  const showPortalLayout = !isAdminRoute && user?.student_status === "approved";
-
-  // Determine navbar variant
-  const navbarVariant = isAdminRoute
-    ? "admin"
-    : showPortalLayout
-      ? "portal"
-      : "public";
+  const navbarVariant = isAdminRoute ? "admin" : "public";
 
   return (
-    <div className="min-h-screen flex flex-col bg-gradient-to-br from-gray-50 to-blue-50 text-gray-800">
+    <div className="min-h-screen flex flex-col bg-bg-main text-text-main transition-colors duration-300">
       <Navbar
         onMobileMenuToggle={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
         variant={navbarVariant}
@@ -86,231 +145,117 @@ function AppContent() {
         user={user}
       />
 
-      {/* Main content area – grows to push footer down */}
       <div className="flex-1 flex pt-16">
-        {/* Sidebar conditional */}
         {isAdminRoute && <AdminSidebar />}
-        {!isAdminRoute && showPortalLayout && <PortalSidebar />}
-        {!isAdminRoute && !showPortalLayout && <Sidebar />}
+        {!isAdminRoute && <Sidebar />}
 
-        <main
-          className={`w-full px-4 sm:px-6 lg:px-8 py-6 sm:py-8 lg:py-10 ${
-            // All sidebars are fixed with w-64, so always apply margin on desktop
-            "lg:ml-64"
-          }`}
-        >
+        <main className="w-full px-4 sm:px-6 lg:px-8 py-6 sm:py-8 lg:py-10 lg:ml-64">
           <Routes>
-            {/* Public routes (accessible to everyone) */}
-            <Route path="/" element={<RedirectIfAuthenticated />} />
-            <Route path="/it-fields" element={<ITFields />} />
-            <Route path="/academic-guide" element={<AcademicGuide />} />
-            <Route path="/it-jobs" element={<ITJobs />} />
-            <Route path="/it-clubs" element={<ITClubs />} />
-            <Route path="/career-paths" element={<CareerPaths />} />
+            {/* Public routes */}
+            {publicRoutes.map(({ path, element }) => (
+              <Route key={path} path={path} element={element} />
+            ))}
 
-            {/* Auth routes with PublicRoute protection */}
-            <Route
-              path="/login"
-              element={
-                <PublicRoute>
-                  <Login />
-                </PublicRoute>
-              }
-            />
-            <Route
-              path="/register"
-              element={
-                <PublicRoute>
-                  <Register />
-                </PublicRoute>
-              }
-            />
-            <Route
-              path="/verify-email"
-              element={
-                <RequireAuth>
-                  <VerifyEmail />
-                </RequireAuth>
-              }
-            />
-            <Route
-              path="/pending-approval"
-              element={
-                <RequireAuth>
-                  <PendingApproval />
-                </RequireAuth>
-              }
-            />
+            {/* Auth routes */}
+            <Route element={<PublicRoute />}>
+              {authRoutes.map(({ path, element }) => (
+                <Route key={path} path={path} element={element} />
+              ))}
+            </Route>
 
-            {/* Admin routes (protected by AdminRoute) */}
-            <Route
-              path="/admin/dashboard"
-              element={
-                <AdminRoute>
-                  <AdminDashboard />
-                </AdminRoute>
-              }
-            />
-            <Route
-              path="/admin/pending"
-              element={
-                <AdminRoute>
-                  <AdminPending />
-                </AdminRoute>
-              }
-            />
-            <Route
-              path="/admin/students"
-              element={
-                <AdminRoute>
-                  <AdminStudents />
-                </AdminRoute>
-              }
-            />
-            <Route
-              path="/admin/reports"
-              element={
-                <AdminRoute>
-                  <AdminReports />
-                </AdminRoute>
-              }
-            />
-            <Route
-              path="/admin"
-              element={
-                <AdminRoute>
-                  <AdminDashboard />
-                </AdminRoute>
-              }
-            />
+            {/* Require Auth routes */}
+            <Route element={<RequireAuth />}>
+              {requireAuthRoutes.map(({ path, element }) => (
+                <Route key={path} path={path} element={element} />
+              ))}
+            </Route>
 
-            {/* Protected portal routes */}
-            <Route
-              path="/portal/dashboard"
-              element={
-                <ProtectedRoute>
-                  <Dashboard />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/portal/notifications"
-              element={
-                <ProtectedRoute>
-                  <Notifications />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/portal/roadmaps"
-              element={
-                <ProtectedRoute>
-                  <Roadmaps />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/portal/roadmaps/:id"
-              element={
-                <ProtectedRoute>
-                  <RoadmapDetail />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/portal/discussions"
-              element={
-                <ProtectedRoute>
-                  <Discussions />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/portal/discussions/new"
-              element={
-                <ProtectedRoute>
-                  <CreateDiscussion />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/portal/discussions/my-posts"
-              element={
-                <ProtectedRoute>
-                  <MyPosts />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/portal/discussions/saved"
-              element={
-                <ProtectedRoute>
-                  <SavedDiscussions />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/portal/discussions/:id/edit"
-              element={
-                <ProtectedRoute>
-                  <EditDiscussion />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/portal/discussions/:id"
-              element={
-                <ProtectedRoute>
-                  <DiscussionDetail />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/portal/groups"
-              element={
-                <ProtectedRoute>
-                  <Groups />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/portal/groups/new"
-              element={
-                <ProtectedRoute>
-                  <CreateGroup />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/portal/groups/:id"
-              element={
-                <ProtectedRoute>
-                  <GroupDetail />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/portal/clubs"
-              element={
-                <ProtectedRoute>
-                  <Clubs />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/portal/clubs/:id"
-              element={
-                <ProtectedRoute>
-                  <ClubDetail />
-                </ProtectedRoute>
-              }
-            />
+            {/* Admin routes */}
+            <Route element={<AdminRoute />}>
+              {adminRoutes.map(({ path, element }) => (
+                <Route key={path} path={path} element={element} />
+              ))}
+            </Route>
+
+            {/* Moderator routes */}
+            <Route element={<ModeratorRoute />}>
+              {moderatorRoutes.map(({ path, element }) => (
+                <Route key={path} path={path} element={element} />
+              ))}
+            </Route>
+
+            <Route path="/portal/*" element={<Navigate to="/dashboard" replace />} />
           </Routes>
         </main>
       </div>
-      <Footer />
+      <Footer withSidebarOffset />
     </div>
   );
+}
+
+function AppContent() {
+  const location = useLocation();
+  const { user, isLoading, isAuthenticated } = useAuth();
+
+  if (isLoading) {
+    return <LoadingSpinner />;
+  }
+
+  // Portal paths that should use MainLayout
+  const portalPaths = [
+    "/dashboard",
+    "/notifications",
+    "/roadmaps",
+    "/discussions",
+    "/groups",
+    "/clubs",
+    "/resources",
+    "/manage",
+    "/profile",
+    "/feed",
+  ];
+  
+  const isPortalRoute = portalPaths.some(
+    (p) => location.pathname === p || location.pathname.startsWith(p + "/"),
+  );
+  
+  const isApprovedUser = user?.student_status === "approved";
+  const isPendingUser =
+    isAuthenticated &&
+    user?.email_status === "verified" &&
+    user?.student_status === "pending";
+
+  // Limited portal for pending users - only dashboard and profile
+  if (isPortalRoute && isPendingUser) {
+    return (
+      <Routes>
+        <Route element={<MainLayout />}>
+          <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/profile" element={<Profile />} />
+          <Route path="*" element={<PendingAccessMessage />} />
+        </Route>
+      </Routes>
+    );
+  }
+
+  // Use MainLayout for portal routes when user is approved
+  if (isPortalRoute && isApprovedUser) {
+    return (
+      <Routes>
+        <Route element={<MainLayout />}>
+          <Route element={<ProtectedRoute />}>
+            {portalContentRoutes.map(({ path, element }) => (
+              <Route key={path} path={path} element={element} />
+            ))}
+            <Route path="/profile" element={<Navigate to="/profile/me" replace />} />
+          </Route>
+        </Route>
+      </Routes>
+    );
+  }
+
+  // Use PublicLayout for non-portal routes
+  return <PublicLayout />;
 }
 
 function App() {

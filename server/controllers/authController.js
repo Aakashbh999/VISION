@@ -21,6 +21,7 @@ const {
   AuditStatus,
   logAuthEvent,
 } = require("../utils/auditService");
+const { calculateSemesterFromBatch } = require("../utils/academicUtils");
 
 exports.register = async (req, res) => {
   const {
@@ -31,6 +32,8 @@ exports.register = async (req, res) => {
     campus,
     program_id,
     semester,
+    batch_year,
+    semester_is_manual,
     tu_registration_no,
   } = req.body;
 
@@ -67,6 +70,43 @@ exports.register = async (req, res) => {
     // Hash password with stronger salt rounds
     const hashedPassword = await bcrypt.hash(password, 12);
 
+    const normalizedBatchYear =
+      batch_year === undefined || batch_year === null || batch_year === ""
+        ? null
+        : Number.parseInt(batch_year, 10);
+
+    if (
+      normalizedBatchYear !== null &&
+      (!Number.isFinite(normalizedBatchYear) || normalizedBatchYear < 2000)
+    ) {
+      await client.query("ROLLBACK");
+      return res.status(400).json({ error: "Invalid batch year" });
+    }
+
+    const normalizedManualSemester =
+      semester_is_manual === true || semester_is_manual === "true";
+
+    let normalizedSemester =
+      semester === undefined || semester === null || semester === ""
+        ? null
+        : Number.parseInt(semester, 10);
+
+    if (normalizedSemester !== null && !Number.isFinite(normalizedSemester)) {
+      await client.query("ROLLBACK");
+      return res.status(400).json({ error: "Invalid semester" });
+    }
+
+    if (normalizedBatchYear && !normalizedManualSemester) {
+      normalizedSemester = calculateSemesterFromBatch(normalizedBatchYear);
+    }
+
+    if (!normalizedSemester) {
+      await client.query("ROLLBACK");
+      return res.status(400).json({
+        error: "Semester is required unless it can be derived from batch year.",
+      });
+    }
+
     // Insert into auth.users
     const authInsert = await client.query(
       `INSERT INTO auth.users (email, password_hash)
@@ -80,15 +120,17 @@ exports.register = async (req, res) => {
     // Insert into portal.users
     await client.query(
       `INSERT INTO portal.users
-       (auth_user_id, full_name, university, campus, program_id, semester, tu_registration_no)
-       VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+       (auth_user_id, full_name, university, campus, program_id, semester, batch_year, semester_is_manual, tu_registration_no)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
       [
         authUserId,
         full_name,
         university,
         campus,
         program_id,
-        semester,
+        normalizedSemester,
+        normalizedBatchYear,
+        normalizedManualSemester,
         tu_registration_no,
       ],
     );

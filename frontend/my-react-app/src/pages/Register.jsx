@@ -1,9 +1,10 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { usePrograms } from "../hooks/usePrograms";
 import { register } from "../services/auth";
 import { Mail, Lock, User, School, MapPin, Hash, Upload } from "lucide-react";
 import LoadingSpinner from "../components/ui/LoadingSpinner";
+import { calculateSemesterFromBatch } from "../utils/academic";
 
 const Register = () => {
   const navigate = useNavigate();
@@ -16,7 +17,9 @@ const Register = () => {
     university: "TU",
     campus: "",
     program_id: "",
+    batch_year: "",
     semester: "",
+    semester_is_manual: false,
     tu_registration_no: "",
     // student_id_image is handled separately (file upload)
   });
@@ -26,8 +29,38 @@ const Register = () => {
   const [success, setSuccess] = useState("");
   const [loading, setLoading] = useState(false);
 
+  useEffect(() => {
+    if (formData.semester_is_manual) return;
+
+    const calculatedSemester = calculateSemesterFromBatch(formData.batch_year);
+    if (!calculatedSemester) return;
+
+    setFormData((currentData) => {
+      const nextSemester = String(calculatedSemester);
+      if (currentData.semester === nextSemester) return currentData;
+      return { ...currentData, semester: nextSemester };
+    });
+  }, [formData.batch_year, formData.semester_is_manual]);
+
   const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    const { name, value, type, checked } = e.target;
+
+    if (type === "checkbox") {
+      setFormData((currentData) => ({
+        ...currentData,
+        [name]: checked,
+        semester:
+          name === "semester_is_manual" && !checked && currentData.batch_year
+            ? String(
+                calculateSemesterFromBatch(currentData.batch_year) ||
+                  currentData.semester,
+              )
+            : currentData.semester,
+      }));
+      return;
+    }
+
+    setFormData({ ...formData, [name]: value });
   };
 
   const handleFileChange = (e) => {
@@ -186,7 +219,7 @@ const Register = () => {
             </div>
           </div>
 
-          {/* Program & Semester */}
+          {/* Program, Batch & Semester */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -207,16 +240,51 @@ const Register = () => {
                 ))}
               </select>
             </div>
+
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Current Semester *
+                Batch Year
               </label>
+              <input
+                type="text"
+                name="batch_year"
+                value={formData.batch_year}
+                onChange={(e) =>
+                  setFormData({
+                    ...formData,
+                    batch_year: e.target.value
+                      .replace(/[^0-9]/g, "")
+                      .slice(0, 4),
+                  })
+                }
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                placeholder="2079"
+              />
+            </div>
+
+            <div className="md:col-span-2">
+              <div className="flex items-center justify-between mb-1 gap-4">
+                <label className="block text-sm font-medium text-gray-700">
+                  Current Semester *
+                </label>
+                <label className="inline-flex items-center gap-2 text-sm text-gray-600">
+                  <input
+                    type="checkbox"
+                    name="semester_is_manual"
+                    checked={formData.semester_is_manual}
+                    onChange={handleChange}
+                  />
+                  Override manually
+                </label>
+              </div>
+
               <select
                 name="semester"
                 required
                 value={formData.semester}
                 onChange={handleChange}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                disabled={!formData.semester_is_manual && !!formData.batch_year}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none disabled:opacity-70 disabled:cursor-not-allowed"
               >
                 <option value="">Select</option>
                 {[1, 2, 3, 4, 5, 6, 7, 8].map((s) => (
@@ -225,6 +293,12 @@ const Register = () => {
                   </option>
                 ))}
               </select>
+
+              <p className="text-xs text-gray-500 mt-1">
+                {formData.batch_year && !formData.semester_is_manual
+                  ? `Auto-filled from batch ${formData.batch_year}.`
+                  : "You can still select this manually if your session is delayed."}
+              </p>
             </div>
           </div>
 
@@ -268,7 +342,7 @@ const Register = () => {
           <button
             type="submit"
             disabled={loading}
-            className="w-full py-2.5 px-4 bg-gradient-to-r from-blue-600 to-purple-600 text-white font-medium rounded-lg hover:shadow-lg hover:shadow-blue-500/30 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full py-2.5 px-4 bg-linear-to-r from-blue-600 to-purple-600 text-white font-medium rounded-lg hover:shadow-lg hover:shadow-blue-500/30 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {loading ? "Creating Account..." : "Register"}
           </button>

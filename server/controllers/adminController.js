@@ -180,9 +180,9 @@ exports.deleteDiscussion = async (req, res) => {
     const result = await pool.query(
       `
       UPDATE portal.discussions
-      SET is_deleted = TRUE
+      SET deleted_at = NOW()
       WHERE discussion_id = $1
-      AND is_deleted = FALSE
+      AND deleted_at IS NULL
       RETURNING discussion_id
       `,
       [id],
@@ -357,7 +357,7 @@ exports.getAdminDashboard = async (req, res) => {
 
     const deletedDiscussions = await pool.query(`
       SELECT COUNT(*) FROM portal.discussions
-      WHERE is_deleted = TRUE
+      WHERE deleted_at IS NOT NULL
     `);
 
     res.json({

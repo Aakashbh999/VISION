@@ -2,8 +2,10 @@ const express = require("express");
 const router = express.Router();
 
 const adminController = require("../controllers/adminController");
-const { verifyJWT } = require("../middleware/authMiddleware"); // adjust path if needed
+const resourceController = require("../controllers/resourceController");
+const { verifyJWT } = require("../middleware/authMiddleware");
 const { verifyAdmin } = require("../middleware/adminMiddleware");
+const { verifyModerator } = require("../middleware/moderatorMiddleware");
 
 /* ===============================
    STUDENT MANAGEMENT
@@ -152,4 +154,30 @@ router.post(
   adminController.forceLogoutUser,
 );
 
+/* ===============================
+   RESOURCE MODERATION (admin OR moderator)
+================================ */
+
+router.get(
+  "/admin/resources/pending",
+  verifyJWT,
+  verifyModerator,
+  resourceController.getPendingResources,
+);
+
+router.patch(
+  "/admin/resources/:id/approve",
+  verifyJWT,
+  verifyModerator,
+  resourceController.approveResource,
+);
+
+router.patch(
+  "/admin/resources/:id/reject",
+  verifyJWT,
+  verifyModerator,
+  resourceController.rejectResource,
+);
+
 module.exports = router;
+

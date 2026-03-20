@@ -36,7 +36,8 @@ export const logout = async () => {
     if (refreshToken) {
       await api.post("/auth/logout", { refreshToken });
     }
-  } catch (err) {
+  } catch (error) {
+        console.error(error);
     // Ignore logout API errors
   }
   localStorage.removeItem("token");

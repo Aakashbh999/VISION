@@ -1,4 +1,4 @@
-import { useItClubs } from "../hooks/useItClubs";
+import { useItClubs } from "../hooks/useClubHooks";
 import LoadingSpinner from "../components/ui/LoadingSpinner";
 import Pagination from "../components/ui/Pagination";
 import { MapPin, Users } from "lucide-react";

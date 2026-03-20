@@ -1,14 +1,9 @@
-const express = require("express");
+const express = require('express');
 const router = express.Router();
-const reportController = require("../controllers/reportController");
-const {
-  verifyJWT,
-  requireApprovedStudent,
-} = require("../middleware/authMiddleware");
+const reportController = require('../controllers/reportController');
+const { verifyJWT } = require('../middleware/authMiddleware');
 
-router.post(
-  "/reports",
-  verifyJWT,
-  requireApprovedStudent,
-  reportController.reportContent,
-);
+// Universal reporting route
+router.post('/', verifyJWT, reportController.createReport);
+
+module.exports = router;

@@ -1,4 +1,4 @@
-import { Navigate } from "react-router-dom";
+import { Navigate, Outlet } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import LoadingSpinner from "./ui/LoadingSpinner";
 
@@ -16,7 +16,7 @@ const ProtectedRoute = ({ children }) => {
     return <Navigate to="/pending-approval" replace />;
   }
 
-  return children;
+  return children ? children : <Outlet />;
 };
 
 export default ProtectedRoute;

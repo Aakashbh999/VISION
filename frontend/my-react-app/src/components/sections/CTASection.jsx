@@ -35,8 +35,8 @@ const CTASection = () => {
               <Button
                 as={Link}
                 to="/career-paths"
-                variant="primary"
-                size="large"
+                variant="gradient"
+                size="lg"
                 className="flex items-center justify-center gap-2 shadow-lg"
               >
                 🎓 Discover Career Paths
@@ -44,7 +44,7 @@ const CTASection = () => {
               <Button
                 onClick={() => setShowModal(true)}
                 variant="secondary"
-                size="large"
+                size="lg"
                 className="bg-white/80 backdrop-blur-sm"
               >
                 👥 Join the Community

@@ -45,6 +45,12 @@ const positions = [
   [15, 82],
 ];
 
+// Pre-generate animation parameters to avoid impure functions in render
+const animationParams = positions.map((_, i) => ({
+  duration: 1.5 + Math.random() * 1,
+  delay: i * 0.1 + Math.random() * 0.3,
+}));
+
 const DOT_COUNT = 108;
 const GLOW_RADIUS = 12; // percentage distance
 
@@ -121,8 +127,7 @@ const HeroFireflyIcons = () => {
       {/* IT Icons with heartbeat animation */}
       {icons.map((Icon, i) => {
         const [x, y] = positions[i];
-        const duration = 1.5 + Math.random() * 1;
-        const delay = i * 0.1 + Math.random() * 0.3;
+        const { duration, delay } = animationParams[i];
 
         return (
           <motion.div

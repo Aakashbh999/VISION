@@ -1,8 +1,8 @@
 import api from "./api";
 
-// Get all roadmaps for the student's program
-export const getRoadmaps = async () => {
-  const response = await api.get("/roadmaps");
+// Get all roadmaps with optional filters
+export const getRoadmaps = async (filters = {}) => {
+  const response = await api.get("/roadmaps", { params: filters });
   return response.data;
 };
 
@@ -21,6 +21,12 @@ export const getStepResources = async (id, stepId) => {
 // Mark a step as completed
 export const completeStep = async (stepId) => {
   const response = await api.post(`/roadmaps/steps/${stepId}/complete`);
+  return response.data;
+};
+
+// Get roadmap path (subway map data)
+export const getRoadmapPath = async (id) => {
+  const response = await api.get(`/roadmaps/${id}/path`);
   return response.data;
 };
 

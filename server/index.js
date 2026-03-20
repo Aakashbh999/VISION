@@ -15,10 +15,12 @@ const notificationRoutes = require("./routes/notificationRoutes");
 const feedRoutes = require("./routes/feedRoutes");
 const programRoutes = require("./routes/programRoutes");
 const discussionRoutes = require("./routes/discussionRoutes");
-const clubRoutes = require("./routes/clubRoutes");
 const groupRoutes = require("./routes/groupRoutes");
-const studyGroupRoutes = require("./routes/studyGroupRoutes");
+const resourceRoutes = require("./routes/resourceRoutes");
+const reportRoutes = require("./routes/reportRoutes");
 const marketInsightsRoutes = require("./routes/marketInsightsRoutes");
+const searchRoutes = require("./routes/searchRoutes");
+const profileRoutes = require("./routes/profileRoutes");
 
 const pool = require("./config/db");
 require("dotenv").config();
@@ -97,10 +99,12 @@ app.use("/api/portal/dashboard", dashboardRoutes);
 app.use("/api/notifications", notificationRoutes);
 app.use("/api/feed", feedRoutes);
 app.use("/api/discussions", discussionRoutes);
-app.use("/api/clubs", clubRoutes);
 app.use("/api/groups", groupRoutes);
-app.use("/api/study-groups", studyGroupRoutes);
+app.use("/api/reports", reportRoutes);
+app.use("/api", resourceRoutes);
 app.use("/api/market", marketInsightsRoutes);
+app.use("/api/search", searchRoutes);
+app.use("/api/profile", profileRoutes);
 
 // 🔐 Protected Portal Route
 const {

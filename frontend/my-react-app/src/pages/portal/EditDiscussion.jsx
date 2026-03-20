@@ -1,8 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useParams, Link } from "react-router-dom";
-import { useDiscussion } from "../../hooks/useDiscussion";
-import { useUpdateDiscussion } from "../../hooks/useDiscussionMutations";
-import { useDiscussionTags } from "../../hooks/useDiscussionFilters";
+import { useDiscussion, useUpdateDiscussion, useDiscussionTags } from "../../hooks/useDiscussionHooks";
 import { ChevronLeft, X, Plus, Loader2, AlertTriangle } from "lucide-react";
 import LoadingSpinner from "../../components/ui/LoadingSpinner";
 import api from "../../services/api";
@@ -39,8 +37,8 @@ const EditDiscussion = () => {
         ]);
         setSpecializations(specsRes.data || []);
         setDegrees(degreesRes.data || []);
-      } catch (err) {
-        console.error("Failed to fetch reference data:", err);
+      } catch (error) {
+        console.error("Failed to fetch reference data:", error);
       }
     };
     fetchReferenceData();
@@ -61,18 +59,18 @@ const EditDiscussion = () => {
   }, [data]);
 
   // Check edit window
-  const canEdit =
-    data?.discussion?.created_at &&
-    Date.now() - new Date(data.discussion.created_at).getTime() <
-      24 * 60 * 60 * 1000;
+  const [canEdit, setCanEdit] = useState(false);
+  const [timeRemaining, setTimeRemaining] = useState(0);
 
-  const timeRemaining = data?.discussion?.created_at
-    ? Math.max(
-        0,
-        24 * 60 * 60 * 1000 -
-          (Date.now() - new Date(data.discussion.created_at).getTime()),
-      )
-    : 0;
+  useEffect(() => {
+    if (data?.discussion?.created_at) {
+      const createdTime = new Date(data.discussion.created_at).getTime();
+      const timeDiff = Date.now() - createdTime;
+      const remaining = Math.max(0, 24 * 60 * 60 * 1000 - timeDiff);
+      setCanEdit(timeDiff < 24 * 60 * 60 * 1000);
+      setTimeRemaining(remaining);
+    }
+  }, [data?.discussion?.created_at]);
 
   const hoursRemaining = Math.floor(timeRemaining / (1000 * 60 * 60));
   const minutesRemaining = Math.floor(
@@ -138,7 +136,7 @@ const EditDiscussion = () => {
     };
 
     updateMutation.mutate(submitData, {
-      onSuccess: () => navigate(`/portal/discussions/${id}`),
+      onSuccess: () => navigate(`/discussions/${id}`),
       onError: (err) => {
         setErrors({
           submit: err.response?.data?.error || "Failed to update discussion",
@@ -168,7 +166,7 @@ const EditDiscussion = () => {
             Discussions can only be edited within 24 hours of posting.
           </p>
           <Link
-            to={`/portal/discussions/${id}`}
+            to={`/discussions/${id}`}
             className="inline-block px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
           >
             Back to Discussion
@@ -183,7 +181,7 @@ const EditDiscussion = () => {
       {/* Header */}
       <div className="flex items-center gap-4">
         <Link
-          to={`/portal/discussions/${id}`}
+          to={`/discussions/${id}`}
           className="inline-flex items-center gap-1 text-sm text-gray-600 hover:text-blue-600"
         >
           <ChevronLeft className="w-4 h-4" /> Back
@@ -371,7 +369,7 @@ const EditDiscussion = () => {
         {/* Submit */}
         <div className="flex justify-end gap-3">
           <Link
-            to={`/portal/discussions/${id}`}
+            to={`/discussions/${id}`}
             className="px-6 py-2.5 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50"
           >
             Cancel

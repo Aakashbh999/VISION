@@ -1,5 +1,6 @@
 const jwt = require("jsonwebtoken");
 const pool = require("../config/db");
+const { resolveEffectiveSemester } = require("../utils/academicUtils");
 
 exports.verifyJWT = async (req, res, next) => {
   try {
@@ -17,6 +18,12 @@ exports.verifyJWT = async (req, res, next) => {
          p.user_id,
          p.student_status,
          p.is_suspended,
+         p.is_moderator,
+         p.program_id,
+         p.semester,
+         p.batch_year,
+         p.semester_is_manual,
+         p.academic_degree_id,
          a.email_status,
          a.role
        FROM auth.users a
@@ -29,8 +36,25 @@ exports.verifyJWT = async (req, res, next) => {
       return res.status(401).json({ error: "User not found" });
     }
 
-    const { user_id, student_status, email_status, is_suspended, role } =
-      userData.rows[0];
+    const {
+      user_id,
+      student_status,
+      email_status,
+      is_suspended,
+      role,
+      is_moderator,
+      program_id,
+      semester,
+      batch_year,
+      semester_is_manual,
+      academic_degree_id,
+    } = userData.rows[0];
+
+    const effectiveSemester = resolveEffectiveSemester({
+      semester,
+      batchYear: batch_year,
+      semesterIsManual: semester_is_manual,
+    });
 
     if (is_suspended) {
       return res.status(403).json({
@@ -41,9 +65,15 @@ exports.verifyJWT = async (req, res, next) => {
     req.user = {
       auth_user_id: decoded.auth_user_id,
       role,
+      is_moderator: is_moderator === true,
       portal_user_id: user_id,
       student_status,
       email_status,
+      program_id,
+      batch_year,
+      semester_is_manual,
+      current_semester: effectiveSemester,
+      academic_degree_id,
     };
 
     next();
@@ -87,6 +117,12 @@ exports.optionalJWT = async (req, res, next) => {
          p.user_id,
          p.student_status,
          p.is_suspended,
+         p.is_moderator,
+         p.program_id,
+         p.semester,
+         p.batch_year,
+         p.semester_is_manual,
+         p.academic_degree_id,
          a.email_status,
          a.role
        FROM auth.users a
@@ -100,8 +136,25 @@ exports.optionalJWT = async (req, res, next) => {
       return next();
     }
 
-    const { user_id, student_status, email_status, is_suspended, role } =
-      userData.rows[0];
+    const {
+      user_id,
+      student_status,
+      email_status,
+      is_suspended,
+      role,
+      is_moderator,
+      program_id,
+      semester,
+      batch_year,
+      semester_is_manual,
+      academic_degree_id,
+    } = userData.rows[0];
+
+    const effectiveSemester = resolveEffectiveSemester({
+      semester,
+      batchYear: batch_year,
+      semesterIsManual: semester_is_manual,
+    });
 
     if (is_suspended) {
       req.user = null;
@@ -111,9 +164,15 @@ exports.optionalJWT = async (req, res, next) => {
     req.user = {
       auth_user_id: decoded.auth_user_id,
       role,
+      is_moderator: is_moderator === true,
       portal_user_id: user_id,
       student_status,
       email_status,
+      program_id,
+      batch_year,
+      semester_is_manual,
+      current_semester: effectiveSemester,
+      academic_degree_id,
     };
 
     next();

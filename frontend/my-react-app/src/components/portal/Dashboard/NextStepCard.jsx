@@ -22,7 +22,7 @@ const NextStepCard = ({ step }) => {
       </h3>
       <h4 className="text-lg font-semibold text-gray-900 mb-1">{step.title}</h4>
       <Link
-        to={`/portal/roadmaps/step/${step.step_id}`}
+        to={`/roadmaps/step/${step.step_id}`}
         className="inline-flex items-center gap-1 text-blue-600 text-sm font-medium hover:text-blue-800 mt-3 group"
       >
         Continue Learning

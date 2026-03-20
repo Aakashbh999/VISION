@@ -21,8 +21,8 @@ export const getDiscussions = async (filters = {}) => {
 };
 
 // Get single discussion with comments
-export const getDiscussion = async (id) => {
-  const response = await api.get(`/discussions/${id}`);
+export const getDiscussion = async (id, sort = "newest") => {
+  const response = await api.get(`/discussions/${id}?sort=${sort}`);
   return response.data;
 };
 
@@ -72,16 +72,29 @@ export const updateDiscussion = async (id, data) => {
   return response.data;
 };
 
-// Delete a discussion
+// Delete a discussion (soft delete)
 export const deleteDiscussion = async (id) => {
   const response = await api.delete(`/discussions/${id}`);
   return response.data;
 };
 
+// Permanently delete a discussion (hard delete)
+export const hardDeleteDiscussion = async (id) => {
+  const response = await api.delete(`/discussions/${id}/hard`);
+  return response.data;
+};
+
 // Add a comment
-export const addComment = async (discussionId, content) => {
+export const addComment = async (
+  discussionId,
+  content,
+  parentId = null,
+  website = "",
+) => {
   const response = await api.post(`/discussions/${discussionId}/comments`, {
     content,
+    parentId,
+    website,
   });
   return response.data;
 };
@@ -92,14 +105,57 @@ export const deleteComment = async (commentId) => {
   return response.data;
 };
 
-// Toggle like
-export const toggleLike = async (discussionId) => {
-  const response = await api.post(`/discussions/${discussionId}/like`);
+// Soft delete a comment (user-initiated, records reason)
+export const softDeleteComment = async (commentId, reason) => {
+  const response = await api.post(
+    `/discussions/comments/${commentId}/soft-delete`,
+    {
+      reason,
+    },
+  );
   return response.data;
+};
+
+// Vote (Upvote/Downvote) on a comment
+export const voteComment = async (commentId, voteType) => {
+  const response = await api.post(`/discussions/comments/${commentId}/vote`, {
+    vote_type: voteType,
+  });
+  return response.data;
+};
+
+// Vote (Upvote/Downvote)
+export const voteDiscussion = async (discussionId, voteType) => {
+  // voteType: 1 (Up), -1 (Down), 0 (Neutral/Reset)
+  const response = await api.post(`/discussions/${discussionId}/vote`, {
+    vote_type: voteType,
+  });
+  return response.data;
+};
+
+// Toggle like (Legacy, now uses vote service with type 1)
+export const toggleLike = async (discussionId) => {
+  return voteDiscussion(discussionId, 1);
 };
 
 // Toggle save
 export const toggleSave = async (discussionId) => {
   const response = await api.post(`/discussions/${discussionId}/save`);
+  return response.data;
+};
+
+// Boost a discussion
+export const boostDiscussion = async (discussionId) => {
+  const response = await api.post(`/discussions/${discussionId}/boost`);
+  return response.data;
+};
+
+// Upload discussion image
+export const uploadDiscussionImage = async (file) => {
+  const formData = new FormData();
+  formData.append("file", file);
+  const response = await api.post("/discussions/upload", formData, {
+    headers: { "Content-Type": "multipart/form-data" },
+  });
   return response.data;
 };

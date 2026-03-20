@@ -1,0 +1,72 @@
+import React from "react";
+
+const Avatar = ({
+  src,
+  name,
+  size = "md",
+  status = "online",
+  className = "",
+  variant = "circular",
+}) => {
+  const sizeClasses = {
+    xs: "w-6 h-6 text-[8px]",
+    sm: "w-8 h-8 text-[10px]",
+    md: "w-10 h-10 text-xs",
+    lg: "w-12 h-12 text-sm",
+    xl: "w-16 h-16 text-lg",
+  };
+
+  const statusColors = {
+    online: "bg-emerald-500",
+    away: "bg-amber-500",
+    busy: "bg-rose-500",
+    offline: "bg-text-muted/40",
+  };
+
+  const initials = name
+    ? name
+        .split(" ")
+        .map((n) => n[0])
+        .join("")
+        .toUpperCase()
+        .slice(0, 2)
+    : "??";
+
+  const containerClasses = `
+    relative inline-flex items-center justify-center shrink-0
+    ${variant === "circular" ? "rounded-full" : "rounded-xl"}
+    ${sizeClasses[size]}
+    bg-sidebar-hover-bg border border-border-main overflow-hidden
+    ${className}
+  `;
+
+  return (
+    <div className={containerClasses}>
+      {src ? (
+        <img
+          src={src}
+          alt={name}
+          className="w-full h-full object-cover"
+          loading="lazy"
+        />
+      ) : (
+        <span className="font-black text-text-muted tracking-tighter">
+          {initials}
+        </span>
+      )}
+
+      {status && (
+        <span
+          className={`
+          absolute bottom-0 right-0 
+          block w-[25%] h-[25%] rounded-full 
+          border-2 border-bg-main 
+          ${statusColors[status]}
+        `}
+        />
+      )}
+    </div>
+  );
+};
+
+export default Avatar;

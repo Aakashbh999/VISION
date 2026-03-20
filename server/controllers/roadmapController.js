@@ -1,16 +1,45 @@
 const pool = require("../config/db");
+const XPService = require("../services/xpService");
 
 /* =====================================================
    GET ALL ROADMAPS
 ===================================================== */
 exports.getAllRoadmaps = async (req, res) => {
   try {
-    const result = await pool.query(`
+    const { search } = req.query;
+    let query = `
       SELECT roadmap_id, title, description, difficulty_level
       FROM portal.roadmaps
       WHERE is_active = TRUE
-      ORDER BY roadmap_id
-    `);
+    `;
+    const params = [];
+
+    if (search) {
+      query += ` AND (title % $1 OR description % $1 OR title ILIKE $2 OR description ILIKE $2)`;
+      params.push(search, `%${search}%`);
+    }
+
+    query += ` ORDER BY ${search ? `similarity(title, $1) DESC` : "roadmap_id"}`;
+
+    const result = await pool.query(query, params);
+
+    // If searching and no results found, fetch recommendations
+    if (search && result.rows.length === 0) {
+      const { userSemester, userProgramId, userDegreeId, portal_user_id: userId } = req.user;
+      const recommendationService = require("../services/recommendationService");
+      const recommendations = await recommendationService.getRecommendations(
+        userId,
+        userSemester,
+        userProgramId,
+        userDegreeId,
+        6
+      );
+      return res.json({
+        roadmaps: [],
+        recommendations,
+        noResults: true
+      });
+    }
 
     res.json(result.rows);
   } catch (err) {
@@ -189,6 +218,9 @@ exports.completeStep = async (req, res) => {
       `,
         [portalUserId, stepId],
       );
+
+      // Grant XP
+      await XPService.updateUserXP(portalUserId, 50, 'Roadmap Step Completion', client);
     }
 
     await client.query("COMMIT");
@@ -233,5 +265,76 @@ exports.getRoadmapProgress = async (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Failed to calculate progress" });
+  }
+};
+
+/* =====================================================
+   GET ROADMAP PATH (Subway Map Data)
+   Returns steps with nested approved resources and scores
+===================================================== */
+exports.getRoadmapPath = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const portalUserId = req.user.portal_user_id;
+
+    // Fetch roadmap metadata first
+    const roadmap = await pool.query(
+      `SELECT title, description, difficulty_level FROM portal.roadmaps WHERE roadmap_id = $1`,
+      [id],
+    );
+
+    if (!roadmap.rows.length) {
+      return res.status(404).json({ error: "Roadmap not found" });
+    }
+
+    // Single query for steps + materials + avg_score
+    const result = await pool.query(
+      `
+      SELECT 
+        rs.step_id, 
+        rs.title, 
+        rs.description, 
+        rs.step_order,
+        rs.estimated_time,
+        rs.prerequisite_step_id,
+        COALESCE(urp.is_completed, FALSE) AS is_completed,
+        COALESCE(
+          (
+            SELECT json_agg(
+              json_build_object(
+                'resource_id', r.resource_id,
+                'title', r.title,
+                'url', r.url,
+                'resource_type', r.resource_type,
+                'is_required', srm.is_required,
+                'avg_score', (
+                  SELECT COALESCE(ROUND(AVG(score)::numeric, 1), 0.0) 
+                  FROM portal.resource_scores 
+                  WHERE resource_id = r.resource_id
+                )
+              )
+            )
+            FROM portal.step_resource_map srm
+            JOIN portal.resources r ON r.resource_id = srm.resource_id
+            WHERE srm.step_id = rs.step_id AND r.status = 'approved'
+          ),
+          '[]'
+        ) as resources
+      FROM portal.roadmap_steps rs
+      LEFT JOIN portal.user_roadmap_progress urp
+        ON urp.step_id = rs.step_id AND urp.user_id = $1
+      WHERE rs.roadmap_id = $2
+      ORDER BY rs.step_order ASC
+      `,
+      [portalUserId, id],
+    );
+
+    res.json({
+      roadmap: roadmap.rows[0],
+      steps: result.rows,
+    });
+  } catch (err) {
+    console.error("getRoadmapPath error:", err);
+    res.status(500).json({ error: "Failed to fetch roadmap path" });
   }
 };

@@ -43,7 +43,12 @@ const Dashboard = () => {
       {/* Two-column row: trending discussions & active clubs */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <TrendingDiscussions discussions={dashboard.trending_discussions} />
-        <ActiveClubs clubs={dashboard.active_clubs} />
+        <div className="space-y-6">
+          <ActiveClubs clubs={dashboard.active_clubs} />
+          {dashboard.degree_feed && dashboard.degree_feed.length > 0 && (
+             <TrendingDiscussions discussions={dashboard.degree_feed} title="Recommended for You" />
+          )}
+        </div>
       </div>
 
       {/* Two-column row: notifications & activity feed */}
