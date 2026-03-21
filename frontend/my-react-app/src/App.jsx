@@ -53,6 +53,7 @@ import ModeratorRoute from "./components/ModeratorRoute";
 import Resources from "./pages/portal/Resources";
 import MyResources from "./pages/portal/MyResources";
 import Profile from "./pages/portal/Profile";
+import ManageContent from "./pages/portal/ManageContent";
 import PendingAccessMessage from "./components/portal/PendingAccessMessage";
 
 // Route Configurations
@@ -86,9 +87,6 @@ const adminRoutes = [
 const moderatorRoutes = [
   { path: "/admin/resources/pending", element: <AdminPendingResources /> },
 ];
-
-import ManageContent from "./pages/portal/ManageContent";
-
 const portalContentRoutes = [
   { path: "/dashboard", element: <Dashboard /> },
   { path: "/notifications", element: <Notifications /> },

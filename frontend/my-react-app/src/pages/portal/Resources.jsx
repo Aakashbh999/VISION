@@ -140,7 +140,7 @@ const ResourcesContent = () => {
                 {resourcesData.recommendations?.resources?.map((rec) => (
                   <Link
                     key={rec.id}
-                    to={`/portal/resources?id=${rec.id}`}
+                    to={`/resources?id=${rec.id}`}
                     className="group p-4 bg-slate-50 border border-transparent hover:border-blue-200 hover:bg-white hover:shadow-xl rounded-2xl transition-all duration-300"
                   >
                     <div className="flex items-center gap-4">
