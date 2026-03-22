@@ -43,9 +43,6 @@ const ResourcesContent = () => {
               ? `Browsing materials for Semester ${filters.semester}`
               : "Access notes, books, and projects from across the university."}
           </p>
-          <p className="text-xs text-blue-500 font-bold bg-blue-50 inline-block px-3 py-1 rounded-full border border-blue-100 mt-2">
-            💡 New uploads are reviewed by moderators before appearing here.
-          </p>
         </div>
 
         <button
@@ -178,17 +175,11 @@ const ResourcesContent = () => {
           )}
         </div>
       ) : (
-      <div className="resource-scroll-container custom-scrollbar">
-        <div className="card-grid-mobile animate-in fade-in slide-in-from-bottom-4 duration-500">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
           {resourcesData.data.map((resource) => (
-            <ResourceCard
-              key={resource.resource_id}
-              resource={resource}
-              showStatus={filters.view === "my"}
-            />
+            <ResourceCard key={resource.resource_id} resource={resource} />
           ))}
         </div>
-      </div>
       )}
 
       <ResourceUploadModal

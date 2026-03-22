@@ -19,7 +19,7 @@ exports.getClubs = async (req, res) => {
         c.logo_url,
         c.website_url
       FROM portal.it_clubs c
-      WHERE (c.is_public IS NULL OR c.is_public = 'true' OR c.is_public = true) AND c.deleted_at IS NULL
+      WHERE (c.is_public IS NULL OR c.is_public = 'true' OR c.is_public = true)
     `;
 
     const values = [];
@@ -101,7 +101,7 @@ exports.getClubDetails = async (req, res) => {
         banner_url,
         founded_year
       FROM portal.it_clubs 
-      WHERE id = $1 AND (is_public IS NULL OR is_public = 'true' OR is_public = true) AND deleted_at IS NULL
+      WHERE id = $1 AND (is_public IS NULL OR is_public = 'true' OR is_public = true)
     `;
 
     const result = await pool.query(query, [id]);
@@ -125,7 +125,7 @@ exports.getSpecialties = async (req, res) => {
     const result = await pool.query(`
       SELECT DISTINCT specialty 
       FROM portal.it_clubs 
-      WHERE specialty IS NOT NULL AND deleted_at IS NULL
+      WHERE specialty IS NOT NULL 
       ORDER BY specialty
     `);
     res.json(result.rows.map((r) => r.specialty));

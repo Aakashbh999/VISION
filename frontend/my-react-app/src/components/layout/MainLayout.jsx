@@ -36,7 +36,7 @@ const MainLayoutContent = () => {
       >
         {/* Library/Resources page manages its own padding & height */}
         {isLibraryRoute ? (
-          <div className="min-h-[calc(100vh-4rem)]">
+          <div className="h-[calc(100vh-4rem)]">
             <Outlet />
           </div>
         ) : (
