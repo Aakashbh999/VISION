@@ -1,0 +1,163 @@
+{
+  "columns": [
+    {
+      "column_name": "group_id",
+      "data_type": "integer",
+      "column_default": null
+    },
+    {
+      "column_name": "name",
+      "data_type": "character varying",
+      "column_default": null
+    },
+    {
+      "column_name": "description",
+      "data_type": "text",
+      "column_default": null
+    },
+    {
+      "column_name": "created_by",
+      "data_type": "integer",
+      "column_default": null
+    },
+    {
+      "column_name": "program_id",
+      "data_type": "integer",
+      "column_default": null
+    },
+    {
+      "column_name": "created_at",
+      "data_type": "timestamp with time zone",
+      "column_default": "CURRENT_TIMESTAMP"
+    },
+    {
+      "column_name": "group_image",
+      "data_type": "text",
+      "column_default": null
+    },
+    {
+      "column_name": "group_image_public_id",
+      "data_type": "text",
+      "column_default": null
+    },
+    {
+      "column_name": "banner_image",
+      "data_type": "text",
+      "column_default": null
+    },
+    {
+      "column_name": "banner_image_public_id",
+      "data_type": "text",
+      "column_default": null
+    },
+    {
+      "column_name": "is_public",
+      "data_type": "boolean",
+      "column_default": "false"
+    },
+    {
+      "column_name": "degree_id",
+      "data_type": "integer",
+      "column_default": null
+    },
+    {
+      "column_name": "privacy_type",
+      "data_type": "character varying",
+      "column_default": "'public'::character varying"
+    },
+    {
+      "column_name": "capacity",
+      "data_type": "integer",
+      "column_default": "15"
+    },
+    {
+      "column_name": "invite_token",
+      "data_type": "uuid",
+      "column_default": "gen_random_uuid()"
+    },
+    {
+      "column_name": "last_profile_pic_update",
+      "data_type": "timestamp with time zone",
+      "column_default": null
+    },
+    {
+      "column_name": "last_banner_update",
+      "data_type": "timestamp with time zone",
+      "column_default": null
+    },
+    {
+      "column_name": "free_skips_remaining",
+      "data_type": "integer",
+      "column_default": "3"
+    },
+    {
+      "column_name": "deleted_at",
+      "data_type": "timestamp with time zone",
+      "column_default": null
+    },
+    {
+      "column_name": "deleted_by",
+      "data_type": "integer",
+      "column_default": null
+    },
+    {
+      "column_name": "deletion_reason",
+      "data_type": "text",
+      "column_default": null
+    },
+    {
+      "column_name": "is_hard_deleted",
+      "data_type": "boolean",
+      "column_default": "false"
+    },
+    {
+      "column_name": "tags",
+      "data_type": "ARRAY",
+      "column_default": null
+    }
+  ],
+  "groups": [
+    {
+      "group_id": 10,
+      "name": "hello",
+      "is_public": false,
+      "privacy_type": "request"
+    },
+    {
+      "group_id": 9,
+      "name": "hello",
+      "is_public": false,
+      "privacy_type": "private"
+    },
+    {
+      "group_id": 8,
+      "name": "Smoke Group 1773326418391",
+      "is_public": false,
+      "privacy_type": "public"
+    },
+    {
+      "group_id": 7,
+      "name": "Smoke Group 1773326296529",
+      "is_public": false,
+      "privacy_type": "public"
+    },
+    {
+      "group_id": 6,
+      "name": "Aakash Bhandari",
+      "is_public": false,
+      "privacy_type": "request"
+    },
+    {
+      "group_id": 2,
+      "name": "the_developers",
+      "is_public": false,
+      "privacy_type": "public"
+    },
+    {
+      "group_id": 1,
+      "name": "the_developers",
+      "is_public": false,
+      "privacy_type": "public"
+    }
+  ]
+}

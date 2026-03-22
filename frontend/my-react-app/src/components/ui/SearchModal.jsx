@@ -15,6 +15,7 @@ import {
   Star,
   TrendingUp,
   Sparkles,
+  MessageCircle,
 } from "lucide-react";
 import { getUniversalResults, SEARCH_CATEGORIES } from "../../services/search";
 
@@ -23,6 +24,7 @@ const categoryIcons = {
   [SEARCH_CATEGORIES.ROADMAPS]: Map,
   [SEARCH_CATEGORIES.RESOURCES]: FileText,
   [SEARCH_CATEGORIES.GROUPS]: Users,
+  [SEARCH_CATEGORIES.DISCUSSIONS]: MessageCircle,
 };
 
 // Category order for consistent display
@@ -30,6 +32,7 @@ const categoryOrder = [
   SEARCH_CATEGORIES.ROADMAPS,
   SEARCH_CATEGORIES.RESOURCES,
   SEARCH_CATEGORIES.GROUPS,
+  SEARCH_CATEGORIES.DISCUSSIONS,
 ];
 
 const SearchModal = ({ isOpen, onClose }) => {
@@ -342,13 +345,13 @@ const SearchModal = ({ isOpen, onClose }) => {
                                   {result.description}
                                 </p>
                               )}
-                              {/* Tags for resources */}
-                              {result.tags && result.tags.length > 0 && (
-                                <div className="flex flex-wrap gap-1 mt-1">
-                                  {result.tags.slice(0, 3).map((tag, i) => (
+                              {/* Tags (Universal) */}
+                              {result.tags && result.tags.filter(t => t?.trim()).length > 0 && (
+                                <div className="flex flex-wrap gap-1 mt-1.5">
+                                  {result.tags.filter(t => t?.trim()).slice(0, 3).map((tag, i) => (
                                     <span
                                       key={i}
-                                      className="px-1.5 py-0.5 text-[10px] text-text-muted bg-sidebar-hover-bg rounded"
+                                      className="px-2 py-0.5 text-[11px] font-medium text-purple-600 dark:text-purple-400 rounded-full border border-purple-200 dark:border-purple-800/50 shadow-sm"
                                     >
                                       #{tag}
                                     </span>

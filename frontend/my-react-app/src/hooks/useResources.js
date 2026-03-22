@@ -5,6 +5,6 @@ export const useResources = (filters = {}) => {
   return useQuery({
     queryKey: ["resources", filters],
     queryFn: () => getResources(filters),
-    staleTime: 5 * 60 * 1000,
+    staleTime: 30 * 1000,
   });
 };

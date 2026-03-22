@@ -599,9 +599,10 @@ const DiscussionDetail = () => {
             <div className="flex justify-end mt-2">
               <button
                 type="submit"
-                className="bg-purple-600 text-white px-8 py-3 rounded-xl font-black text-xs uppercase hover:bg-purple-700"
+                disabled={addCommentMutation.isPending || !commentContent.trim()}
+                className="bg-purple-600 text-white px-8 py-3 rounded-xl font-black text-xs uppercase hover:bg-purple-700 disabled:opacity-50 flex items-center justify-center min-w-[140px]"
               >
-                Post Comment
+                {addCommentMutation.isPending ? <ButtonLoader size={16} /> : "Post Comment"}
               </button>
             </div>
           </form>

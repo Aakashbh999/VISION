@@ -13,7 +13,7 @@ const Button = ({
 
   const variants = {
     primary:
-      "bg-slate-900 text-white hover:bg-slate-800 focus:ring-slate-900/10 rounded-xl",
+      "bg-purple-600 text-white hover:bg-purple-700 focus:ring-purple-500/20 rounded-xl font-medium font-body",
     shiny:
       "bg-purple-600 text-white hover:bg-purple-700 shadow-lg shadow-purple-500/20 focus:ring-purple-500/20 rounded-xl",
     secondary:

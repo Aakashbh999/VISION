@@ -164,51 +164,76 @@ const Groups = () => {
           </div>
         </div>
 
-        {/* Dynamic Filters Bar */}
-        <div className="mt-10 flex flex-col md:flex-row gap-4 p-2 bg-slate-100/50 rounded-[2rem] border border-slate-200/50 backdrop-blur-sm">
-          <div className="flex-1">
-            <UniversalSearch
-              placeholder="Search by topic, group name, or mentor..."
-              initialValue={filters.search}
-              onSearch={(val) => setFilters(prev => ({ ...prev, search: val }))}
-              isLoading={isLoading}
-              className="w-full"
-            />
+        {/* Tab Switcher & Dynamic Filters Bar */}
+        <div className="mt-10 space-y-6">
+          <div className="flex bg-slate-100/80 p-1.5 rounded-2xl border border-slate-200 w-fit mx-auto lg:mx-0 shadow-inner">
+            <button
+              onClick={() => setFilters(prev => ({ ...prev, view: 'public' }))}
+              className={`px-8 py-2.5 rounded-xl font-black text-sm transition-all ${
+                filters.view !== 'my'
+                  ? "bg-white text-purple-600 shadow-md"
+                  : "text-slate-500 hover:text-slate-700"
+              }`}
+            >
+              Discover
+            </button>
+            <button
+              onClick={() => setFilters(prev => ({ ...prev, view: 'my' }))}
+              className={`px-8 py-2.5 rounded-xl font-black text-sm transition-all ${
+                filters.view === 'my'
+                  ? "bg-white text-purple-600 shadow-md"
+                  : "text-slate-500 hover:text-slate-700"
+              }`}
+            >
+              My Circles
+            </button>
           </div>
 
-          <div className="flex flex-wrap gap-2">
-            <select
-              value={degree}
-              onChange={(e) => setDegree(e.target.value)}
-              className="bg-white border border-slate-200 rounded-2xl px-6 py-2 text-sm font-black text-slate-600 focus:outline-none focus:ring-4 focus:ring-purple-500/10 appearance-none cursor-pointer hover:border-purple-300 transition-all"
-            >
-              <option value="">All Branches</option>
-              {degrees.map((deg) => (
-                <option key={deg.id} value={deg.id}>
-                  {deg.name}
-                </option>
-              ))}
-            </select>
+          <div className="flex flex-col md:flex-row gap-4 p-2 bg-slate-100/50 rounded-[2rem] border border-slate-200/50 backdrop-blur-sm">
+            <div className="flex-1">
+              <UniversalSearch
+                placeholder="Search by topic, group name, or mentor..."
+                initialValue={filters.search}
+                onSearch={(val) => setFilters(prev => ({ ...prev, search: val }))}
+                isLoading={isLoading}
+                className="w-full"
+              />
+            </div>
 
-            <div className="flex bg-white/80 p-1 rounded-2xl border border-slate-200 shadow-sm">
-              {[
-                { value: "latest", label: "Recent", icon: Sparkles },
-                { value: "active", label: "Hot", icon: TrendingUp },
-                { value: "popular", label: "Massive", icon: Users },
-              ].map(({ value, label, icon: SectionIcon }) => (
-                <button
-                  key={value}
-                  onClick={() => setSort(value)}
-                  className={`flex items-center gap-2 px-5 py-2 text-xs font-black rounded-xl transition-all ${
-                    sort === value
-                      ? "bg-purple-600 text-white shadow-lg shadow-purple-500/30"
-                      : "text-slate-500 hover:text-slate-900 hover:bg-slate-50"
-                  }`}
-                >
-                  {createElement(SectionIcon, { className: "w-3.5 h-3.5" })}{" "}
-                  {label}
-                </button>
-              ))}
+            <div className="flex flex-wrap gap-2">
+              <select
+                value={degree}
+                onChange={(e) => setDegree(e.target.value)}
+                className="bg-white border border-slate-200 rounded-2xl px-6 py-2 text-sm font-black text-slate-600 focus:outline-none focus:ring-4 focus:ring-purple-500/10 appearance-none cursor-pointer hover:border-purple-300 transition-all"
+              >
+                <option value="">All Branches</option>
+                {degrees.map((deg) => (
+                  <option key={deg.id} value={deg.id}>
+                    {deg.name}
+                  </option>
+                ))}
+              </select>
+
+              <div className="flex bg-white/80 p-1 rounded-2xl border border-slate-200 shadow-sm">
+                {[
+                  { value: "latest", label: "Recent", icon: Sparkles },
+                  { value: "active", label: "Hot", icon: TrendingUp },
+                  { value: "popular", label: "Massive", icon: Users },
+                ].map(({ value, label, icon: SectionIcon }) => (
+                  <button
+                    key={value}
+                    onClick={() => setSort(value)}
+                    className={`flex items-center gap-2 px-5 py-2 text-xs font-black rounded-xl transition-all ${
+                      sort === value
+                        ? "bg-purple-600 text-white shadow-lg shadow-purple-500/30"
+                        : "text-slate-500 hover:text-slate-900 hover:bg-slate-50"
+                    }`}
+                  >
+                    {createElement(SectionIcon, { className: "w-3.5 h-3.5" })}{" "}
+                    {label}
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
         </div>

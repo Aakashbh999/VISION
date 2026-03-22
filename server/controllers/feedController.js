@@ -2,6 +2,9 @@ const pool = require("../config/db");
 
 exports.getFeed = async (req, res) => {
   try {
+    const limit = parseInt(req.query.limit, 10) || 50;
+    const finalLimit = Math.min(limit, 100);
+
     const feed = await pool.query(
       `SELECT af.*, u.full_name AS actor_name
        FROM portal.activity_feed af
@@ -9,7 +12,8 @@ exports.getFeed = async (req, res) => {
        ORDER BY 
          CASE WHEN af.action_type = 'boost' AND af.created_at > NOW() - INTERVAL '24 hours' THEN 0 ELSE 1 END ASC,
          af.created_at DESC
-       LIMIT 50`,
+       LIMIT $1`,
+       [finalLimit]
     );
 
     res.json(feed.rows);

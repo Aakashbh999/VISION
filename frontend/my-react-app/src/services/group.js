@@ -1,10 +1,12 @@
 import api from "./api";
 
 // Get all groups with optional filters
-export const getGroups = async ({ search, sort } = {}) => {
+export const getGroups = async ({ search, sort, degree, view } = {}) => {
   const params = new URLSearchParams();
   if (search) params.set("search", search);
   if (sort) params.set("sort", sort);
+  if (degree) params.set("degree", degree);
+  if (view) params.set("view", view);
   const response = await api.get(`/groups?${params.toString()}`);
   return response.data;
 };

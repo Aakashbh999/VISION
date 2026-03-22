@@ -119,6 +119,7 @@ const MyResources = () => {
           </button>
         </div>
       ) : (
+      <div className="resource-scroll-container custom-scrollbar">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
           {filteredResources.map((resource) => (
             <ResourceCard
@@ -129,6 +130,7 @@ const MyResources = () => {
             />
           ))}
         </div>
+      </div>
       )}
     </div>
   );

@@ -326,9 +326,23 @@ const ResourceCard = ({
           <h3 className="font-bold text-gray-900 text-lg mb-2 line-clamp-2 group-hover:text-blue-600 transition-colors">
             {title}
           </h3>
-          <p className="text-gray-600 text-sm mb-4 line-clamp-3 flex-1">
+          <p className="text-gray-600 text-sm mb-3 line-clamp-3">
             {description || "No description provided."}
           </p>
+
+          {/* Tags */}
+          {resource.tags && resource.tags.filter(t => typeof t === "object" ? t?.name?.trim() : t?.trim()).length > 0 && (
+            <div className="flex flex-wrap gap-1.5 mb-4 mt-auto">
+              {resource.tags.filter(t => typeof t === "object" ? t?.name?.trim() : t?.trim()).slice(0, 5).map((tag, i) => (
+                <span
+                  key={i}
+                  className="px-2 py-0.5 text-[11px] font-medium text-purple-600 dark:text-purple-400 rounded-full border border-purple-200 dark:border-purple-800/50 shadow-sm"
+                >
+                  #{typeof tag === "object" ? tag.name : tag}
+                </span>
+              ))}
+            </div>
+          )}
 
           {/* Rejection Reason if any */}
           {status === "rejected" && rejection_reason && (

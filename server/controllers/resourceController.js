@@ -1,6 +1,7 @@
 const pool = require("../config/db");
 const { notify } = require("../utils/activityService");
 const { successResponse, errorResponse } = require("../utils/response");
+const recommendationService = require("../services/recommendationService");
 
 /* ===============================
    UPLOAD RESOURCE (User Contribution)
@@ -77,8 +78,8 @@ exports.uploadResource = async (req, res) => {
     const result = await pool.query(
       `INSERT INTO portal.resources
          (title, description, resource_type, program_id, semester, degree_id, url,
-          file_url, file_public_id, original_filename, status, created_by, created_at, hashtags)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, 'pending', $11, NOW(), $12)
+          file_url, file_public_id, original_filename, status, created_by, created_at)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, 'pending', $11, NOW())
        RETURNING *`,
       [
         title,
@@ -92,9 +93,33 @@ exports.uploadResource = async (req, res) => {
         filePublicId,
         originalFilename,
         userId,
-        mergedHashtags.length > 0 ? mergedHashtags : null,
       ],
     );
+
+    const insertedResource = result.rows[0];
+
+    // Handle relational resource tags
+    if (mergedHashtags.length > 0) {
+      for (const tag of mergedHashtags) {
+        try {
+          // Find or create tag
+          const tagRes = await pool.query(
+            `INSERT INTO portal.tags (name) VALUES ($1) ON CONFLICT (name) DO UPDATE SET name=$1 RETURNING tag_id`,
+            [tag]
+          );
+          if (tagRes.rows.length > 0) {
+            const tagId = tagRes.rows[0].tag_id;
+            // Bridge tag to resource
+            await pool.query(
+              `INSERT INTO portal.resource_tags (resource_id, tag_id) VALUES ($1, $2) ON CONFLICT DO NOTHING`,
+              [insertedResource.resource_id, tagId]
+            );
+          }
+        } catch (tagErr) {
+          console.error("Tag mapping constraint error on Resource upload:", tagErr);
+        }
+      }
+    }
 
     return res.status(201).json({
       success: true,
@@ -134,7 +159,7 @@ exports.getResources = async (req, res) => {
     const offset = (pageNum - 1) * limitNum;
 
     const params = [];
-    const conditions = ["r.status = 'approved'"];
+    const conditions = ["r.status = 'approved'", "r.deleted_at IS NULL"];
 
     if (program_id) {
       params.push(parseInt(program_id));
@@ -173,7 +198,14 @@ exports.getResources = async (req, res) => {
     if (hashtags) {
       const hashtagArray = Array.isArray(hashtags) ? hashtags : [hashtags];
       params.push(hashtagArray);
-      conditions.push(`r.hashtags && $${params.length}`);
+      conditions.push(`
+        EXISTS (
+          SELECT 1 FROM portal.resource_tags rt
+          JOIN portal.tags t ON rt.tag_id = t.tag_id
+          WHERE rt.resource_id = r.resource_id
+          AND t.name = ANY($${params.length})
+        )
+      `);
     }
 
     const whereClause = `WHERE ${conditions.join(" AND ")}`;
@@ -207,13 +239,11 @@ exports.getResources = async (req, res) => {
 
     // If searching and no results found, return recommendations
     if (search && result.rows.length === 0) {
-      const { userSemester, userProgramId, userDegreeId, portal_user_id: userId } = req.user;
-      const recommendationService = require("../services/recommendationService");
       const recommendations = await recommendationService.getRecommendations(
-        userId,
-        userSemester,
-        userProgramId,
-        userDegreeId,
+        req.user?.portal_user_id,
+        req.user?.current_semester,
+        req.user?.program_id,
+        req.user?.academic_degree_id,
         10
       );
       return res.json({
@@ -262,7 +292,7 @@ exports.getMyResources = async (req, res) => {
        FROM portal.resources r
        LEFT JOIN portal.academic_degrees ad ON ad.id = r.degree_id
        LEFT JOIN portal.programs p ON p.program_id = r.program_id
-       WHERE r.created_by = $1
+       WHERE r.created_by = $1 AND r.deleted_at IS NULL
        ORDER BY r.created_at DESC`,
       [userId],
     );
@@ -514,5 +544,114 @@ exports.softDeleteResource = async (req, res) => {
   } catch (err) {
     console.error(err);
     return errorResponse(res, "Failed to delete resource");
+  }
+};
+
+/* ===============================
+   RESTORE RESOURCE (Admin)
+================================ */
+/**
+ * PATCH /api/admin/resources/:id/restore
+ */
+exports.restoreResource = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const adminId = req.user.portal_user_id;
+
+    const result = await pool.query(
+      `UPDATE portal.resources 
+       SET deleted_at = NULL, deleted_by = NULL, deletion_reason = NULL
+       WHERE resource_id = $1 AND deleted_at IS NOT NULL
+       RETURNING resource_id`,
+      [id],
+    );
+
+    if (result.rowCount === 0) {
+      return errorResponse(res, "Resource not found or not deleted", 404);
+    }
+
+    // Log action
+    await pool.query(
+      `INSERT INTO portal.moderation_logs (admin_user_id, action_type, target_type, target_id)
+       VALUES ($1, 'restore', 'resource', $2)`,
+      [adminId, id],
+    );
+
+    return successResponse(res, null, "Resource restored successfully");
+  } catch (err) {
+    console.error("restoreResource error:", err);
+    return errorResponse(res, "Failed to restore resource");
+  }
+};
+
+/* ===============================
+   HARD DELETE RESOURCE (Admin)
+================================ */
+/**
+ * DELETE /api/admin/resources/:id/hard-delete
+ */
+exports.hardDeleteResource = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const adminId = req.user.portal_user_id;
+
+    const result = await pool.query(
+      `DELETE FROM portal.resources WHERE resource_id = $1 RETURNING resource_id`,
+      [id],
+    );
+
+    if (result.rowCount === 0) {
+      return errorResponse(res, "Resource not found", 404);
+    }
+
+    // Log action
+    await pool.query(
+      `INSERT INTO portal.moderation_logs (admin_user_id, action_type, target_type, target_id)
+       VALUES ($1, 'hard_delete', 'resource', $2)`,
+      [adminId, id],
+    );
+
+    return successResponse(res, null, "Resource permanently deleted");
+  } catch (err) {
+    console.error("hardDeleteResource error:", err);
+    return errorResponse(res, "Failed to permanently delete resource");
+  }
+};
+
+/* ===============================
+   SOFT DELETE RESOURCE (Admin)
+================================ */
+/**
+ * PATCH /api/admin/resources/:id/delete
+ */
+exports.adminSoftDeleteResource = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const adminId = req.user.portal_user_id;
+    const { reason } = req.body;
+
+    const result = await pool.query(
+      `UPDATE portal.resources 
+       SET deleted_at = NOW(), deleted_by = $1, deletion_reason = $2
+       WHERE resource_id = $3 AND deleted_at IS NULL
+       RETURNING resource_id`,
+      [adminId, reason || "Admin action", id],
+    );
+
+    if (result.rowCount === 0) {
+      return errorResponse(res, "Resource not found or already deleted", 404);
+    }
+
+    // Log action
+    await pool.query(
+      `INSERT INTO portal.moderation_logs (admin_user_id, action_type, target_type, target_id)
+       VALUES ($1, 'soft_delete', 'resource', $2)`,
+      [adminId, id],
+    );
+
+    return successResponse(res, null, "Resource archived successfully");
+  } catch (err) {
+    console.error("adminSoftDeleteResource error:", err);
+    return errorResponse(res, "Failed to archive resource");
   }
 };

@@ -10,6 +10,7 @@ export const useUploadResource = () => {
     onSuccess: (data) => {
       toast.success(data?.message || "Resource uploaded successfully! It is now pending approval.");
       queryClient.invalidateQueries(["my-resources"]);
+      queryClient.invalidateQueries(["resources"]); 
       // Also invalidate pending resources if the user is a moderator and looking at the queue
       queryClient.invalidateQueries(["pending-resources"]);
     },

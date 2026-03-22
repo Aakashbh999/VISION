@@ -126,7 +126,7 @@ const MobileMenu = ({ isOpen, onClose, variant, user }) => {
                   key={item.id}
                   to={item.href}
                   onClick={onClose}
-                  className="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-sidebar-hover-bg text-text-muted hover:text-blue-600 dark:hover:text-blue-400 hover:font-medium hover:border hover:border-border-main transition-all duration-300 w-full text-left"
+                  className="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-sidebar-hover-bg text-text-muted hover:text-purple-600 dark:hover:text-purple-400 hover:font-medium hover:border hover:border-border-main transition-all duration-300 w-full text-left"
                 >
                   {item.icon}
                   <span>{item.label}</span>
@@ -162,7 +162,7 @@ const MobileMenu = ({ isOpen, onClose, variant, user }) => {
                   key={item.id}
                   to={item.href}
                   onClick={onClose}
-                  className="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-sidebar-hover-bg text-text-muted hover:text-blue-600 dark:hover:text-blue-400 hover:font-medium hover:border hover:border-border-main transition-all duration-300 w-full text-left"
+                  className="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-sidebar-hover-bg text-text-muted hover:text-purple-600 dark:hover:text-purple-400 hover:font-medium hover:border hover:border-border-main transition-all duration-300 w-full text-left"
                 >
                   {item.icon}
                   <span>{item.label}</span>
