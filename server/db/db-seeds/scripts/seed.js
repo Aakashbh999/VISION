@@ -7,7 +7,7 @@ async function ensureTablesExist() {
   console.log("🏗️ Building tables in the cloud...");
   const queries = [
     // 1. IT FIELDS
-    `CREATE TABLE IF NOT EXISTS it_fields (
+    `CREATE TABLE IF NOT EXISTS portal.it_fields (
     id SERIAL PRIMARY KEY,
     slug TEXT UNIQUE,
     field_name TEXT,
@@ -15,11 +15,12 @@ async function ensureTablesExist() {
     description_full TEXT,
     tech_stack_hint TEXT,
     demand_level TEXT,
-    icon_name TEXT
+    icon_name TEXT,
+    is_public BOOLEAN DEFAULT true
   );`,
 
     // 2. ACADEMIC DEGREES
-    `CREATE TABLE IF NOT EXISTS academic_degrees (
+    `CREATE TABLE IF NOT EXISTS portal.academic_degrees (
     id SERIAL PRIMARY KEY,
     slug TEXT UNIQUE,
     degree_code TEXT,
@@ -28,11 +29,12 @@ async function ensureTablesExist() {
     duration TEXT,
     eligibility TEXT,
     focus_area TEXT,
-    admission_process TEXT
+    admission_process TEXT,
+    is_public BOOLEAN DEFAULT true
   );`,
 
     // 3. JOB MARKET INSIGHTS
-    `CREATE TABLE IF NOT EXISTS job_market_insights (
+    `CREATE TABLE IF NOT EXISTS portal.job_market_insights (
     id SERIAL PRIMARY KEY,
     slug TEXT UNIQUE,
     role_name TEXT,
@@ -40,19 +42,27 @@ async function ensureTablesExist() {
     market_demand TEXT,
     key_skills TEXT,
     job_summary TEXT,
-    description TEXT
+    description TEXT,
+    is_public BOOLEAN DEFAULT true
   );`,
 
     // 4. IT CLUBS
-    `CREATE TABLE IF NOT EXISTS it_clubs (
+    `CREATE TABLE IF NOT EXISTS portal.it_clubs (
     id SERIAL PRIMARY KEY,
     slug TEXT UNIQUE,
     club_name TEXT,
     location TEXT,
     institution TEXT,
     specialty TEXT,
-    is_public TEXT, 
+    is_public BOOLEAN DEFAULT true, 
     contact_info TEXT
+  );`,
+
+    // 5. IT CLUB MEMBERS
+    `CREATE TABLE IF NOT EXISTS portal.it_club_members (
+    club_id INTEGER NOT NULL REFERENCES portal.it_clubs(id) ON DELETE CASCADE,
+    user_id INTEGER NOT NULL REFERENCES portal.users(user_id) ON DELETE CASCADE,
+    PRIMARY KEY (club_id, user_id)
   );`,
   ];
   for (let q of queries) {
@@ -108,10 +118,10 @@ async function run() {
     // THIS IS THE MISSING STEP: Create the "rooms" before moving in the "furniture"
     await ensureTablesExist();
 
-    await seedTable("it_fields.csv", "it_fields");
-    await seedTable("academic_degrees.csv", "academic_degrees");
-    await seedTable("job_market_insights.csv", "job_market_insights");
-    await seedTable("it_clubs.csv", "it_clubs");
+    await seedTable("it_fields.csv", "portal.it_fields");
+    await seedTable("academic_degrees.csv", "portal.academic_degrees");
+    await seedTable("job_market_insights.csv", "portal.job_market_insights");
+    await seedTable("it_clubs.csv", "portal.it_clubs");
 
     console.log("⭐ Neon Cloud is now perfectly in sync!");
   } catch (error) {

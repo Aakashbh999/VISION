@@ -8,7 +8,7 @@ const parsePagination = (req) => {
   let limit = parseInt(req.query.limit);
 
   page = page > 0 ? page : 1;
-  limit = limit > 0 && limit <= 50 ? limit : 9; // max limit = 50
+  limit = limit > 0 && limit <= 50 ? limit : 9;
 
   const offset = (page - 1) * limit;
 
@@ -16,32 +16,57 @@ const parsePagination = (req) => {
 };
 
 /* ============================================
-   IT FIELDS
+   Explicit Column Definitions
+   (Never allow SELECT *)
 ============================================ */
-// @desc Get all IT Fields
-// @route GET /api/it-fields?page=1&limit=9
-exports.getItFields = async (req, res) => {
+const COLUMNS = {
+  it_fields:
+    "id, slug, field_name, short_description, description_full, tech_stack_hint, demand_level, icon_name",
+
+  academic_degrees:
+    "id, slug, degree_code, full_name, university, duration, eligibility, focus_area, admission_process",
+
+  job_market_insights:
+    "id, slug, role_name, salary_range, market_demand, key_skills, job_summary, description",
+
+  it_clubs:
+    "id, slug, club_name, location, institution, specialty, contact_info, logo_url, website_url, facebook_url, linkedin_url, discord_url, github_url, banner_url, founded_year, description_full",
+};
+
+/* ============================================
+   Reusable Paginated Fetch Helper
+============================================ */
+const fetchPaginatedData = async (req, res, tableName, orderColumn = "id") => {
   try {
+    // Validate table name
+    if (!COLUMNS[tableName]) {
+      return res.status(400).json({ error: "Invalid table requested" });
+    }
+
     const { page, limit, offset } = parsePagination(req);
+    const columns = COLUMNS[tableName];
 
     const dataQuery = `
-      SELECT *
-      FROM public.it_fields
-      ORDER BY id ASC
+      SELECT ${columns}
+      FROM portal.${tableName}
+      ORDER BY ${orderColumn} ASC
       LIMIT $1 OFFSET $2
     `;
 
     const countQuery = `
-      SELECT COUNT(*) FROM public.it_fields
+      SELECT COUNT(*)
+      FROM portal.${tableName}
     `;
 
-    const data = await pool.query(dataQuery, [limit, offset]);
-    const totalResult = await pool.query(countQuery);
+    const [dataResult, countResult] = await Promise.all([
+      pool.query(dataQuery, [limit, offset]),
+      pool.query(countQuery),
+    ]);
 
-    const total = parseInt(totalResult.rows[0].count);
+    const total = parseInt(countResult.rows[0].count);
 
-    res.json({
-      data: data.rows,
+    return res.json({
+      data: dataResult.rows,
       pagination: {
         page,
         limit,
@@ -50,127 +75,87 @@ exports.getItFields = async (req, res) => {
       },
     });
   } catch (error) {
-    console.error("Error fetching IT fields:", error);
-    res.status(500).json({ error: "Failed to fetch IT fields" });
+    console.error(`Error fetching ${tableName}:`, error);
+    return res
+      .status(500)
+      .json({ error: `Failed to fetch ${tableName.replace(/_/g, " ")}` });
   }
 };
+
+/* ============================================
+   Reusable Slug-Based Fetch Helper
+============================================ */
+const fetchBySlug = async (req, res, tableName, labelName) => {
+  try {
+    if (!COLUMNS[tableName]) {
+      return res.status(400).json({ error: "Invalid table requested" });
+    }
+
+    const { slug } = req.params;
+    const columns = COLUMNS[tableName];
+
+    const query = `
+      SELECT ${columns}
+      FROM portal.${tableName}
+      WHERE slug = $1
+      LIMIT 1
+    `;
+
+    const result = await pool.query(query, [slug]);
+
+    if (!result.rows.length) {
+      return res.status(404).json({ error: `${labelName} not found` });
+    }
+
+    return res.json(result.rows[0]);
+  } catch (error) {
+    console.error(`Error fetching ${tableName} by slug:`, error);
+    return res.status(500).json({ error: `Failed to fetch ${labelName}` });
+  }
+};
+
+/* ============================================
+   IT FIELDS
+============================================ */
+
+// GET /api/it-fields?page=1&limit=9
+exports.getItFields = (req, res) => fetchPaginatedData(req, res, "it_fields");
+
+// GET /api/it-fields/:slug
+exports.getItFieldBySlug = (req, res) =>
+  fetchBySlug(req, res, "it_fields", "IT Field");
 
 /* ============================================
    ACADEMIC DEGREES
 ============================================ */
-// @desc Get all Academic Degrees
-// @route GET /api/degrees?page=1&limit=9
-exports.getDegrees = async (req, res) => {
-  try {
-    const { page, limit, offset } = parsePagination(req);
 
-    const dataQuery = `
-      SELECT *
-      FROM public.academic_degrees
-      ORDER BY id ASC
-      LIMIT $1 OFFSET $2
-    `;
+// GET /api/academic-degrees?page=1&limit=9
+exports.getDegrees = (req, res) =>
+  fetchPaginatedData(req, res, "academic_degrees");
 
-    const countQuery = `
-      SELECT COUNT(*) FROM public.academic_degrees
-    `;
-
-    const data = await pool.query(dataQuery, [limit, offset]);
-    const totalResult = await pool.query(countQuery);
-
-    const total = parseInt(totalResult.rows[0].count);
-
-    res.json({
-      data: data.rows,
-      pagination: {
-        page,
-        limit,
-        total,
-        totalPages: Math.ceil(total / limit),
-      },
-    });
-  } catch (error) {
-    console.error("Error fetching degrees:", error);
-    res.status(500).json({ error: "Failed to fetch academic degrees" });
-  }
-};
+// GET /api/academic-degrees/:slug
+exports.getDegreeBySlug = (req, res) =>
+  fetchBySlug(req, res, "academic_degrees", "Academic Degree");
 
 /* ============================================
    JOB MARKET
 ============================================ */
-// @desc Get all Job Market Insights
-// @route GET /api/job-market?page=1&limit=9
-exports.getJobMarket = async (req, res) => {
-  try {
-    const { page, limit, offset } = parsePagination(req);
 
-    const dataQuery = `
-      SELECT *
-      FROM public.job_market_insights
-      ORDER BY id ASC
-      LIMIT $1 OFFSET $2
-    `;
+// GET /api/job-market?page=1&limit=9
+exports.getJobMarket = (req, res) =>
+  fetchPaginatedData(req, res, "job_market_insights");
 
-    const countQuery = `
-      SELECT COUNT(*) FROM public.job_market_insights
-    `;
-
-    const data = await pool.query(dataQuery, [limit, offset]);
-    const totalResult = await pool.query(countQuery);
-
-    const total = parseInt(totalResult.rows[0].count);
-
-    res.json({
-      data: data.rows,
-      pagination: {
-        page,
-        limit,
-        total,
-        totalPages: Math.ceil(total / limit),
-      },
-    });
-  } catch (error) {
-    console.error("Error fetching job market data:", error);
-    res.status(500).json({ error: "Failed to fetch job market data" });
-  }
-};
+// GET /api/job-market/:slug
+exports.getJobMarketBySlug = (req, res) =>
+  fetchBySlug(req, res, "job_market_insights", "Job Market Insight");
 
 /* ============================================
    IT CLUBS
 ============================================ */
-// @desc Get all IT Clubs
-// @route GET /api/it-clubs?page=1&limit=9
-exports.getItClubs = async (req, res) => {
-  try {
-    const { page, limit, offset } = parsePagination(req);
 
-    const dataQuery = `
-      SELECT *
-      FROM public.it_clubs
-      ORDER BY id ASC
-      LIMIT $1 OFFSET $2
-    `;
+// GET /api/it-clubs?page=1&limit=9
+exports.getItClubs = (req, res) => fetchPaginatedData(req, res, "it_clubs");
 
-    const countQuery = `
-      SELECT COUNT(*) FROM public.it_clubs
-    `;
-
-    const data = await pool.query(dataQuery, [limit, offset]);
-    const totalResult = await pool.query(countQuery);
-
-    const total = parseInt(totalResult.rows[0].count);
-
-    res.json({
-      data: data.rows,
-      pagination: {
-        page,
-        limit,
-        total,
-        totalPages: Math.ceil(total / limit),
-      },
-    });
-  } catch (error) {
-    console.error("Error fetching IT clubs:", error);
-    res.status(500).json({ error: "Failed to fetch IT clubs" });
-  }
-};
+// GET /api/it-clubs/:slug
+exports.getItClubBySlug = (req, res) =>
+  fetchBySlug(req, res, "it_clubs", "IT Club");

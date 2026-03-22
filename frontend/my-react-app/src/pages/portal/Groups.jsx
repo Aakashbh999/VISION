@@ -1,69 +1,422 @@
-import { useGroups } from "../../hooks/useGroups";
-import { Link } from "react-router-dom";
+import { useState, useEffect, createElement } from "react";
+import { useGroups } from "../../hooks/useGroupHooks";
+import { Link, useSearchParams, useNavigate } from "react-router-dom";
 import LoadingSpinner from "../../components/ui/LoadingSpinner";
-import { Users, Plus } from "lucide-react";
+import { useUserStats } from "../../hooks/useUserStats";
+import {
+  Users,
+  Plus,
+  Search,
+  Sparkles,
+  Clock,
+  TrendingUp,
+  Check,
+  Zap,
+  Lock,
+  ArrowRight,
+  ShieldAlert,
+  EyeOff,
+} from "lucide-react";
+// eslint-disable-next-line no-unused-vars
+import { motion, AnimatePresence } from "framer-motion";
+import api from "../../services/api";
+import { toast } from "react-toastify";
+import UniversalSearch from "../../components/ui/UniversalSearch";
 
 const Groups = () => {
-  const { data: groups, isLoading, error } = useGroups();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [sort, setSort] = useState(searchParams.get("sort") || "latest");
+  const [degree, setDegree] = useState(searchParams.get("degree") || "");
+  const [filters, setFilters] = useState({
+    search: searchParams.get("search") || "",
+    sort: searchParams.get("sort") || "latest",
+    degree: searchParams.get("degree") || "",
+  });
+  const [degrees, setDegrees] = useState([]);
+  const navigate = useNavigate();
+  const { data: stats } = useUserStats();
 
-  if (isLoading) return <LoadingSpinner />;
-  if (error)
-    return <div className="p-8 text-red-500">Failed to load groups</div>;
+  const userXP = stats?.total_xp || 0;
+  const canCreateGroup = userXP >= 500;
+
+  useEffect(() => {
+    const fetchDegrees = async () => {
+      try {
+        const res = await api.get("/discussions/degrees");
+        setDegrees(res.data || []);
+      } catch (error) {
+        console.error("Failed to fetch degrees:", error);
+      }
+    };
+    fetchDegrees();
+  }, []);
+
+  // Update URL params efficiently
+
+  useEffect(() => {
+    const params = new URLSearchParams();
+    if (filters.search) params.set("search", filters.search);
+    if (filters.sort !== "latest") params.set("sort", filters.sort);
+    if (filters.degree) params.set("degree", filters.degree);
+    setSearchParams(params);
+  }, [filters, setSearchParams]);
+
+  const {
+    data,
+    isLoading,
+    error,
+  } = useGroups(filters);
+
+  // Extract groups from possibly structured response (fallback case)
+  const groupsList = Array.isArray(data) ? data : (data?.groups || []);
+
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.1,
+      },
+    },
+  };
+
+  const itemVariants = {
+    hidden: { y: 20, opacity: 0 },
+    visible: {
+      y: 0,
+      opacity: 1,
+      transition: {
+        type: "spring",
+        stiffness: 100,
+        damping: 15,
+      },
+    },
+  };
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">
-            Learning Groups
-          </h1>
-          <p className="text-gray-600 mt-1">
-            Join groups to collaborate and learn together.
-          </p>
+    <div className="max-w-6xl mx-auto space-y-8 pb-20 px-4">
+      {/* Premium Header Section */}
+      <div className="relative overflow-hidden bg-white/40 backdrop-blur-xl border border-white/40 rounded-3xl p-8 shadow-2xl shadow-purple-500/5">
+        <div className="absolute top-0 right-0 -mr-20 -mt-20 w-64 h-64 bg-purple-500/10 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute bottom-0 left-0 -ml-20 -mb-20 w-64 h-64 bg-blue-500/10 rounded-full blur-3xl pointer-events-none" />
+
+        <div className="relative flex flex-col lg:flex-row lg:items-center justify-between gap-8">
+          <div className="space-y-2">
+            <motion.h1
+              initial={{ x: -20, opacity: 0 }}
+              animate={{ x: 0, opacity: 1 }}
+              className="text-4xl font-black text-slate-900 tracking-tight flex items-center gap-3"
+            >
+              <div className="p-3 bg-purple-600 rounded-2xl shadow-lg shadow-purple-500/30">
+                <Users className="w-8 h-8 text-white" />
+              </div>
+              Learning Circles
+            </motion.h1>
+            <p className="text-slate-500 font-medium text-lg ml-1">
+              Connect, collaborate, and conquer complex topics together.
+            </p>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-4">
+            <div
+              className={`flex items-center gap-2 px-4 py-2.5 rounded-2xl border text-sm font-black transition-all ${
+                canCreateGroup
+                  ? "bg-emerald-50 border-emerald-100 text-emerald-700 shadow-sm shadow-emerald-500/10"
+                  : "bg-amber-50 border-amber-100 text-amber-700"
+              }`}
+            >
+              <Zap
+                className={`w-4 h-4 ${canCreateGroup ? "fill-emerald-500" : "fill-amber-500"}`}
+              />
+              {canCreateGroup
+                ? "Creative Master Unlocked"
+                : `${500 - userXP} VXP to Unlock Creator`}
+            </div>
+
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              onClick={() => {
+                if (canCreateGroup) {
+                  navigate("/groups/new");
+                } else {
+                  toast.error(
+                    `Unlock the Labyrinth Master badge first! (${userXP}/500 VXP)`,
+                  );
+                }
+              }}
+              className={`group px-8 py-3.5 font-black rounded-2xl transition-all flex items-center justify-center gap-2 shadow-xl shrink-0 ${
+                canCreateGroup
+                  ? "bg-[#7c3aed] text-white hover:bg-purple-700 shadow-purple-500/40 relative overflow-hidden"
+                  : "bg-slate-100 text-slate-400 cursor-not-allowed border border-slate-200"
+              }`}
+            >
+              {canCreateGroup && (
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
+              )}
+              {canCreateGroup ? (
+                <Plus className="w-5 h-5" />
+              ) : (
+                <Lock className="w-5 h-5" />
+              )}
+              Start a Circle
+            </motion.button>
+          </div>
         </div>
-        <Link
-          to="/portal/groups/new"
-          className="px-5 py-2.5 bg-gradient-to-r from-blue-600 to-purple-600 text-white font-medium rounded-lg hover:shadow-lg transition-all duration-300 flex items-center justify-center gap-2"
-        >
-          <Plus className="w-5 h-5" /> New Group
-        </Link>
+
+        {/* Tab Switcher & Dynamic Filters Bar */}
+        <div className="mt-10 space-y-6">
+          <div className="flex bg-slate-100/80 p-1.5 rounded-2xl border border-slate-200 w-fit mx-auto lg:mx-0 shadow-inner">
+            <button
+              onClick={() => setFilters(prev => ({ ...prev, view: 'public' }))}
+              className={`px-8 py-2.5 rounded-xl font-black text-sm transition-all ${
+                filters.view !== 'my'
+                  ? "bg-white text-purple-600 shadow-md"
+                  : "text-slate-500 hover:text-slate-700"
+              }`}
+            >
+              Discover
+            </button>
+            <button
+              onClick={() => setFilters(prev => ({ ...prev, view: 'my' }))}
+              className={`px-8 py-2.5 rounded-xl font-black text-sm transition-all ${
+                filters.view === 'my'
+                  ? "bg-white text-purple-600 shadow-md"
+                  : "text-slate-500 hover:text-slate-700"
+              }`}
+            >
+              My Circles
+            </button>
+          </div>
+
+          <div className="flex flex-col md:flex-row gap-4 p-2 bg-slate-100/50 rounded-[2rem] border border-slate-200/50 backdrop-blur-sm">
+            <div className="flex-1">
+              <UniversalSearch
+                placeholder="Search by topic, group name, or mentor..."
+                initialValue={filters.search}
+                onSearch={(val) => setFilters(prev => ({ ...prev, search: val }))}
+                isLoading={isLoading}
+                className="w-full"
+              />
+            </div>
+
+            <div className="flex flex-wrap gap-2">
+              <select
+                value={degree}
+                onChange={(e) => setDegree(e.target.value)}
+                className="bg-white border border-slate-200 rounded-2xl px-6 py-2 text-sm font-black text-slate-600 focus:outline-none focus:ring-4 focus:ring-purple-500/10 appearance-none cursor-pointer hover:border-purple-300 transition-all"
+              >
+                <option value="">All Branches</option>
+                {degrees.map((deg) => (
+                  <option key={deg.id} value={deg.id}>
+                    {deg.name}
+                  </option>
+                ))}
+              </select>
+
+              <div className="flex bg-white/80 p-1 rounded-2xl border border-slate-200 shadow-sm">
+                {[
+                  { value: "latest", label: "Recent", icon: Sparkles },
+                  { value: "active", label: "Hot", icon: TrendingUp },
+                  { value: "popular", label: "Massive", icon: Users },
+                ].map(({ value, label, icon: SectionIcon }) => (
+                  <button
+                    key={value}
+                    onClick={() => setSort(value)}
+                    className={`flex items-center gap-2 px-5 py-2 text-xs font-black rounded-xl transition-all ${
+                      sort === value
+                        ? "bg-purple-600 text-white shadow-lg shadow-purple-500/30"
+                        : "text-slate-500 hover:text-slate-900 hover:bg-slate-50"
+                    }`}
+                  >
+                    {createElement(SectionIcon, { className: "w-3.5 h-3.5" })}{" "}
+                    {label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {groups?.length === 0 ? (
-          <p className="text-gray-500 col-span-full text-center py-12">
-            No groups yet. Create the first one!
-          </p>
-        ) : (
-          groups?.map((group) => (
-            <Link
-              key={group.group_id}
-              to={`/portal/groups/${group.group_id}`}
-              className="bg-white rounded-2xl border border-gray-200 p-6 hover:shadow-xl hover:-translate-y-1 transition-all duration-300"
+      {/* Modern Grid Layout */}
+      <div className="min-h-[400px]">
+        {isLoading ? (
+          <div className="flex flex-col items-center justify-center py-24">
+            <LoadingSpinner />
+            <p className="text-slate-400 font-bold mt-4 uppercase tracking-widest text-xs">Summoning Circles...</p>
+          </div>
+        ) : error ? (
+           <div className="bg-rose-50 border border-rose-100 text-rose-600 p-12 rounded-[2.5rem] text-center font-bold">
+            Failed to load circles. Please try again.
+          </div>
+        ) : groupsList.length === 0 ? (
+          <motion.div
+            variants={containerVariants}
+            initial="hidden"
+            animate="visible"
+            className="grid grid-cols-1"
+          >
+            <motion.div
+              variants={itemVariants}
+              className="bg-white/60 backdrop-blur-xl border border-slate-200/50 rounded-[3rem] p-24 text-center shadow-inner"
             >
-              <div className="flex items-start gap-4">
-                <div className="w-12 h-12 rounded-xl bg-blue-50 flex items-center justify-center text-blue-600">
-                  <Users className="w-6 h-6" />
-                </div>
-                <div className="flex-1">
-                  <h2 className="text-lg font-semibold text-gray-900">
-                    {group.name}
-                  </h2>
-                  <p className="text-sm text-gray-600 mt-1 line-clamp-2">
-                    {group.description}
-                  </p>
-                  <div className="flex items-center justify-between mt-3">
-                    <span className="text-xs text-gray-500">
-                      Created by {group.creator}
-                    </span>
-                    <span className="text-xs bg-gray-100 px-2 py-1 rounded-full text-gray-700">
-                      {group.members} members
-                    </span>
+              {data?.noResults ? (
+                <div className="max-w-2xl mx-auto space-y-10 px-4 text-left">
+                  <div className="w-24 h-24 bg-indigo-50 rounded-full flex items-center justify-center mx-auto shadow-sm">
+                      <Search className="w-10 h-10 text-indigo-400" />
+                  </div>
+                  <div className="space-y-3 text-center">
+                      <h3 className="text-3xl font-black text-slate-900 tracking-tight uppercase">
+                          No matches for "{filters.search}"
+                      </h3>
+                      <p className="text-slate-500 font-bold text-lg">
+                          We couldn't find exactly that, but these growing circles might be perfect for you:
+                      </p>
+                  </div>
+                  
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      {data.recommendations?.groups?.map(rec => (
+                          <Link 
+                              key={rec.id}
+                              to={`/groups/${rec.id}`}
+                              className="group p-6 bg-white border border-slate-100 rounded-3xl hover:border-indigo-200 hover:shadow-2xl transition-all duration-300 flex items-center gap-5"
+                          >
+                              <div className="w-14 h-14 rounded-2xl bg-slate-50 flex items-center justify-center text-indigo-600 font-black text-xl shrink-0 group-hover:scale-110 transition-transform">
+                                  {rec.group_image ? <img src={rec.group_image} className="w-full h-full object-cover rounded-2xl" /> : rec.name.charAt(0)}
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                  <div className="font-black text-slate-800 truncate group-hover:text-indigo-600 transition-colors uppercase tracking-tight text-sm">{rec.name}</div>
+                                  <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1 flex items-center gap-1.5">
+                                      <Users className="w-3 h-3" /> {rec.member_count} Members
+                                  </div>
+                              </div>
+                          </Link>
+                      ))}
                   </div>
                 </div>
-              </div>
-            </Link>
-          ))
+              ) : (
+                <div className="text-center">
+                  <div className="w-24 h-24 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                    <Users className="w-10 h-10 text-slate-300" />
+                  </div>
+                  <h3 className="text-2xl font-black text-slate-900 mb-2">
+                    No Circles Found
+                  </h3>
+                  <p className="text-slate-500 max-w-xs mx-auto">
+                    {filters.search
+                      ? "Try adjusting your filters or search terms."
+                      : "The labyrinth is empty. Be the first to start a circle."}
+                  </p>
+                </div>
+              )}
+            </motion.div>
+          </motion.div>
+        ) : (
+          <motion.div
+            variants={containerVariants}
+            initial="hidden"
+            animate="visible"
+            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
+          >
+            {groupsList.map((group) => {
+              const groupId = group.group_id ?? group.id;
+
+              return (
+                <motion.div
+                  key={groupId}
+                  variants={itemVariants}
+                  whileHover={{ y: -8 }}
+                  className="group"
+                >
+                  <Link
+                    to={`/groups/${groupId}`}
+                    className="relative block h-full bg-white/70 backdrop-blur-xl border border-slate-200/60 rounded-[2.5rem] overflow-hidden hover:shadow-[0_32px_64px_-16px_rgba(124,58,237,0.12)] hover:border-purple-300 transition-all duration-500 flex flex-col group shadow-sm"
+                  >
+                    <div className="h-28 relative overflow-hidden bg-slate-600">
+                      <div className="absolute inset-0 opacity-40 bg-[radial-gradient(at_top_right,rgba(124,58,237,0.8),transparent_50%),radial-gradient(at_bottom_left,rgba(59,130,246,0.8),transparent_50%)] animate-pulse-slow" />
+                      {group.banner_image && (
+                        <img
+                          src={group.banner_image}
+                          alt=""
+                          className="w-full h-full object-cover mix-blend-overlay opacity-60 group-hover:scale-110 transition-transform duration-700"
+                        />
+                      )}
+                      <div className="absolute top-4 right-4 z-10 flex flex-col gap-2 items-end">
+                        {group.is_member && (
+                          <span className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-500/90 backdrop-blur-md text-white text-[10px] font-black uppercase tracking-widest rounded-full shadow-lg border border-white/20">
+                            <Check className="w-3 h-3" /> Engaged
+                          </span>
+                        )}
+                        {group.privacy_type === "request" && (
+                          <span className="flex items-center gap-1.5 px-3 py-1.5 bg-amber-500/90 backdrop-blur-md text-white text-[10px] font-black uppercase tracking-widest rounded-full shadow-lg border border-white/20">
+                            <ShieldAlert className="w-3 h-3" /> Request
+                          </span>
+                        )}
+                        {group.privacy_type === "private" && (
+                          <span className="flex items-center gap-1.5 px-3 py-1.5 bg-rose-500/90 backdrop-blur-md text-white text-[10px] font-black uppercase tracking-widest rounded-full shadow-lg border border-white/20">
+                            <EyeOff className="w-3 h-3" /> Hidden
+                          </span>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="px-6 pb-6 -mt-10 relative flex-1 flex flex-col">
+                      <div className="w-20 h-20 rounded-full bg-white p-1 shadow-2xl shadow-purple-500/20 mb-4 group-hover:rotate-6 transition-transform">
+                        <div className="w-full h-full rounded-full bg-purple-50 border-2 border-purple-100 flex items-center justify-center text-purple-600 font-black text-2xl overflow-hidden shadow-inner">
+                          {group.group_image ? (
+                            <img
+                              src={group.group_image}
+                              alt=""
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            group.name?.charAt(0).toUpperCase()
+                          )}
+                        </div>
+                      </div>
+
+                      <div className="space-y-1 mb-4">
+                        <h2 className="text-xl font-black text-slate-900 group-hover:text-purple-600 transition-colors leading-snug">
+                          {group.name}
+                        </h2>
+                        <p className="text-sm text-slate-500 line-clamp-2 font-medium leading-relaxed">
+                          {group.description ||
+                            "Synthesizing collective knowledge through structured collaboration."}
+                        </p>
+                      </div>
+
+                      <div className="mt-auto pt-6 border-t border-slate-100 flex items-center justify-between">
+                        <div className="flex items-center">
+                          <div className="flex -space-x-3 overflow-hidden">
+                            {[...Array(Math.min(3, group.members || 0))].map(
+                              (_, i) => (
+                                <div
+                                  key={i}
+                                  className="inline-block h-8 w-8 rounded-full ring-2 ring-white bg-slate-100 border border-slate-200 flex items-center justify-center text-[10px] font-black text-slate-400"
+                                >
+                                  {String.fromCharCode(65 + i)}
+                                </div>
+                              ),
+                            )}
+                          </div>
+                          <span className="ml-3 text-xs font-black text-slate-400 uppercase tracking-tight">
+                            {group.members > 3
+                              ? `+${group.members - 3} collaborators`
+                              : `${group.members} active`}
+                          </span>
+                        </div>
+
+                        <div className="w-10 h-10 rounded-2xl bg-slate-50 flex items-center justify-center text-slate-400 group-hover:bg-purple-600 group-hover:text-white transition-all shadow-sm">
+                          <ArrowRight className="w-5 h-5" />
+                        </div>
+                      </div>
+                    </div>
+                  </Link>
+                </motion.div>
+              );
+            })}
+          </motion.div>
         )}
       </div>
     </div>

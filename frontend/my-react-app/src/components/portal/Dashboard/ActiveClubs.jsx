@@ -22,7 +22,7 @@ const ActiveClubs = ({ clubs }) => {
         {clubs.map((club) => (
           <Link
             key={club.club_id}
-            to={`/portal/clubs/${club.club_id}`}
+            to={`/clubs/${club.club_id}`}
             className="flex items-start justify-between p-3 rounded-xl hover:bg-gray-50 transition-colors"
           >
             <div>

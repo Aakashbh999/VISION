@@ -4,18 +4,7 @@ exports.getRecommendations = async (req, res) => {
   try {
     const authUserId = req.user.auth_user_id;
 
-    // Get portal user id + program
-    const userRes = await pool.query(
-      `SELECT u.user_id, u.program_id
-       FROM portal.users u
-       WHERE u.auth_user_id = $1`,
-      [authUserId],
-    );
-
-    if (userRes.rows.length === 0)
-      return res.status(404).json({ error: "User not found" });
-
-    const { user_id, program_id } = userRes.rows[0];
+    const { portal_user_id: user_id, program_id } = req.user;
 
     // Clear old cache (older than 6 hours)
     await pool.query(`
@@ -90,6 +79,7 @@ exports.getRecommendations = async (req, res) => {
         'auto_calculated'
         
       FROM portal.resources r
+      WHERE r.status = 'approved' AND r.deleted_at IS NULL
       ON CONFLICT (user_id, resource_id)
       DO UPDATE SET
         score = EXCLUDED.score,

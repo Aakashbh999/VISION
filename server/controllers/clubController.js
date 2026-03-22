@@ -9,27 +9,30 @@ exports.getClubs = async (req, res) => {
 
     let query = `
       SELECT
-        c.club_id,
+        c.id,
         c.club_name,
         c.location,
         c.institution,
         c.specialty,
-        c.is_public,
         c.contact_info,
         c.slug,
-        COUNT(cm.user_id) AS members
-      FROM public.it_clubs c
-      LEFT JOIN portal.club_members cm
-        ON cm.club_id = c.club_id
-      WHERE 1=1
+        c.logo_url,
+        c.website_url
+      FROM portal.it_clubs c
+      WHERE (c.is_public IS NULL OR c.is_public = 'true' OR c.is_public = true) AND c.deleted_at IS NULL
     `;
 
     const values = [];
     let i = 1;
 
+    let orderBy = `c.club_name ASC`;
+
     if (search) {
-      query += ` AND LOWER(c.club_name) LIKE LOWER($${i++})`;
+      query += ` AND (c.club_name % $${i} OR c.club_name ILIKE $${i + 1})`;
+      values.push(search);
       values.push(`%${search}%`);
+      orderBy = `similarity(c.club_name, $${i}) DESC, c.club_name ASC`;
+      i += 2;
     }
 
     if (specialty) {
@@ -38,16 +41,33 @@ exports.getClubs = async (req, res) => {
     }
 
     if (institution) {
-      query += ` AND LOWER(c.institution) LIKE LOWER($${i++})`;
+      query += ` AND (c.institution % $${i} OR c.institution ILIKE $${i + 1})`;
+      values.push(institution);
       values.push(`%${institution}%`);
+      i += 2;
     }
 
-    query += `
-      GROUP BY c.club_id
-      ORDER BY members DESC, c.club_name
-    `;
+    query += ` ORDER BY ${orderBy}`;
 
     const result = await pool.query(query, values);
+    
+    // If searching and no results found, return recommendations
+    if (search && result.rows.length === 0) {
+      const { userSemester, userProgramId, userDegreeId, portal_user_id: userId } = req.user;
+      const recommendations = await recommendationService.getRecommendations(
+        userId,
+        userSemester,
+        userProgramId,
+        userDegreeId,
+        5
+      );
+      return res.json({
+        clubs: [],
+        recommendations,
+        noResults: true
+      });
+    }
+
     res.json(result.rows);
   } catch (err) {
     console.error(err);
@@ -56,32 +76,41 @@ exports.getClubs = async (req, res) => {
 };
 
 /* ===============================
-   CLUB DETAILS
+   CLUB DETAILS (Directory Profile)
 ================================ */
 exports.getClubDetails = async (req, res) => {
   try {
     const { id } = req.params;
 
-    const club = await pool.query(
-      `SELECT * FROM public.it_clubs WHERE club_id = $1`,
-      [id],
-    );
+    const query = `
+      SELECT 
+        id, 
+        slug, 
+        club_name, 
+        location, 
+        institution, 
+        specialty, 
+        contact_info, 
+        description_full,
+        website_url, 
+        facebook_url, 
+        linkedin_url,
+        discord_url,
+        github_url,
+        logo_url,
+        banner_url,
+        founded_year
+      FROM portal.it_clubs 
+      WHERE id = $1 AND (is_public IS NULL OR is_public = 'true' OR is_public = true) AND deleted_at IS NULL
+    `;
 
-    if (!club.rows.length)
+    const result = await pool.query(query, [id]);
+
+    if (!result.rows.length) {
       return res.status(404).json({ error: "Club not found" });
+    }
 
-    const members = await pool.query(
-      `SELECT u.user_id, u.full_name
-       FROM portal.club_members cm
-       JOIN portal.users u ON u.user_id = cm.user_id
-       WHERE cm.club_id = $1`,
-      [id],
-    );
-
-    res.json({
-      club: club.rows[0],
-      members: members.rows,
-    });
+    res.json(result.rows[0]);
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Failed to fetch club" });
@@ -89,44 +118,19 @@ exports.getClubDetails = async (req, res) => {
 };
 
 /* ===============================
-   JOIN CLUB
+   GET SPECIALTIES (for filtering)
 ================================ */
-exports.joinClub = async (req, res) => {
+exports.getSpecialties = async (req, res) => {
   try {
-    const { id } = req.params;
-    const userId = req.user.portal_user_id;
-
-    await pool.query(
-      `INSERT INTO portal.club_members (club_id, user_id)
-       VALUES ($1, $2)
-       ON CONFLICT DO NOTHING`,
-      [id, userId],
-    );
-
-    res.json({ message: "Joined club successfully" });
+    const result = await pool.query(`
+      SELECT DISTINCT specialty 
+      FROM portal.it_clubs 
+      WHERE specialty IS NOT NULL AND deleted_at IS NULL
+      ORDER BY specialty
+    `);
+    res.json(result.rows.map((r) => r.specialty));
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: "Join failed" });
-  }
-};
-
-/* ===============================
-   LEAVE CLUB
-================================ */
-exports.leaveClub = async (req, res) => {
-  try {
-    const { id } = req.params;
-    const userId = req.user.portal_user_id;
-
-    await pool.query(
-      `DELETE FROM portal.club_members
-       WHERE club_id = $1 AND user_id = $2`,
-      [id, userId],
-    );
-
-    res.json({ message: "Left club successfully" });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "Leave failed" });
+    res.status(500).json({ error: "Failed to fetch specialties" });
   }
 };

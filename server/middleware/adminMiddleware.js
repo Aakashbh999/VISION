@@ -1,7 +1,5 @@
 exports.verifyAdmin = (req, res, next) => {
-  const adminKey = req.headers["x-admin-key"];
-
-  if (!adminKey || adminKey !== process.env.ADMIN_SECRET) {
+  if (!req.user || req.user.role !== "admin") {
     return res.status(403).json({ error: "Admin access required" });
   }
 

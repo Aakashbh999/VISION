@@ -1,0 +1,285 @@
+import { useRef, useState } from "react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import { motion } from "framer-motion";
+import {
+  Menu,
+  Bell,
+  User,
+  LogOut,
+  ChevronRight,
+  Zap,
+  ChevronDown,
+  X,
+  Check,
+  Search,
+  Command,
+} from "lucide-react";
+import SearchModal, { useSearchModal } from "../ui/SearchModal";
+import { useAuth } from "../../context/AuthContext";
+import { useSidebar } from "../../hooks/useSidebar";
+import { useUnreadCount } from "../../hooks/useUnreadCount";
+import { useClickOutside } from "../../hooks/useClickOutside";
+import visionLogo from "../../assets/vision-logo.png";
+import ThemeToggle from "./ThemeToggle";
+
+// Breadcrumb mapping
+const routeLabels = {
+  portal: "Portal",
+  dashboard: "Dashboard",
+  roadmaps: "Roadmaps",
+  discussions: "Discussions",
+  groups: "Groups",
+  clubs: "Clubs",
+  resources: "Library",
+  profile: "Profile",
+  notifications: "Notifications",
+  my: "My Resources",
+  new: "Create New",
+  saved: "Saved",
+  "my-posts": "My Posts",
+};
+
+const Breadcrumb = () => {
+  const location = useLocation();
+  const pathSegments = location.pathname.split("/").filter(Boolean);
+
+  // Build breadcrumb items
+  const breadcrumbs = pathSegments.map((segment, index) => {
+    const path = "/" + pathSegments.slice(0, index + 1).join("/");
+    const label =
+      routeLabels[segment] ||
+      segment.charAt(0).toUpperCase() + segment.slice(1);
+    const isLast = index === pathSegments.length - 1;
+
+    return { label, path, isLast };
+  });
+
+  return (
+    <nav className="flex items-center text-sm">
+      {breadcrumbs.map((crumb, index) => (
+        <div key={crumb.path} className="flex items-center">
+          {index > 0 && <ChevronRight className="w-4 h-4 mx-2 text-gray-400" />}
+          {crumb.isLast ? (
+            <span className="text-gray-800 font-medium">{crumb.label}</span>
+          ) : (
+            <Link
+              to={crumb.path}
+              className="text-gray-500 hover:text-purple-600 transition-colors"
+            >
+              {crumb.label}
+            </Link>
+          )}
+        </div>
+      ))}
+    </nav>
+  );
+};
+
+const TopNavBar = () => {
+  const navigate = useNavigate();
+  const { user, logout } = useAuth();
+  const { toggle } = useSidebar();
+  const [profileMenuOpen, setProfileMenuOpen] = useState(false);
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+  const [exploreDropdownOpen, setExploreDropdownOpen] = useState(false);
+  const searchModal = useSearchModal();
+
+  const isLoggedIn = !!user;
+  const { data: unreadCount = 0 } = useUnreadCount(isLoggedIn);
+
+  const profileRef = useRef(null);
+  const exploreRef = useRef(null);
+
+  useClickOutside(profileRef, () => {
+    setProfileMenuOpen(false);
+    setShowLogoutConfirm(false);
+  });
+  useClickOutside(exploreRef, () => setExploreDropdownOpen(false));
+
+  const handleLogout = () => {
+    logout();
+    navigate("/");
+  };
+
+  const publicLinks = [
+    { label: "IT Specializations", href: "/it-fields" },
+    { label: "Academic Guide", href: "/academic-guide" },
+    { label: "Job Market", href: "/it-jobs" },
+    { label: "Community", href: "/it-clubs" },
+  ];
+
+  return (
+    <header className="fixed top-0 left-0 right-0 h-16 bg-bg-main/95 backdrop-blur-sm border-b border-border-main z-40 flex items-center justify-between px-4 lg:px-6 transition-colors duration-300">
+      {/* Left section: Menu toggle + Logo + Breadcrumb */}
+      <div className="flex items-center gap-3">
+        {/* Mobile menu toggle */}
+        <button
+          onClick={toggle}
+          className="p-2 rounded-lg hover:bg-gray-100 transition-colors"
+          aria-label="Toggle sidebar"
+        >
+          <Menu className="w-5 h-5 text-gray-600" />
+        </button>
+
+        {/* Logo */}
+        <Link to="/dashboard" className="shrink-0 flex items-center">
+          <img src={visionLogo} alt="VISION" className="h-25 sm:h-28 md:h-32 lg:h-36 w-auto object-contain transition-all duration-300" />
+        </Link>
+
+        {/* Breadcrumb (hidden on mobile) */}
+        <div className="hidden md:block border-l border-gray-200 pl-4 ml-2">
+          <Breadcrumb />
+        </div>
+      </div>
+
+      {/* Right section: Search, XP, Explore, Notifications, Profile */}
+      <div className="flex items-center gap-2 lg:gap-4">
+        {/* Universal Search Button */}
+        <button
+          onClick={searchModal.open}
+          className="flex items-center gap-2 px-3 py-1.5 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg border border-gray-200 transition-colors"
+          aria-label="Search (Ctrl+K)"
+        >
+          <Search className="w-4 h-4" />
+          <span className="hidden sm:inline text-sm">Search</span>
+          <kbd className="hidden md:flex items-center gap-0.5 px-1.5 py-0.5 text-[10px] font-medium text-gray-400 bg-gray-100 rounded border border-gray-200">
+            <Command className="w-3 h-3" />K
+          </kbd>
+        </button>
+
+
+        {/* Explore Dropdown */}
+        <div className="relative hidden lg:block" ref={exploreRef}>
+          <button
+            onClick={() => setExploreDropdownOpen(!exploreDropdownOpen)}
+            className="flex items-center gap-1 px-3 py-2 text-gray-600 hover:text-purple-600 hover:bg-gray-50 rounded-lg transition-colors font-medium text-sm"
+          >
+            Explore
+            <ChevronDown className="w-4 h-4" />
+          </button>
+          {exploreDropdownOpen && (
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="absolute right-0 mt-1 w-48 bg-bg-card rounded-lg shadow-lg border border-border-main py-1 z-50"
+            >
+              {publicLinks.map((link) => (
+                <Link
+                  key={link.href}
+                  to={link.href}
+                  className="block px-4 py-2 text-sm text-gray-700 hover:bg-purple-50 hover:text-purple-600"
+                  onClick={() => setExploreDropdownOpen(false)}
+                >
+                  {link.label}
+                </Link>
+              ))}
+            </motion.div>
+          )}
+        </div>
+
+        {/* Theme Toggle */}
+        <ThemeToggle />
+
+        {/* Notifications */}
+        <Link
+          to="/notifications"
+          className="relative p-2 rounded-lg hover:bg-gray-100 transition-colors"
+        >
+          <Bell className="w-5 h-5 text-gray-600" />
+          {unreadCount > 0 && (
+            <span className="absolute top-1 right-1 min-w-4.5 h-4.5 bg-red-500 text-white text-[10px] font-bold flex items-center justify-center rounded-full px-1">
+              {unreadCount > 99 ? "99+" : unreadCount}
+            </span>
+          )}
+        </Link>
+
+        {/* Profile Menu */}
+        <div className="relative" ref={profileRef}>
+          <button
+            onClick={() => setProfileMenuOpen(!profileMenuOpen)}
+            className="flex items-center gap-2 p-1.5 rounded-lg hover:bg-gray-100 transition-colors"
+            aria-label="User menu"
+          >
+            <div className="w-8 h-8 rounded-full bg-linear-to-br from-purple-500 to-purple-700 flex items-center justify-center text-white shadow-sm">
+              <User className="w-4 h-4" />
+            </div>
+          </button>
+
+          {profileMenuOpen && (
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="absolute right-0 mt-2 w-60 bg-bg-card rounded-lg shadow-lg border border-border-main py-1 z-50"
+            >
+              {!showLogoutConfirm ? (
+                <>
+                  {/* User info header */}
+                  <div className="px-4 py-3 border-b border-border-main">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm font-semibold text-gray-900">
+                          {user?.full_name || "Student"}
+                        </p>
+                        <p className="text-xs text-gray-500">{user?.email}</p>
+                      </div>
+                      {user?.is_moderator && (
+                        <span className="px-2 py-0.5 bg-purple-50 text-purple-600 border border-purple-200 rounded text-[10px] font-bold uppercase">
+                          Mod
+                        </span>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Menu items */}
+                  <Link
+                    to="/profile"
+                    className="flex items-center gap-2 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50"
+                    onClick={() => setProfileMenuOpen(false)}
+                  >
+                    <User className="w-4 h-4 text-gray-400" />
+                    Profile
+                  </Link>
+                  <button
+                    onClick={() => setShowLogoutConfirm(true)}
+                    className="flex items-center gap-2 w-full px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50"
+                  >
+                    <LogOut className="w-4 h-4 text-gray-400" />
+                    Sign out
+                  </button>
+                </>
+              ) : (
+                <>
+                  {/* Logout confirmation */}
+                  <div className="px-4 py-3 text-sm text-gray-700 border-b border-gray-100">
+                    Are you sure you want to sign out?
+                  </div>
+                  <div className="flex items-center gap-2 p-2">
+                    <button
+                      onClick={() => setShowLogoutConfirm(false)}
+                      className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+                    >
+                      <X className="w-4 h-4" />
+                      Cancel
+                    </button>
+                    <button
+                      onClick={handleLogout}
+                      className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 text-sm text-white bg-red-500 hover:bg-red-600 rounded-lg transition-colors"
+                    >
+                      <Check className="w-4 h-4" />
+                      Confirm
+                    </button>
+                  </div>
+                </>
+              )}
+            </motion.div>
+          )}
+        </div>
+      </div>
+
+      {/* Search Modal */}
+      <SearchModal isOpen={searchModal.isOpen} onClose={searchModal.close} />
+    </header>
+  );
+};
+
+export default TopNavBar;

@@ -10,7 +10,7 @@ const Sidebar = () => {
   ];
 
   return (
-    <aside className="hidden lg:block fixed left-0 top-16 h-[calc(100vh-4rem)] w-64 bg-white/80 backdrop-blur-sm border-r border-gray-200 px-5 py-8 shadow-sm">
+    <aside className="hidden lg:block fixed left-0 top-16 h-[calc(100vh-4rem)] w-64 bg-sidebar-bg/80 backdrop-blur-sm border-r border-border-main px-5 py-8 shadow-sm transition-colors duration-300">
       <nav className="space-y-2 text-sm">
         {menuItems.map((item) => (
           <NavLink
@@ -20,8 +20,8 @@ const Sidebar = () => {
             className={({ isActive }) =>
               `flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-300 group ${
                 isActive
-                  ? "bg-gradient-to-r from-blue-50 to-purple-50 text-blue-700 font-semibold border border-blue-100"
-                  : "hover:bg-gradient-to-r hover:from-gray-50 hover:to-blue-50 text-gray-600 hover:text-blue-600 hover:font-medium hover:border hover:border-gray-200"
+                  ? "bg-sidebar-active-bg text-blue-700 dark:text-blue-400 font-semibold border border-blue-100 dark:border-blue-900/30"
+                  : "hover:bg-sidebar-hover-bg text-text-muted hover:text-blue-600 dark:hover:text-blue-400 hover:font-medium hover:border hover:border-border-main"
               }`
             }
           >
@@ -42,10 +42,9 @@ const Sidebar = () => {
         ))}
       </nav>
 
-      {/* Sidebar Footer */}
       <div className="absolute bottom-8 left-5 right-5">
-        <div className="p-4 rounded-xl bg-gradient-to-br from-blue-50 to-purple-50 border border-blue-100 hover:shadow-md transition-shadow duration-300">
-          <p className="text-xs text-gray-600">Need guidance?</p>
+        <div className="p-4 rounded-xl bg-sidebar-active-bg border border-blue-100 dark:border-blue-900/30 hover:shadow-md transition-shadow duration-300">
+          <p className="text-xs text-text-muted">Need guidance?</p>
           <a
             href="#"
             className="text-sm font-medium text-blue-600 hover:text-blue-800 transition-colors duration-300 inline-flex items-center gap-1"

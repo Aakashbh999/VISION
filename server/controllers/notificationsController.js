@@ -10,12 +10,15 @@ exports.getNotifications = async (req, res) => {
       return res.status(404).json({ error: "User not found" });
     }
 
+    const limit = parseInt(req.query.limit, 10) || 50;
+    const finalLimit = Math.min(limit, 100);
+
     const notifications = await pool.query(
       `SELECT * FROM portal.notifications
        WHERE user_id = $1
        ORDER BY created_at DESC
-       LIMIT 50`,
-      [portalUserId],
+       LIMIT $2`,
+      [portalUserId, finalLimit],
     );
 
     res.json(notifications.rows);

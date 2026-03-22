@@ -1,18 +1,29 @@
--- Migration: Add role column to auth.users
--- This column was referenced in the login query but was missing from the schema
+CREATE TABLE "portal"."notifications" (
+    "notification_id" integer PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
+    "user_id" integer REFERENCES "portal"."users"("user_id") ON DELETE CASCADE,
+    "title" varchar(150),
+    "message" text NOT NULL,
+    "type" varchar(40),
+    "is_read" boolean DEFAULT false,
+    "actor_user_id" integer REFERENCES "portal"."users"("user_id") ON DELETE SET NULL,
+    "created_at" timestamp with time zone DEFAULT CURRENT_TIMESTAMP
+);
 
-DO $$
-BEGIN
-    -- Create the role enum type if it doesn't exist
-    IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'user_role_type' AND typnamespace = (SELECT oid FROM pg_namespace WHERE nspname = 'auth')) THEN
-        CREATE TYPE auth.user_role_type AS ENUM ('student', 'admin');
-    END IF;
-END $$;
+CREATE TABLE "portal"."reports" (
+    "report_id" serial PRIMARY KEY,
+    "reporter_user_id" integer REFERENCES "portal"."users"("user_id"),
+    "target_type" varchar(50),
+    "target_id" integer,
+    "reason" text,
+    "status" varchar(30) DEFAULT 'open',
+    "created_at" timestamp DEFAULT CURRENT_TIMESTAMP
+);
 
--- Add role column if it doesn't exist
-DO $$
-BEGIN
-    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'auth' AND table_name = 'users' AND column_name = 'role') THEN
-        ALTER TABLE auth.users ADD COLUMN role auth.user_role_type DEFAULT 'student';
-    END IF;
-END $$;
+CREATE TABLE "portal"."moderation_logs" (
+    "log_id" integer PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
+    "admin_user_id" integer REFERENCES "portal"."users"("user_id") ON DELETE SET NULL,
+    "action_type" varchar(50),
+    "target_type" varchar(50),
+    "target_id" integer,
+    "created_at" timestamp without time zone DEFAULT CURRENT_TIMESTAMP
+);
