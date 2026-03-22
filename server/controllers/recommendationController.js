@@ -79,7 +79,7 @@ exports.getRecommendations = async (req, res) => {
         'auto_calculated'
         
       FROM portal.resources r
-      WHERE r.status = 'approved' AND r.deleted_at IS NULL
+      WHERE r.status = 'approved'
       ON CONFLICT (user_id, resource_id)
       DO UPDATE SET
         score = EXCLUDED.score,

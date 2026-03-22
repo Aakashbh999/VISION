@@ -57,20 +57,6 @@ router.patch(
   adminController.deleteDiscussion,
 );
 
-router.patch(
-  "/admin/discussions/:id/restore",
-  verifyJWT,
-  verifyAdmin,
-  adminController.restoreDiscussion,
-);
-
-router.delete(
-  "/admin/discussions/:id/hard-delete",
-  verifyJWT,
-  verifyAdmin,
-  adminController.hardDeleteDiscussion,
-);
-
 /* ===============================
    REPORTS
 ================================ */
@@ -191,27 +177,6 @@ router.patch(
   verifyJWT,
   verifyModerator,
   resourceController.rejectResource,
-);
-
-router.patch(
-  "/admin/resources/:id/delete",
-  verifyJWT,
-  verifyAdmin,
-  resourceController.adminSoftDeleteResource,
-);
-
-router.patch(
-  "/admin/resources/:id/restore",
-  verifyJWT,
-  verifyAdmin,
-  resourceController.restoreResource,
-);
-
-router.delete(
-  "/admin/resources/:id/hard-delete",
-  verifyJWT,
-  verifyAdmin,
-  resourceController.hardDeleteResource,
 );
 
 module.exports = router;

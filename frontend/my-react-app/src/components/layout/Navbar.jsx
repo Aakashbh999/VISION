@@ -60,7 +60,7 @@ const Navbar = ({ onMobileMenuToggle, variant, user }) => {
         {variant === "portal" && user ? (
           <>
             {/* Explore dropdown */}
-            <div className="relative hidden lg:block" ref={resourcesRef}>
+            <div className="relative" ref={resourcesRef}>
               <button
                 onClick={() => setResourcesDropdownOpen(!resourcesDropdownOpen)}
                 className="flex items-center gap-1 text-gray-700 hover:text-blue-600 transition-colors font-medium"

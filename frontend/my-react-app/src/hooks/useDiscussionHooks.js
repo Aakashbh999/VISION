@@ -150,12 +150,8 @@ export const useCreateDiscussion = () => {
   return useMutation({
     mutationFn: createDiscussion,
     onSuccess: (data) => {
-      toast.success("Discussion posted!");
       queryClient.invalidateQueries(["discussions"]);
-      navigate(`/discussions/${data.discussion_id}`);
-    },
-    onError: (err) => {
-      toast.error(err.response?.data?.message || err.response?.data?.error || "Failed to post discussion");
+      navigate(`/portal/discussions/${data.discussion_id}`);
     },
   });
 };
@@ -165,11 +161,7 @@ export const useAddComment = (discussionId) => {
   return useMutation({
     mutationFn: ({ content, parentId, website }) => addComment(discussionId, content, parentId, website),
     onSuccess: () => {
-      toast.success("Comment posted!");
       queryClient.invalidateQueries(["discussion", discussionId]);
-    },
-    onError: (err) => {
-      toast.error(err.response?.data?.message || err.response?.data?.error || "Failed to post comment");
     },
   });
 };
@@ -182,9 +174,6 @@ export const useVote = (discussionId) => {
       queryClient.invalidateQueries(["discussion", discussionId]);
       queryClient.invalidateQueries(["discussions"]);
     },
-    onError: (err) => {
-      toast.error(err.response?.data?.message || err.response?.data?.error || "Vote failed");
-    },
   });
 };
 
@@ -194,9 +183,6 @@ export const useCommentVote = (discussionId) => {
     mutationFn: ({ commentId, voteType }) => voteComment(commentId, voteType),
     onSuccess: () => {
       queryClient.invalidateQueries(["discussion", discussionId]);
-    },
-    onError: (err) => {
-      toast.error(err.response?.data?.message || err.response?.data?.error || "Vote failed");
     },
   });
 };
@@ -209,17 +195,10 @@ export const useToggleSave = (discussionId) => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: () => toggleSave(discussionId),
-    onSuccess: (data) => {
-      const isSaved = data?.saved ?? data?.is_saved;
-      if (isSaved !== undefined) {
-        toast.success(isSaved ? "💾 Saved to bookmarks!" : "Removed from saved");
-      }
+    onSuccess: () => {
       queryClient.invalidateQueries(["discussion", discussionId]);
       queryClient.invalidateQueries(["discussions"]);
       queryClient.invalidateQueries(["saved-discussions"]);
-    },
-    onError: (err) => {
-      toast.error(err.response?.data?.message || "Failed to update saved");
     },
   });
 };

@@ -14,7 +14,6 @@ import {
   ChevronDown,
   Library,
   X,
-  Search,
 } from "lucide-react";
 import { useSidebar } from "../../hooks/useSidebar";
 
@@ -199,7 +198,7 @@ const PortalSidebarNew = () => {
 
       {/* Mobile close button */}
       {isMobile && (
-        <div className="flex items-center justify-between px-4 py-3 border-b border-border-main mb-2">
+        <div className="flex items-center justify-between px-4 py-3 border-b border-border-main">
           <span className="text-lg font-semibold text-text-main">Menu</span>
           <button
             onClick={closeMobile}
@@ -207,23 +206,6 @@ const PortalSidebarNew = () => {
           >
             <X className="w-5 h-5 text-gray-500" />
           </button>
-        </div>
-      )}
-
-      {/* Mobile Search - Phase 4 Improvement */}
-      {isMobile && (
-        <div className="px-4 mb-4">
-          <div className="relative">
-            <X className="absolute right-3 top-2.5 w-4 h-4 text-gray-400 opacity-0 pointer-events-none" />
-            <input
-              type="text"
-              placeholder="Quick search..."
-              className="w-full bg-sidebar-hover-bg border border-border-main rounded-xl py-2 pl-9 pr-4 text-sm outline-none focus:border-purple-300 transition-all font-medium"
-            />
-            <motion.div className="absolute left-3 top-2.5">
-              <Search className="w-4 h-4 text-gray-400" />
-            </motion.div>
-          </div>
         </div>
       )}
 
