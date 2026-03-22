@@ -28,7 +28,10 @@ exports.register = async (req, res) => {
     email,
     password,
     full_name,
-    // Step 2 fields (optional in Step 1)
+    // Step 2 fields
+    current_education,
+    target_exam,
+    career_scope,
     university,
     campus,
     program_id,
@@ -56,10 +59,11 @@ exports.register = async (req, res) => {
 
     // Validate strong password policy
     if (
-      password.length < 8 ||
-      !/[A-Z]/.test(password) ||
-      !/[a-z]/.test(password) ||
-      !/[0-9]/.test(password)
+      password &&
+      (password.length < 8 ||
+        !/[A-Z]/.test(password) ||
+        !/[a-z]/.test(password) ||
+        !/[0-9]/.test(password))
     ) {
       await client.query("ROLLBACK");
       return res.status(400).json({
@@ -68,10 +72,10 @@ exports.register = async (req, res) => {
       });
     }
 
-    // Hash password with stronger salt rounds
+    // Hash password
     const hashedPassword = await bcrypt.hash(password, 12);
 
-    // Initial registration (Step 1)
+    // 1. Insert into auth.users
     const authInsert = await client.query(
       `INSERT INTO auth.users (email, password_hash)
        VALUES ($1, $2)
@@ -81,12 +85,48 @@ exports.register = async (req, res) => {
 
     const authUserId = authInsert.rows[0].auth_user_id;
 
-    // Insert into portal.users with registration_step = 1
+    // 2. Normalize Academic Data
+    const normalizedBatchYear =
+      batch_year === undefined || batch_year === null || batch_year === ""
+        ? null
+        : Number.parseInt(batch_year, 10);
+
+    const normalizedManualSemester =
+      semester_is_manual === true || semester_is_manual === "true";
+
+    let normalizedSemester =
+      semester === undefined || semester === null || semester === ""
+        ? null
+        : Number.parseInt(semester, 10);
+
+    if (normalizedBatchYear && !normalizedManualSemester) {
+      normalizedSemester = calculateSemesterFromBatch(normalizedBatchYear);
+    }
+
+    const studentIdImageUrl = req.file?.path || null;
+
+    // 3. Insert into portal.users with registration_step = 2 (Complete)
     await client.query(
       `INSERT INTO portal.users
-       (auth_user_id, full_name, registration_step)
-       VALUES ($1, $2, 1)`,
-      [authUserId, full_name],
+       (auth_user_id, full_name, current_education, target_exam, career_scope, 
+        university, campus, program_id, semester, batch_year, 
+        semester_is_manual, tu_registration_no, student_id_image_url, registration_step)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, 2)`,
+      [
+        authUserId,
+        full_name,
+        current_education,
+        target_exam,
+        career_scope,
+        university,
+        campus,
+        program_id,
+        normalizedSemester,
+        normalizedBatchYear,
+        normalizedManualSemester,
+        tu_registration_no,
+        studentIdImageUrl,
+      ],
     );
 
     // Generate email verification token
@@ -120,12 +160,12 @@ exports.register = async (req, res) => {
     }
 
     res.status(201).json({
-      message: "Step 1 successful. Account created. Please check your email.",
-      auth_user_id: authUserId, // Return this for Step 2 if needed (though JWT is better)
+      message: "Registration successful. Please check your email to verify your account.",
+      auth_user_id: authUserId,
     });
   } catch (err) {
     await client.query("ROLLBACK");
-    console.error(err);
+    console.error("Registration error:", err);
     res.status(500).json({ error: "Registration failed" });
   } finally {
     client.release();

@@ -38,29 +38,6 @@ const Register = () => {
 
   const [step, setStep] = useState(1);
 
-  // Sync step with user profile if they are already logged in (e.g. after Step 1)
-  useEffect(() => {
-    if (user) {
-      if (user.registration_step === 1) {
-        setStep(2);
-      }
-      setFormData(prev => ({
-        ...prev,
-        email: user.email || prev.email,
-        full_name: user.full_name || prev.full_name,
-        current_education: user.current_education || prev.current_education,
-        target_exam: user.target_exam || prev.target_exam,
-        career_scope: user.career_scope ? user.career_scope.split(", ") : prev.career_scope,
-        university: user.university || prev.university,
-        campus: user.campus || prev.campus,
-        program_id: user.program_id || prev.program_id,
-        batch_year: user.batch_year || prev.batch_year,
-        semester: user.semester ? String(user.semester) : prev.semester,
-        tu_registration_no: user.tu_registration_no || prev.tu_registration_no,
-      }));
-    }
-  }, [user]);
-
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -125,58 +102,51 @@ const Register = () => {
   const handleStep1Submit = async (e) => {
     e.preventDefault();
     setError("");
-    setLoading(true);
-
-    try {
-      // 1. Capture the lead
-      await apiRegister({
-        email: formData.email,
-        password: formData.password,
-        full_name: formData.full_name
-      });
-
-      // 2. Immediate Login to get token for Step 2
-      const tokenData = await apiLogin(formData.email, formData.password);
-      authLogin(tokenData); // Sets token in localStorage/API header
-
-      setStep(2);
-      window.scrollTo(0, 0);
-    } catch (err) {
-      setError(err.response?.data?.error || "Registration failed. Please try again.");
-    } finally {
-      setLoading(false);
-    }
+    // Just move to the next step, no API call yet
+    setStep(2);
+    window.scrollTo(0, 0);
   };
 
-  const handleStep2Submit = async (e) => {
+  const handleFinalSubmit = async (e) => {
     e.preventDefault();
     setError("");
     setLoading(true);
 
-    const step2Data = new FormData();
-    // Career/Profile Scope
-    step2Data.append("current_education", formData.current_education);
-    step2Data.append("target_exam", formData.target_exam);
-    step2Data.append("career_scope", formData.career_scope.join(", "));
+    const finalData = new FormData();
+    // Step 1 Data
+    finalData.append("email", formData.email);
+    finalData.append("password", formData.password);
+    finalData.append("full_name", formData.full_name);
+
+    // Step 2 Data (Career/Profile Scope)
+    finalData.append("current_education", formData.current_education);
+    finalData.append("target_exam", formData.target_exam);
+    finalData.append("career_scope", formData.career_scope.join(", "));
     
-    // Traditional academic data (for filtered features)
-    step2Data.append("university", formData.university);
-    step2Data.append("campus", formData.campus);
-    step2Data.append("program_id", formData.program_id);
-    step2Data.append("semester", formData.semester);
-    step2Data.append("batch_year", formData.batch_year);
-    step2Data.append("tu_registration_no", formData.tu_registration_no);
+    // Academic fields
+    finalData.append("university", formData.university);
+    finalData.append("campus", formData.campus);
+    finalData.append("program_id", formData.program_id);
+    finalData.append("semester", formData.semester);
+    finalData.append("batch_year", formData.batch_year);
+    finalData.append("tu_registration_no", formData.tu_registration_no);
     
     if (studentIdFile) {
-        step2Data.append("student_id_image", studentIdFile);
+        finalData.append("student_id_image", studentIdFile);
     }
 
     try {
-      await apiCompleteRegistration(step2Data);
-      toast.success("Profile completed! Welcome aboard 🚀");
+      // 1. Register with full payload
+      await apiRegister(finalData);
+      
+      // 2. Login immediately after successful registration
+      const tokenData = await apiLogin(formData.email, formData.password);
+      authLogin(tokenData);
+
+      toast.success("Welcome aboard 🚀 Account created successfully!");
       navigate("/dashboard");
     } catch (err) {
-      setError(err.response?.data?.error || "Failed to complete profile.");
+      setError(err.response?.data?.error || "Registration failed. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -290,7 +260,7 @@ const Register = () => {
             </form>
           ) : (
             /* STEP 2 FORM */
-            <form onSubmit={handleStep2Submit} className="space-y-8 animate-in fade-in slide-in-from-right-4 duration-500">
+            <form onSubmit={handleFinalSubmit} className="space-y-8 animate-in fade-in slide-in-from-right-4 duration-500">
               {/* Career Scope / Tags */}
               <div className="space-y-4">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
