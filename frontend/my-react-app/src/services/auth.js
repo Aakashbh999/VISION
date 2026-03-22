@@ -13,7 +13,12 @@ export const login = async (email, password) => {
 
 export const register = async (userData) => {
   const response = await api.post("/auth/register", userData);
-  return response.data; // might return { message: "..." }
+  return response.data;
+};
+
+export const completeRegistration = async (data) => {
+  const response = await api.post("/auth/complete-registration", data);
+  return response.data;
 };
 
 export const getUserProfile = async () => {
@@ -37,8 +42,7 @@ export const logout = async () => {
       await api.post("/auth/logout", { refreshToken });
     }
   } catch (error) {
-        console.error(error);
-    // Ignore logout API errors
+    console.error(error);
   }
   localStorage.removeItem("token");
   localStorage.removeItem("refreshToken");

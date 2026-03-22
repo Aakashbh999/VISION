@@ -10,6 +10,7 @@ export const SEARCH_CATEGORIES = {
   ROADMAPS: "Roadmaps",
   RESOURCES: "Resources",
   GROUPS: "Groups",
+  DISCUSSIONS: "Discussions",
 };
 
 // Icon mapping for result types
@@ -17,6 +18,7 @@ const CATEGORY_ICONS = {
   roadmap: "map",
   resource: "file",
   group: "users",
+  discussion: "message-circle",
 };
 
 /**
@@ -32,7 +34,7 @@ const transformResults = (apiResponse) => {
         id: `roadmap-${r.id}`,
         title: r.title,
         category: SEARCH_CATEGORIES.ROADMAPS,
-        path: r.path || `/portal/roadmaps/${r.id}`,
+        path: r.path || `/roadmaps/${r.id}`,
         description: r.description || "",
         icon: CATEGORY_ICONS.roadmap,
         score: r.score,
@@ -49,7 +51,7 @@ const transformResults = (apiResponse) => {
         id: `resource-${r.id}`,
         title: r.title,
         category: SEARCH_CATEGORIES.RESOURCES,
-        path: r.path || `/portal/resources?id=${r.id}`,
+        path: r.path || `/resources?id=${r.id}`,
         description: r.description || r.resource_type || "",
         icon: CATEGORY_ICONS.resource,
         score: r.score,
@@ -78,6 +80,24 @@ const transformResults = (apiResponse) => {
         memberCount: g.member_count,
         isMember: g.is_member,
         groupImage: g.group_image,
+      });
+    });
+  }
+
+  // Process discussions
+  if (apiResponse.discussions?.length) {
+    apiResponse.discussions.forEach((d) => {
+      results.push({
+        id: `discussion-${d.id}`,
+        title: d.title,
+        category: SEARCH_CATEGORIES.DISCUSSIONS,
+        path: d.path || `/discussions/${d.id}`,
+        description: d.description || "",
+        icon: CATEGORY_ICONS.discussion,
+        score: d.score,
+        tags: d.tags,
+        likeCount: d.like_count,
+        commentCount: d.comment_count,
       });
     });
   }

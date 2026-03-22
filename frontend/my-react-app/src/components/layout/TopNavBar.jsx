@@ -19,7 +19,6 @@ import { useAuth } from "../../context/AuthContext";
 import { useSidebar } from "../../hooks/useSidebar";
 import { useUnreadCount } from "../../hooks/useUnreadCount";
 import { useClickOutside } from "../../hooks/useClickOutside";
-import XpWidget from "../portal/XpWidget";
 import visionLogo from "../../assets/vision-logo.png";
 import ThemeToggle from "./ThemeToggle";
 
@@ -123,8 +122,8 @@ const TopNavBar = () => {
         </button>
 
         {/* Logo */}
-        <Link to="/dashboard" className="shrink-0">
-          <img src={visionLogo} alt="VISION" className="h-32 w-auto" />
+        <Link to="/dashboard" className="shrink-0 flex items-center">
+          <img src={visionLogo} alt="VISION" className="h-25 sm:h-28 md:h-32 lg:h-36 w-auto object-contain transition-all duration-300" />
         </Link>
 
         {/* Breadcrumb (hidden on mobile) */}
@@ -148,10 +147,6 @@ const TopNavBar = () => {
           </kbd>
         </button>
 
-        {/* Vision XP Badge */}
-        <div className="hidden sm:block">
-          <XpWidget />
-        </div>
 
         {/* Explore Dropdown */}
         <div className="relative hidden lg:block" ref={exploreRef}>
@@ -232,9 +227,6 @@ const TopNavBar = () => {
                           Mod
                         </span>
                       )}
-                    </div>
-                    <div className="mt-4">
-                      <XpWidget />
                     </div>
                   </div>
 

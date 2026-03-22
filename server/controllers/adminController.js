@@ -212,6 +212,79 @@ exports.deleteDiscussion = async (req, res) => {
 };
 
 /* ===============================
+   RESTORE DISCUSSION (Admin)
+================================ */
+exports.restoreDiscussion = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const adminId = req.user.portal_user_id;
+
+    const result = await pool.query(
+      `
+      UPDATE portal.discussions
+      SET deleted_at = NULL
+      WHERE discussion_id = $1
+      AND deleted_at IS NOT NULL
+      RETURNING discussion_id
+      `,
+      [id],
+    );
+
+    if (result.rowCount === 0) {
+      return res.status(404).json({ error: "Discussion not found or not deleted" });
+    }
+
+    await pool.query(
+      `
+      INSERT INTO portal.moderation_logs
+      (admin_user_id, action_type, target_type, target_id)
+      VALUES ($1, 'restore', 'discussion', $2)
+      `,
+      [adminId, id],
+    );
+
+    res.json({ message: "Discussion restored successfully" });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Failed to restore discussion" });
+  }
+};
+
+/* ===============================
+   HARD DELETE DISCUSSION (Admin)
+================================ */
+exports.hardDeleteDiscussion = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const adminId = req.user.portal_user_id;
+
+    // Wait, let's make sure it exists
+    const result = await pool.query(
+      `DELETE FROM portal.discussions WHERE discussion_id = $1 RETURNING discussion_id`,
+      [id],
+    );
+
+    if (result.rowCount === 0) {
+      return res.status(404).json({ error: "Discussion not found" });
+    }
+
+    await pool.query(
+      `
+      INSERT INTO portal.moderation_logs
+      (admin_user_id, action_type, target_type, target_id)
+      VALUES ($1, 'hard_delete', 'discussion', $2)
+      `,
+      [adminId, id],
+    );
+
+    res.json({ message: "Discussion permanently deleted" });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Failed to permanently delete discussion" });
+  }
+};
+
+/* ===============================
   GET ALL REPORTS
 ================================ */
 exports.getReports = async (req, res) => {

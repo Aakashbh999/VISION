@@ -19,6 +19,15 @@ exports.getMe = async (req, res) => {
         p.reputation_points,
         p.is_moderator,
         p.academic_degree_id,
+        p.registration_step,
+        p.current_education,
+        p.target_exam,
+        p.career_scope,
+        p.university,
+        p.campus,
+        p.program_id,
+        p.batch_year,
+        p.tu_registration_no,
         pr.program_name
        FROM auth.users a
        LEFT JOIN portal.users p 

@@ -18,10 +18,10 @@ const LibraryLayout = ({ children }) => {
         {isCollapsed && (
           <button
             onClick={() => setIsCollapsed(false)}
-            className="absolute -right-4 top-4 z-30 bg-white shadow-md border border-gray-100 p-2 rounded-full hover:bg-gray-50 transition-all hover:scale-105"
+            className="absolute left-6 top-4 z-30 bg-white shadow-xl border border-gray-200 p-3 rounded-full hover:bg-gray-50 transition-all hover:scale-105 cursor-pointer flex items-center justify-center text-purple-600"
             title="Open Library Sidebar"
           >
-            <ChevronRight size={18} className="text-gray-500" />
+            <ChevronRight size={20} className="ml-0.5" />
           </button>
         )}
       </div>

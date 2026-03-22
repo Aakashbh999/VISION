@@ -18,7 +18,7 @@ const {
 ================================ */
 exports.getGroups = async (req, res) => {
   try {
-    const { search, sort, degree } = req.query;
+    const { search, sort, degree, view } = req.query;
     const userId = req.user?.portal_user_id;
 
     let query = `
@@ -48,7 +48,16 @@ exports.getGroups = async (req, res) => {
 
     const params = userId ? [userId] : [];
     let paramIndex = params.length;
-    const conditions = ["g.privacy_type != 'private'", "g.deleted_at IS NULL"]; // Hide private and deleted groups from listing
+    const conditions = ["g.deleted_at IS NULL"]; 
+    
+    // Privacy Filter: 
+    if (view === 'my') {
+      if (!userId) return errorResponse(res, "You must be logged in to view your groups", 401);
+      conditions.push(`EXISTS(SELECT 1 FROM portal.group_members WHERE group_id = g.group_id AND user_id = $1)`);
+    } else {
+      // By default, only show non-private groups in the discovery list
+      conditions.push(`g.privacy_type != 'private'`);
+    }
 
     if (search) {
       conditions.push(
@@ -150,14 +159,11 @@ exports.getGroupDetails = async (req, res) => {
       g.member_permissions,
     );
 
-    // Private group: only accessible via valid invite token or if already a member
+    // Privacy Check for details: same as search/listing
     if (g.privacy_type === "private" && !isMember) {
+      // If private and not a member, check for valid invite token if provided (e.g. from invite link)
       if (!invite || invite !== g.invite_token) {
-        return errorResponse(
-          res,
-          "This group is private. You need an invite link to access it.",
-          404,
-        );
+        return errorResponse(res, "This group is private. You need an invite link to access it.", 404);
       }
     }
 
@@ -235,8 +241,8 @@ exports.createGroup = async (req, res) => {
       await client.query("BEGIN");
 
       const group = await client.query(
-        `INSERT INTO portal.study_groups (name, description, created_by, degree_id, privacy_type, tags)
-         VALUES ($1, $2, $3, $4, $5, $6)
+        `INSERT INTO portal.study_groups (name, description, created_by, degree_id, privacy_type, tags, is_public)
+         VALUES ($1, $2, $3, $4, $5, $6, $7)
          RETURNING *`,
         [
           name.trim(),
@@ -245,6 +251,7 @@ exports.createGroup = async (req, res) => {
           degree_id || null,
           privacy_type,
           normalizedTags,
+          privacy_type !== 'private'
         ],
       );
 
@@ -313,7 +320,11 @@ exports.updateGroup = async (req, res) => {
       `UPDATE portal.study_groups
        SET name = COALESCE($1, name),
            description = COALESCE($2, description),
-           privacy_type = COALESCE($3, privacy_type)
+           privacy_type = COALESCE($3, privacy_type),
+           is_public = CASE 
+             WHEN $3 IS NOT NULL THEN ($3 != 'private')
+             ELSE is_public 
+           END
        WHERE group_id = $4
        RETURNING *`,
       [name?.trim() || null, description || null, privacy_type || null, id],
