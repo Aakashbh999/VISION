@@ -2,7 +2,6 @@ import React, { useState } from "react";
 import { BookOpen, MessageSquare, Users, Trash2, ArrowRight } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useMyResources } from "../../hooks/useMyResources";
-import { useGroups } from "../../hooks/useGroupHooks";
 import LoadingSpinner from "../../components/ui/LoadingSpinner";
 import { formatDistanceToNow } from "date-fns";
 import { softDeleteResource } from "../../services/resource";
@@ -14,15 +13,13 @@ const ManageContent = () => {
   const queryClient = useQueryClient();
 
   const { data: resources = [], isLoading: loadingResources } = useMyResources();
-  const { data: groupsData, isLoading: loadingGroups } = useGroups({ view: 'my' });
-  const groups = Array.isArray(groupsData) ? groupsData : (groupsData?.groups || []);
 
   const handleDeleteResource = async (id) => {
     if (window.confirm("Are you sure you want to delete this resource?")) {
       try {
         await softDeleteResource(id, "User deleted their own resource");
         toast.success("Resource deleted successfully");
-        queryClient.invalidateQueries(["my-resources"]);
+        queryClient.invalidateQueries(["myResources"]);
       } catch (err) {
         toast.error("Failed to delete resource");
       }
@@ -168,74 +165,10 @@ const ManageContent = () => {
         )}
 
         {activeTab === "groups" && (
-          <div className="p-6 md:p-8">
-            <div className="flex justify-between items-center mb-6">
-              <h2 className="text-2xl font-black text-gray-900">My Circles</h2>
-              <Link 
-                to="/groups?view=my"
-                className="text-sm font-bold text-blue-600 hover:text-blue-700 flex items-center gap-1"
-              >
-                View in Library <ArrowRight className="w-4 h-4" />
-              </Link>
-            </div>
-
-            {loadingGroups ? (
-              <div className="py-20 flex justify-center">
-                <LoadingSpinner />
-              </div>
-            ) : groups.length === 0 ? (
-              <div className="text-center py-20 bg-gray-50 rounded-2xl border-2 border-dashed border-gray-200">
-                <Users className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-                <h3 className="text-xl font-bold text-gray-900 mb-2">No Circles Joined</h3>
-                <p className="text-gray-500 mb-6">You haven't joined or created any circles yet.</p>
-                <Link to="/groups" className="px-6 py-2 bg-blue-600 text-white font-bold rounded-xl hover:bg-blue-700 transition-colors">
-                  Explore Circles
-                </Link>
-              </div>
-            ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full text-left border-collapse">
-                  <thead>
-                    <tr className="border-b border-gray-100">
-                      <th className="pb-4 font-bold text-gray-500 uppercase text-xs tracking-wider">Name</th>
-                      <th className="pb-4 font-bold text-gray-500 uppercase text-xs tracking-wider">Privacy</th>
-                      <th className="pb-4 font-bold text-gray-500 uppercase text-xs tracking-wider">Members</th>
-                      <th className="pb-4 font-bold text-gray-500 uppercase text-xs tracking-wider text-right">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-gray-50">
-                    {groups.map((group) => (
-                      <tr key={group.group_id} className="group hover:bg-gray-50 transition-colors">
-                        <td className="py-4 pr-4">
-                          <p className="font-bold text-gray-900 mb-1 truncate max-w-xs">{group.name}</p>
-                        </td>
-                        <td className="py-4 pr-4">
-                          <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border ${
-                            group.privacy_type === 'private' ? 'bg-rose-50 text-rose-700 border-rose-200' :
-                            group.privacy_type === 'request' ? 'bg-amber-50 text-amber-700 border-amber-200' :
-                            'bg-emerald-50 text-emerald-700 border-emerald-200'
-                          }`}>
-                            {group.privacy_type === 'private' ? 'Hidden' : group.privacy_type}
-                          </span>
-                        </td>
-                        <td className="py-4 pr-4 text-gray-500 text-sm font-bold">
-                          {group.members} members
-                        </td>
-                        <td className="py-4 text-right">
-                          <Link 
-                            to={`/groups/${group.group_id}`}
-                            className="p-2 text-blue-500 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition-colors inline-block"
-                            title="Go to Circle"
-                          >
-                            <ArrowRight className="w-5 h-5" />
-                          </Link>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
+          <div className="p-6 md:p-8 text-center py-20">
+            <Users className="w-12 h-12 text-gray-300 mx-auto mb-4" />
+            <h2 className="text-2xl font-black text-gray-900 mb-2">My Groups</h2>
+            <p className="text-gray-500">Manage groups you've created here. (Coming Soon)</p>
           </div>
         )}
       </div>

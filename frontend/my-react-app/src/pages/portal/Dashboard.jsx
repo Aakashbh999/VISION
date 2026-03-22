@@ -10,7 +10,6 @@ import TrendingDiscussions from "../../components/portal/Dashboard/TrendingDiscu
 import ActiveClubs from "../../components/portal/Dashboard/ActiveClubs";
 import NotificationsWidget from "../../components/portal/Dashboard/NotificationsWidget";
 import ActivityFeedWidget from "../../components/portal/Dashboard/ActivityFeedWidget";
-import XpWidget from "../../components/portal/XpWidget";
 
 const Dashboard = () => {
   const {
@@ -27,14 +26,9 @@ const Dashboard = () => {
 
   return (
     <div className="px-4 sm:px-6 lg:px-8 py-6 sm:py-8 space-y-8">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">
-          Your Learning Dashboard
-        </h1>
-        <div className="shrink-0 w-full sm:w-auto">
-          <XpWidget />
-        </div>
-      </div>
+      <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">
+        Your Learning Dashboard
+      </h1>
 
       {/* Top row: progress, next step, quick actions */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">

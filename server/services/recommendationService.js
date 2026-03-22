@@ -28,7 +28,6 @@ LEFT JOIN (
   GROUP BY resource_id
 ) rs ON rs.resource_id = r.resource_id
 LEFT JOIN portal.resource_scores rs_all ON rs_all.resource_id = r.resource_id
-WHERE r.deleted_at IS NULL
 `;
 
 const buildGroupQueryBase = (userId, paramIndexForUser) => `
@@ -46,11 +45,6 @@ SELECT
 FROM portal.study_groups g
 LEFT JOIN portal.group_members gm ON gm.group_id = g.group_id
 LEFT JOIN portal.academic_degrees ad ON ad.id = g.degree_id
-WHERE g.deleted_at IS NULL AND (
-    g.is_public = TRUE 
-    OR 
-    (${userId ? `EXISTS(SELECT 1 FROM portal.group_members WHERE group_id = g.group_id AND user_id = $${paramIndexForUser})` : "FALSE"})
-  )
 `;
 
 exports.getRecommendations = async (
@@ -69,44 +63,9 @@ exports.getRecommendations = async (
 
   try {
     // 1. Resources
-    if (userSemester || userProgramId || userId) {
-      let resourceQuery = `
-        SELECT 
-          r.resource_id as id,
-          r.title,
-          r.description,
-          r.semester,
-          r.program_id,
-          COALESCE(rs.avg_score, 0) as avg_score,
-          COUNT(rs_all.score) as review_count,
-          COALESCE(
-            (SELECT array_agg(t.name) 
-              FROM portal.resource_tags rt 
-              JOIN portal.tags t ON t.tag_id = rt.tag_id 
-              WHERE rt.resource_id = r.resource_id), 
-            ARRAY[]::text[]
-          ) as tags,
-          'resource' as type
-          ${userId ? `,
-          (
-            SELECT COUNT(*) 
-            FROM portal.resource_tags rt 
-            JOIN portal.user_interests ui ON ui.tag_id = rt.tag_id 
-            WHERE rt.resource_id = r.resource_id AND ui.user_id = $1
-          ) as shared_tag_count
-          ` : ""}
-        FROM portal.resources r
-        LEFT JOIN (
-          SELECT resource_id, AVG(score)::numeric(4,2) as avg_score 
-          FROM portal.resource_scores 
-          GROUP BY resource_id
-        ) rs ON rs.resource_id = r.resource_id
-        LEFT JOIN portal.resource_scores rs_all ON rs_all.resource_id = r.resource_id
-        WHERE r.deleted_at IS NULL AND r.status = 'approved'
-      `;
-
-      const params = userId ? [userId] : [];
-      
+    if (userSemester || userProgramId) {
+      let resourceQuery = `${buildResourceQueryBase()} WHERE r.status = 'approved'`;
+      const params = [];
       if (userSemester) {
         params.push(userSemester);
         resourceQuery += ` AND r.semester = $${params.length}`;
@@ -115,9 +74,8 @@ exports.getRecommendations = async (
         params.push(userProgramId);
         resourceQuery += ` AND (r.program_id = $${params.length} OR r.program_id IS NULL)`;
       }
-
       params.push(limit);
-      resourceQuery += ` GROUP BY r.resource_id, r.title, r.description, r.semester, r.program_id, rs.avg_score ORDER BY ${userId ? "shared_tag_count DESC, " : ""} COALESCE(rs.avg_score, 0) DESC LIMIT $${params.length}`;
+      resourceQuery += ` GROUP BY r.resource_id, r.title, r.description, r.semester, r.program_id, rs.avg_score ORDER BY COALESCE(rs.avg_score, 0) DESC LIMIT $${params.length}`;
       
       const res = await pool.query(resourceQuery, params);
       recommendations.resources = res.rows;
@@ -125,7 +83,7 @@ exports.getRecommendations = async (
 
     // 2. Groups
     const groupQuery = userId 
-      ? `${buildGroupQueryBase(userId, 2)} AND g.degree_id = $1 GROUP BY g.group_id, g.name, g.description, g.group_image, g.is_public, g.degree_id, ad.full_name ORDER BY member_count DESC LIMIT $3`
+      ? `${buildGroupQueryBase(userId, 2)} WHERE g.degree_id = $1 GROUP BY g.group_id, g.name, g.description, g.group_image, g.is_public, g.degree_id, ad.full_name ORDER BY member_count DESC LIMIT $3`
       : `${buildGroupQueryBase(userId, 1)} GROUP BY g.group_id, g.name, g.description, g.group_image, g.is_public, g.degree_id, ad.full_name ORDER BY member_count DESC LIMIT $1`;
     
     const groupParams = userId ? [userDegreeId, userId, limit] : [limit];
@@ -138,7 +96,7 @@ exports.getRecommendations = async (
 
     // 4. Discussions (Trending/Popular)
     const discussionRes = await pool.query(`
-      SELECT d.discussion_id as id, d.title, d.like_count, d.comment_count, u.full_name as author
+      SELECT d.discussion_id, d.title, d.like_count, d.comment_count, u.full_name as author
       FROM portal.discussions d
       JOIN portal.users u ON u.user_id = d.user_id
       WHERE d.deleted_at IS NULL
