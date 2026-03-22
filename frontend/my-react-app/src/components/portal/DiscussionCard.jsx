@@ -109,20 +109,6 @@ const DiscussionCard = ({
             {disc.title}
           </h2>
 
-          {/* Tags */}
-          {disc.tags && disc.tags.filter(t => typeof t === "object" ? t?.name?.trim() : t?.trim()).length > 0 && (
-            <div className="flex flex-wrap gap-1.5 mb-3">
-              {disc.tags.filter(t => typeof t === "object" ? t?.name?.trim() : t?.trim()).slice(0, 5).map((tag, i) => (
-                <span
-                  key={i}
-                  className="px-2 py-0.5 text-[11px] font-bold tracking-wide text-purple-600 dark:text-purple-400 rounded-full border border-purple-200 dark:border-purple-800/50 shadow-sm"
-                >
-                  #{typeof tag === "object" ? tag.name : tag}
-                </span>
-              ))}
-            </div>
-          )}
-
           {!hasImage ? (
             /* TEXT-ONLY: 3-line snippet */
             <p className="text-sm text-text-muted line-clamp-3 mb-4 leading-relaxed">

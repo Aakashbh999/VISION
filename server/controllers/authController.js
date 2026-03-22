@@ -28,7 +28,6 @@ exports.register = async (req, res) => {
     email,
     password,
     full_name,
-    // Step 2 fields (optional in Step 1)
     university,
     campus,
     program_id,
@@ -71,7 +70,44 @@ exports.register = async (req, res) => {
     // Hash password with stronger salt rounds
     const hashedPassword = await bcrypt.hash(password, 12);
 
-    // Initial registration (Step 1)
+    const normalizedBatchYear =
+      batch_year === undefined || batch_year === null || batch_year === ""
+        ? null
+        : Number.parseInt(batch_year, 10);
+
+    if (
+      normalizedBatchYear !== null &&
+      (!Number.isFinite(normalizedBatchYear) || normalizedBatchYear < 2000)
+    ) {
+      await client.query("ROLLBACK");
+      return res.status(400).json({ error: "Invalid batch year" });
+    }
+
+    const normalizedManualSemester =
+      semester_is_manual === true || semester_is_manual === "true";
+
+    let normalizedSemester =
+      semester === undefined || semester === null || semester === ""
+        ? null
+        : Number.parseInt(semester, 10);
+
+    if (normalizedSemester !== null && !Number.isFinite(normalizedSemester)) {
+      await client.query("ROLLBACK");
+      return res.status(400).json({ error: "Invalid semester" });
+    }
+
+    if (normalizedBatchYear && !normalizedManualSemester) {
+      normalizedSemester = calculateSemesterFromBatch(normalizedBatchYear);
+    }
+
+    if (!normalizedSemester) {
+      await client.query("ROLLBACK");
+      return res.status(400).json({
+        error: "Semester is required unless it can be derived from batch year.",
+      });
+    }
+
+    // Insert into auth.users
     const authInsert = await client.query(
       `INSERT INTO auth.users (email, password_hash)
        VALUES ($1, $2)
@@ -81,12 +117,22 @@ exports.register = async (req, res) => {
 
     const authUserId = authInsert.rows[0].auth_user_id;
 
-    // Insert into portal.users with registration_step = 1
+    // Insert into portal.users
     await client.query(
       `INSERT INTO portal.users
-       (auth_user_id, full_name, registration_step)
-       VALUES ($1, $2, 1)`,
-      [authUserId, full_name],
+       (auth_user_id, full_name, university, campus, program_id, semester, batch_year, semester_is_manual, tu_registration_no)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
+      [
+        authUserId,
+        full_name,
+        university,
+        campus,
+        program_id,
+        normalizedSemester,
+        normalizedBatchYear,
+        normalizedManualSemester,
+        tu_registration_no,
+      ],
     );
 
     // Generate email verification token
@@ -94,6 +140,13 @@ exports.register = async (req, res) => {
       { auth_user_id: authUserId },
       process.env.JWT_SECRET,
       { expiresIn: "24h" },
+    );
+
+    // Delete any existing tokens for this user (prevents multiple active tokens)
+    await client.query(
+      `DELETE FROM auth.email_verification_tokens
+       WHERE auth_user_id = $1`,
+      [authUserId],
     );
 
     // Save token in DB
@@ -106,7 +159,7 @@ exports.register = async (req, res) => {
 
     await client.query("COMMIT");
 
-    // Send verification email
+    // Send branded verification email
     const verificationLink = `${process.env.BASE_URL}/api/auth/verify-email?token=${emailToken}`;
 
     try {
@@ -117,11 +170,12 @@ exports.register = async (req, res) => {
       });
     } catch (emailErr) {
       console.error("Failed to send verification email:", emailErr);
+      // Don't fail registration if email fails, user can request resend
     }
 
     res.status(201).json({
-      message: "Step 1 successful. Account created. Please check your email.",
-      auth_user_id: authUserId, // Return this for Step 2 if needed (though JWT is better)
+      message:
+        "Registration successful. Please check your email to verify your account.",
     });
   } catch (err) {
     await client.query("ROLLBACK");
@@ -129,84 +183,6 @@ exports.register = async (req, res) => {
     res.status(500).json({ error: "Registration failed" });
   } finally {
     client.release();
-  }
-};
-
-/**
- * Step 2: Complete Profile & Career Scope
- */
-exports.completeRegistration = async (req, res) => {
-  const {
-    current_education,
-    target_exam,
-    career_scope,
-    university,
-    campus,
-    program_id,
-    semester,
-    batch_year,
-    semester_is_manual,
-    tu_registration_no,
-  } = req.body;
-
-  const authUserId = req.user.auth_user_id;
-
-  try {
-    const normalizedBatchYear =
-      batch_year === undefined || batch_year === null || batch_year === ""
-        ? null
-        : Number.parseInt(batch_year, 10);
-
-    const normalizedManualSemester =
-      semester_is_manual === true || semester_is_manual === "true";
-
-    let normalizedSemester =
-      semester === undefined || semester === null || semester === ""
-        ? null
-        : Number.parseInt(semester, 10);
-
-    if (normalizedBatchYear && !normalizedManualSemester) {
-      normalizedSemester = calculateSemesterFromBatch(normalizedBatchYear);
-    }
-
-    const studentIdImageUrl = req.file?.path || null;
-
-    // Update portal.users
-    await pool.query(
-      `UPDATE portal.users
-       SET current_education = $1,
-           target_exam = $2,
-           career_scope = $3,
-           university = COALESCE($4, university),
-           campus = COALESCE($5, campus),
-           program_id = COALESCE($6, program_id),
-           semester = COALESCE($7, semester),
-           batch_year = COALESCE($8, batch_year),
-           semester_is_manual = COALESCE($9, semester_is_manual),
-           tu_registration_no = COALESCE($10, tu_registration_no),
-           student_id_image_url = COALESCE($11, student_id_image_url),
-           registration_step = 2
-       WHERE auth_user_id = $12`,
-      [
-        current_education,
-        target_exam,
-        career_scope,
-        university,
-        campus,
-        program_id,
-        normalizedSemester,
-        normalizedBatchYear,
-        normalizedManualSemester,
-        tu_registration_no,
-        studentIdImageUrl,
-        authUserId,
-      ],
-    );
-
-    res.json({ message: "Profile completed successfully! 🚀" });
-  } catch (err) {
-    console.error("Complete registration error:", err);
-    res.status(500).json({ error: "Failed to complete profile" });
   }
 };
 exports.login = async (req, res) => {
