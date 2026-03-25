@@ -12,8 +12,7 @@ const MainLayoutContent = () => {
   // Hide footer on discussion and group pages
   const hideFooter =
     location.pathname.startsWith("/discussions") ||
-    location.pathname.startsWith("/groups") ||
-    location.pathname.startsWith("/resources");
+    location.pathname.startsWith("/groups");
 
   // Library page manages its own padding/height for the sidebar layout
   const isLibraryRoute = location.pathname.startsWith("/resources");
@@ -30,24 +29,24 @@ const MainLayoutContent = () => {
       <motion.main
         layout
         className={`
-          flex-1 pt-16 layout-transition
+          flex-1 pt-16 layout-transition flex flex-col
           ${isMobile ? "ml-0" : isCollapsed ? "lg:ml-18" : "lg:ml-64"}
         `}
         transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1] }}
       >
-        {/* Library/Resources page manages its own padding & height */}
+        {/* Library/Resources page manages its own padding */}
         {isLibraryRoute ? (
-          <div className="h-[calc(100vh-4rem)]">
+          <div className="flex-1 min-h-[calc(100vh-4rem)]">
             <Outlet />
           </div>
         ) : (
-          <div className="min-h-[calc(100vh-4rem)] px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+          <div className="flex-1 min-h-[calc(100vh-4rem)] px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
             <Outlet />
           </div>
         )}
 
-        {/* Footer */}
-        {!hideFooter && <Footer withSidebarOffset={!isCollapsed && !isMobile} />}
+        {/* Footer: no sidebar offset needed here because main already has the margin */}
+        {!hideFooter && <Footer withSidebarOffset={false} />}
       </motion.main>
     </div>
   );

@@ -76,7 +76,7 @@ const CommentItem = ({
     String(comment.user_id) === String(user.portal_user_id || user.user_id);
 
   return (
-    <div className={`${depth > 0 ? "ml-8 mt-4" : ""}`}>
+    <div className={`${depth > 0 ? "ml-3 sm:ml-8 mt-4" : ""}`}>
       <div className="flex gap-2">
         {depth > 0 && (
           <div className="flex-shrink-0 w-0.5 bg-purple-200/50 rounded-full" />
