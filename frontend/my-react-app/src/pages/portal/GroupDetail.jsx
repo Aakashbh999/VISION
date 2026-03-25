@@ -39,6 +39,7 @@ import {
   Star,
   Image as ImageIcon,
   Loader2,
+  Menu,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -107,6 +108,7 @@ const GroupDetail = () => {
 
   // Additional state for Admin Panel
   const [showAdminPanel, setShowAdminPanel] = useState(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   const {
     data: group,
@@ -396,21 +398,21 @@ const GroupDetail = () => {
                     })()
                   )}
                 </Link>
-                <div className="flex flex-col">
-                  <h1 className="font-black text-[var(--text-main)] text-base md:text-lg leading-tight flex items-center gap-3">
-                    {group.name}
+                <div className="flex flex-col min-w-0">
+                  <h1 className="font-black text-[var(--text-main)] text-sm sm:text-base md:text-lg leading-tight flex items-center gap-2 sm:gap-3 truncate">
+                    <span className="truncate">{group.name}</span>
                     <Badge
                       color={
                         SECTIONS.find((s) => s.id === activeSection)
                           ?.color.replace("text-", "")
                           .split("-")[0] || "purple"
                       }
-                      className="hidden md:inline-flex"
+                      className="hidden md:inline-flex shrink-0"
                     >
                       {SECTIONS.find((s) => s.id === activeSection)?.label}
                     </Badge>
                   </h1>
-                  <span className="text-[10px] font-black text-[var(--text-muted)] uppercase tracking-widest">
+                  <span className="text-[10px] font-black text-[var(--text-muted)] uppercase tracking-widest truncate">
                     {group.members} Members • Capacity: {group.capacity}
                   </span>
                 </div>
@@ -444,21 +446,33 @@ const GroupDetail = () => {
                   <Button
                     variant={showAdminPanel ? "shiny" : "ghost"}
                     size="sm"
-                    onClick={() => setShowAdminPanel(!showAdminPanel)}
-                    className="p-2.5 gap-2 hidden lg:flex"
+                    onClick={() => {
+                      setShowAdminPanel(!showAdminPanel);
+                      setIsSidebarOpen(true);
+                    }}
+                    className="p-2.5 gap-1.5 md:gap-2 flex"
                   >
-                    <Settings className="w-5 h-5" />
-                    <span className="text-xs font-bold">Admin Panel</span>
+                    <Settings className="w-4 h-4 md:w-5 md:h-5" />
+                    <span className="text-[10px] md:text-xs font-bold hidden sm:inline">Admin Panel</span>
                   </Button>
                 )
               )}
               <Button
                 variant={showSearch ? "shiny" : "ghost"}
                 size="sm"
-                className="p-2.5 hidden md:flex"
+                className="p-2.5 flex"
                 onClick={() => setShowSearch(!showSearch)}
               >
-                <Search className="w-5 h-5" />
+                <Search className="w-4 h-4 md:w-5 md:h-5" />
+              </Button>
+              {/* Mobile menu button */}
+              <Button
+                variant="ghost"
+                size="sm"
+                className="p-2.5 lg:hidden ml-1"
+                onClick={() => setIsSidebarOpen(true)}
+              >
+                <Menu className="w-5 h-5" />
               </Button>
             </div>
           </div>
@@ -693,8 +707,24 @@ const GroupDetail = () => {
             )}
         </div>
 
+        {/* Mobile Sidebar Overlay */}
+        {isSidebarOpen && (
+          <div 
+            className="fixed inset-0 bg-black/50 z-40 lg:hidden" 
+            onClick={() => setIsSidebarOpen(false)}
+          />
+        )}
+
         {/* Right Sidebar */}
-        <div className="hidden lg:flex flex-col w-88 bg-[var(--bg-card)] border-l border-[var(--border-main)] z-10">
+        <div className={`fixed inset-y-0 right-0 z-50 w-80 bg-[var(--bg-card)] border-l border-[var(--border-main)] border-y md:border-y-0 transform transition-transform duration-300 ease-in-out lg:static lg:transform-none lg:flex flex-col flex ${
+          isSidebarOpen ? "translate-x-0" : "translate-x-full"
+        }`}>
+          {/* Close button for mobile */}
+          <div className="lg:hidden absolute top-4 right-4 z-50">
+            <Button variant="ghost" size="sm" className="p-2 bg-[var(--bg-main)]/50 backdrop-blur" onClick={() => setIsSidebarOpen(false)}>
+              <X className="w-5 h-5" />
+            </Button>
+          </div>
           {showAdminPanel && isAdmin ? (
             // ------------------ ADMIN PANEL ------------------
             <div className="flex-1 flex flex-col h-full bg-[var(--bg-main)]/50">
@@ -957,6 +987,7 @@ const GroupDetail = () => {
                           onClick={() => {
                             setActiveSection(section.id);
                             isInitialLoad.current = true;
+                            setIsSidebarOpen(false); // Close sidebar on mobile after selection
                           }}
                           className={`flex items-center gap-3 p-3 rounded-xl transition-all ${
                             isActive

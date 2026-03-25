@@ -202,9 +202,9 @@ const ClubDetail = () => {
           )}
           
           <div className="absolute bottom-6 left-6 right-6 z-20 flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
-            <div className="flex items-end gap-5">
-              <div className="w-24 h-24 sm:w-32 sm:h-32 rounded-[1.5rem] bg-[var(--bg-card)] p-1.5 shadow-2xl">
-                <div className="w-full h-full rounded-[1.2rem] bg-purple-50 flex items-center justify-center text-purple-600 font-black text-4xl overflow-hidden border border-purple-100">
+            <div className="flex flex-col sm:flex-row sm:items-end gap-3 sm:gap-5">
+              <div className="w-20 h-20 sm:w-32 sm:h-32 rounded-[1.2rem] sm:rounded-[1.5rem] bg-[var(--bg-card)] p-1.5 shadow-2xl relative z-10 sm:-mb-2">
+                <div className="w-full h-full rounded-[1rem] sm:rounded-[1.2rem] bg-purple-50 flex items-center justify-center text-purple-600 font-black text-3xl sm:text-4xl overflow-hidden border border-purple-100">
                   {club.logo_url ? (
                     <img src={club.logo_url} className="w-full h-full object-cover" alt="" />
                   ) : (
@@ -212,8 +212,8 @@ const ClubDetail = () => {
                   )}
                 </div>
               </div>
-              <div className="pb-2">
-                <h1 className="text-3xl sm:text-4xl font-black text-white drop-shadow-md tracking-tight leading-tight">
+              <div className="pb-0 sm:pb-2 flex-1 min-w-0">
+                <h1 className="text-2xl sm:text-4xl font-black text-white drop-shadow-md tracking-tight leading-tight truncate">
                   {club.club_name}
                 </h1>
               </div>
@@ -266,10 +266,10 @@ const ClubDetail = () => {
                 <div className="w-10 h-10 rounded-xl bg-purple-50 flex items-center justify-center text-purple-600 shrink-0">
                   <MapPin className="w-5 h-5" />
                 </div>
-                <div>
+                <div className="min-w-0">
                   <div className="text-[10px] font-black uppercase tracking-widest text-[var(--text-muted)]">Headquarters</div>
-                  <div className="font-bold text-[var(--text-main)] leading-tight mt-0.5">{club.location || "N/A"}</div>
-                  <div className="text-xs font-medium text-[var(--text-muted)] mt-0.5">{club.institution}</div>
+                  <div className="font-bold text-[var(--text-main)] leading-tight mt-0.5 truncate">{club.location || "N/A"}</div>
+                  <div className="text-xs font-medium text-[var(--text-muted)] mt-0.5 truncate">{club.institution}</div>
                 </div>
               </div>
 

@@ -231,8 +231,8 @@ const Discussions = () => {
           </div>
         </div>
 
-        <div className="flex items-center justify-between border-t border-[var(--border-main)] pt-3">
-          <div className="flex gap-4">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between border-t border-[var(--border-main)] pt-3 gap-3">
+          <div className="flex flex-wrap gap-2 w-full sm:w-auto">
             <button
               onClick={() => setShowFilters(!showFilters)}
               className="flex items-center gap-1 text-xs font-bold text-[var(--text-muted)] hover:bg-[var(--bg-active)] px-2 py-1 rounded"

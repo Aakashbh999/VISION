@@ -434,52 +434,52 @@ const Profile = () => {
              })}
           </div>
 
-          <div className="mt-8 py-6 border-t border-[var(--border-main)] flex flex-wrap gap-x-8 gap-y-4 text-sm">
-            <div className="flex items-center gap-2.5 text-[var(--text-muted)]">
-              <div className="w-8 h-8 rounded-lg bg-purple-50 flex items-center justify-center text-purple-600">
+          <div className="mt-8 py-6 border-t border-[var(--border-main)] grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6 text-sm">
+            <div className="flex items-center gap-2.5 text-[var(--text-muted)] bg-[var(--bg-active)] p-3 rounded-2xl border border-[var(--border-main)]">
+              <div className="w-8 h-8 rounded-lg bg-purple-50 flex items-center justify-center text-purple-600 shrink-0">
                 <Users className="w-4 h-4" />
               </div>
-              <div className="flex flex-col">
-                <span className="font-bold text-[var(--text-main)] leading-none">
+              <div className="flex flex-col min-w-0">
+                <span className="font-bold text-[var(--text-main)] leading-none truncate">
                   {profile.followers_count || 0}
                 </span>
-                <span className="text-[10px] uppercase tracking-wider text-[var(--text-muted)] font-bold mt-1">Followers</span>
+                <span className="text-[10px] uppercase tracking-wider text-[var(--text-muted)] font-bold mt-1 truncate">Followers</span>
               </div>
             </div>
 
-            <div className="flex items-center gap-2.5 text-[var(--text-muted)] border-l pl-8 border-[var(--border-main)]">
-              <div className="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center text-blue-600">
+            <div className="flex items-center gap-2.5 text-[var(--text-muted)] bg-[var(--bg-active)] p-3 rounded-2xl border border-[var(--border-main)]">
+              <div className="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center text-blue-600 shrink-0">
                 <Users className="w-4 h-4" />
               </div>
-              <div className="flex flex-col">
-                <span className="font-bold text-[var(--text-main)] leading-none">
+              <div className="flex flex-col min-w-0">
+                <span className="font-bold text-[var(--text-main)] leading-none truncate">
                   {profile.following_count || 0}
                 </span>
-                <span className="text-[10px] uppercase tracking-wider text-[var(--text-muted)] font-bold mt-1">Following</span>
+                <span className="text-[10px] uppercase tracking-wider text-[var(--text-muted)] font-bold mt-1 truncate">Following</span>
               </div>
             </div>
 
-            <div className="flex items-center gap-2.5 text-[var(--text-muted)] border-l pl-8 border-[var(--border-main)]">
-              <div className="w-8 h-8 rounded-lg bg-pink-50 flex items-center justify-center text-pink-600">
+            <div className="flex items-center gap-2.5 text-[var(--text-muted)] bg-[var(--bg-active)] p-3 rounded-2xl border border-[var(--border-main)]">
+              <div className="w-8 h-8 rounded-lg bg-pink-50 flex items-center justify-center text-pink-600 shrink-0">
                 <MessageSquare className="w-4 h-4" />
               </div>
-              <div className="flex flex-col">
-                <span className="font-bold text-[var(--text-main)] leading-none">
+              <div className="flex flex-col min-w-0">
+                <span className="font-bold text-[var(--text-main)] leading-none truncate">
                   {profile.discussion_count || 0}
                 </span>
-                <span className="text-[10px] uppercase tracking-wider text-[var(--text-muted)] font-bold mt-1">Discussions</span>
+                <span className="text-[10px] uppercase tracking-wider text-[var(--text-muted)] font-bold mt-1 truncate">Discussions</span>
               </div>
             </div>
 
-            <div className="flex items-center gap-2.5 text-[var(--text-muted)] border-l pl-8 border-[var(--border-main)]">
-              <div className="w-8 h-8 rounded-lg bg-emerald-50 flex items-center justify-center text-emerald-600">
+            <div className="flex items-center gap-2.5 text-[var(--text-muted)] bg-[var(--bg-active)] p-3 rounded-2xl border border-[var(--border-main)]">
+              <div className="w-8 h-8 rounded-lg bg-emerald-50 flex items-center justify-center text-emerald-600 shrink-0">
                 <FileText className="w-4 h-4" />
               </div>
-              <div className="flex flex-col">
-                <span className="font-bold text-[var(--text-main)] leading-none">
+              <div className="flex flex-col min-w-0">
+                <span className="font-bold text-[var(--text-main)] leading-none truncate">
                   {profile.resource_count || 0}
                 </span>
-                <span className="text-[10px] uppercase tracking-wider text-[var(--text-muted)] font-bold mt-1">Resources</span>
+                <span className="text-[10px] uppercase tracking-wider text-[var(--text-muted)] font-bold mt-1 truncate">Resources</span>
               </div>
             </div>
           </div>

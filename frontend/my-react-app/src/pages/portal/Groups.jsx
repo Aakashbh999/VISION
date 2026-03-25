@@ -189,7 +189,7 @@ const Groups = () => {
               ))}
             </select>
 
-            <div className="flex bg-[var(--bg-card)]/80 p-1 rounded-2xl border border-[var(--border-main)] shadow-sm">
+            <div className="flex flex-wrap gap-1 bg-[var(--bg-card)]/80 p-1 rounded-2xl border border-[var(--border-main)] shadow-sm">
               {[
                 { value: "latest", label: "Recent", icon: Sparkles },
                 { value: "active", label: "Hot", icon: TrendingUp },

@@ -81,13 +81,13 @@ const DiscussionCard = ({
       {/* Content Area */}
       <div className="flex-1 p-4 flex flex-col">
         {/* Meta Header */}
-        <div className="flex items-center justify-between mb-3">
-          <div className="flex items-center gap-2 text-[10px] uppercase font-black tracking-widest text-[var(--text-muted)]">
-            <span className="text-purple-500 font-black hover:underline cursor-pointer">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3">
+          <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 text-[10px] uppercase font-black tracking-widest text-[var(--text-muted)]">
+            <span className="text-purple-500 font-black hover:underline cursor-pointer truncate max-w-[120px] sm:max-w-none">
               v/{disc.specialization_name?.replace(/\s+/g, "").toLowerCase() || "general"}
             </span>
             <span className="opacity-50">•</span>
-            <span className="text-[var(--text-main)]/80">u/{disc.author}</span>
+            <span className="text-[var(--text-main)]/80 truncate max-w-[100px] sm:max-w-none">u/{disc.author}</span>
             <span className="opacity-50">•</span>
             <span>{new Date(disc.created_at).toLocaleDateString()}</span>
             {hasImage && (
@@ -171,10 +171,10 @@ const DiscussionCard = ({
         </Link>
 
         {/* Action Bar */}
-        <div className="flex items-center gap-1 mt-auto pt-2 border-t border-[var(--border-main)]/30">
+        <div className="flex flex-wrap items-center gap-1 mt-auto pt-2 border-t border-[var(--border-main)]/30">
           <Link
             to={`/discussions/${disc.discussion_id}`}
-            className="flex items-center gap-1.5 px-3 py-2 hover:bg-[var(--bg-active)] rounded-lg text-[10px] font-black uppercase tracking-wider text-[var(--text-muted)] transition-all"
+            className="flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-2 hover:bg-[var(--bg-active)] rounded-lg text-[10px] font-black uppercase tracking-wider text-[var(--text-muted)] transition-all"
           >
             <MessageSquare className="w-4 h-4" />
             {disc.comment_count || 0} Comments
