@@ -26,12 +26,12 @@ export const completeStep = async (stepId) => {
 
 // Get roadmap path (subway map data)
 export const getRoadmapPath = async (id) => {
-  const response = await api.get(`/api/roadmaps/${id}/path`);
+  const response = await api.get(`/roadmaps/${id}/path`);
   return response.data;
 };
 
 // Get progress percentage for a roadmap
 export const getRoadmapProgress = async (roadmapId) => {
-  const response = await api.get(`/api/roadmaps/${roadmapId}/progress`);
+  const response = await api.get(`/roadmaps/${roadmapId}/progress`);
   return response.data;
 };
