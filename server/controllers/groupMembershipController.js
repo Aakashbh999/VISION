@@ -58,7 +58,7 @@ exports.joinGroup = async (req, res) => {
 
     const group = await pool.query(
       `SELECT privacy_type, capacity, invite_token,
-        (SELECT COUNT(*) FROM portal.group_members WHERE group_id = $1) AS member_count
+        (SELECT COUNT(*) FROM portal.group_members WHERE group_id = $1 AND status = 'approved') AS member_count
        FROM portal.study_groups WHERE group_id = $1`,
       [id],
     );
@@ -184,7 +184,7 @@ exports.approveRequest = async (req, res) => {
 
     // Check capacity
     const cap = await pool.query(
-      `SELECT capacity, (SELECT COUNT(*) FROM portal.group_members WHERE group_id = $1) AS member_count
+      `SELECT capacity, (SELECT COUNT(*) FROM portal.group_members WHERE group_id = $1 AND status = 'approved') AS member_count
        FROM portal.study_groups WHERE group_id = $1`,
       [id],
     );
@@ -267,7 +267,7 @@ exports.appointCoAdmin = async (req, res) => {
 
     // Check co-admin limit
     const coAdminCount = await pool.query(
-      `SELECT COUNT(*) FROM portal.group_members WHERE group_id = $1 AND role = 'co_admin'`,
+      `SELECT COUNT(*) FROM portal.group_members WHERE group_id = $1 AND role = 'co_admin' AND status = 'approved'`,
       [id],
     );
     if (parseInt(coAdminCount.rows[0].count) >= MAX_CO_ADMINS) {

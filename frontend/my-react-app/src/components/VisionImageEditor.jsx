@@ -161,11 +161,11 @@ export default function VisionImageEditor({
     if (asModal) {
       return (
         <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="w-full max-w-sm bg-white rounded-2xl shadow-2xl border border-gray-100 p-5 space-y-4">
-            <p className="text-base font-bold text-gray-900">
+          <div className="w-full max-w-sm bg-[var(--bg-card)] rounded-2xl shadow-2xl border border-[var(--border-main)] p-5 space-y-4">
+            <p className="text-base font-bold text-[var(--text-main)]">
               {isCircle ? "Update Profile Photo" : "Update Banner Image"}
             </p>
-            <p className="text-sm text-gray-500">
+            <p className="text-sm text-[var(--text-muted)]">
               Select an image to start cropping.
             </p>
             {errorMsg && (
@@ -185,13 +185,13 @@ export default function VisionImageEditor({
             <div className="flex items-center justify-end gap-3 pt-1">
               <button
                 onClick={handleCancel}
-                className="px-4 py-2 rounded-lg text-sm font-semibold text-gray-600 hover:bg-gray-100"
+                className="px-4 py-2 rounded-lg text-sm font-semibold text-[var(--text-muted)] hover:bg-[var(--bg-active)] transition-colors"
               >
                 Cancel
               </button>
               <button
                 onClick={() => fileInputRef.current?.click()}
-                className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-purple-600 hover:bg-purple-700 text-white text-sm font-semibold"
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-purple-600 hover:bg-purple-700 text-white text-sm font-semibold transition-colors"
               >
                 <Upload className="w-4 h-4" />
                 Choose Image

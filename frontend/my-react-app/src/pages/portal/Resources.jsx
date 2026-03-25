@@ -35,10 +35,10 @@ const ResourcesContent = () => {
       {/* Header Section */}
       <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6 mb-10">
         <div className="space-y-1">
-          <h1 className="text-4xl font-black text-slate-900 tracking-tight">
+          <h1 className="text-4xl font-black text-[var(--text-main)] tracking-tight">
             {filters.view === "my" ? "My Uploads" : "Resource Library"}
           </h1>
-          <p className="text-slate-500 text-lg font-medium">
+          <p className="text-[var(--text-muted)] text-lg font-medium">
             {filters.semester
               ? `Browsing materials for Semester ${filters.semester}`
               : "Access notes, books, and projects from across the university."}
@@ -47,7 +47,7 @@ const ResourcesContent = () => {
 
         <button
           onClick={() => setIsUploadModalOpen(true)}
-          className="flex items-center justify-center gap-2 px-6 py-4 bg-blue-600 text-white rounded-2xl hover:bg-blue-700 transition-all shadow-xl shadow-blue-100 font-bold active:scale-95"
+          className="flex items-center justify-center gap-2 px-6 py-4 bg-purple-600 text-white rounded-2xl hover:bg-purple-700 transition-all shadow-xl shadow-purple-500/20 font-bold active:scale-95"
         >
           <Plus className="w-5 h-5" />
           Share Resource
@@ -55,10 +55,10 @@ const ResourcesContent = () => {
       </div>
 
       {/* Filters Section */}
-      <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 mb-8">
+      <div className="bg-[var(--bg-card)] p-6 rounded-2xl shadow-sm border border-[var(--border-main)] mb-8">
         <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-2 text-slate-800 font-bold uppercase text-xs tracking-widest">
-            <Filter className="w-4 h-4 text-blue-500" />
+          <div className="flex items-center gap-2 text-[var(--text-muted)] font-bold uppercase text-xs tracking-widest">
+            <Filter className="w-4 h-4 text-purple-600" />
             Quick Filters
           </div>
 
@@ -86,7 +86,7 @@ const ResourcesContent = () => {
             name="resource_type"
             value={filters.resource_type}
             onChange={handleFilterChange}
-            className="w-full px-4 py-3 bg-slate-50 border border-transparent focus:border-blue-200 focus:bg-white rounded-xl text-sm font-bold outline-none transition-all"
+            className="w-full px-4 py-3 bg-[var(--bg-active)] border border-transparent focus:border-purple-200 focus:bg-[var(--bg-card)] rounded-xl text-sm font-bold outline-none transition-all text-[var(--text-main)]"
           >
             <option value="">All Formats</option>
             <option value="notes">Lecture Notes</option>
@@ -101,7 +101,7 @@ const ResourcesContent = () => {
             name="program_id"
             value={filters.program_id}
             onChange={handleFilterChange}
-            className="w-full px-4 py-3 bg-slate-50 border border-transparent focus:border-blue-200 focus:bg-white rounded-xl text-sm font-bold outline-none transition-all"
+            className="w-full px-4 py-3 bg-[var(--bg-active)] border border-transparent focus:border-purple-200 focus:bg-[var(--bg-card)] rounded-xl text-sm font-bold outline-none transition-all text-[var(--text-main)]"
           >
             <option value="">All Programs</option>
             {programs.map((p) => (
@@ -123,16 +123,16 @@ const ResourcesContent = () => {
           Failed to load resources. Please check your connection.
         </div>
       ) : !resourcesData?.data?.length || resourcesData?.noResults ? (
-        <div className="text-center py-20 bg-white border-2 border-dashed border-slate-200 rounded-3xl">
+        <div className="text-center py-20 bg-[var(--bg-card)] border-2 border-dashed border-[var(--border-main)] rounded-3xl">
           {resourcesData?.noResults ? (
             <div className="max-w-3xl mx-auto px-6">
-              <div className="w-16 h-16 bg-blue-50 rounded-2xl flex items-center justify-center mx-auto mb-6">
-                <Search className="w-8 h-8 text-blue-500" />
+              <div className="w-16 h-16 bg-purple-50 rounded-2xl flex items-center justify-center mx-auto mb-6">
+                <Search className="w-8 h-8 text-purple-600" />
               </div>
-              <h3 className="text-2xl font-black text-slate-900 uppercase mb-2">
+              <h3 className="text-2xl font-black text-[var(--text-main)] uppercase mb-2">
                 No matches for "{filters.search}"
               </h3>
-              <p className="text-slate-500 font-bold mb-10">
+              <p className="text-[var(--text-muted)] font-bold mb-10">
                 Try these recommended resources instead:
               </p>
 
@@ -141,17 +141,17 @@ const ResourcesContent = () => {
                   <Link
                     key={rec.id}
                     to={`/resources?id=${rec.id}`}
-                    className="group p-4 bg-slate-50 border border-transparent hover:border-blue-200 hover:bg-white hover:shadow-xl rounded-2xl transition-all duration-300"
+                    className="group p-4 bg-[var(--bg-active)] border border-transparent hover:border-purple-200 hover:bg-[var(--bg-card)] hover:shadow-xl rounded-2xl transition-all duration-300"
                   >
                     <div className="flex items-center gap-4">
-                      <div className="p-3 bg-white rounded-xl shadow-sm group-hover:bg-blue-50 transition-colors">
-                        <Award className="w-5 h-5 text-blue-500" />
+                      <div className="p-3 bg-[var(--bg-card)] rounded-xl shadow-sm group-hover:bg-purple-50 transition-colors">
+                        <Award className="w-5 h-5 text-purple-600" />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="font-bold text-slate-900 truncate group-hover:text-blue-600">
+                        <p className="font-bold text-[var(--text-main)] truncate group-hover:text-purple-600">
                           {rec.title}
                         </p>
-                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-0.5">
+                        <p className="text-[10px] font-black text-[var(--text-muted)] uppercase tracking-widest mt-0.5">
                           Sem {rec.semester} • {rec.avg_score} ★
                         </p>
                       </div>
@@ -162,13 +162,13 @@ const ResourcesContent = () => {
             </div>
           ) : (
             <div className="py-10">
-              <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Search className="w-8 h-8 text-slate-300" />
+              <div className="w-16 h-16 bg-[var(--bg-active)] rounded-full flex items-center justify-center mx-auto mb-4">
+                <Search className="w-8 h-8 text-[var(--text-muted)]" />
               </div>
-              <h3 className="text-lg font-bold text-slate-900 uppercase">
+              <h3 className="text-lg font-bold text-[var(--text-main)] uppercase">
                 No results found
               </h3>
-              <p className="text-sm text-slate-500">
+              <p className="text-sm text-[var(--text-muted)]">
                 Try adjusting your filters or search query
               </p>
             </div>

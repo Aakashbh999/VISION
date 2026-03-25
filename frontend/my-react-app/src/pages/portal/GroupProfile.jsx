@@ -189,7 +189,7 @@ export default function GroupProfile() {
       <div className="min-h-screen flex items-center justify-center">
         <div className="flex flex-col items-center gap-3">
           <div className="animate-spin rounded-full h-10 w-10 border-2 border-purple-200 border-t-purple-600" />
-          <p className="text-sm text-slate-500">Loading group profile...</p>
+          <p className="text-sm text-[var(--text-muted)]">Loading group profile...</p>
         </div>
       </div>
     );
@@ -197,7 +197,7 @@ export default function GroupProfile() {
 
   if (groupError || !group) {
     return (
-      <div className="p-8 text-center text-slate-500">
+      <div className="p-8 text-center text-[var(--text-muted)]">
         <ShieldCheck className="w-12 h-12 mx-auto mb-3 text-rose-400" />
         Group not found or access denied.
       </div>
@@ -216,23 +216,23 @@ export default function GroupProfile() {
       <div className="flex items-center gap-3">
         <button
           onClick={() => navigate(-1)}
-          className="flex items-center gap-2 text-sm font-semibold text-slate-500 hover:text-purple-600 transition-colors"
+          className="flex items-center gap-2 text-sm font-semibold text-[var(--text-muted)] hover:text-purple-600 transition-colors"
         >
           <ChevronLeft className="w-4 h-4" /> Back
         </button>
-        <span className="text-slate-300">/</span>
+        <span className="text-[var(--text-muted)]/30">/</span>
         <Link
           to={`/groups/${id}`}
-          className="flex items-center gap-1.5 text-sm font-semibold text-slate-500 hover:text-purple-600 transition-colors"
+          className="flex items-center gap-1.5 text-sm font-semibold text-[var(--text-muted)] hover:text-purple-600 transition-colors"
         >
           Open Workspace <ArrowUpRight className="w-3.5 h-3.5" />
         </Link>
       </div>
 
       {/* ── Hero Card ───────────────────────── */}
-      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden relative">
+      <div className="bg-[var(--bg-card)] rounded-2xl border border-[var(--border-main)] shadow-sm overflow-hidden relative">
         {/* Banner */}
-        <div className="h-52 relative bg-linear-to-r from-slate-900 to-purple-900 overflow-hidden">
+        <div className="h-52 relative bg-gradient-to-r from-slate-900 to-purple-900 overflow-hidden">
           {group.banner_image && (
             <img
               src={group.banner_image}
@@ -271,7 +271,7 @@ export default function GroupProfile() {
           <div className="flex flex-col sm:flex-row sm:items-end gap-6 -mt-10 sm:-mt-14">
             {/* Avatar */}
             <div className="relative group/av">
-              <div className="w-32 h-32 sm:w-40 sm:h-40 rounded-2xl border-4 border-slate-50 shadow-xl flex items-center justify-center bg-slate-900 overflow-hidden">
+              <div className="w-32 h-32 sm:w-40 sm:h-40 rounded-2xl border-4 border-[var(--bg-card)] shadow-xl flex items-center justify-center bg-slate-900 overflow-hidden">
                 {group.group_image ? (
                   <img
                     src={group.group_image}
@@ -313,23 +313,23 @@ export default function GroupProfile() {
               {/* Editable name */}
               {canEditDescription && isEditMode ? (
                 <div className="space-y-2 mb-3">
-                  <label className="block text-xs font-bold uppercase tracking-[0.24em] text-slate-500">
+                  <label className="block text-xs font-bold uppercase tracking-[0.24em] text-[var(--text-muted)]">
                     Group Name
                   </label>
                   <input
                     value={draftGroup.name}
                     onChange={(e) => setDraftGroup({ ...draftGroup, name: e.target.value })}
-                    className="text-2xl sm:text-3xl font-black text-slate-900 border-b-2 border-purple-400 bg-transparent focus:outline-none w-full"
+                    className="text-2xl sm:text-3xl font-black text-[var(--text-main)] border-b-2 border-purple-400 bg-transparent focus:outline-none w-full"
                     maxLength={150}
                   />
                 </div>
               ) : (
-                <h1 className="text-2xl sm:text-3xl font-black text-slate-900 flex items-center gap-3">
+                <h1 className="text-2xl sm:text-3xl font-black text-[var(--text-main)] flex items-center gap-3">
                   {group.name}
                 </h1>
               )}
 
-              <div className="flex flex-wrap items-center gap-3 text-sm text-slate-500">
+              <div className="flex flex-wrap items-center gap-3 text-sm text-[var(--text-muted)]">
                 {/* Privacy badge */}
                 <span
                   className={`flex items-center gap-1.5 font-semibold ${privacyCfg.color}`}
@@ -338,7 +338,7 @@ export default function GroupProfile() {
                 </span>
                 {group.degree_name && (
                   <span className="flex items-center gap-1.5">
-                    <GraduationCap className="w-3.5 h-3.5 text-slate-400" />{" "}
+                    <GraduationCap className="w-3.5 h-3.5 text-[var(--text-muted)]" />{" "}
                     {group.degree_name}
                   </span>
                 )}
@@ -366,7 +366,7 @@ export default function GroupProfile() {
                 (group.has_pending_request ? (
                   <button
                     disabled
-                    className="px-5 py-2 rounded-xl font-bold bg-slate-100 text-slate-400 cursor-not-allowed"
+                    className="px-5 py-2 rounded-xl font-bold bg-[var(--bg-active)] text-[var(--text-muted)] cursor-not-allowed"
                   >
                     Request Pending
                   </button>
@@ -388,7 +388,7 @@ export default function GroupProfile() {
                 ))}
               <Link
                 to={`/groups/${id}`}
-                className="flex items-center gap-2 px-5 py-2 rounded-xl font-bold bg-slate-100 text-slate-700 hover:bg-slate-200 transition-colors"
+                className="flex items-center gap-2 px-5 py-2 rounded-xl font-bold bg-[var(--bg-active)] text-[var(--text-main)] hover:bg-[var(--border-main)] transition-colors"
               >
                 <MessageSquare className="w-4 h-4" /> Open Workspace
               </Link>
@@ -406,25 +406,25 @@ export default function GroupProfile() {
           </div>
 
           {/* Stats strip */}
-          <div className="mt-8 flex flex-wrap gap-6 text-sm border-t border-slate-100 pt-6">
-            <div className="flex items-center gap-2 text-slate-600">
-              <Users className="w-4 h-4 text-slate-400" />
-              <span className="font-black text-slate-900">
+          <div className="mt-8 flex flex-wrap gap-6 text-sm border-t border-[var(--border-main)] pt-6">
+            <div className="flex items-center gap-2 text-[var(--text-muted)]">
+              <Users className="w-4 h-4 text-[var(--text-muted)]" />
+              <span className="font-black text-[var(--text-main)]">
                 {group.members || 0}
               </span>{" "}
               / {group.capacity} Members
             </div>
-            <div className="flex items-center gap-2 text-slate-600 border-l pl-6 border-slate-200">
-              <MessageSquare className="w-4 h-4 text-slate-400" />
-              <span className="font-black text-slate-900">
+            <div className="flex items-center gap-2 text-[var(--text-muted)] border-l pl-6 border-[var(--border-main)]">
+              <MessageSquare className="w-4 h-4 text-[var(--text-muted)]" />
+              <span className="font-black text-[var(--text-main)]">
                 {group.post_count || 0}
               </span>{" "}
               Posts
             </div>
-            <div className="flex items-center gap-2 text-slate-600 border-l pl-6 border-slate-200">
-              <Calendar className="w-4 h-4 text-slate-400" />
+            <div className="flex items-center gap-2 text-[var(--text-muted)] border-l pl-6 border-[var(--border-main)]">
+              <Calendar className="w-4 h-4 text-[var(--text-muted)]" />
               Founded{" "}
-              <span className="font-black text-slate-900">
+              <span className="font-black text-[var(--text-main)]">
                 {new Date(group.created_at).toLocaleDateString("en-US", {
                   month: "long",
                   year: "numeric",
@@ -432,9 +432,9 @@ export default function GroupProfile() {
               </span>
             </div>
             {group.last_activity && (
-              <div className="flex items-center gap-2 text-slate-600 border-l pl-6 border-slate-200">
+              <div className="flex items-center gap-2 text-[var(--text-muted)] border-l pl-6 border-[var(--border-main)]">
                 Last active{" "}
-                <span className="font-black text-slate-900">
+                <span className="font-black text-[var(--text-main)]">
                   {new Date(group.last_activity).toLocaleDateString("en-US", {
                     month: "short",
                     day: "numeric",
@@ -451,9 +451,9 @@ export default function GroupProfile() {
         {/* Left — Description + Creator */}
         <div className="lg:col-span-2 space-y-8">
           {/* Description */}
-          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-8">
+          <div className="bg-[var(--bg-card)] rounded-2xl border border-[var(--border-main)] shadow-sm p-8">
             <div className="flex justify-between items-center mb-4">
-              <h3 className="text-lg font-bold text-slate-900 flex items-center gap-2">
+              <h3 className="text-lg font-bold text-[var(--text-main)] flex items-center gap-2">
                 <Info className="w-5 h-5 text-purple-600" /> About this Circle
               </h3>
               {canEditDescription && isEditMode && (
@@ -469,32 +469,32 @@ export default function GroupProfile() {
                   value={draftGroup.description}
                   onChange={(e) => setDraftGroup({ ...draftGroup, description: e.target.value })}
                   maxLength={1000}
-                  className="w-full text-sm text-slate-700 bg-slate-50 border border-slate-200 rounded-xl p-4 focus:ring-2 focus:ring-purple-600 focus:border-transparent min-h-30"
+                  className="w-full text-sm text-[var(--text-main)] bg-[var(--bg-active)] border border-[var(--border-main)] rounded-xl p-4 focus:ring-2 focus:ring-purple-600 focus:border-transparent min-h-30"
                   placeholder="Describe what this circle is about..."
                 />
                 <p
-                  className={`text-xs text-right ${countWords(draftGroup.description) > MAX_GROUP_DESCRIPTION_WORDS ? "text-red-600" : "text-slate-500"}`}
+                  className={`text-xs text-right ${countWords(draftGroup.description) > MAX_GROUP_DESCRIPTION_WORDS ? "text-red-600" : "text-[var(--text-muted)]"}`}
                 >
                   {countWords(draftGroup.description)}/{MAX_GROUP_DESCRIPTION_WORDS} words
                 </p>
               </div>
             ) : (
-              <p className="text-slate-600 leading-relaxed whitespace-pre-wrap">
+              <p className="text-[var(--text-muted)] leading-relaxed whitespace-pre-wrap">
                 {group.description || "This circle hasn't added a description yet."}
               </p>
             )}
           </div>
 
           {/* Creator card */}
-          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-8">
-            <h3 className="text-lg font-bold text-slate-900 mb-6 flex items-center gap-2">
+          <div className="bg-[var(--bg-card)] rounded-2xl border border-[var(--border-main)] shadow-sm p-8">
+            <h3 className="text-lg font-bold text-[var(--text-main)] mb-6 flex items-center gap-2">
               <Crown className="w-5 h-5 text-amber-500" /> Labyrinth Master
             </h3>
             <Link
               to={`/profile/${group.creator_id}`}
               className="flex items-center gap-4 group/creator"
             >
-              <div className="w-14 h-14 rounded-2xl bg-slate-100 overflow-hidden shrink-0 border-2 border-white shadow-md">
+              <div className="w-14 h-14 rounded-2xl bg-[var(--bg-active)] overflow-hidden shrink-0 border-2 border-white shadow-md">
                 {group.creator_image ? (
                   <img
                     src={group.creator_image}
@@ -502,17 +502,17 @@ export default function GroupProfile() {
                     className="w-full h-full object-cover"
                   />
                 ) : (
-                  <div className="w-full h-full flex items-center justify-center text-xl font-black text-slate-400">
+                  <div className="w-full h-full flex items-center justify-center text-xl font-black text-[var(--text-muted)]">
                     {group.creator?.charAt(0)?.toUpperCase()}
                   </div>
                 )}
               </div>
               <div>
-                <p className="font-black text-slate-900 group-hover/creator:text-purple-600 transition-colors flex items-center gap-2">
+                <p className="font-black text-[var(--text-main)] group-hover/creator:text-purple-600 transition-colors flex items-center gap-2">
                   {group.creator}
                   <ArrowUpRight className="w-4 h-4 opacity-0 group-hover/creator:opacity-100 transition-opacity" />
                 </p>
-                <p className="text-xs text-slate-400 uppercase tracking-widest font-bold">
+                <p className="text-xs text-[var(--text-muted)] uppercase tracking-widest font-bold">
                   Group Founder & Master
                 </p>
               </div>
@@ -523,13 +523,13 @@ export default function GroupProfile() {
         {/* Right — Members preview + Edit settings (owner) */}
         <div className="space-y-8">
           {/* Council of Five + members preview */}
-          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
-            <h3 className="text-sm font-black text-slate-900 uppercase tracking-wider mb-5 flex items-center gap-2">
+          <div className="bg-[var(--bg-card)] rounded-2xl border border-[var(--border-main)] shadow-sm p-6">
+            <h3 className="text-sm font-black text-[var(--text-main)] uppercase tracking-wider mb-5 flex items-center gap-2">
               <Users className="w-4 h-4 text-purple-600" /> Circle Members
             </h3>
 
             {topMembers.length === 0 ? (
-              <p className="text-sm text-slate-400 text-center py-4">
+              <p className="text-sm text-[var(--text-muted)] text-center py-4">
                 No members yet.
               </p>
             ) : (
@@ -541,9 +541,9 @@ export default function GroupProfile() {
                     <Link
                       key={m.user_id}
                       to={`/profile/${m.user_id}`}
-                      className="flex items-center gap-3 p-2 rounded-xl hover:bg-slate-50 transition-colors group/member"
+                      className="flex items-center gap-3 p-2 rounded-xl hover:bg-[var(--bg-active)] transition-colors group/member"
                     >
-                      <div className="w-9 h-9 rounded-full bg-slate-100 overflow-hidden shrink-0 border border-slate-200">
+                      <div className="w-9 h-9 rounded-full bg-[var(--bg-active)] overflow-hidden shrink-0 border border-[var(--border-main)]">
                         {m.profile_image ? (
                           <img
                             src={m.profile_image}
@@ -551,13 +551,13 @@ export default function GroupProfile() {
                             className="w-full h-full object-cover"
                           />
                         ) : (
-                          <div className="w-full h-full flex items-center justify-center text-xs font-black text-slate-400">
+                          <div className="w-full h-full flex items-center justify-center text-xs font-black text-[var(--text-muted)]">
                             {m.full_name?.charAt(0)?.toUpperCase()}
                           </div>
                         )}
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-xs font-bold text-slate-800 truncate group-hover/member:text-purple-600 transition-colors">
+                        <p className="text-xs font-bold text-[var(--text-main)] truncate group-hover/member:text-purple-600 transition-colors">
                           {m.full_name}
                         </p>
                         {cfg && (
@@ -591,7 +591,7 @@ export default function GroupProfile() {
             <Motion.div
               initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
-              className="bg-linear-to-br from-purple-600 to-blue-700 rounded-2xl shadow-xl p-1 relative overflow-hidden"
+              className="bg-gradient-to-br from-purple-600 to-blue-700 rounded-2xl shadow-xl p-1 relative overflow-hidden"
             >
               <div className="bg-white/10 backdrop-blur-md rounded-xl p-6 border border-white/20">
                 <h3 className="text-sm font-black text-purple-100 uppercase tracking-wider mb-4 flex items-center gap-2">
@@ -655,17 +655,17 @@ export default function GroupProfile() {
       </div>
 
       {canEditDescription && isEditMode && (
-        <div className="fixed bottom-0 left-0 right-0 z-50 border-t border-slate-200 bg-white/95 backdrop-blur-xl shadow-2xl pb-16 sm:pb-0">
+        <div className="fixed bottom-0 left-0 right-0 z-50 border-t border-[var(--border-main)] bg-[var(--bg-card)]/95 backdrop-blur-xl shadow-2xl pb-16 sm:pb-0">
           <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
             <div>
-              <p className="text-sm font-bold text-slate-900">Group edit mode</p>
-              <p className="text-xs text-slate-500">Text changes save in one request. Image uploads apply instantly.</p>
+              <p className="text-sm font-bold text-[var(--text-main)]">Group edit mode</p>
+              <p className="text-xs text-[var(--text-muted)]">Text changes save in one request. Image uploads apply instantly.</p>
             </div>
             <div className="flex items-center gap-3 w-full sm:w-auto">
               <button
                 type="button"
                 onClick={handleEditCancel}
-                className="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-slate-100 text-slate-700 font-bold hover:bg-slate-200 transition-colors"
+                className="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-[var(--bg-active)] text-[var(--text-main)] font-bold hover:bg-[var(--border-main)] transition-colors"
               >
                 <X className="w-4 h-4" /> Cancel
               </button>

@@ -28,18 +28,18 @@ const VerifyEmail = () => {
 
   return (
     <div className="max-w-md mx-auto text-center py-12">
-      <div className="bg-white rounded-2xl border border-gray-200 p-8 shadow-sm">
-        <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
-          <Mail className="w-8 h-8 text-blue-600" />
+      <div className="bg-[var(--bg-card)] rounded-2xl border border-[var(--border-main)] p-8 shadow-sm">
+        <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
+          <Mail className="w-8 h-8 text-purple-600" />
         </div>
-        <h1 className="text-2xl font-bold text-gray-900 mb-2">
+        <h1 className="text-2xl font-bold text-[var(--text-main)] mb-2">
           Verify Your Email
         </h1>
-        <p className="text-gray-600 mb-2">We've sent a verification link to:</p>
-        <p className="font-medium text-gray-900 mb-4">
+        <p className="text-[var(--text-muted)] mb-2">We've sent a verification link to:</p>
+        <p className="font-medium text-[var(--text-main)] mb-4">
           {user?.email || "your email address"}
         </p>
-        <p className="text-gray-600 mb-6">
+        <p className="text-[var(--text-muted)] mb-6">
           Please check your inbox and click the link to verify your account.
           You'll have full access to VISION once verified.
         </p>
@@ -61,7 +61,7 @@ const VerifyEmail = () => {
         <button
           onClick={handleResend}
           disabled={loading}
-          className="w-full py-2.5 px-4 bg-gradient-to-r from-blue-600 to-purple-600 text-white font-medium rounded-lg hover:shadow-lg hover:shadow-blue-500/30 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+          className="w-full py-2.5 px-4 bg-gradient-to-r from-purple-600 to-purple-800 text-white font-medium rounded-lg hover:shadow-lg hover:shadow-purple-500/30 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
         >
           {loading ? (
             <>
@@ -76,13 +76,13 @@ const VerifyEmail = () => {
           )}
         </button>
 
-        <p className="text-sm text-gray-500 mt-4">
+        <p className="text-sm text-[var(--text-muted)] mt-4">
           Didn't receive the email? Check your spam folder.
         </p>
 
         <button
           onClick={logout}
-          className="mt-4 text-sm text-gray-500 hover:text-gray-700"
+          className="mt-4 text-sm text-[var(--text-muted)] hover:text-purple-600 transition-colors"
         >
           Sign out and use a different account
         </button>
@@ -91,4 +91,4 @@ const VerifyEmail = () => {
   );
 };
 
-export default VerifyEmail;
+export default VerifyEmail; 

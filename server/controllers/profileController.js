@@ -83,9 +83,9 @@ exports.getPublicProfile = async (req, res) => {
        FROM portal.users u
        LEFT JOIN portal.programs p     ON p.program_id = u.program_id
        LEFT JOIN portal.user_stats us  ON us.user_id   = u.user_id
-       LEFT JOIN portal.discussions d  ON d.user_id     = u.user_id
-       LEFT JOIN portal.resources r    ON r.created_by = u.user_id
-       WHERE u.user_id = $1
+       LEFT JOIN portal.discussions d  ON d.user_id     = u.user_id AND d.deleted_at IS NULL AND d.is_deleted = FALSE
+       LEFT JOIN portal.resources r    ON r.created_by = u.user_id AND r.deleted_at IS NULL
+       WHERE u.user_id = $1 AND u.status = 'active'
        GROUP BY u.user_id, p.program_name, us.total_xp, us.current_level`,
       viewerId ? [userId, viewerId] : [userId],
     );
@@ -155,8 +155,8 @@ exports.getOwnProfile = async (req, res) => {
        JOIN auth.users a               ON a.auth_user_id = u.auth_user_id
        LEFT JOIN portal.programs p     ON p.program_id = u.program_id
        LEFT JOIN portal.user_stats us  ON us.user_id   = u.user_id
-       LEFT JOIN portal.discussions d  ON d.user_id     = u.user_id
-       LEFT JOIN portal.resources r    ON r.created_by = u.user_id
+       LEFT JOIN portal.discussions d  ON d.user_id     = u.user_id AND d.deleted_at IS NULL AND d.is_deleted = FALSE
+       LEFT JOIN portal.resources r    ON r.created_by = u.user_id AND r.deleted_at IS NULL
        WHERE u.user_id = $1
        GROUP BY u.user_id, a.email, a.email_status, p.program_name, us.total_xp, us.current_level`,
       [userId],
@@ -612,7 +612,7 @@ exports.getFollowers = async (req, res) => {
       `SELECT u.user_id, u.full_name, u.profile_image, uf.followed_at
        FROM portal.user_followers uf
        JOIN portal.users u ON u.user_id = uf.follower_id
-       WHERE uf.following_id = $1
+       WHERE uf.following_id = $1 AND u.status = 'active'
        ORDER BY uf.followed_at DESC`,
       [userId],
     );
@@ -635,7 +635,7 @@ exports.getFollowing = async (req, res) => {
       `SELECT u.user_id, u.full_name, u.profile_image, uf.followed_at
        FROM portal.user_followers uf
        JOIN portal.users u ON u.user_id = uf.following_id
-       WHERE uf.follower_id = $1
+       WHERE uf.follower_id = $1 AND u.status = 'active'
        ORDER BY uf.followed_at DESC`,
       [userId],
     );

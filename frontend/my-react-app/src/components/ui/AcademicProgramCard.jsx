@@ -2,19 +2,18 @@ import { ArrowRight, GraduationCap, Clock, Building } from "lucide-react";
 import Badge from "./Badge";
 
 const AcademicProgramCard = ({ item }) => {
-  // item = { id, name, level, duration, university, description, ... }
   return (
-    <div className="bg-white rounded-2xl border border-gray-200 p-6 hover:shadow-xl hover:-translate-y-1 hover:border-green-200 transition-all duration-300 flex flex-col h-full">
+    <div className="bg-white rounded-2xl border border-gray-200 p-6 hover:shadow-xl hover:-translate-y-1 hover:border-purple-200 transition-all duration-300 flex flex-col h-full">
       {/* Icon + Title row */}
       <div className="flex items-start gap-3">
-        <div className="w-10 h-10 rounded-xl bg-green-50 flex items-center justify-center text-green-600 flex-shrink-0">
+        <div className="w-10 h-10 rounded-xl bg-purple-50 flex items-center justify-center text-purple-600 flex-shrink-0">
           <GraduationCap className="w-5 h-5" />
         </div>
         <h3 className="font-semibold text-lg text-gray-900">{item.name}</h3>
       </div>
 
-      {/* Description */}
-      <p className="text-sm text-gray-600 mt-3 leading-relaxed">
+      {/* Description – limit to 3 lines */}
+      <p className="text-sm text-gray-600 mt-3 leading-relaxed line-clamp-3">
         {item.description}
       </p>
 
@@ -30,15 +29,15 @@ const AcademicProgramCard = ({ item }) => {
         </div>
       </div>
 
-      {/* Level badge */}
+      {/* Level badge – keep green for variety, but you can change to purple */}
       <div className="mt-4">
         <Badge variant="green">{item.level}</Badge>
       </div>
 
-      {/* View Details link */}
+      {/* View Details link – now purple */}
       <a
         href={`/academic-guide/${item.slug}`}
-        className="mt-5 inline-flex items-center gap-1 text-green-600 text-sm font-medium hover:text-green-800 transition-colors group"
+        className="mt-5 inline-flex items-center gap-1 text-purple-600 text-sm font-medium hover:text-purple-800 transition-colors group"
       >
         View Program Details
         <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />

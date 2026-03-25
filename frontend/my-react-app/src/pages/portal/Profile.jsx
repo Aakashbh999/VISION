@@ -43,7 +43,7 @@ import { showToast } from "../../utils/toast";
 import { calculateSemesterFromBatch } from "../../utils/academic";
 
 const MAX_BIO_WORDS = 130;
- 
+
 const RedditIcon = (props) => (
   <svg viewBox="0 0 24 24" fill="currentColor" {...props}>
     <path d="M24 11.5c0-1.654-1.346-3-3-3-.396 0-.77.081-1.114.223-1.644-1.22-3.903-2.007-6.398-2.126l1.353-6.347 4.417.941c.05 1.05.918 1.889 1.989 1.889 1.103 0 2-.897 2-2s-.897-2-2-2c-1.034 0-1.876.79-1.982 1.808l-4.904-1.045c-.171-.036-.347.051-.416.211L13.25 5.567c-2.55.074-4.878.783-6.577 2.016-.328-.135-.688-.203-1.057-.203-1.654 0-3 1.346-3 3 0 .977.472 1.84 1.196 2.38-.035.197-.059.399-.059.604 0 3.321 4.14 6.016 9.25 6.016s9.25-2.695 9.25-6.016c0-.202-.023-.401-.057-.594.743-.541 1.233-1.413 1.233-2.407zm-16.75 3.5c-.827 0-1.5-.673-1.5-1.5s.673-1.5 1.5-1.5 1.5.673 1.5 1.5-.673 1.5-1.5 1.5zm10.75 0c-.827 0-1.5-.673-1.5-1.5s.673-1.5 1.5-1.5 1.5.673 1.5 1.5-.673 1.5-1.5 1.5zm-1.096 4.398c-.689.689-1.785 1.102-2.904 1.102s-2.215-.413-2.904-1.102c-.146-.146-.146-.384 0-.53.147-.147.384-.146.53 0 .546.547 1.458.882 2.374.882s1.828-.335 2.374-.882c.073-.073.169-.11.265-.11s.192.037.265.11c.146.146.146.384 0 .53z"/>
@@ -51,7 +51,6 @@ const RedditIcon = (props) => (
 );
 
 const countWords = (text = "") =>
-
   text.trim().split(/\s+/).filter(Boolean).length;
 
 const buildDraftProfile = (profile) => ({
@@ -143,7 +142,7 @@ const Profile = () => {
       <div className="min-h-screen flex items-center justify-center">
         <div className="flex flex-col items-center gap-3">
           <div className="animate-spin rounded-full h-10 w-10 border-2 border-purple-200 border-t-purple-600"></div>
-          <p className="text-sm text-gray-500">Loading profile...</p>
+          <p className="text-sm text-[var(--text-muted)]">Loading profile...</p>
         </div>
       </div>
     );
@@ -151,7 +150,7 @@ const Profile = () => {
 
   if (!profile) {
     return (
-      <div className="p-8 text-center text-gray-500">Profile not found.</div>
+      <div className="p-8 text-center text-[var(--text-muted)]">Profile not found.</div>
     );
   }
 
@@ -236,8 +235,8 @@ const Profile = () => {
 
   return (
     <div className="px-4 sm:px-6 lg:px-8 py-6 sm:py-8 space-y-8 max-w-5xl mx-auto pb-28">
-      <div className="bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden relative">
-        <div className="h-56 relative bg-linear-to-br from-slate-900 via-purple-900 to-slate-900 overflow-hidden group/banner">
+      <div className="bg-[var(--bg-card)] rounded-3xl border border-[var(--border-main)] shadow-sm overflow-hidden relative">
+        <div className="h-56 relative bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 overflow-hidden group/banner">
           {profile.banner_image && (
             <img
               src={profile.banner_image}
@@ -277,7 +276,7 @@ const Profile = () => {
                   if (isOwner && isEditMode) return;
                   setViewingAvatar(true);
                 }}
-                className={`w-32 h-32 sm:w-40 sm:h-40 rounded-full bg-white border-4 border-white shadow-xl flex items-center justify-center bg-linear-to-br from-purple-500 to-blue-500 overflow-hidden relative ${isOwner && !isEditMode ? "cursor-pointer" : ""}`}
+                className={`w-32 h-32 sm:w-40 sm:h-40 rounded-full bg-white border-4 border-[var(--bg-card)] shadow-xl flex items-center justify-center bg-gradient-to-br from-purple-500 to-blue-500 overflow-hidden relative ${isOwner && !isEditMode ? "cursor-pointer" : ""}`}
               >
                 {profile.profile_image ? (
                   <img
@@ -320,7 +319,7 @@ const Profile = () => {
             <div className="flex-1 pb-2 sm:pb-4 min-w-0">
               {isOwner && isEditMode ? (
                 <div className="space-y-3 max-w-xl">
-                  <label className="block text-xs font-bold uppercase tracking-[0.24em] text-gray-500">
+                  <label className="block text-xs font-bold uppercase tracking-[0.24em] text-[var(--text-muted)]">
                     Full Name
                   </label>
                   <input
@@ -328,12 +327,12 @@ const Profile = () => {
                     onChange={(event) =>
                       handleDraftChange("full_name", event.target.value)
                     }
-                    className="w-full px-5 py-3.5 rounded-2xl border-2 border-purple-100 bg-white/80 backdrop-blur-sm text-2xl sm:text-3xl font-bold text-gray-900 focus:outline-none focus:ring-4 focus:ring-purple-500/10 focus:border-purple-500 transition-all shadow-sm"
+                    className="w-full px-5 py-3.5 rounded-2xl border-2 border-purple-100 bg-white/80 backdrop-blur-sm text-2xl sm:text-3xl font-bold text-[var(--text-main)] focus:outline-none focus:ring-4 focus:ring-purple-500/10 focus:border-purple-500 transition-all shadow-sm"
                     placeholder="Enter your full name"
                   />
                 </div>
               ) : (
-                <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 flex items-center gap-3">
+                <h1 className="text-2xl sm:text-3xl font-bold text-[var(--text-main)] flex items-center gap-3">
                   {profile.full_name}
                   {profile.is_moderator && (
                     <span className="flex items-center gap-1 px-2.5 py-1 bg-blue-50 text-blue-600 border border-blue-200 rounded-lg text-xs font-bold uppercase tracking-wider">
@@ -343,7 +342,7 @@ const Profile = () => {
                 </h1>
               )}
 
-              <p className="text-gray-500 font-medium mt-2">
+              <p className="text-[var(--text-muted)] font-medium mt-2">
                 {isOwner && isEditMode
                   ? programName || "Select a degree program below"
                   : profile.program_name || profile.email || "VISION Member"}
@@ -357,7 +356,7 @@ const Profile = () => {
                     <button
                       onClick={() => setFollowDropdownOpen((open) => !open)}
                       disabled={followMut.isPending}
-                      className="flex items-center gap-1.5 px-5 py-2.5 rounded-xl font-bold bg-gray-100 text-gray-700 hover:bg-gray-200 transition-all shadow-sm disabled:opacity-50"
+                      className="flex items-center gap-1.5 px-5 py-2.5 rounded-xl font-bold bg-[var(--bg-active)] text-[var(--text-main)] hover:bg-[var(--border-main)] transition-all shadow-sm disabled:opacity-50"
                     >
                       <Check className="w-4 h-4 text-purple-600" />
                       Following
@@ -366,7 +365,7 @@ const Profile = () => {
                       />
                     </button>
                     {followDropdownOpen && (
-                      <div className="absolute right-0 mt-2 w-40 bg-white rounded-xl shadow-lg border border-gray-100 py-1 z-50">
+                      <div className="absolute right-0 mt-2 w-40 bg-[var(--bg-card)] rounded-xl shadow-lg border border-[var(--border-main)] py-1 z-50">
                         <button
                           onClick={() => {
                             setFollowDropdownOpen(false);
@@ -427,7 +426,7 @@ const Profile = () => {
                     target="_blank"
                     rel="noopener noreferrer"
                     title={social.label}
-                    className={`p-2.5 rounded-2xl border border-gray-100 shadow-xs transition-all hover:scale-110 active:scale-95 ${social.color}`}
+                    className={`p-2.5 rounded-2xl border border-[var(--border-main)] shadow-xs transition-all hover:scale-110 active:scale-95 ${social.color}`}
                  >
                    <Icon className="w-5 h-5" />
                  </a>
@@ -435,52 +434,52 @@ const Profile = () => {
              })}
           </div>
 
-          <div className="mt-8 py-6 border-t border-gray-50 flex flex-wrap gap-x-8 gap-y-4 text-sm">
-            <div className="flex items-center gap-2.5 text-gray-600">
+          <div className="mt-8 py-6 border-t border-[var(--border-main)] flex flex-wrap gap-x-8 gap-y-4 text-sm">
+            <div className="flex items-center gap-2.5 text-[var(--text-muted)]">
               <div className="w-8 h-8 rounded-lg bg-purple-50 flex items-center justify-center text-purple-600">
                 <Users className="w-4 h-4" />
               </div>
               <div className="flex flex-col">
-                <span className="font-bold text-gray-900 leading-none">
+                <span className="font-bold text-[var(--text-main)] leading-none">
                   {profile.followers_count || 0}
                 </span>
-                <span className="text-[10px] uppercase tracking-wider text-gray-500 font-bold mt-1">Followers</span>
+                <span className="text-[10px] uppercase tracking-wider text-[var(--text-muted)] font-bold mt-1">Followers</span>
               </div>
             </div>
 
-            <div className="flex items-center gap-2.5 text-gray-600 border-l pl-8 border-gray-100">
+            <div className="flex items-center gap-2.5 text-[var(--text-muted)] border-l pl-8 border-[var(--border-main)]">
               <div className="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center text-blue-600">
                 <Users className="w-4 h-4" />
               </div>
               <div className="flex flex-col">
-                <span className="font-bold text-gray-900 leading-none">
+                <span className="font-bold text-[var(--text-main)] leading-none">
                   {profile.following_count || 0}
                 </span>
-                <span className="text-[10px] uppercase tracking-wider text-gray-500 font-bold mt-1">Following</span>
+                <span className="text-[10px] uppercase tracking-wider text-[var(--text-muted)] font-bold mt-1">Following</span>
               </div>
             </div>
 
-            <div className="flex items-center gap-2.5 text-gray-600 border-l pl-8 border-gray-100">
+            <div className="flex items-center gap-2.5 text-[var(--text-muted)] border-l pl-8 border-[var(--border-main)]">
               <div className="w-8 h-8 rounded-lg bg-pink-50 flex items-center justify-center text-pink-600">
                 <MessageSquare className="w-4 h-4" />
               </div>
               <div className="flex flex-col">
-                <span className="font-bold text-gray-900 leading-none">
+                <span className="font-bold text-[var(--text-main)] leading-none">
                   {profile.discussion_count || 0}
                 </span>
-                <span className="text-[10px] uppercase tracking-wider text-gray-500 font-bold mt-1">Discussions</span>
+                <span className="text-[10px] uppercase tracking-wider text-[var(--text-muted)] font-bold mt-1">Discussions</span>
               </div>
             </div>
 
-            <div className="flex items-center gap-2.5 text-gray-600 border-l pl-8 border-gray-100">
+            <div className="flex items-center gap-2.5 text-[var(--text-muted)] border-l pl-8 border-[var(--border-main)]">
               <div className="w-8 h-8 rounded-lg bg-emerald-50 flex items-center justify-center text-emerald-600">
                 <FileText className="w-4 h-4" />
               </div>
               <div className="flex flex-col">
-                <span className="font-bold text-gray-900 leading-none">
+                <span className="font-bold text-[var(--text-main)] leading-none">
                   {profile.resource_count || 0}
                 </span>
-                <span className="text-[10px] uppercase tracking-wider text-gray-500 font-bold mt-1">Resources</span>
+                <span className="text-[10px] uppercase tracking-wider text-[var(--text-muted)] font-bold mt-1">Resources</span>
               </div>
             </div>
           </div>
@@ -509,9 +508,9 @@ const Profile = () => {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="lg:col-span-2 space-y-8">
-          <div className="bg-white rounded-3xl border border-gray-100 shadow-sm p-8 transition-all hover:shadow-md">
+          <div className="bg-[var(--bg-card)] rounded-3xl border border-[var(--border-main)] shadow-sm p-8 transition-all hover:shadow-md">
             <div className="flex justify-between items-center mb-6">
-              <h3 className="text-xl font-bold text-gray-900 flex items-center gap-3">
+              <h3 className="text-xl font-bold text-[var(--text-main)] flex items-center gap-3">
                 <div className="w-10 h-10 rounded-xl bg-purple-50 flex items-center justify-center text-purple-600">
                   <User className="w-5 h-5" />
                 </div>
@@ -531,18 +530,18 @@ const Profile = () => {
                   onChange={(event) =>
                     handleDraftChange("bio", event.target.value)
                   }
-                  className="w-full text-base text-gray-700 bg-white border-2 border-purple-50 rounded-2xl p-5 focus:ring-4 focus:ring-purple-500/10 focus:border-purple-500 transition-all min-h-40 placeholder:text-gray-400"
+                  className="w-full text-base text-[var(--text-main)] bg-white border-2 border-purple-50 rounded-2xl p-5 focus:ring-4 focus:ring-purple-500/10 focus:border-purple-500 transition-all min-h-40 placeholder:text-[var(--text-muted)]"
                   placeholder="Tell the community about yourself..."
                 />
                 <div className="flex justify-between items-center text-xs font-bold uppercase tracking-wider">
-                  <span className="text-gray-400">Word count</span>
+                  <span className="text-[var(--text-muted)]">Word count</span>
                   <span className={currentBioWords > MAX_BIO_WORDS ? "text-rose-500" : "text-purple-600"}>
                     {currentBioWords} / {MAX_BIO_WORDS}
                   </span>
                 </div>
               </div>
             ) : (
-              <p className="text-gray-600 leading-relaxed whitespace-pre-wrap text-base">
+              <p className="text-[var(--text-muted)] leading-relaxed whitespace-pre-wrap text-base">
                 {profile.bio ||
                   (isOwner
                     ? "Welcome to your profile! Use edit mode to tell the community a bit about yourself, your interests, and what you're working on."
@@ -552,8 +551,8 @@ const Profile = () => {
           </div>
 
           {isOwner && isEditMode && (
-            <div className="bg-white rounded-3xl border border-gray-100 shadow-sm p-8">
-              <h3 className="text-xl font-bold text-gray-900 mb-8 flex items-center gap-3">
+            <div className="bg-[var(--bg-card)] rounded-3xl border border-[var(--border-main)] shadow-sm p-8">
+              <h3 className="text-xl font-bold text-[var(--text-main)] mb-8 flex items-center gap-3">
                 <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center text-blue-600">
                   <Globe className="w-5 h-5" />
                 </div>
@@ -571,14 +570,14 @@ const Profile = () => {
                   { key: 'website_url', label: 'Website', icon: Globe, color: 'text-teal-600' },
                 ].map((social) => (
                   <div key={social.key} className="space-y-2">
-                    <label className="text-xs font-black text-gray-500 uppercase tracking-widest flex items-center gap-2">
+                    <label className="text-xs font-black text-[var(--text-muted)] uppercase tracking-widest flex items-center gap-2">
                       <social.icon className={`w-3.5 h-3.5 ${social.color}`} /> {social.label}
                     </label>
                     <input
                       value={draftProfile[social.key]}
                       onChange={(e) => handleDraftChange(social.key, e.target.value)}
                       placeholder="https://..."
-                      className="w-full px-4 py-2.5 text-sm rounded-xl border-2 border-slate-50 bg-slate-50/50 focus:bg-white focus:ring-4 focus:ring-purple-500/10 focus:border-purple-500 transition-all"
+                      className="w-full px-4 py-2.5 text-sm rounded-xl border-2 border-slate-50 bg-slate-50/50 focus:bg-white focus:ring-4 focus:ring-purple-500/10 focus:border-purple-500 transition-all text-[var(--text-main)]"
                     />
                   </div>
                 ))}
@@ -586,196 +585,196 @@ const Profile = () => {
             </div>
           )}
 
-          <div className="bg-white rounded-3xl border border-gray-100 shadow-sm p-8">
-            <div className="flex items-center justify-between mb-8">
-              <h3 className="text-xl font-bold text-gray-900 flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-emerald-50 flex items-center justify-center text-emerald-600">
-                  <GraduationCap className="w-5 h-5" />
-                </div>
-                Academic Background
-              </h3>
-              {isOwner &&
-                !draftProfile.semester_is_manual &&
-                draftProfile.batch_year && (
-                  <span className="px-3 py-1 bg-emerald-50 text-emerald-600 rounded-full text-[10px] font-black uppercase tracking-widest border border-emerald-100">
-                    Auto Semester
-                  </span>
-                )}
+          <div className="bg-[var(--bg-card)] rounded-3xl border border-[var(--border-main)] shadow-sm p-8">
+  <div className="flex items-center justify-between mb-8">
+    <h3 className="text-xl font-bold text-[var(--text-main)] flex items-center gap-3">
+      <div className="w-10 h-10 rounded-xl bg-emerald-50 flex items-center justify-center text-emerald-600">
+        <GraduationCap className="w-5 h-5" />
+      </div>
+      Academic Background
+    </h3>
+    {isOwner &&
+      !draftProfile.semester_is_manual &&
+      draftProfile.batch_year && (
+        <span className="px-3 py-1 bg-emerald-50 text-emerald-600 rounded-full text-[10px] font-black uppercase tracking-widest border border-emerald-100">
+          Auto Semester
+        </span>
+      )}
+  </div>
+
+  {isOwner && isEditMode ? (
+    <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
+      <div className="space-y-3">
+        <label className="text-xs text-[var(--text-muted)] uppercase tracking-widest font-black">
+          Degree Program
+        </label>
+        <select
+          value={draftProfile.program_id}
+          onChange={(event) =>
+            handleDraftChange("program_id", event.target.value)
+          }
+          className="w-full px-4 py-3 rounded-2xl border-2 border-[var(--border-main)] bg-[var(--bg-active)] focus:bg-[var(--bg-card)] focus:ring-4 focus:ring-purple-500/10 focus:border-purple-500 transition-all appearance-none cursor-pointer text-[var(--text-main)]"
+        >
+          <option value="">Select program</option>
+          {programs?.map((program) => (
+            <option
+              key={program.program_id}
+              value={program.program_id}
+            >
+              {program.program_name}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      <div className="space-y-3">
+        <label className="text-xs text-[var(--text-muted)] uppercase tracking-widest font-black">
+          Batch Year
+        </label>
+        <input
+          value={draftProfile.batch_year}
+          onChange={(event) =>
+            handleDraftChange(
+              "batch_year",
+              event.target.value.replace(/[^0-9]/g, "").slice(0, 4),
+            )
+          }
+          placeholder="e.g. 2079"
+          className="w-full px-4 py-3 rounded-2xl border-2 border-[var(--border-main)] bg-[var(--bg-active)] focus:bg-[var(--bg-card)] focus:ring-4 focus:ring-purple-500/10 focus:border-purple-500 transition-all font-bold text-[var(--text-main)]"
+        />
+        <p className="text-[10px] text-[var(--text-muted)] font-bold uppercase tracking-wider">
+          Required for auto-semester calculation
+        </p>
+      </div>
+
+      <div className="space-y-4 sm:col-span-2">
+        <div className="flex items-center justify-between gap-4">
+          <label className="text-xs text-[var(--text-muted)] uppercase tracking-widest font-black">
+            Current Semester
+          </label>
+          <label className="inline-flex items-center gap-2.5 text-xs font-bold text-[var(--text-main)] cursor-pointer select-none">
+            <div className="relative inline-flex items-center">
+              <input
+                type="checkbox"
+                className="sr-only peer"
+                checked={draftProfile.semester_is_manual}
+                onChange={(event) => {
+                  const checked = event.target.checked;
+                  setDraftProfile((currentDraft) => ({
+                    ...currentDraft,
+                    semester_is_manual: checked,
+                    semester:
+                      !checked && currentDraft.batch_year
+                        ? String(
+                            calculateSemesterFromBatch(
+                              currentDraft.batch_year,
+                            ) || currentDraft.semester,
+                          )
+                        : currentDraft.semester,
+                  }));
+                }}
+              />
+              <div className="w-10 h-5 bg-[var(--bg-active)] peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-purple-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-[var(--border-main)] after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-purple-600"></div>
             </div>
+            Manual Override
+          </label>
+        </div>
 
-            {isOwner && isEditMode ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
-                <div className="space-y-3">
-                  <label className="text-xs text-gray-500 uppercase tracking-widest font-black">
-                    Degree Program
-                  </label>
-                  <select
-                    value={draftProfile.program_id}
-                    onChange={(event) =>
-                      handleDraftChange("program_id", event.target.value)
-                    }
-                    className="w-full px-4 py-3 rounded-2xl border-2 border-slate-50 bg-slate-50/50 focus:bg-white focus:ring-4 focus:ring-purple-500/10 focus:border-purple-500 transition-all appearance-none cursor-pointer"
-                  >
-                    <option value="">Select program</option>
-                    {programs?.map((program) => (
-                      <option
-                        key={program.program_id}
-                        value={program.program_id}
-                      >
-                        {program.program_name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
+        <select
+          value={draftProfile.semester}
+          onChange={(event) =>
+            handleDraftChange("semester", event.target.value)
+          }
+          disabled={
+            !draftProfile.semester_is_manual &&
+            !!draftProfile.batch_year
+          }
+          className="w-full px-4 py-3 rounded-2xl border-2 border-[var(--border-main)] bg-[var(--bg-active)] focus:bg-[var(--bg-card)] focus:ring-4 focus:ring-purple-500/10 focus:border-purple-500 transition-all disabled:opacity-50 disabled:cursor-not-allowed appearance-none text-[var(--text-main)]"
+        >
+          <option value="">Select semester</option>
+          {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map((semester) => (
+            <option key={semester} value={semester}>
+              Semester {semester}
+            </option>
+          ))}
+        </select>
 
-                <div className="space-y-3">
-                  <label className="text-xs text-gray-500 uppercase tracking-widest font-black">
-                    Batch Year
-                  </label>
-                  <input
-                    value={draftProfile.batch_year}
-                    onChange={(event) =>
-                      handleDraftChange(
-                        "batch_year",
-                        event.target.value.replace(/[^0-9]/g, "").slice(0, 4),
-                      )
-                    }
-                    placeholder="e.g. 2079"
-                    className="w-full px-4 py-3 rounded-2xl border-2 border-slate-50 bg-slate-50/50 focus:bg-white focus:ring-4 focus:ring-purple-500/10 focus:border-purple-500 transition-all font-bold"
-                  />
-                  <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">
-                    Required for auto-semester calculation
-                  </p>
-                </div>
+        {!draftProfile.semester_is_manual &&
+          draftProfile.batch_year && (
+            <div className="flex items-center gap-2 px-4 py-2 bg-emerald-50 rounded-xl border border-emerald-100">
+              <Check className="w-3.5 h-3.5 text-emerald-600" />
+              <p className="text-xs text-emerald-700 font-bold">
+                System predicted: Semester {autoSemester || "-"}
+              </p>
+            </div>
+          )}
+      </div>
 
-                <div className="space-y-4 sm:col-span-2">
-                  <div className="flex items-center justify-between gap-4">
-                    <label className="text-xs text-gray-500 uppercase tracking-widest font-black">
-                      Current Semester
-                    </label>
-                    <label className="inline-flex items-center gap-2.5 text-xs font-bold text-slate-600 cursor-pointer select-none">
-                      <div className="relative inline-flex items-center">
-                        <input
-                          type="checkbox"
-                          className="sr-only peer"
-                          checked={draftProfile.semester_is_manual}
-                          onChange={(event) => {
-                            const checked = event.target.checked;
-                            setDraftProfile((currentDraft) => ({
-                              ...currentDraft,
-                              semester_is_manual: checked,
-                              semester:
-                                !checked && currentDraft.batch_year
-                                  ? String(
-                                      calculateSemesterFromBatch(
-                                        currentDraft.batch_year,
-                                      ) || currentDraft.semester,
-                                    )
-                                  : currentDraft.semester,
-                            }));
-                          }}
-                        />
-                        <div className="w-10 h-5 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-purple-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-purple-600"></div>
-                      </div>
-                      Manual Override
-                    </label>
-                  </div>
-
-                  <select
-                    value={draftProfile.semester}
-                    onChange={(event) =>
-                      handleDraftChange("semester", event.target.value)
-                    }
-                    disabled={
-                      !draftProfile.semester_is_manual &&
-                      !!draftProfile.batch_year
-                    }
-                    className="w-full px-4 py-3 rounded-2xl border-2 border-slate-50 bg-slate-50/50 focus:bg-white focus:ring-4 focus:ring-purple-500/10 focus:border-purple-500 transition-all disabled:opacity-50 disabled:cursor-not-allowed appearance-none"
-                  >
-                    <option value="">Select semester</option>
-                    {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map((semester) => (
-                      <option key={semester} value={semester}>
-                        Semester {semester}
-                      </option>
-                    ))}
-                  </select>
-
-                  {!draftProfile.semester_is_manual &&
-                    draftProfile.batch_year && (
-                      <div className="flex items-center gap-2 px-4 py-2 bg-emerald-50 rounded-xl border border-emerald-100">
-                        <Check className="w-3.5 h-3.5 text-emerald-600" />
-                        <p className="text-xs text-emerald-700 font-bold">
-                          System predicted: Semester {autoSemester || "-"}
-                        </p>
-                      </div>
-                    )}
-                </div>
-
-                <div className="bg-slate-50 p-6 rounded-2xl border border-slate-100 sm:col-span-2">
-                  <p className="text-[10px] text-gray-500 uppercase tracking-widest font-black mb-2">
-                    Member Since
-                  </p>
-                  <p className="text-lg font-bold text-gray-900 flex items-center gap-3">
-                    <Calendar className="w-5 h-5 text-purple-600" />
-                    {new Date(profile.created_at).toLocaleDateString("en-US", {
-                      month: "long",
-                      year: "numeric",
-                    })}
-                  </p>
-                </div>
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="bg-white p-5 rounded-2xl border-2 border-slate-50 hover:border-purple-100 transition-all">
-                  <p className="text-[10px] text-gray-400 uppercase tracking-widest font-black mb-2">
-                    Degree Program
-                  </p>
-                  <p className="text-base font-bold text-gray-900">
-                    {profile.program_name || "Self Taught / Other"}
-                  </p>
-                </div>
-                <div className="bg-white p-5 rounded-2xl border-2 border-slate-50 hover:border-purple-100 transition-all">
-                  <p className="text-[10px] text-gray-400 uppercase tracking-widest font-black mb-2">
-                    Current Semester
-                  </p>
-                  <div className="flex items-center justify-between">
-                    <p className="text-base font-bold text-gray-900">
-                      {profile.semester
-                        ? `Semester ${profile.semester}`
-                        : "Not specified"}
-                    </p>
-                    {profile.batch_year && !profile.semester_is_manual && (
-                      <span className="text-[10px] bg-emerald-50 text-emerald-600 px-2.5 py-1 rounded-lg font-black uppercase tracking-wider">Auto</span>
-                    )}
-                  </div>
-                </div>
-                <div className="bg-white p-5 rounded-2xl border-2 border-slate-50 hover:border-purple-100 transition-all">
-                  <p className="text-[10px] text-gray-400 uppercase tracking-widest font-black mb-2">
-                    Batch Year
-                  </p>
-                  <p className="text-base font-bold text-gray-900">
-                    {profile.batch_year || "N/A"}
-                  </p>
-                </div>
-                <div className="bg-white p-5 rounded-2xl border-2 border-slate-50 hover:border-purple-100 transition-all">
-                  <p className="text-[10px] text-gray-400 uppercase tracking-widest font-black mb-2">
-                    Member Since
-                  </p>
-                  <p className="text-base font-bold text-gray-900 flex items-center gap-2">
-                    <Calendar className="w-4 h-4 text-purple-600" />
-                    {new Date(profile.created_at).toLocaleDateString("en-US", {
-                      month: "long",
-                      year: "numeric",
-                    })}
-                  </p>
-                </div>
-              </div>
-            )}
-          </div>
+      <div className="bg-[var(--bg-active)] p-6 rounded-2xl border border-[var(--border-main)] sm:col-span-2">
+        <p className="text-[10px] text-[var(--text-muted)] uppercase tracking-widest font-black mb-2">
+          Member Since
+        </p>
+        <p className="text-lg font-bold text-[var(--text-main)] flex items-center gap-3">
+          <Calendar className="w-5 h-5 text-purple-600" />
+          {new Date(profile.created_at).toLocaleDateString("en-US", {
+            month: "long",
+            year: "numeric",
+          })}
+        </p>
+      </div>
+    </div>
+  ) : (
+    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <div className="bg-[var(--bg-card)] p-5 rounded-2xl border-2 border-[var(--border-main)] hover:border-purple-100 transition-all">
+        <p className="text-[10px] text-[var(--text-muted)] uppercase tracking-widest font-black mb-2">
+          Degree Program
+        </p>
+        <p className="text-base font-bold text-[var(--text-main)]">
+          {profile.program_name || "Self Taught / Other"}
+        </p>
+      </div>
+      <div className="bg-[var(--bg-card)] p-5 rounded-2xl border-2 border-[var(--border-main)] hover:border-purple-100 transition-all">
+        <p className="text-[10px] text-[var(--text-muted)] uppercase tracking-widest font-black mb-2">
+          Current Semester
+        </p>
+        <div className="flex items-center justify-between">
+          <p className="text-base font-bold text-[var(--text-main)]">
+            {profile.semester
+              ? `Semester ${profile.semester}`
+              : "Not specified"}
+          </p>
+          {profile.batch_year && !profile.semester_is_manual && (
+            <span className="text-[10px] bg-emerald-50 text-emerald-600 px-2.5 py-1 rounded-lg font-black uppercase tracking-wider">Auto</span>
+          )}
+        </div>
+      </div>
+      <div className="bg-[var(--bg-card)] p-5 rounded-2xl border-2 border-[var(--border-main)] hover:border-purple-100 transition-all">
+        <p className="text-[10px] text-[var(--text-muted)] uppercase tracking-widest font-black mb-2">
+          Batch Year
+        </p>
+        <p className="text-base font-bold text-[var(--text-main)]">
+          {profile.batch_year || "N/A"}
+        </p>
+      </div>
+      <div className="bg-[var(--bg-card)] p-5 rounded-2xl border-2 border-[var(--border-main)] hover:border-purple-100 transition-all">
+        <p className="text-[10px] text-[var(--text-muted)] uppercase tracking-widest font-black mb-2">
+          Member Since
+        </p>
+        <p className="text-base font-bold text-[var(--text-main)] flex items-center gap-2">
+          <Calendar className="w-4 h-4 text-purple-600" />
+          {new Date(profile.created_at).toLocaleDateString("en-US", {
+            month: "long",
+            year: "numeric",
+          })}
+        </p>
+      </div>
+    </div>
+  )}
+</div>
         </div>
 
         <div className="space-y-8">
-          <div className="bg-linear-to-br from-slate-900 via-purple-900 to-indigo-950 rounded-3xl shadow-2xl p-1.5 text-white relative overflow-hidden group">
+          <div className="bg-gradient-to-br from-slate-900 via-purple-900 to-indigo-950 rounded-3xl shadow-2xl p-1.5 text-white relative overflow-hidden group">
             <div className="absolute top-0 right-0 w-48 h-48 bg-purple-500/20 rounded-full blur-3xl -mr-20 -mt-20 group-hover:bg-purple-500/30 transition-all duration-700"></div>
             <div className="absolute bottom-0 left-0 w-48 h-48 bg-blue-500/10 rounded-full blur-3xl -ml-20 -mb-20"></div>
 
@@ -796,7 +795,7 @@ const Profile = () => {
 
               <div className="text-center mb-10">
                 <div className="relative inline-block">
-                  <p className="text-7xl font-black tracking-tighter mb-1 bg-linear-to-b from-white to-purple-200 bg-clip-text text-transparent drop-shadow-2xl">
+                  <p className="text-7xl font-black tracking-tighter mb-1 bg-gradient-to-b from-white to-purple-200 bg-clip-text text-transparent drop-shadow-2xl">
                     {profile.total_xp || 0}
                   </p>
                   <div className="absolute -right-6 -top-2">
@@ -839,50 +838,50 @@ const Profile = () => {
                    <span className="text-[10px] font-black text-white">75%</span>
                 </div>
                 <div className="h-2 w-full bg-white/5 rounded-full overflow-hidden border border-white/5 p-0.5">
-                   <div className="h-full bg-linear-to-r from-purple-500 to-indigo-500 rounded-full w-[75%]"></div>
+                   <div className="h-full bg-gradient-to-r from-purple-500 to-indigo-500 rounded-full w-[75%]"></div>
                 </div>
               </div>
             </div>
           </div>
 
-          <div className="bg-white rounded-3xl border border-gray-100 shadow-sm p-8 transition-all hover:shadow-md">
-            <h3 className="text-sm font-black text-gray-900 uppercase tracking-[0.2em] mb-8 flex items-center gap-3">
-              <div className="w-8 h-8 rounded-lg bg-amber-50 flex items-center justify-center text-amber-500">
-                <Award className="w-4 h-4" />
-              </div>
-              Achievements & Badges
-            </h3>
-            {profile.badges && profile.badges.length > 0 ? (
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-                {profile.badges.map((badge, index) => (
-                  <div
-                    key={index}
-                    className="group flex flex-col items-center bg-slate-50 border border-slate-100 rounded-2xl p-4 text-center transition-all hover:bg-white hover:shadow-lg hover:shadow-amber-500/10 hover:-translate-y-1 hover:border-amber-200"
-                  >
-                    <div className="w-12 h-12 bg-amber-100 rounded-full flex items-center justify-center mb-3 shadow-inner group-hover:scale-110 transition-transform">
-                      <Award className="w-6 h-6 text-amber-600" />
-                    </div>
-                    <span className="text-xs font-black text-slate-800 leading-tight uppercase tracking-wider">
-                      {badge.badge_name}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="text-center py-10 bg-slate-50 rounded-[2rem] border-2 border-slate-100 border-dashed">
-                <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center mx-auto mb-4 shadow-sm">
-                  <Award className="w-8 h-8 text-slate-200" />
-                </div>
-                <p className="text-sm font-bold text-slate-400">Unlock your first badge today!</p>
-              </div>
-            )}
+         <div className="bg-[var(--bg-card)] rounded-3xl border border-[var(--border-main)] shadow-sm p-8 transition-all hover:shadow-md">
+  <h3 className="text-sm font-black text-[var(--text-main)] uppercase tracking-[0.2em] mb-8 flex items-center gap-3">
+    <div className="w-8 h-8 rounded-lg bg-amber-50 flex items-center justify-center text-amber-500">
+      <Award className="w-4 h-4" />
+    </div>
+    Achievements & Badges
+  </h3>
+  {profile.badges && profile.badges.length > 0 ? (
+    <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+      {profile.badges.map((badge, index) => (
+        <div
+          key={index}
+          className="group flex flex-col items-center bg-[var(--bg-active)] border border-[var(--border-main)] rounded-2xl p-4 text-center transition-all hover:bg-[var(--bg-card)] hover:shadow-lg hover:shadow-amber-500/10 hover:-translate-y-1 hover:border-amber-200"
+        >
+          <div className="w-12 h-12 bg-amber-100 rounded-full flex items-center justify-center mb-3 shadow-inner group-hover:scale-110 transition-transform">
+            <Award className="w-6 h-6 text-amber-600" />
           </div>
+          <span className="text-xs font-black text-[var(--text-main)] leading-tight uppercase tracking-wider">
+            {badge.badge_name}
+          </span>
+        </div>
+      ))}
+    </div>
+  ) : (
+    <div className="text-center py-10 bg-[var(--bg-active)] rounded-[2rem] border-2 border-dashed border-[var(--border-main)]">
+      <div className="w-16 h-16 bg-[var(--bg-card)] rounded-full flex items-center justify-center mx-auto mb-4 shadow-sm">
+        <Award className="w-8 h-8 text-[var(--text-muted)]" />
+      </div>
+      <p className="text-sm font-bold text-[var(--text-muted)]">Unlock your first badge today!</p>
+    </div>
+  )}
+</div>
         </div>
       </div>
 
       {viewingAvatar && (
         <div
-          className="fixed inset-0 z-9999 bg-black/90 flex items-center justify-center"
+          className="fixed inset-0 z-50 bg-black/90 flex items-center justify-center"
           onClick={() => setViewingAvatar(false)}
         >
           <button
@@ -906,7 +905,7 @@ const Profile = () => {
                 className="max-w-[88vw] max-h-[85vh] object-contain rounded-2xl shadow-2xl"
               />
             ) : (
-              <div className="w-64 h-64 rounded-full bg-linear-to-br from-purple-500 to-blue-500 flex items-center justify-center shadow-2xl">
+              <div className="w-64 h-64 rounded-full bg-gradient-to-br from-purple-500 to-blue-500 flex items-center justify-center shadow-2xl">
                 <span className="text-8xl font-bold text-white">
                   {profile.full_name?.charAt(0)?.toUpperCase() || "U"}
                 </span>

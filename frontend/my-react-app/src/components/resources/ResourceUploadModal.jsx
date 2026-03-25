@@ -17,7 +17,6 @@ const ResourceUploadModal = ({ isOpen, onClose }) => {
   const [file, setFile] = useState(null);
 
   const { data: programsData } = usePrograms();
-
   const programs = programsData?.data || programsData || [];
   const uploadMutation = useUploadResource();
 
@@ -46,7 +45,6 @@ const ResourceUploadModal = ({ isOpen, onClose }) => {
       submitData.append("program_id", parseInt(formData.program_id));
     if (formData.semester) submitData.append("semester", formData.semester);
 
-    // Send explicit tags as JSON string
     if (formData.tags.length > 0) {
       submitData.append("tags", JSON.stringify(formData.tags));
     }
@@ -78,21 +76,21 @@ const ResourceUploadModal = ({ isOpen, onClose }) => {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-      <div className="bg-white rounded-2xl w-full max-w-2xl shadow-xl max-h-[90vh] overflow-y-auto">
-        <div className="flex justify-between items-center p-6 border-b border-gray-100 sticky top-0 bg-white/95 backdrop-blur z-10">
-          <h2 className="text-xl font-bold text-gray-800">Share a Resource</h2>
+      <div className="bg-[var(--bg-card)] rounded-2xl w-full max-w-2xl shadow-xl max-h-[90vh] overflow-y-auto">
+        <div className="flex justify-between items-center p-6 border-b border-[var(--border-main)] sticky top-0 bg-[var(--bg-card)]/95 backdrop-blur z-10">
+          <h2 className="text-xl font-bold text-[var(--text-main)]">Share a Resource</h2>
           <button
             onClick={onClose}
-            className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+            className="p-2 hover:bg-[var(--bg-active)] rounded-full transition-colors"
           >
-            <X className="w-5 h-5 text-gray-500" />
+            <X className="w-5 h-5 text-[var(--text-muted)]" />
           </button>
         </div>
 
         <form onSubmit={handleSubmit} className="p-6 space-y-6">
           <div className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-[var(--text-main)] mb-1">
                 Title *
               </label>
               <input
@@ -102,12 +100,12 @@ const ResourceUploadModal = ({ isOpen, onClose }) => {
                 value={formData.title}
                 onChange={handleChange}
                 placeholder="e.g. Data Structures Chapter 1 Notes"
-                className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all"
+                className="w-full px-4 py-2 border border-[var(--border-main)] rounded-xl focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 outline-none transition-all bg-[var(--bg-main)] text-[var(--text-main)]"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-[var(--text-main)] mb-1">
                 Description
               </label>
               <textarea
@@ -115,7 +113,7 @@ const ResourceUploadModal = ({ isOpen, onClose }) => {
                 value={formData.description}
                 onChange={handleChange}
                 placeholder="Briefly describe what this resource covers..."
-                className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all resize-none min-h-[100px]"
+                className="w-full px-4 py-3 border border-[var(--border-main)] rounded-xl focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 outline-none transition-all resize-none min-h-[100px] bg-[var(--bg-main)] text-[var(--text-main)]"
               />
             </div>
 
@@ -128,14 +126,14 @@ const ResourceUploadModal = ({ isOpen, onClose }) => {
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-[var(--text-main)] mb-1">
                   Type *
                 </label>
                 <select
                   name="resource_type"
                   value={formData.resource_type}
                   onChange={handleChange}
-                  className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all"
+                  className="w-full px-4 py-2 border border-[var(--border-main)] rounded-xl focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 outline-none transition-all bg-[var(--bg-main)] text-[var(--text-main)]"
                 >
                   <option value="notes">Notes</option>
                   <option value="book">Book/eBook</option>
@@ -145,14 +143,14 @@ const ResourceUploadModal = ({ isOpen, onClose }) => {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-[var(--text-main)] mb-1">
                   Program (Optional)
                 </label>
                 <select
                   name="program_id"
                   value={formData.program_id}
                   onChange={handleChange}
-                  className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all cursor-pointer"
+                  className="w-full px-4 py-2 border border-[var(--border-main)] rounded-xl focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 outline-none transition-all bg-[var(--bg-main)] text-[var(--text-main)]"
                 >
                   <option value="">All Programs</option>
                   {Array.isArray(programs) &&
@@ -165,14 +163,14 @@ const ResourceUploadModal = ({ isOpen, onClose }) => {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-[var(--text-main)] mb-1">
                   Semester (Optional)
                 </label>
                 <select
                   name="semester"
                   value={formData.semester}
                   onChange={handleChange}
-                  className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all"
+                  className="w-full px-4 py-2 border border-[var(--border-main)] rounded-xl focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 outline-none transition-all bg-[var(--bg-main)] text-[var(--text-main)]"
                 >
                   <option value="">All Semesters</option>
                   {[1, 2, 3, 4, 5, 6, 7, 8].map((s) => (
@@ -184,14 +182,14 @@ const ResourceUploadModal = ({ isOpen, onClose }) => {
 
             {/* File or URL Input */}
             <div className="mt-4">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-[var(--text-main)] mb-2">
                 {formData.resource_type === "link" ? "Resource Link *" : "Upload File *"}
               </label>
 
               {formData.resource_type === "link" ? (
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <LinkIcon className="h-5 w-5 text-gray-400" />
+                    <LinkIcon className="h-5 w-5 text-[var(--text-muted)]" />
                   </div>
                   <input
                     type="url"
@@ -200,16 +198,16 @@ const ResourceUploadModal = ({ isOpen, onClose }) => {
                     value={formData.url}
                     onChange={handleChange}
                     placeholder="https://example.com/guide"
-                    className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all"
+                    className="w-full pl-10 pr-4 py-2 border border-[var(--border-main)] rounded-xl focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 outline-none transition-all bg-[var(--bg-main)] text-[var(--text-main)]"
                   />
                 </div>
               ) : (
-                <div className="border border-gray-200 border-dashed rounded-xl p-6 flex flex-col items-center justify-center bg-gray-50/50 hover:bg-gray-50 transition-colors">
-                  <Upload className="w-8 h-8 text-blue-500 mb-3" />
-                  <p className="text-sm text-gray-600 mb-1">
+                <div className="border border-[var(--border-main)] border-dashed rounded-xl p-6 flex flex-col items-center justify-center bg-[var(--bg-active)]/50 hover:bg-[var(--bg-active)] transition-colors">
+                  <Upload className="w-8 h-8 text-purple-600 mb-3" />
+                  <p className="text-sm text-[var(--text-muted)] mb-1">
                     Drag and drop your file here, or
                   </p>
-                  <label className="text-sm font-medium text-blue-600 hover:text-blue-700 cursor-pointer">
+                  <label className="text-sm font-medium text-purple-600 hover:text-purple-700 cursor-pointer">
                     <span>Browse files</span>
                     <input
                       type="file"
@@ -219,12 +217,12 @@ const ResourceUploadModal = ({ isOpen, onClose }) => {
                     />
                   </label>
                   {file && (
-                    <div className="mt-4 flex items-center gap-2 text-sm text-gray-800 bg-white px-3 py-2 rounded-lg border border-gray-200 shadow-sm w-full max-w-sm justify-center">
-                      <FileIcon className="w-4 h-4 text-blue-500" />
+                    <div className="mt-4 flex items-center gap-2 text-sm text-[var(--text-main)] bg-[var(--bg-card)] px-3 py-2 rounded-lg border border-[var(--border-main)] shadow-sm w-full max-w-sm justify-center">
+                      <FileIcon className="w-4 h-4 text-purple-600" />
                       <span className="truncate">{file.name}</span>
                     </div>
                   )}
-                  <p className="text-xs text-gray-500 mt-2">
+                  <p className="text-xs text-[var(--text-muted)] mt-2">
                     Max size: 10MB (PDF, DOC, DOCX, Images, ZIP)
                   </p>
                 </div>
@@ -232,8 +230,8 @@ const ResourceUploadModal = ({ isOpen, onClose }) => {
             </div>
           </div>
 
-          {/* Info */}
-          <div className="bg-blue-50/50 border border-blue-100 rounded-xl p-4 text-sm text-blue-800 flex items-start gap-3">
+          {/* Info Box */}
+          <div className="bg-purple-50/50 border border-purple-100 rounded-xl p-4 text-sm text-purple-800 flex items-start gap-3">
             <span className="text-xl">💡</span>
             <p>
               Your resource will be reviewed by moderators before becoming
@@ -246,7 +244,7 @@ const ResourceUploadModal = ({ isOpen, onClose }) => {
             <button
               type="button"
               onClick={onClose}
-              className="px-5 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-100 rounded-xl transition-colors"
+              className="px-5 py-2.5 text-sm font-medium text-[var(--text-muted)] hover:bg-[var(--bg-active)] rounded-xl transition-colors"
             >
               Cancel
             </button>
@@ -256,7 +254,7 @@ const ResourceUploadModal = ({ isOpen, onClose }) => {
                 uploadMutation.isPending ||
                 (!file && formData.resource_type !== "link")
               }
-              className="px-5 py-2.5 text-sm font-medium bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+              className="px-5 py-2.5 text-sm font-medium bg-purple-600 text-white rounded-xl hover:bg-purple-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
             >
               {uploadMutation.isPending ? "Uploading..." : "Submit Resource"}
             </button>

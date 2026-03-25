@@ -42,7 +42,7 @@ exports.getGroups = async (req, res) => {
         (SELECT MAX(gp.created_at) FROM portal.group_posts gp WHERE gp.group_id = g.group_id) AS last_activity
       FROM portal.study_groups g
       JOIN portal.users u ON u.user_id = g.created_by
-      LEFT JOIN portal.group_members gm ON gm.group_id = g.group_id
+      LEFT JOIN portal.group_members gm ON gm.group_id = g.group_id AND gm.status = 'approved'
       LEFT JOIN portal.academic_degrees ad ON ad.id = g.degree_id
     `;
 
@@ -132,8 +132,8 @@ exports.getGroupDetails = async (req, res) => {
         ${userId ? `EXISTS(SELECT 1 FROM portal.join_requests WHERE group_id = g.group_id AND user_id = $2 AND status = 'pending') AS has_pending_request` : "FALSE AS has_pending_request"}
       FROM portal.study_groups g
       JOIN portal.users u ON u.user_id = g.created_by
-      LEFT JOIN portal.group_members gm ON gm.group_id = g.group_id
-      LEFT JOIN portal.group_posts gp ON gp.group_id = g.group_id
+      LEFT JOIN portal.group_members gm ON gm.group_id = g.group_id AND gm.status = 'approved'
+      LEFT JOIN portal.group_posts gp ON gp.group_id = g.group_id AND gp.deleted_at IS NULL
       LEFT JOIN portal.academic_degrees ad ON ad.id = g.degree_id
       WHERE g.group_id = $1 AND g.deleted_at IS NULL
       GROUP BY g.group_id, g.name, g.description, g.created_at, g.created_by, g.group_image, g.banner_image, g.is_public, g.privacy_type, g.capacity, g.free_skips_remaining, g.last_profile_pic_update, g.last_banner_update, g.invite_token, g.degree_id, ad.full_name, u.full_name, u.user_id, u.profile_image`,

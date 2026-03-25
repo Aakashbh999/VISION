@@ -23,20 +23,23 @@ const LibrarySidebar = ({ isCollapsed, onToggle }) => {
 
   return (
     <aside
-      className={`relative h-full bg-white border-r border-gray-100 flex flex-col shadow-sm
+      className={`relative h-full bg-[var(--bg-card)] border-r border-[var(--border-main)] flex flex-col shadow-sm
       transition-all duration-300 ease-in-out z-20 overflow-hidden
       ${isCollapsed ? "w-0 opacity-0 border-none" : "w-64 opacity-100"}`}
     >
-      {/* We wrap everything in a fixed-width div so the text doesn't 
-         wrap weirdly while the sidebar is sliding shut 
-      */}
       <div className="w-64 flex flex-col h-full">
         {/* Header */}
-        <div className="p-4 flex items-center justify-between border-b border-gray-50">
-          <h2 className="font-bold text-gray-800">Library</h2>
+        <div className="p-4 flex items-center justify-between border-b border-[var(--border-main)] relative">
+          <h2 className="font-bold text-[var(--text-main)]">Library</h2>
           <button
             onClick={onToggle}
-            className="p-1.5 hover:bg-gray-100 rounded-lg text-gray-500 transition-colors"
+            className="sticky right-0 top-1/2 -translate-y-1/2 p-1.5 hover:bg-[var(--bg-active)] rounded-lg text-[var(--text-muted)] transition-colors z-40 bg-[var(--bg-card)] shadow"
+            style={{
+              position: "absolute",
+              right: "-18px",
+              top: "50%",
+              transform: "translateY(-50%)",
+            }}
           >
             <ChevronLeft size={18} />
           </button>
@@ -50,14 +53,14 @@ const LibrarySidebar = ({ isCollapsed, onToggle }) => {
               onClick={item.action}
               className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all ${
                 filters.view === item.id
-                  ? "bg-blue-50 text-blue-600 font-semibold"
-                  : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+                  ? "bg-purple-50 text-purple-700 font-bold shadow-sm shadow-purple-500/5"
+                  : "text-[var(--text-muted)] hover:bg-[var(--bg-active)] hover:text-[var(--text-main)]"
               }`}
             >
               <item.icon
                 size={20}
                 className={
-                  filters.view === item.id ? "text-blue-600" : "text-gray-400"
+                  filters.view === item.id ? "text-purple-600" : "text-[var(--text-muted)]"
                 }
               />
               <span className="whitespace-nowrap">{item.label}</span>
@@ -66,7 +69,7 @@ const LibrarySidebar = ({ isCollapsed, onToggle }) => {
 
           {/* Semester Section */}
           <div className="pt-4 pb-2">
-            <div className="px-3 text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">
+            <div className="px-3 text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-widest mb-2">
               Semesters
             </div>
             <div className="space-y-0.5">
@@ -78,14 +81,16 @@ const LibrarySidebar = ({ isCollapsed, onToggle }) => {
                   }
                   className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl transition-all text-sm ${
                     filters.semester === s
-                      ? "bg-slate-100 text-blue-700 font-bold"
-                      : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+                      ? "bg-purple-100 text-purple-700 font-black"
+                      : "text-[var(--text-muted)] hover:bg-[var(--bg-active)] hover:text-[var(--text-main)]"
                   }`}
                 >
                   <GraduationCap
                     size={18}
                     className={
-                      filters.semester === s ? "text-blue-600" : "text-gray-400"
+                      filters.semester === s
+                        ? "text-purple-600"
+                        : "text-[var(--text-muted)]"
                     }
                   />
                   <span className="whitespace-nowrap">Semester {s}</span>

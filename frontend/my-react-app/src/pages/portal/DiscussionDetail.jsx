@@ -41,6 +41,7 @@ import {
   Image as ImageIcon,
 } from "lucide-react";
 import ActionMenu from "../../components/ui/ActionMenu";
+import DeleteAction from "../../components/DeleteAction";
 
 /**
  * Recursive Comment Item Component
@@ -53,7 +54,6 @@ const CommentItem = ({
   isAuthenticated,
   handleCommentVote,
   handleReportClick,
-  handleDeleteComment,
   replyingTo,
   setReplyingTo,
   replyContent,
@@ -64,13 +64,12 @@ const CommentItem = ({
   setWebsiteHoneypot,
 }) => {
   const [isExpanded, setIsExpanded] = useState(false);
-  const [visibleCount, setVisibleCount] = useState(1); // Groups of 10
+  const [visibleCount, setVisibleCount] = useState(1);
 
   const isAuthor = comment.user_id === discussion.user_id;
   const maxDepth = 5;
   const repliesBatchSize = 10;
 
-  // Comparison logic check: ensure we handle null users or different ID types
   const isCommentOwner =
     isAuthenticated &&
     user &&
@@ -84,12 +83,12 @@ const CommentItem = ({
         )}
         <div className="flex-1">
           <div className="flex items-center gap-2 mb-2">
-            <div className="w-7 h-7 bg-gray-100 rounded-full flex items-center justify-center font-black text-gray-500 text-[10px] shadow-sm border border-gray-100">
+            <div className="w-7 h-7 bg-[var(--bg-active)] rounded-full flex items-center justify-center font-black text-[var(--text-muted)] text-[10px] shadow-sm border border-[var(--border-main)]">
               {comment.full_name?.charAt(0)}
             </div>
             <div className="flex flex-col">
               <div className="flex items-center gap-2">
-                <span className="text-xs font-black text-gray-900">
+                <span className="text-xs font-black text-[var(--text-main)]">
                   {comment.full_name}
                 </span>
                 {isAuthor && (
@@ -98,30 +97,30 @@ const CommentItem = ({
                   </span>
                 )}
               </div>
-              <span className="text-[9px] text-gray-400 font-bold uppercase tracking-tighter">
+              <span className="text-[9px] text-[var(--text-muted)] font-bold uppercase tracking-tighter">
                 {new Date(comment.created_at).toLocaleString()}
               </span>
             </div>
           </div>
 
-          <div className="bg-gray-50/50 p-4 rounded-xl border border-gray-100/50 text-gray-800 text-sm leading-relaxed mb-2">
+          <div className="bg-[var(--bg-active)]/50 p-4 rounded-xl border border-[var(--border-main)] text-[var(--text-main)] text-sm leading-relaxed mb-2">
             {comment.content}
           </div>
 
           <div className="flex items-center gap-1 ml-1 mb-3">
-            <div className="flex items-center gap-0.5 mr-3 bg-gray-50 rounded-lg p-0.5 border border-gray-100">
+            <div className="flex items-center gap-0.5 mr-3 bg-[var(--bg-active)] rounded-lg p-0.5 border border-[var(--border-main)]">
               <button
                 onClick={() =>
                   handleCommentVote(comment.comment_id, 1, comment.user_vote)
                 }
-                className={`p-1 rounded-md transition-all ${comment.user_vote === 1 ? "text-purple-600 bg-purple-50" : "text-gray-400 hover:text-purple-500"}`}
+                className={`p-1 rounded-md transition-all ${comment.user_vote === 1 ? "text-purple-600 bg-purple-50" : "text-[var(--text-muted)] hover:text-purple-500"}`}
               >
                 <ArrowBigUp
                   className={`w-5 h-5 ${comment.user_vote === 1 ? "fill-purple-600" : ""}`}
                 />
               </button>
               <span
-                className={`text-xs font-black px-1 min-w-[1.2rem] text-center ${comment.user_vote === 1 ? "text-purple-600" : comment.user_vote === -1 ? "text-red-600" : "text-gray-600"}`}
+                className={`text-xs font-black px-1 min-w-[1.2rem] text-center ${comment.user_vote === 1 ? "text-purple-600" : comment.user_vote === -1 ? "text-red-600" : "text-[var(--text-muted)]"}`}
               >
                 {comment.likes_count || 0}
               </span>
@@ -129,7 +128,7 @@ const CommentItem = ({
                 onClick={() =>
                   handleCommentVote(comment.comment_id, -1, comment.user_vote)
                 }
-                className={`p-1 rounded-md transition-all ${comment.user_vote === -1 ? "text-red-600 bg-red-50" : "text-gray-400 hover:text-red-500"}`}
+                className={`p-1 rounded-md transition-all ${comment.user_vote === -1 ? "text-red-600 bg-red-50" : "text-[var(--text-muted)] hover:text-red-500"}`}
               >
                 <ArrowBigDown
                   className={`w-5 h-5 ${comment.user_vote === -1 ? "fill-red-600" : ""}`}
@@ -139,7 +138,7 @@ const CommentItem = ({
 
             <button
               onClick={() => setReplyingTo(comment.comment_id)}
-              className="flex items-center gap-1.5 px-2 py-1 rounded-md text-gray-500 hover:bg-gray-50 hover:text-purple-600 transition-all"
+              className="flex items-center gap-1.5 px-2 py-1 rounded-md text-[var(--text-muted)] hover:bg-[var(--bg-active)] hover:text-purple-600 transition-all"
             >
               <Reply className="w-4 h-4" />
               <span className="text-[10px] font-black uppercase tracking-wider">Reply</span>
@@ -150,10 +149,15 @@ const CommentItem = ({
                 ...(isCommentOwner
                   ? [
                       {
-                        label: "Delete",
-                        icon: <Trash2 className="w-3 h-3" />,
-                        onClick: () => handleDeleteComment(comment.comment_id),
-                        variant: "danger",
+                        render: () => (
+                          <DeleteAction
+                            targetType="comment"
+                            targetId={comment.comment_id}
+                            label="Delete"
+                            iconClassName="w-3 h-3"
+                            buttonClassName="w-full flex items-center gap-3 px-4 py-2.5 text-xs font-black uppercase tracking-widest text-red-600 hover:bg-red-50 transition-colors duration-150"
+                          />
+                        )
                       },
                     ]
                   : [
@@ -188,7 +192,7 @@ const CommentItem = ({
                       value={replyContent}
                       onChange={(e) => setReplyContent(e.target.value)}
                       placeholder={`Reply to ${comment.full_name}...`}
-                      className="flex-1 p-2 text-sm bg-white border border-gray-200 rounded-lg outline-none focus:border-purple-300 min-h-[80px] resize-none"
+                      className="flex-1 p-2 text-sm bg-[var(--bg-card)] border border-[var(--border-main)] rounded-lg outline-none focus:border-purple-300 min-h-[80px] resize-none text-[var(--text-main)]"
                       autoFocus
                     />
                   </div>
@@ -196,7 +200,7 @@ const CommentItem = ({
                     <button
                       type="button"
                       onClick={() => setReplyingTo(null)}
-                      className="px-4 py-2 text-xs font-black text-gray-500 hover:bg-gray-100 rounded-lg uppercase tracking-wider"
+                      className="px-4 py-2 text-xs font-black text-[var(--text-muted)] hover:bg-[var(--bg-active)] rounded-lg uppercase tracking-wider"
                     >
                       Cancel
                     </button>
@@ -226,9 +230,9 @@ const CommentItem = ({
               {!isExpanded ? (
                 <button
                   onClick={() => setIsExpanded(true)}
-                  className="text-[11px] font-black text-gray-500 hover:text-purple-600 flex items-center gap-2 tracking-widest uppercase ml-4"
+                  className="text-[11px] font-black text-[var(--text-muted)] hover:text-purple-600 flex items-center gap-2 tracking-widest uppercase ml-4"
                 >
-                  <div className="w-6 h-[1px] bg-gray-200" />
+                  <div className="w-6 h-[1px] bg-[var(--border-main)]" />
                   View {comment.replies.length} replies
                 </button>
               ) : (
@@ -246,7 +250,6 @@ const CommentItem = ({
                           isAuthenticated={isAuthenticated}
                           handleCommentVote={handleCommentVote}
                           handleReportClick={handleReportClick}
-                          handleDeleteComment={handleDeleteComment}
                           replyingTo={replyingTo}
                           setReplyingTo={setReplyingTo}
                           replyContent={replyContent}
@@ -272,7 +275,7 @@ const CommentItem = ({
                         setIsExpanded(false);
                         setVisibleCount(1);
                       }}
-                      className="text-[11px] font-black text-gray-500 hover:text-gray-700 tracking-widest uppercase"
+                      className="text-[11px] font-black text-[var(--text-muted)] hover:text-[var(--text-main)] tracking-widest uppercase"
                     >
                       Hide replies
                     </button>
@@ -322,17 +325,6 @@ const DiscussionDetail = () => {
   const toggleSaveMutation = useToggleSave(id);
   const archiveMutation = useDeleteDiscussion();
   const hardDeleteMutation = useHardDeleteDiscussion();
-
-  // Handlers
-  const handleDeleteComment = (commentId) => {
-    if (window.confirm("Delete this comment permanently?")) {
-      deleteCommentMutation.mutate(commentId, {
-        onSuccess: () => toast.success("Comment deleted"),
-        onError: (err) =>
-          toast.error(err.response?.data?.error || "Delete failed"),
-      });
-    }
-  };
 
   useEffect(() => {
     if (user?.current_level > lastLevel) {
@@ -435,10 +427,10 @@ const DiscussionDetail = () => {
               reportModal.targetId,
               reason,
             );
-            return true; // Indicate success for the modal
+            return true;
           } catch (e) {
             toast.error("Report failed");
-            throw e; // Propagate error to modal
+            throw e;
           } finally {
             setIsReporting(false);
           }
@@ -455,7 +447,7 @@ const DiscussionDetail = () => {
 
       <Link
         to="/discussions"
-        className="inline-flex items-center text-xs font-black text-gray-500 mb-6 hover:text-purple-600 uppercase tracking-widest"
+        className="inline-flex items-center text-xs font-black text-[var(--text-muted)] mb-6 hover:text-purple-600 uppercase tracking-widest"
       >
         <ChevronLeft className="w-4 h-4 mr-1" /> Back to Feed
       </Link>
@@ -463,14 +455,14 @@ const DiscussionDetail = () => {
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="flex flex-col md:flex-row bg-white border border-gray-100 rounded-xl overflow-hidden shadow-sm"
+        className="flex flex-col md:flex-row bg-[var(--bg-card)] border border-[var(--border-main)] rounded-xl overflow-hidden shadow-sm"
       >
         {/* Voting Rail */}
-        <div className="w-full md:w-14 bg-gray-50/30 flex flex-row md:flex-col items-center justify-center p-2 md:py-6 gap-2 border-b md:border-b-0 md:border-r border-gray-100">
+        <div className="w-full md:w-14 bg-[var(--bg-active)]/30 flex flex-row md:flex-col items-center justify-center p-2 md:py-6 gap-2 border-b md:border-b-0 md:border-r border-[var(--border-main)]">
           <button
             onClick={() => handleVote(1)}
             disabled={voteMutation.isPending}
-            className={`p-1 rounded-lg transition-all ${discussion.user_vote === 1 ? "text-purple-600 bg-purple-50" : "text-gray-400 hover:bg-gray-100"}`}
+            className={`p-1 rounded-lg transition-all ${discussion.user_vote === 1 ? "text-purple-600 bg-purple-50" : "text-[var(--text-muted)] hover:bg-[var(--bg-active)]"}`}
           >
             {voteMutation.isPending ? (
               <ButtonLoader size={24} />
@@ -480,13 +472,22 @@ const DiscussionDetail = () => {
               />
             )}
           </button>
-          <span className="text-sm font-black">
+          <span
+            className={`text-base font-black px-3 py-1 rounded-lg shadow-sm border ${
+              discussion.user_vote === 1
+                ? "text-purple-600 bg-purple-50 border-purple-200"
+                : discussion.user_vote === -1
+                  ? "text-red-600 bg-red-50 border-red-200"
+                  : "text-[var(--text-main)] bg-[var(--bg-active)] border-[var(--border-main)]"
+            }`}
+            title="Net Likes"
+          >
             {discussion.like_count || 0}
           </span>
           <button
             onClick={() => handleVote(-1)}
             disabled={voteMutation.isPending}
-            className={`p-1 rounded-lg transition-all ${discussion.user_vote === -1 ? "text-red-600 bg-red-50" : "text-gray-400 hover:bg-gray-100"}`}
+            className={`p-1 rounded-lg transition-all ${discussion.user_vote === -1 ? "text-red-600 bg-red-50" : "text-[var(--text-muted)] hover:bg-[var(--bg-active)]"}`}
           >
             {voteMutation.isPending ? (
               <ButtonLoader size={24} />
@@ -501,7 +502,7 @@ const DiscussionDetail = () => {
         {/* Content */}
         <div className="flex-1 p-6 md:p-8">
           <div className="flex justify-between items-start mb-6">
-            <h1 className="text-2xl md:text-3xl font-black text-gray-900 tracking-tight">
+            <h1 className="text-2xl md:text-3xl font-black text-[var(--text-main)] tracking-tight">
               {discussion.title}
             </h1>
             <ActionMenu
@@ -520,6 +521,18 @@ const DiscussionDetail = () => {
                         label: "Manage Post",
                         icon: <Edit className="w-4 h-4" />,
                         onClick: () => navigate(`/portal/discussions/${id}/edit`),
+                      },
+                      {
+                        render: () => (
+                          <DeleteAction
+                            targetType="discussion"
+                            targetId={id}
+                            label="Delete Post"
+                            iconClassName="w-4 h-4"
+                            buttonClassName="w-full flex items-center gap-3 px-4 py-2.5 text-xs font-black uppercase tracking-widest text-red-600 hover:bg-red-50 transition-colors duration-150"
+                            onDeleted={() => navigate("/discussions")}
+                          />
+                        )
                       },
                     ]
                   : [
@@ -540,12 +553,12 @@ const DiscussionDetail = () => {
 
           {discussion.image_url && (
             <div 
-              className="relative mb-8 rounded-2xl overflow-hidden border border-gray-100 group cursor-zoom-in shadow-sm hover:shadow-md transition-shadow"
+              className="relative mb-8 rounded-2xl overflow-hidden border border-[var(--border-main)] group cursor-zoom-in shadow-sm hover:shadow-md transition-shadow"
               onClick={() => setLightbox({ isOpen: true, image: discussion.image_url, title: discussion.title })}
             >
               {isImageLoading && (
-                <div className="absolute inset-0 flex items-center justify-center bg-gray-50 animate-pulse">
-                  <ImageIcon className="w-8 h-8 text-gray-200" />
+                <div className="absolute inset-0 flex items-center justify-center bg-[var(--bg-active)] animate-pulse">
+                  <ImageIcon className="w-8 h-8 text-[var(--text-muted)]" />
                 </div>
               )}
               <img
@@ -560,19 +573,19 @@ const DiscussionDetail = () => {
             </div>
           )}
 
-          <div className="prose prose-purple max-w-none text-gray-800 mb-10 whitespace-pre-wrap">
+          <div className="prose prose-purple max-w-none text-[var(--text-main)] mb-10 whitespace-pre-wrap">
             {discussion.content}
           </div>
 
-          <div className="flex items-center gap-2 border-t border-gray-100 pt-6">
-            <button className="flex items-center gap-2 text-xs font-black text-gray-600 bg-white border border-gray-200 px-4 py-2 rounded-full">
+          <div className="flex items-center gap-2 border-t border-[var(--border-main)] pt-6">
+            <button className="flex items-center gap-2 text-xs font-black text-[var(--text-main)] bg-[var(--bg-card)] border border-[var(--border-main)] px-4 py-2 rounded-full">
               <MessageSquare className="w-4 h-4 text-purple-600" />{" "}
               {comments?.length || 0} Comments
             </button>
             <button
               onClick={() => toggleSaveMutation.mutate()}
               disabled={toggleSaveMutation.isPending}
-              className={`p-2.5 rounded-full transition-all ${discussion.user_saved ? "text-amber-500 bg-amber-50" : "text-gray-500 hover:bg-gray-50 border border-gray-100"}`}
+              className={`p-2.5 rounded-full transition-all ${discussion.user_saved ? "text-amber-500 bg-amber-50" : "text-[var(--text-muted)] hover:bg-[var(--bg-active)] border border-[var(--border-main)]"}`}
             >
               {toggleSaveMutation.isPending ? (
                 <ButtonLoader size={16} />
@@ -587,14 +600,14 @@ const DiscussionDetail = () => {
       </motion.div>
 
       {/* Discussion Thread */}
-      <div className="mt-8 bg-white border border-gray-100 rounded-xl p-6 md:p-8 shadow-sm">
+      <div className="mt-8 bg-[var(--bg-card)] border border-[var(--border-main)] rounded-xl p-6 md:p-8 shadow-sm">
         {isAuthenticated ? (
           <form onSubmit={handleCommentSubmit} className="mb-10">
             <textarea
               value={commentContent}
               onChange={(e) => setCommentContent(e.target.value)}
               placeholder="Join the discussion..."
-              className="w-full p-4 border-2 border-gray-100 rounded-2xl outline-none focus:border-purple-200 min-h-[120px]"
+              className="w-full p-4 border-2 border-[var(--border-main)] rounded-2xl outline-none focus:border-purple-200 min-h-[120px] bg-[var(--bg-card)] text-[var(--text-main)]"
             />
             <div className="flex justify-end mt-2">
               <button
@@ -625,7 +638,6 @@ const DiscussionDetail = () => {
               user={user}
               isAuthenticated={isAuthenticated}
               handleCommentVote={handleCommentVote}
-              handleDeleteComment={handleDeleteComment} // Fixed: Correct prop passed
               handleReportClick={(id, type) =>
                 setReportModal({ isOpen: true, targetId: id, targetType: type })
               }

@@ -58,7 +58,7 @@ exports.getRoadmapDetails = async (req, res) => {
 
     // roadmap exists?
     const roadmap = await pool.query(
-      `SELECT * FROM portal.roadmaps WHERE roadmap_id = $1`,
+      `SELECT * FROM portal.roadmaps WHERE roadmap_id = $1 AND is_active = TRUE`,
       [id],
     );
 
@@ -279,7 +279,7 @@ exports.getRoadmapPath = async (req, res) => {
 
     // Fetch roadmap metadata first
     const roadmap = await pool.query(
-      `SELECT title, description, difficulty_level FROM portal.roadmaps WHERE roadmap_id = $1`,
+      `SELECT title, description, difficulty_level FROM portal.roadmaps WHERE roadmap_id = $1 AND is_active = TRUE`,
       [id],
     );
 
@@ -316,7 +316,7 @@ exports.getRoadmapPath = async (req, res) => {
             )
             FROM portal.step_resource_map srm
             JOIN portal.resources r ON r.resource_id = srm.resource_id
-            WHERE srm.step_id = rs.step_id AND r.status = 'approved'
+            WHERE srm.step_id = rs.step_id AND r.status = 'approved' AND r.deleted_at IS NULL
           ),
           '[]'
         ) as resources

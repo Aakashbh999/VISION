@@ -64,7 +64,7 @@ exports.getRecommendations = async (
   try {
     // 1. Resources
     if (userSemester || userProgramId) {
-      let resourceQuery = `${buildResourceQueryBase()} WHERE r.status = 'approved'`;
+      let resourceQuery = `${buildResourceQueryBase()} WHERE r.status = 'approved' AND r.deleted_at IS NULL`;
       const params = [];
       if (userSemester) {
         params.push(userSemester);
@@ -81,10 +81,11 @@ exports.getRecommendations = async (
       recommendations.resources = res.rows;
     }
 
-    // 2. Groups
+    // 2. Groups (Exclude private if not member)
+    const baseCondition = `WHERE g.privacy_type != 'private' AND g.deleted_at IS NULL AND g.degree_id = $1`;
     const groupQuery = userId 
-      ? `${buildGroupQueryBase(userId, 2)} WHERE g.degree_id = $1 GROUP BY g.group_id, g.name, g.description, g.group_image, g.is_public, g.degree_id, ad.full_name ORDER BY member_count DESC LIMIT $3`
-      : `${buildGroupQueryBase(userId, 1)} GROUP BY g.group_id, g.name, g.description, g.group_image, g.is_public, g.degree_id, ad.full_name ORDER BY member_count DESC LIMIT $1`;
+      ? `${buildGroupQueryBase(userId, 2)} ${baseCondition} GROUP BY g.group_id, g.name, g.description, g.group_image, g.is_public, g.degree_id, ad.full_name ORDER BY member_count DESC LIMIT $3`
+      : `${buildGroupQueryBase(userId, 1)} WHERE g.privacy_type != 'private' AND g.deleted_at IS NULL GROUP BY g.group_id, g.name, g.description, g.group_image, g.is_public, g.degree_id, ad.full_name ORDER BY member_count DESC LIMIT $1`;
     
     const groupParams = userId ? [userDegreeId, userId, limit] : [limit];
     const groupRes = await pool.query(groupQuery, groupParams);
@@ -96,11 +97,12 @@ exports.getRecommendations = async (
 
     // 4. Discussions (Trending/Popular)
     const discussionRes = await pool.query(`
-      SELECT d.discussion_id, d.title, d.like_count, d.comment_count, u.full_name as author
+      SELECT d.discussion_id as id, d.title, d.like_count, d.comment_count, u.full_name as author,
+      (d.like_count * 2 + d.comment_count) as score
       FROM portal.discussions d
       JOIN portal.users u ON u.user_id = d.user_id
-      WHERE d.deleted_at IS NULL
-      ORDER BY (d.like_count * 2 + d.comment_count) DESC
+      WHERE d.deleted_at IS NULL AND d.is_deleted = FALSE AND u.status = 'active'
+      ORDER BY score DESC
       LIMIT $1
     `, [limit]);
     recommendations.discussions = discussionRes.rows;

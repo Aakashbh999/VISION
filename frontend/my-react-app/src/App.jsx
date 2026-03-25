@@ -5,7 +5,7 @@ import {
   useLocation,
   Navigate,
 } from "react-router-dom";
-import { useState } from "react";
+import { useState, lazy, Suspense } from "react";
 import { useAuth } from "./context/AuthContext";
 import PublicRoute from "./components/PublicRoute";
 import Navbar from "./components/layout/Navbar";
@@ -30,19 +30,19 @@ import Notifications from "./pages/portal/Notifications";
 import Roadmaps from "./pages/portal/Roadmaps";
 import RoadmapView from "./pages/portal/RoadmapView";
 import Discussions from "./pages/portal/Discussions";
-import DiscussionDetail from "./pages/portal/DiscussionDetail";
 import CreateDiscussion from "./pages/portal/CreateDiscussion";
 import EditDiscussion from "./pages/portal/EditDiscussion";
 import MyPosts from "./pages/portal/MyPosts";
 import SavedDiscussions from "./pages/portal/SavedDiscussions";
 import Groups from "./pages/portal/Groups";
-import GroupDetail from "./pages/portal/GroupDetail";
-import GroupProfile from "./pages/portal/GroupProfile";
 import CreateGroup from "./pages/portal/CreateGroup";
 import Clubs from "./pages/portal/Clubs";
-import ClubDetail from "./pages/portal/ClubDetail";
 import RedirectIfAuthenticated from "./components/RedirectIfAuthenticated";
 import CareerPaths from "./pages/CareerPaths";
+import Resources from "./pages/portal/Resources";
+import MyResources from "./pages/portal/MyResources";
+import ManageContent from "./pages/portal/ManageContent";
+import PendingAccessMessage from "./components/portal/PendingAccessMessage";
 // Admin pages
 import AdminDashboard from "./pages/admin/Dashboard";
 import AdminPending from "./pages/admin/PendingStudents";
@@ -50,11 +50,13 @@ import AdminStudents from "./pages/admin/StudentsList";
 import AdminReports from "./pages/admin/Reports";
 import AdminPendingResources from "./pages/admin/PendingResources";
 import ModeratorRoute from "./components/ModeratorRoute";
-import Resources from "./pages/portal/Resources";
-import MyResources from "./pages/portal/MyResources";
-import Profile from "./pages/portal/Profile";
-import ManageContent from "./pages/portal/ManageContent";
-import PendingAccessMessage from "./components/portal/PendingAccessMessage";
+
+// Lazy-loaded heavy pages (reduces initial bundle size significantly)
+const Profile = lazy(() => import("./pages/portal/Profile"));
+const GroupDetail = lazy(() => import("./pages/portal/GroupDetail"));
+const GroupProfile = lazy(() => import("./pages/portal/GroupProfile"));
+const DiscussionDetail = lazy(() => import("./pages/portal/DiscussionDetail"));
+const ClubDetail = lazy(() => import("./pages/portal/ClubDetail"));
 
 // Route Configurations
 const publicRoutes = [
@@ -116,6 +118,16 @@ const LoadingSpinner = () => (
     <div className="flex flex-col items-center gap-3">
       <div className="animate-spin rounded-full h-10 w-10 border-2 border-purple-200 border-t-purple-600"></div>
       <p className="text-sm text-text-muted">Loading...</p>
+    </div>
+  </div>
+);
+
+// Suspense fallback for lazy pages
+const PageLoader = () => (
+  <div className="min-h-[60vh] flex items-center justify-center">
+    <div className="flex flex-col items-center gap-3">
+      <div className="animate-spin rounded-full h-8 w-8 border-2 border-purple-200 border-t-purple-600" />
+      <p className="text-xs text-text-muted font-medium uppercase tracking-widest">Loading page...</p>
     </div>
   </div>
 );
@@ -239,16 +251,18 @@ function AppContent() {
   // Use MainLayout for portal routes when user is approved
   if (isPortalRoute && isApprovedUser) {
     return (
-      <Routes>
-        <Route element={<MainLayout />}>
-          <Route element={<ProtectedRoute />}>
-            {portalContentRoutes.map(({ path, element }) => (
-              <Route key={path} path={path} element={element} />
-            ))}
-            <Route path="/profile" element={<Navigate to="/profile/me" replace />} />
+      <Suspense fallback={<PageLoader />}>
+        <Routes>
+          <Route element={<MainLayout />}>
+            <Route element={<ProtectedRoute />}>
+              {portalContentRoutes.map(({ path, element }) => (
+                <Route key={path} path={path} element={element} />
+              ))}
+              <Route path="/profile" element={<Navigate to="/profile/me" replace />} />
+            </Route>
           </Route>
-        </Route>
-      </Routes>
+        </Routes>
+      </Suspense>
     );
   }
 

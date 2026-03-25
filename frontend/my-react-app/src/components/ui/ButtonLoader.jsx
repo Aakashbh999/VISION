@@ -2,7 +2,6 @@ import { Loader2 } from "lucide-react";
 
 /**
  * Inline loading spinner for buttons and small actions
- * Usage: <ButtonLoader /> or <ButtonLoader size={16} />
  */
 const ButtonLoader = ({ size = 16, className = "" }) => {
   return (
@@ -15,7 +14,6 @@ const ButtonLoader = ({ size = 16, className = "" }) => {
 
 /**
  * Action button wrapper that handles loading state
- * Shows loader when loading, children otherwise
  */
 export const ActionButton = ({
   onClick,
@@ -37,7 +35,7 @@ export const ActionButton = ({
 };
 
 /**
- * Like button with loading state
+ * Like button with loading state – now uses purple theme
  */
 export const LikeButton = ({
   isLiked,
@@ -51,15 +49,15 @@ export const LikeButton = ({
       <button
         onClick={onClick}
         disabled={isLoading}
-        className={`hover:bg-gray-200 p-1 rounded transition-all ${
+        className={`hover:bg-[var(--bg-active)] p-1 rounded transition-all ${
           isLoading ? "opacity-50 cursor-wait" : ""
-        } ${isLiked ? "text-orange-600" : "text-gray-500"}`}
+        } ${isLiked ? "text-purple-600" : "text-[var(--text-muted)]"}`}
       >
         {isLoading ? (
           <ButtonLoader size={24} />
         ) : (
           <svg
-            className={`w-6 h-6 ${isLiked ? "fill-orange-600" : ""}`}
+            className={`w-6 h-6 ${isLiked ? "fill-purple-600" : ""}`}
             viewBox="0 0 24 24"
             fill="none"
             stroke="currentColor"
@@ -69,13 +67,13 @@ export const LikeButton = ({
           </svg>
         )}
       </button>
-      <span className="text-xs font-bold">{count}</span>
+      <span className="text-xs font-bold text-[var(--text-muted)]">{count}</span>
     </div>
   );
 };
 
 /**
- * Save/Bookmark button with loading state
+ * Save/Bookmark button with loading state – purple accent
  */
 export const SaveButton = ({
   isSaved,
@@ -88,15 +86,15 @@ export const SaveButton = ({
     <button
       onClick={onClick}
       disabled={isLoading}
-      className={`flex items-center gap-1.5 px-2 py-1.5 hover:bg-gray-100 rounded text-xs font-bold transition-all ${
+      className={`flex items-center gap-1.5 px-2 py-1.5 hover:bg-[var(--bg-active)] rounded text-xs font-bold transition-all ${
         isLoading ? "opacity-50 cursor-wait" : ""
-      } ${isSaved ? "text-yellow-600" : "text-gray-500"} ${className}`}
+      } ${isSaved ? "text-purple-600" : "text-[var(--text-muted)]"} ${className}`}
     >
       {isLoading ? (
         <ButtonLoader size={16} />
       ) : (
         <svg
-          className={`w-4 h-4 ${isSaved ? "fill-yellow-500 text-yellow-500" : ""}`}
+          className={`w-4 h-4 ${isSaved ? "fill-purple-500 text-purple-500" : ""}`}
           viewBox="0 0 24 24"
           fill="none"
           stroke="currentColor"
@@ -111,7 +109,7 @@ export const SaveButton = ({
 };
 
 /**
- * Comment submit button with loading state
+ * Comment submit button with loading state – uses purple gradient
  */
 export const CommentButton = ({
   isLoading,
@@ -123,7 +121,7 @@ export const CommentButton = ({
     <button
       onClick={onClick}
       disabled={isLoading || disabled}
-      className={`px-4 py-2 bg-blue-600 text-white text-sm font-bold rounded-full hover:bg-blue-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 ${className}`}
+      className={`px-4 py-2 bg-gradient-to-r from-purple-600 to-purple-800 text-white text-sm font-bold rounded-full hover:shadow-lg hover:shadow-purple-500/30 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 ${className}`}
     >
       {isLoading ? (
         <>

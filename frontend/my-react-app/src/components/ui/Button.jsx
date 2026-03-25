@@ -13,16 +13,17 @@ const Button = ({
 
   const variants = {
     primary:
-      "bg-slate-900 text-white hover:bg-slate-800 focus:ring-slate-900/10 rounded-xl",
+      "bg-purple-700 text-white hover:bg-purple-800 focus:ring-purple-500/20 rounded-xl",
     shiny:
-      "bg-purple-600 text-white hover:bg-purple-700 shadow-lg shadow-purple-500/20 focus:ring-purple-500/20 rounded-xl",
+      "bg-gradient-to-r from-purple-600 to-purple-800 text-white hover:from-purple-700 hover:to-purple-900 shadow-lg shadow-purple-500/20 focus:ring-purple-500/20 rounded-xl",
     secondary:
       "bg-white border border-slate-200 text-slate-900 hover:bg-slate-50 focus:ring-slate-100 rounded-xl",
     ghost:
-      "bg-transparent text-slate-400 hover:bg-slate-100 hover:text-slate-900 focus:ring-slate-100 rounded-xl",
+      "bg-transparent text-purple-700 hover:bg-purple-50 hover:text-purple-800 focus:ring-purple-100 rounded-xl",
     danger:
       "bg-rose-500 text-white hover:bg-rose-600 focus:ring-rose-500/20 rounded-xl",
-   gradient: "px-6 py-3 rounded-2xl bg-gradient-to-r from-blue-600 to-purple-600 text-white font-semibold hover:shadow-xl hover:shadow-blue-500/40 transition-all duration-300 transform hover:-translate-y-0.5 hover:scale-[1.02]",
+    gradient:
+      "px-6 py-3 rounded-2xl bg-gradient-to-r from-purple-600 to-purple-800 text-white font-semibold hover:shadow-xl hover:shadow-purple-500/40 transition-all duration-300 transform hover:-translate-y-0.5 hover:scale-[1.02]",
   };
 
   const sizes = {

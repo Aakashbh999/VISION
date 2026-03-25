@@ -28,13 +28,6 @@ exports.register = async (req, res) => {
     email,
     password,
     full_name,
-<<<<<<< HEAD
-    // Step 2 fields
-    current_education,
-    target_exam,
-    career_scope,
-=======
->>>>>>> f063a4515a4bc074ba9b0bcb878f9359be0f048e
     university,
     campus,
     program_id,
@@ -42,6 +35,7 @@ exports.register = async (req, res) => {
     batch_year,
     semester_is_manual,
     tu_registration_no,
+    career_scope,
   } = req.body;
 
   const client = await pool.connect();
@@ -60,7 +54,7 @@ exports.register = async (req, res) => {
       return res.status(400).json({ error: "Email already registered" });
     }
 
-    // Validate strong password policy
+    // Validate strong password policy (at least 8 chars, 1 upper, 1 lower, 1 number)
     if (
       password &&
       (password.length < 8 ||
@@ -78,48 +72,7 @@ exports.register = async (req, res) => {
     // Hash password
     const hashedPassword = await bcrypt.hash(password, 12);
 
-<<<<<<< HEAD
-    // 1. Insert into auth.users
-=======
-    const normalizedBatchYear =
-      batch_year === undefined || batch_year === null || batch_year === ""
-        ? null
-        : Number.parseInt(batch_year, 10);
-
-    if (
-      normalizedBatchYear !== null &&
-      (!Number.isFinite(normalizedBatchYear) || normalizedBatchYear < 2000)
-    ) {
-      await client.query("ROLLBACK");
-      return res.status(400).json({ error: "Invalid batch year" });
-    }
-
-    const normalizedManualSemester =
-      semester_is_manual === true || semester_is_manual === "true";
-
-    let normalizedSemester =
-      semester === undefined || semester === null || semester === ""
-        ? null
-        : Number.parseInt(semester, 10);
-
-    if (normalizedSemester !== null && !Number.isFinite(normalizedSemester)) {
-      await client.query("ROLLBACK");
-      return res.status(400).json({ error: "Invalid semester" });
-    }
-
-    if (normalizedBatchYear && !normalizedManualSemester) {
-      normalizedSemester = calculateSemesterFromBatch(normalizedBatchYear);
-    }
-
-    if (!normalizedSemester) {
-      await client.query("ROLLBACK");
-      return res.status(400).json({
-        error: "Semester is required unless it can be derived from batch year.",
-      });
-    }
-
-    // Insert into auth.users
->>>>>>> f063a4515a4bc074ba9b0bcb878f9359be0f048e
+    // 1. Insert into auth.users phase
     const authInsert = await client.query(
       `INSERT INTO auth.users (email, password_hash)
        VALUES ($1, $2)
@@ -129,8 +82,7 @@ exports.register = async (req, res) => {
 
     const authUserId = authInsert.rows[0].auth_user_id;
 
-<<<<<<< HEAD
-    // 2. Normalize Academic Data
+    // 2. Normalize and compute academic data
     const normalizedBatchYear =
       batch_year === undefined || batch_year === null || batch_year === ""
         ? null
@@ -144,64 +96,57 @@ exports.register = async (req, res) => {
         ? null
         : Number.parseInt(semester, 10);
 
+    // Auto-calculate semester if not manual
     if (normalizedBatchYear && !normalizedManualSemester) {
       normalizedSemester = calculateSemesterFromBatch(normalizedBatchYear);
     }
 
     const studentIdImageUrl = req.file?.path || null;
 
-    // 3. Insert into portal.users with registration_step = 2 (Complete)
-    await client.query(
+    // 3. Insert into portal.users phase (atomic step)
+    const portalInsert = await client.query(
       `INSERT INTO portal.users
-       (auth_user_id, full_name, current_education, target_exam, career_scope, 
-        university, campus, program_id, semester, batch_year, 
-        semester_is_manual, tu_registration_no, student_id_image_url, registration_step)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, 2)`,
+       (auth_user_id, full_name, university, campus, program_id, semester, batch_year, 
+        semester_is_manual, tu_registration_no, student_id_image_url, career_scope)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+       RETURNING user_id`,
       [
         authUserId,
         full_name,
-        current_education,
-        target_exam,
-        career_scope,
-=======
-    // Insert into portal.users
-    await client.query(
-      `INSERT INTO portal.users
-       (auth_user_id, full_name, university, campus, program_id, semester, batch_year, semester_is_manual, tu_registration_no)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
-      [
-        authUserId,
-        full_name,
->>>>>>> f063a4515a4bc074ba9b0bcb878f9359be0f048e
-        university,
+        university || 'TU',
         campus,
-        program_id,
+        program_id ? parseInt(program_id, 10) : null,
         normalizedSemester,
         normalizedBatchYear,
         normalizedManualSemester,
         tu_registration_no,
-<<<<<<< HEAD
         studentIdImageUrl,
-=======
->>>>>>> f063a4515a4bc074ba9b0bcb878f9359be0f048e
+        career_scope
       ],
     );
 
-    // Generate email verification token
+    const portalUserId = portalInsert.rows[0].user_id;
+
+    // 4. Initialize User Stats (VisionXP)
+    await client.query(
+      `INSERT INTO portal.user_stats (user_id, total_xp, current_level)
+       VALUES ($1, 0, 1)`,
+      [portalUserId]
+    );
+
+    // 5. Verification token generation
     const emailToken = jwt.sign(
       { auth_user_id: authUserId },
       process.env.JWT_SECRET,
       { expiresIn: "24h" },
     );
 
-    // Delete any existing tokens for this user (prevents multiple active tokens)
     await client.query(
       `DELETE FROM auth.email_verification_tokens
        WHERE auth_user_id = $1`,
       [authUserId],
     );
 
-    // Save token in DB
     await client.query(
       `INSERT INTO auth.email_verification_tokens
        (auth_user_id, token, expires_at)
@@ -211,7 +156,7 @@ exports.register = async (req, res) => {
 
     await client.query("COMMIT");
 
-    // Send branded verification email
+    // 5. Post-commit: Notification / Verification Email
     const verificationLink = `${process.env.BASE_URL}/api/auth/verify-email?token=${emailToken}`;
 
     try {
@@ -221,27 +166,33 @@ exports.register = async (req, res) => {
         verificationLink,
       });
     } catch (emailErr) {
-      console.error("Failed to send verification email:", emailErr);
-      // Don't fail registration if email fails, user can request resend
+      console.error("Non-blocking email failure:", emailErr);
     }
 
     res.status(201).json({
-<<<<<<< HEAD
-      message: "Registration successful. Please check your email to verify your account.",
+      message: "Registration successful. Please verify your email.",
       auth_user_id: authUserId,
-=======
-      message:
-        "Registration successful. Please check your email to verify your account.",
->>>>>>> f063a4515a4bc074ba9b0bcb878f9359be0f048e
     });
   } catch (err) {
     await client.query("ROLLBACK");
-    console.error("Registration error:", err);
-    res.status(500).json({ error: "Registration failed" });
+    console.error("Atomic registration failure:", err);
+    
+    // Specific handling for DB unique constraint violations
+    if (err.code === '23505') {
+       if (err.detail.includes('tu_registration_no')) {
+           return res.status(400).json({ error: "TU Registration Number already in use." });
+       }
+       if (err.detail.includes('email')) {
+           return res.status(400).json({ error: "Email already registered." });
+       }
+    }
+    
+    res.status(500).json({ error: "Registration failed. Please try again." });
   } finally {
     client.release();
   }
 };
+
 exports.login = async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -278,9 +229,6 @@ exports.login = async (req, res) => {
       );
       return res.status(400).json({ error: "Invalid credentials" });
     }
-
-    // Note: We now allow unverified users to login but with limited access
-    // The frontend will handle showing verification prompts
 
     // 🚫 Block suspended user
     const portalUser = await pool.query(
@@ -323,6 +271,7 @@ exports.login = async (req, res) => {
     res.status(500).json({ error: "Login failed" });
   }
 };
+
 exports.verifyEmail = async (req, res) => {
   try {
     const { token } = req.query;
@@ -582,9 +531,6 @@ exports.resetPassword = async (req, res) => {
   }
 };
 
-/**
- * Refresh access token using refresh token (with rotation)
- */
 exports.refreshToken = async (req, res) => {
   try {
     const { refreshToken } = req.body;
@@ -627,9 +573,6 @@ exports.refreshToken = async (req, res) => {
   }
 };
 
-/**
- * Logout - revoke refresh token
- */
 exports.logout = async (req, res) => {
   try {
     const { refreshToken } = req.body;
@@ -648,9 +591,6 @@ exports.logout = async (req, res) => {
   }
 };
 
-/**
- * Logout from all devices
- */
 exports.logoutAllDevices = async (req, res) => {
   try {
     const authUserId = req.user.auth_user_id;
@@ -667,9 +607,6 @@ exports.logoutAllDevices = async (req, res) => {
   }
 };
 
-/**
- * Get user's active sessions
- */
 exports.getSessions = async (req, res) => {
   try {
     const authUserId = req.user.auth_user_id;
@@ -683,9 +620,6 @@ exports.getSessions = async (req, res) => {
   }
 };
 
-/**
- * Revoke a specific session
- */
 exports.revokeSessionById = async (req, res) => {
   try {
     const authUserId = req.user.auth_user_id;

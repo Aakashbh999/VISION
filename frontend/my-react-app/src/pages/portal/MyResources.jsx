@@ -40,39 +40,39 @@ const MyResources = () => {
   });
 
   return (
-    <div className="max-w-7xl mx-auto pb-10">
+    <div className="max-w-7xl mx-auto pb-10 px-4 sm:px-6 lg:px-8">
       <Link
         to="/resources"
-        className="inline-flex items-center gap-2 text-sm text-gray-500 hover:text-blue-600 mb-6 transition-colors font-medium border border-gray-100 bg-white px-4 py-2 rounded-xl shadow-sm"
+        className="inline-flex items-center gap-2 text-sm text-[var(--text-muted)] hover:text-purple-600 mb-6 transition-colors font-medium border border-[var(--border-main)] bg-[var(--bg-card)] px-4 py-2 rounded-xl shadow-sm"
       >
         <ArrowLeft className="w-4 h-4" /> Back to Resource Library
       </Link>
 
       <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4 mb-8">
         <div>
-          <h1 className="text-4xl font-black text-gray-900 mb-2 tracking-tight">My Uploads</h1>
-          <p className="text-gray-500 font-medium">
+          <h1 className="text-4xl font-black text-[var(--text-main)] mb-2 tracking-tight">My Uploads</h1>
+          <p className="text-[var(--text-muted)] font-medium">
             Manage the resources you've shared with the community.
           </p>
         </div>
         
         <Link 
           to="/manage" 
-          className="inline-flex items-center gap-2 px-5 py-3 bg-white border border-gray-200 text-gray-700 rounded-xl hover:bg-gray-50 hover:border-gray-300 transition-all font-bold shadow-sm"
+          className="inline-flex items-center gap-2 px-5 py-3 bg-[var(--bg-card)] border border-[var(--border-main)] text-[var(--text-main)] rounded-xl hover:bg-[var(--bg-active)] hover:border-[var(--border-main)] transition-all font-bold shadow-sm"
         >
           Manage All Content <ExternalLink className="w-4 h-4" />
         </Link>
       </div>
 
-      <div className="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 mb-8 flex items-center justify-between">
-        <div className="flex items-center gap-2 font-bold text-gray-700">
-          <Filter className="w-5 h-5 text-blue-500" />
+      <div className="bg-[var(--bg-card)] p-4 rounded-2xl shadow-sm border border-[var(--border-main)] mb-8 flex items-center justify-between">
+        <div className="flex items-center gap-2 font-bold text-[var(--text-main)]">
+          <Filter className="w-5 h-5 text-purple-600" />
           Filter by Status:
         </div>
         <select
           value={statusFilter}
           onChange={(e) => setStatusFilter(e.target.value)}
-          className="px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none font-medium bg-gray-50"
+          className="px-4 py-2 border border-[var(--border-main)] rounded-xl focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 outline-none font-medium bg-[var(--bg-active)] text-[var(--text-main)]"
         >
           <option value="all">All Uploads</option>
           <option value="approved">Approved</option>
@@ -82,38 +82,38 @@ const MyResources = () => {
       </div>
 
       {resources.length === 0 ? (
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-16 text-center">
-          <div className="w-20 h-20 bg-blue-50 text-blue-500 rounded-full flex items-center justify-center mx-auto mb-6">
+        <div className="bg-[var(--bg-card)] rounded-2xl shadow-sm border border-[var(--border-main)] p-16 text-center">
+          <div className="w-20 h-20 bg-purple-50 text-purple-600 rounded-full flex items-center justify-center mx-auto mb-6">
             <Clock className="w-10 h-10" />
           </div>
-          <h3 className="text-2xl font-black text-gray-900 mb-3">
+          <h3 className="text-2xl font-black text-[var(--text-main)] mb-3">
             No resources uploaded yet
           </h3>
-          <p className="text-gray-500 font-medium mb-8 max-w-md mx-auto">
+          <p className="text-[var(--text-muted)] font-medium mb-8 max-w-md mx-auto">
             Share your knowledge with the community by uploading study
             materials, links, or project work.
           </p>
           <Link
             to="/resources"
-            className="inline-flex px-8 py-3 bg-blue-600 text-white font-bold rounded-xl hover:bg-blue-700 transition-colors shadow-lg shadow-blue-200"
+            className="inline-flex px-8 py-3 bg-purple-600 text-white font-bold rounded-xl hover:bg-purple-700 transition-colors shadow-lg shadow-purple-500/20"
           >
             Go to Library to Share
           </Link>
         </div>
       ) : filteredResources.length === 0 ? (
-        <div className="text-center py-20 bg-white border-2 border-dashed border-gray-200 rounded-3xl">
-          <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4">
-            <Search className="w-8 h-8 text-gray-400" />
+        <div className="text-center py-20 bg-[var(--bg-card)] border-2 border-dashed border-[var(--border-main)] rounded-3xl">
+          <div className="w-16 h-16 bg-[var(--bg-active)] rounded-full flex items-center justify-center mx-auto mb-4">
+            <Search className="w-8 h-8 text-[var(--text-muted)]" />
           </div>
-          <h3 className="text-xl font-bold text-gray-900 mb-2">
+          <h3 className="text-xl font-bold text-[var(--text-main)] mb-2">
             No {statusFilter} resources
           </h3>
-          <p className="text-gray-500 font-medium">
+          <p className="text-[var(--text-muted)] font-medium">
             Try selecting a different status filter.
           </p>
           <button 
             onClick={() => setStatusFilter("all")}
-            className="mt-6 px-6 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl font-bold transition-colors"
+            className="mt-6 px-6 py-2 bg-[var(--bg-active)] hover:bg-[var(--border-main)] text-[var(--text-main)] rounded-xl font-bold transition-colors"
           >
             View All Uploads
           </button>

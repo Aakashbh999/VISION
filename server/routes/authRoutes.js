@@ -2,6 +2,7 @@ const express = require("express");
 const router = express.Router();
 const authController = require("../controllers/authController");
 const { verifyJWT } = require("../middleware/authMiddleware");
+const upload = require("../middleware/uploadMiddleware");
 
 // Public routes
 router.post("/register", upload.single("student_id_image"), authController.register);

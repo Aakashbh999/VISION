@@ -25,28 +25,27 @@ const RoadmapDetail = () => {
 
   const handleComplete = (stepId) => {
     completeStepMutation.mutate(stepId);
-    // Optimistically mark as completed in UI? The hook will refetch.
   };
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 px-4 sm:px-6 lg:px-8 py-6 sm:py-8 lg:py-10">
       {/* Back button and title */}
       <div>
         <Link
           to="/roadmaps"
-          className="inline-flex items-center gap-1 text-sm text-gray-600 hover:text-blue-600 mb-4"
+          className="inline-flex items-center gap-1 text-sm text-[var(--text-muted)] hover:text-purple-600 mb-4"
         >
           <ChevronLeft className="w-4 h-4" /> Back to Roadmaps
         </Link>
-        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">
+        <h1 className="text-2xl sm:text-3xl font-bold text-[var(--text-main)]">
           {roadmap.title}
         </h1>
-        <p className="text-gray-600 mt-2">{roadmap.description}</p>
+        <p className="text-[var(--text-muted)] mt-2">{roadmap.description}</p>
         <div className="flex gap-2 mt-3">
-          <span className="text-xs px-2 py-1 rounded-full bg-gray-100 text-gray-700">
+          <span className="text-xs px-2 py-1 rounded-full bg-[var(--bg-active)] text-[var(--text-muted)]">
             {roadmap.difficulty_level || "Beginner"}
           </span>
-          <span className="text-xs px-2 py-1 rounded-full bg-gray-100 text-gray-700">
+          <span className="text-xs px-2 py-1 rounded-full bg-[var(--bg-active)] text-[var(--text-muted)]">
             {roadmap.estimated_duration}
           </span>
         </div>
@@ -56,34 +55,36 @@ const RoadmapDetail = () => {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Steps list */}
         <div className="lg:col-span-1 space-y-3">
-          <h2 className="text-sm font-medium text-gray-500 uppercase tracking-wider">
+          <h2 className="text-sm font-medium text-[var(--text-muted)] uppercase tracking-wider">
             Steps
           </h2>
-          <div className="bg-white rounded-xl border border-gray-200 divide-y">
+          <div className="bg-[var(--bg-card)] rounded-xl border border-[var(--border-main)] divide-y">
             {steps?.map((step) => (
               <button
                 key={step.step_id}
                 onClick={() => setSelectedStep(step)}
-                className={`w-full text-left p-4 flex items-center gap-3 hover:bg-gray-50 transition-colors ${
-                  selectedStep?.step_id === step.step_id ? "bg-blue-50" : ""
+                className={`w-full text-left p-4 flex items-center gap-3 hover:bg-[var(--bg-active)] transition-colors ${
+                  selectedStep?.step_id === step.step_id ? "bg-purple-50" : ""
                 }`}
               >
                 {step.is_completed ? (
                   <CheckCircle className="w-5 h-5 text-green-500 flex-shrink-0" />
                 ) : (
-                  <Circle className="w-5 h-5 text-gray-300 flex-shrink-0" />
+                  <Circle className="w-5 h-5 text-[var(--text-muted)] flex-shrink-0" />
                 )}
                 <div className="flex-1">
                   <p
                     className={`text-sm font-medium ${
                       step.is_completed
-                        ? "text-gray-500 line-through"
-                        : "text-gray-900"
+                        ? "text-[var(--text-muted)] line-through"
+                        : "text-[var(--text-main)]"
                     }`}
                   >
                     {step.title}
                   </p>
-                  <p className="text-xs text-gray-500">{step.estimated_time}</p>
+                  <p className="text-xs text-[var(--text-muted)]">
+                    {step.estimated_time}
+                  </p>
                 </div>
               </button>
             ))}
@@ -93,13 +94,13 @@ const RoadmapDetail = () => {
         {/* Step details and resources */}
         <div className="lg:col-span-2">
           {selectedStep ? (
-            <div className="bg-white rounded-xl border border-gray-200 p-6">
+            <div className="bg-[var(--bg-card)] rounded-xl border border-[var(--border-main)] p-6">
               <div className="flex items-start justify-between mb-4">
                 <div>
-                  <h2 className="text-xl font-semibold text-gray-900">
+                  <h2 className="text-xl font-semibold text-[var(--text-main)]">
                     {selectedStep.title}
                   </h2>
-                  <p className="text-gray-600 mt-1">
+                  <p className="text-[var(--text-muted)] mt-1">
                     {selectedStep.description}
                   </p>
                 </div>
@@ -115,7 +116,7 @@ const RoadmapDetail = () => {
 
               {/* Resources */}
               <div className="mt-6">
-                <h3 className="text-sm font-medium text-gray-700 uppercase tracking-wider mb-3">
+                <h3 className="text-sm font-medium text-[var(--text-muted)] uppercase tracking-wider mb-3">
                   Learning Resources
                 </h3>
                 {resourcesLoading ? (
@@ -128,11 +129,11 @@ const RoadmapDetail = () => {
                         href={resource.url}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="flex items-center justify-between p-3 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors group"
+                        className="flex items-center justify-between p-3 rounded-lg bg-[var(--bg-active)] hover:bg-[var(--border-main)] transition-colors group"
                       >
                         <div className="flex-1">
                           <div className="flex items-center gap-2">
-                            <span className="text-sm font-medium text-gray-800">
+                            <span className="text-sm font-medium text-[var(--text-main)]">
                               {resource.title}
                             </span>
                             {resource.is_required && (
@@ -142,7 +143,7 @@ const RoadmapDetail = () => {
                             )}
                           </div>
                           {resource.description && (
-                            <p className="text-xs text-gray-500 mt-1">
+                            <p className="text-xs text-[var(--text-muted)] mt-1">
                               {resource.description}
                             </p>
                           )}
@@ -158,29 +159,29 @@ const RoadmapDetail = () => {
                             >
                               {resource.difficulty_level || "Beginner"}
                             </span>
-                            <span className="text-xs px-1.5 py-0.5 rounded bg-blue-50 text-blue-600">
+                            <span className="text-xs px-1.5 py-0.5 rounded bg-purple-50 text-purple-600">
                               {resource.resource_type}
                             </span>
                             {parseFloat(resource.avg_score) > 0 && (
-                              <span className="text-xs text-gray-500">
+                              <span className="text-xs text-[var(--text-muted)]">
                                 Score:{" "}
                                 {parseFloat(resource.avg_score).toFixed(1)}
                               </span>
                             )}
                           </div>
                         </div>
-                        <ExternalLink className="w-4 h-4 text-gray-400 group-hover:text-blue-600 flex-shrink-0 ml-2" />
+                        <ExternalLink className="w-4 h-4 text-[var(--text-muted)] group-hover:text-purple-600 flex-shrink-0 ml-2" />
                       </a>
                     ))}
                     {(!resources || resources.length === 0) && (
-                      <p className="text-sm text-gray-500">No resources yet.</p>
+                      <p className="text-sm text-[var(--text-muted)]">No resources yet.</p>
                     )}
                   </div>
                 )}
               </div>
             </div>
           ) : (
-            <div className="bg-white rounded-xl border border-gray-200 p-6 text-center text-gray-500">
+            <div className="bg-[var(--bg-card)] rounded-xl border border-[var(--border-main)] p-6 text-center text-[var(--text-muted)]">
               Select a step to view details and resources.
             </div>
           )}

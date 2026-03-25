@@ -439,7 +439,7 @@ exports.softDeleteComment = async (req, res) => {
     }
 
     // Only author can soft delete
-    if (comment.rows[0].user_id !== userId) {
+    if (Number(comment.rows[0].user_id) !== Number(userId)) {
       return errorResponse(res, "Only the author can delete this comment", 403);
     }
 
@@ -448,9 +448,17 @@ exports.softDeleteComment = async (req, res) => {
       `UPDATE portal.discussion_comments 
        SET deleted_at = NOW(), deleted_by = $1, deletion_reason = $2
        WHERE comment_id = $3
-       RETURNING comment_id, content, deleted_at`,
+       RETURNING comment_id, discussion_id, content, deleted_at`,
       [userId, reason || "No reason provided", commentId],
     );
+
+    // Decrement the comment count for the discussion
+    if (result.rows.length > 0) {
+      await pool.query(
+        `UPDATE portal.discussions SET comment_count = GREATEST(0, comment_count - 1) WHERE discussion_id = $1`,
+        [result.rows[0].discussion_id]
+      );
+    }
 
     return successResponse(res, result.rows[0], "Comment deleted successfully (soft delete)");
   } catch (err) {

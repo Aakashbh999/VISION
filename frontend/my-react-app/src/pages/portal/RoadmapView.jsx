@@ -70,10 +70,10 @@ const StationNode = ({ step, isActive, onClick }) => {
           transition-all duration-500 relative
           ${
             step.is_completed
-              ? "bg-[#7c3aed] shadow-lg shadow-purple-500/20 shadow-xl border-none"
+              ? "bg-purple-700 shadow-lg shadow-purple-500/20 shadow-xl border-none"
               : isActive
-                ? "bg-white border-2 border-[#7c3aed] shadow-lg"
-                : "bg-white border border-gray-200 shadow-sm"
+                ? "bg-white border-2 border-purple-700 shadow-lg"
+                : "bg-white border border-[var(--border-main)] shadow-sm"
           }
         `}
       >
@@ -92,7 +92,7 @@ const StationNode = ({ step, isActive, onClick }) => {
               key="icon"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              className={isActive ? "text-[#7c3aed]" : "text-gray-400"}
+              className={isActive ? "text-purple-700" : "text-[var(--text-muted)]"}
             >
               <Icon className="w-7 h-7" />
             </motion.div>
@@ -102,14 +102,14 @@ const StationNode = ({ step, isActive, onClick }) => {
         {/* Locked Overlay */}
         {!step.is_completed && !isActive && (
           <div className="absolute inset-0 bg-white/40 rounded-full flex items-center justify-center">
-            <Lock className="w-3.5 h-3.5 text-gray-300" />
+            <Lock className="w-3.5 h-3.5 text-[var(--text-muted)]" />
           </div>
         )}
       </motion.button>
 
       {/* Label/Tooltip */}
       <div className="absolute top-20 text-center w-48 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
-        <div className="bg-gray-900 text-white text-[10px] font-black uppercase tracking-[0.2em] px-3 py-1.5 rounded-lg shadow-xl inline-block border border-white/10">
+        <div className="bg-[var(--bg-card)] text-[var(--text-main)] text-[10px] font-black uppercase tracking-[0.2em] px-3 py-1.5 rounded-lg shadow-xl border border-[var(--border-main)]">
           {step.title}
         </div>
       </div>
@@ -117,7 +117,11 @@ const StationNode = ({ step, isActive, onClick }) => {
       {/* Static Label below */}
       <div className="mt-4 text-center max-w-[120px]">
         <p
-          className={`text-[11px] font-black uppercase tracking-tighter leading-tight ${step.is_completed || isActive ? "text-gray-900" : "text-gray-400"}`}
+          className={`text-[11px] font-black uppercase tracking-tighter leading-tight ${
+            step.is_completed || isActive
+              ? "text-[var(--text-main)]"
+              : "text-[var(--text-muted)]"
+          }`}
         >
           {step.title}
         </p>
@@ -183,49 +187,49 @@ const RoadmapView = () => {
 
   if (error)
     return (
-      <div className="p-20 text-center text-gray-400">
+      <div className="p-20 text-center text-[var(--text-muted)]">
         Failed to load roadmap.
       </div>
     );
 
   return (
-    <div className="min-h-screen bg-[#fafafa] pb-24">
+    <div className="min-h-screen bg-[var(--bg-main)] pb-24 transition-colors duration-300">
       {/* Header */}
       <div className="max-w-7xl mx-auto px-6 pt-12 mb-16">
         <Link
           to="/roadmaps"
-          className="inline-flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.3em] text-[#7c3aed] mb-8 hover:translate-x-[-4px] transition-transform"
+          className="inline-flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.3em] text-purple-700 mb-8 hover:translate-x-[-4px] transition-transform"
         >
           <ChevronLeft className="w-3 h-3" /> Back to Dashboard
         </Link>
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-8">
           <div className="space-y-4 max-w-2xl">
-            <h1 className="text-4xl sm:text-6xl font-black text-gray-900 tracking-tighter leading-[0.9]">
+            <h1 className="text-4xl sm:text-6xl font-black text-[var(--text-main)] tracking-tighter leading-[0.9]">
               {isLoading ? "..." : data?.roadmap?.title}
             </h1>
-            <p className="text-gray-500 font-medium text-lg leading-relaxed max-w-xl">
+            <p className="text-[var(--text-muted)] font-medium text-lg leading-relaxed max-w-xl">
               {isLoading
                 ? "Fetching roadmap data..."
                 : data?.roadmap?.description}
             </p>
           </div>
           {!isLoading && (
-            <div className="flex items-center gap-6 bg-white p-4 rounded-2xl border border-gray-100 shadow-sm min-w-[240px]">
+            <div className="flex items-center gap-6 bg-[var(--bg-card)] p-4 rounded-2xl border border-[var(--border-main)] shadow-sm min-w-[240px]">
               <div className="flex-1">
                 <div className="flex items-center justify-between mb-2">
-                  <span className="text-[10px] font-black uppercase text-gray-400">
+                  <span className="text-[10px] font-black uppercase text-[var(--text-muted)]">
                     Total Progress
                   </span>
-                  <span className="text-sm font-black text-[#7c3aed]">
+                  <span className="text-sm font-black text-purple-700">
                     {Math.round(progress)}%
                   </span>
                 </div>
-                <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
+                <div className="h-2 bg-[var(--bg-active)] rounded-full overflow-hidden">
                   <motion.div
                     initial={{ width: 0 }}
                     animate={{ width: `${progress}%` }}
                     transition={{ duration: 1.5, ease: "easeOut" }}
-                    className="h-full bg-[#7c3aed]"
+                    className="h-full bg-purple-700"
                   />
                 </div>
               </div>
@@ -236,19 +240,23 @@ const RoadmapView = () => {
 
       {/* Linear Track Area */}
       <div className="max-w-7xl mx-auto px-6">
-        <div className="bg-white rounded-[2.5rem] border border-gray-100 shadow-2xl shadow-purple-900/5 p-8 sm:p-24 overflow-x-auto overflow-y-visible scrollbar-hide">
+        <div className="bg-[var(--bg-card)] rounded-[2.5rem] border border-[var(--border-main)] shadow-2xl shadow-purple-900/5 p-8 sm:p-24 overflow-x-auto overflow-y-visible scrollbar-hide">
           {isLoading ? (
             <div className="h-64 flex items-center justify-center">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#7c3aed]" />
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-700" />
             </div>
           ) : (
             <div
-              className={`relative flex ${isMobile ? "flex-col min-h-[600px] justify-start items-center pt-10 px-4" : "flex-row min-w-max justify-center items-center py-20 px-10"}`}
+              className={`relative flex ${
+                isMobile
+                  ? "flex-col min-h-[600px] justify-start items-center pt-10 px-4"
+                  : "flex-row min-w-max justify-center items-center py-20 px-10"
+              }`}
             >
               {/* The Track (Pipe) */}
               <div
                 className={`
-                    absolute bg-white border border-gray-100 rounded-full overflow-hidden
+                    absolute bg-white border border-[var(--border-main)] rounded-full overflow-hidden
                     ${
                       isMobile
                         ? "w-3 h-[calc(100%-100px)] top-[60px] mid-x"
@@ -268,13 +276,15 @@ const RoadmapView = () => {
                       : { width: `${progress}%` }
                   }
                   transition={{ type: "spring", stiffness: 50, damping: 15 }}
-                  className={`bg-[#7c3aed] ${isMobile ? "w-full origin-top" : "h-full origin-left"}`}
+                  className={`bg-purple-700 ${isMobile ? "w-full origin-top" : "h-full origin-left"}`}
                 />
               </div>
 
               {/* Station Nodes */}
               <div
-                className={`relative flex ${isMobile ? "flex-col gap-24" : "flex-row gap-16 sm:gap-32"}`}
+                className={`relative flex ${
+                  isMobile ? "flex-col gap-24" : "flex-row gap-16 sm:gap-32"
+                }`}
               >
                 {steps.map((step, i) => (
                   <StationNode

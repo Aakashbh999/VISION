@@ -9,7 +9,7 @@ const ThemeToggle = () => {
   return (
     <button
       onClick={toggleTheme}
-      className="relative p-2 rounded-full hover:bg-gray-100 dark:hover:bg-slate-800 transition-colors duration-300"
+      className="relative p-2 rounded-full hover:bg-[var(--bg-active)] transition-colors duration-300"
       aria-label="Toggle theme"
     >
       <AnimatePresence mode="wait" initial={false}>

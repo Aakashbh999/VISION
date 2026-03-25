@@ -138,25 +138,25 @@ const CreateDiscussion = () => {
       <div className="flex items-center gap-4 mb-8">
         <Link
           to="/discussions"
-          className="p-2 bg-white border border-gray-100 rounded-xl shadow-sm hover:bg-gray-50 transition-all text-gray-500 hover:text-purple-600"
+          className="p-2 bg-[var(--bg-card)] border border-[var(--border-main)] rounded-xl shadow-sm hover:bg-[var(--bg-active)] transition-all text-[var(--text-muted)] hover:text-purple-600"
         >
           <ChevronLeft className="w-5 h-5" />
         </Link>
-        <h1 className="text-2xl font-black text-gray-900 uppercase tracking-tighter">Create a post</h1>
+        <h1 className="text-2xl font-black text-[var(--text-main)] uppercase tracking-tighter">Create a post</h1>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
         {/* Main Editor */}
         <div className="lg:col-span-2 space-y-6">
-          <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm">
+          <div className="bg-[var(--bg-card)] border border-[var(--border-main)] rounded-2xl overflow-hidden shadow-sm">
             {/* Tabs */}
-            <div className="flex border-b border-gray-100">
+            <div className="flex border-b border-[var(--border-main)]">
               <button
                 onClick={() => setActiveTab("post")}
                 className={`flex-1 flex items-center justify-center gap-2 py-4 text-sm font-black transition-all ${
                   activeTab === "post"
                     ? "text-purple-600 border-b-2 border-purple-600 bg-purple-50/30"
-                    : "text-gray-400 hover:text-gray-600 hover:bg-gray-50"
+                    : "text-[var(--text-muted)] hover:text-[var(--text-main)] hover:bg-[var(--bg-active)]"
                 }`}
               >
                 <FileText className="w-4 h-4" /> 📄 Post
@@ -166,7 +166,7 @@ const CreateDiscussion = () => {
                 className={`flex-1 flex items-center justify-center gap-2 py-4 text-sm font-black transition-all ${
                   activeTab === "image"
                     ? "text-purple-600 border-b-2 border-purple-600 bg-purple-50/30"
-                    : "text-gray-400 hover:text-gray-600 hover:bg-gray-50"
+                    : "text-[var(--text-muted)] hover:text-[var(--text-main)] hover:bg-[var(--bg-active)]"
                 }`}
               >
                 <ImageIcon className="w-4 h-4" /> 🖼️ Image
@@ -179,7 +179,7 @@ const CreateDiscussion = () => {
                 <select
                   value={formData.specializationId}
                   onChange={(e) => setFormData({ ...formData, specializationId: e.target.value })}
-                  className="w-full md:w-2/3 p-4 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold text-gray-700 outline-none focus:ring-4 focus:ring-purple-500/10 focus:border-purple-500 transition-all appearance-none cursor-pointer"
+                  className="w-full md:w-2/3 p-4 bg-[var(--bg-active)] border border-[var(--border-main)] rounded-xl text-sm font-bold text-[var(--text-main)] outline-none focus:ring-4 focus:ring-purple-500/10 focus:border-purple-500 transition-all appearance-none cursor-pointer"
                 >
                   <option value="">Choose a community...</option>
                   {specializations.map((s) => (
@@ -191,8 +191,8 @@ const CreateDiscussion = () => {
               {/* Title Field */}
               <div className="space-y-2 relative">
                 <div className="flex justify-between items-center">
-                  <label className="text-[10px] font-black uppercase text-gray-400 tracking-widest">Post Title</label>
-                  <span className={`text-[10px] font-bold ${formData.title.length > 100 ? "text-red-500" : "text-gray-400"}`}>
+                  <label className="text-[10px] font-black uppercase text-[var(--text-muted)] tracking-widest">Post Title</label>
+                  <span className={`text-[10px] font-bold ${formData.title.length > 100 ? "text-red-500" : "text-[var(--text-muted)]"}`}>
                     {formData.title.length} / 100
                   </span>
                 </div>
@@ -202,7 +202,7 @@ const CreateDiscussion = () => {
                   value={formData.title}
                   maxLength={100}
                   onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                  className="w-full p-4 text-lg font-black text-gray-900 border border-slate-200 rounded-xl outline-none focus:ring-4 focus:ring-purple-500/10 focus:border-purple-500 transition-all placeholder:text-gray-300"
+                  className="w-full p-4 text-lg font-black text-[var(--text-main)] border border-[var(--border-main)] rounded-xl outline-none focus:ring-4 focus:ring-purple-500/10 focus:border-purple-500 transition-all placeholder:text-[var(--text-muted)]/50"
                 />
               </div>
 
@@ -236,7 +236,7 @@ const CreateDiscussion = () => {
                       placeholder="Text (optional, supports markdown in future updates...)"
                       value={formData.content}
                       onChange={(e) => setFormData({ ...formData, content: e.target.value })}
-                      className="w-full p-4 bg-transparent border border-slate-200 rounded-xl min-h-[300px] outline-none focus:ring-4 focus:ring-purple-500/10 focus:border-purple-500 transition-all resize-none text-gray-700"
+                      className="w-full p-4 bg-transparent border border-[var(--border-main)] rounded-xl min-h-[300px] outline-none focus:ring-4 focus:ring-purple-500/10 focus:border-purple-500 transition-all resize-none text-[var(--text-main)]"
                     />
                   </motion.div>
                 ) : (
@@ -252,14 +252,14 @@ const CreateDiscussion = () => {
                         onDragOver={handleDragOver}
                         onDrop={handleDrop}
                         onClick={() => fileInputRef.current?.click()}
-                        className="group relative border-2 border-dashed border-slate-200 rounded-2xl p-12 flex flex-col items-center justify-center gap-4 hover:border-purple-400 hover:bg-purple-50/30 transition-all cursor-pointer"
+                        className="group relative border-2 border-dashed border-[var(--border-main)] rounded-2xl p-12 flex flex-col items-center justify-center gap-4 hover:border-purple-400 hover:bg-purple-50/30 transition-all cursor-pointer"
                       >
-                        <div className="w-16 h-16 bg-slate-100 rounded-2xl flex items-center justify-center text-slate-400 group-hover:bg-purple-100 group-hover:text-purple-600 transition-all">
+                        <div className="w-16 h-16 bg-[var(--bg-active)] rounded-2xl flex items-center justify-center text-[var(--text-muted)] group-hover:bg-purple-100 group-hover:text-purple-600 transition-all">
                           <ImagePlus className="w-8 h-8" />
                         </div>
                         <div className="text-center">
-                          <p className="text-sm font-black text-slate-700">Drag and drop or click to upload</p>
-                          <p className="text-[10px] uppercase font-bold text-slate-400 mt-1 tracking-widest">Diagrams, screenshots, or code snips (max 10MB)</p>
+                          <p className="text-sm font-black text-[var(--text-main)]">Drag and drop or click to upload</p>
+                          <p className="text-[10px] uppercase font-bold text-[var(--text-muted)] mt-1 tracking-widest">Diagrams, screenshots, or code snips (max 10MB)</p>
                         </div>
                         <input
                           ref={fileInputRef}
@@ -270,7 +270,7 @@ const CreateDiscussion = () => {
                         />
                       </div>
                     ) : (
-                      <div className="relative rounded-2xl border border-slate-200 overflow-hidden bg-slate-50 group">
+                      <div className="relative rounded-2xl border border-[var(--border-main)] overflow-hidden bg-[var(--bg-active)] group">
                         <img
                           src={previewUrl}
                           alt="Preview"
@@ -286,8 +286,8 @@ const CreateDiscussion = () => {
                     )}
                     <div className="space-y-2">
                       <div className="flex justify-between items-center">
-                        <label className="text-[10px] font-black uppercase text-gray-400 tracking-widest">Image Caption</label>
-                        <span className={`text-[10px] font-bold ${formData.imageCaption.length > 200 ? "text-red-500" : "text-gray-400"}`}>
+                        <label className="text-[10px] font-black uppercase text-[var(--text-muted)] tracking-widest">Image Caption</label>
+                        <span className={`text-[10px] font-bold ${formData.imageCaption.length > 200 ? "text-red-500" : "text-[var(--text-muted)]"}`}>
                           {formData.imageCaption.length} / 200
                         </span>
                       </div>
@@ -296,16 +296,16 @@ const CreateDiscussion = () => {
                         value={formData.imageCaption}
                         maxLength={200}
                         onChange={(e) => setFormData({ ...formData, imageCaption: e.target.value })}
-                        className="w-full p-4 bg-transparent border border-slate-200 rounded-xl min-h-[80px] outline-none focus:ring-4 focus:ring-purple-500/10 focus:border-purple-500 transition-all resize-none text-gray-700 text-sm"
+                        className="w-full p-4 bg-transparent border border-[var(--border-main)] rounded-xl min-h-[80px] outline-none focus:ring-4 focus:ring-purple-500/10 focus:border-purple-500 transition-all resize-none text-[var(--text-main)] text-sm"
                       />
                     </div>
                     <div className="space-y-2">
-                      <label className="text-[10px] font-black uppercase text-gray-400 tracking-widest">Post Description</label>
+                      <label className="text-[10px] font-black uppercase text-[var(--text-muted)] tracking-widest">Post Description</label>
                       <textarea
                         placeholder="Detailed description (optional)..."
                         value={formData.content}
                         onChange={(e) => setFormData({ ...formData, content: e.target.value })}
-                        className="w-full p-4 bg-transparent border border-slate-200 rounded-xl min-h-[200px] outline-none focus:ring-4 focus:ring-purple-500/10 focus:border-purple-500 transition-all resize-none text-gray-700"
+                        className="w-full p-4 bg-transparent border border-[var(--border-main)] rounded-xl min-h-[200px] outline-none focus:ring-4 focus:ring-purple-500/10 focus:border-purple-500 transition-all resize-none text-[var(--text-main)]"
                       />
                     </div>
                   </motion.div>
@@ -313,8 +313,8 @@ const CreateDiscussion = () => {
               </AnimatePresence>
 
               {/* Submit Area */}
-              <div className="flex items-center justify-between pt-4 border-t border-gray-100">
-                <div className="flex items-center gap-2 text-[10px] font-bold text-slate-400">
+              <div className="flex items-center justify-between pt-4 border-t border-[var(--border-main)]">
+                <div className="flex items-center gap-2 text-[10px] font-bold text-[var(--text-muted)]">
                   <AlertCircle className="w-3.5 h-3.5" />
                   Your post will be filtered for profanity
                 </div>
@@ -342,13 +342,13 @@ const CreateDiscussion = () => {
 
         {/* Sidebar Guidelines */}
         <div className="space-y-6">
-          <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm">
-            <div className="bg-slate-900 px-6 py-4">
+          <div className="bg-[var(--bg-card)] border border-[var(--border-main)] rounded-2xl overflow-hidden shadow-sm">
+            <div className="bg-purple-800 px-6 py-4">
               <h3 className="text-[10px] font-black uppercase text-white tracking-widest flex items-center gap-2">
-                <ShieldCheck className="w-4 h-4 text-purple-400" /> Posting to VISION
+                <ShieldCheck className="w-4 h-4 text-purple-300" /> Posting to VISION
               </h3>
             </div>
-            <div className="p-6 space-y-4 bg-slate-50/50">
+            <div className="p-6 space-y-4 bg-[var(--bg-active)]/50">
               {[
                 { title: "Collaborative Spirit", desc: "Be respectful to your fellow CS/IT students." },
                 { title: "Check Duplicates", desc: "Look for similar questions before asking again." },
@@ -358,8 +358,8 @@ const CreateDiscussion = () => {
                 <div key={i} className="flex gap-3">
                   <span className="text-[10px] font-black text-purple-500 w-4">{i + 1}.</span>
                   <div className="space-y-0.5">
-                    <p className="text-xs font-black text-slate-900 leading-none">{rule.title}</p>
-                    <p className="text-[10px] font-bold text-slate-500 leading-relaxed">{rule.desc}</p>
+                    <p className="text-xs font-black text-[var(--text-main)] leading-none">{rule.title}</p>
+                    <p className="text-[10px] font-bold text-[var(--text-muted)] leading-relaxed">{rule.desc}</p>
                   </div>
                 </div>
               ))}

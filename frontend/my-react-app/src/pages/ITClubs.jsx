@@ -1,4 +1,4 @@
-import { useItClubs } from "../hooks/useClubHooks";
+import { useItClubs } from "../hooks/useClubHooks"; // adjust import path if needed
 import LoadingSpinner from "../components/ui/LoadingSpinner";
 import Pagination from "../components/ui/Pagination";
 import { MapPin, Users } from "lucide-react";
@@ -17,11 +17,11 @@ const ITClubs = () => {
   const pagination = data?.pagination;
 
   return (
-    <div className="space-y-8">
-      <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">
+    <div className="space-y-8 px-4 sm:px-6 lg:px-8 py-6 sm:py-8 lg:py-10">
+      <h1 className="text-2xl sm:text-3xl font-bold text-[var(--text-main)]">
         IT Clubs & Communities
       </h1>
-      <p className="text-gray-600">
+      <p className="text-[var(--text-muted)]">
         Connect with local IT communities across Nepal.
       </p>
 
@@ -40,22 +40,24 @@ const ITClubs = () => {
           return (
             <div
               key={club.id}
-              className="bg-white rounded-2xl border border-gray-200 p-6 shadow-sm hover:shadow-md transition space-y-3"
+              className="bg-[var(--bg-card)] rounded-2xl border border-[var(--border-main)] p-6 shadow-sm hover:shadow-md transition space-y-3"
             >
-              <h2 className="text-lg font-semibold text-gray-900">
+              <h2 className="text-lg font-semibold text-[var(--text-main)]">
                 {club.club_name}
               </h2>
               {club.institution && (
-                <p className="text-sm text-gray-500">{club.institution}</p>
+                <p className="text-sm text-[var(--text-muted)]">
+                  {club.institution}
+                </p>
               )}
 
-              <div className="space-y-2 text-sm text-gray-600">
+              <div className="space-y-2 text-sm text-[var(--text-muted)]">
                 <div className="flex items-center gap-2">
-                  <MapPin className="w-4 h-4 text-gray-400" />
+                  <MapPin className="w-4 h-4 text-[var(--text-muted)]" />
                   <span>{club.location}</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <Users className="w-4 h-4 text-gray-400" />
+                  <Users className="w-4 h-4 text-[var(--text-muted)]" />
                   <span>{club.members || "N/A"} members</span>
                 </div>
               </div>
@@ -63,7 +65,7 @@ const ITClubs = () => {
               {club.specialty && (
                 <div className="flex flex-wrap gap-2 mt-2">
                   {club.specialty.split(",").map((spec, i) => (
-                    <Badge key={i} variant="green">
+                    <Badge key={i} variant="purple">
                       {spec.trim()}
                     </Badge>
                   ))}
@@ -71,17 +73,21 @@ const ITClubs = () => {
               )}
 
               {club.description && (
-                <p className="text-sm text-gray-500 mt-3">{club.description}</p>
+                <p className="text-sm text-[var(--text-muted)] mt-3">
+                  {club.description}
+                </p>
               )}
 
               {Object.keys(contact).length > 0 && (
                 <div className="mt-3 space-y-1 text-sm">
                   {contact.email && (
                     <p>
-                      <span className="font-medium">Email:</span>{" "}
+                      <span className="font-medium text-[var(--text-main)]">
+                        Email:
+                      </span>{" "}
                       <a
                         href={`mailto:${contact.email}`}
-                        className="text-blue-600 hover:underline"
+                        className="text-purple-600 hover:text-purple-800 hover:underline"
                       >
                         {contact.email}
                       </a>
@@ -89,12 +95,14 @@ const ITClubs = () => {
                   )}
                   {contact.website && (
                     <p>
-                      <span className="font-medium">Website:</span>{" "}
+                      <span className="font-medium text-[var(--text-main)]">
+                        Website:
+                      </span>{" "}
                       <a
                         href={contact.website}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="text-blue-600 hover:underline"
+                        className="text-purple-600 hover:text-purple-800 hover:underline"
                       >
                         {contact.website}
                       </a>
@@ -102,12 +110,14 @@ const ITClubs = () => {
                   )}
                   {contact.facebook && (
                     <p>
-                      <span className="font-medium">Facebook:</span>{" "}
+                      <span className="font-medium text-[var(--text-main)]">
+                        Facebook:
+                      </span>{" "}
                       <a
                         href={contact.facebook}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="text-blue-600 hover:underline"
+                        className="text-purple-600 hover:text-purple-800 hover:underline"
                       >
                         {contact.facebook}
                       </a>

@@ -6,26 +6,32 @@ const actions = [
     label: "Browse Roadmaps",
     icon: BookOpen,
     href: "/roadmaps",
-    color: "blue",
+    bgHover: "hover:bg-blue-50",
+    iconColor: "text-blue-600",
+    hoverColor: "group-hover:text-blue-700",
   },
   {
     label: "Join Discussion",
     icon: MessageCircle,
     href: "/discussions",
-    color: "green",
+    bgHover: "hover:bg-green-50",
+    iconColor: "text-green-600",
+    hoverColor: "group-hover:text-green-700",
   },
   {
     label: "Explore Clubs",
     icon: Users,
     href: "/clubs",
-    color: "purple",
+    bgHover: "hover:bg-purple-50",
+    iconColor: "text-purple-600",
+    hoverColor: "group-hover:text-purple-700",
   },
 ];
 
 const QuickActionsCard = () => {
   return (
-    <div className="bg-white rounded-2xl border border-gray-200 p-6">
-      <h3 className="text-sm font-medium text-gray-500 uppercase tracking-wider mb-3">
+    <div className="bg-[var(--bg-card)] rounded-2xl border border-[var(--border-main)] p-6">
+      <h3 className="text-sm font-medium text-[var(--text-muted)] uppercase tracking-wider mb-3">
         Quick Actions
       </h3>
       <div className="space-y-2">
@@ -33,10 +39,14 @@ const QuickActionsCard = () => {
           <Link
             key={action.label}
             to={action.href}
-            className={`flex items-center gap-3 p-3 rounded-xl hover:bg-${action.color}-50 transition-colors group`}
+            className={`flex items-center gap-3 p-3 rounded-xl ${action.bgHover} transition-all duration-200 group`}
           >
-            <action.icon className={`w-5 h-5 text-${action.color}-600`} />
-            <span className="text-gray-700 group-hover:text-gray-900">
+            <action.icon
+              className={`w-5 h-5 ${action.iconColor} ${action.hoverColor} transition-colors`}
+            />
+            <span
+              className={`text-[var(--text-main)] ${action.hoverColor} transition-colors`}
+            >
               {action.label}
             </span>
           </Link>

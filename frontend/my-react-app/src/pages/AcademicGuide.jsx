@@ -4,7 +4,6 @@ import LoadingSpinner from "../components/ui/LoadingSpinner";
 import Pagination from "../components/ui/Pagination";
 import Badge from "../components/ui/Badge";
 
-// Component to display eligibility in structured format
 const EligibilityDisplay = ({ eligibility }) => {
   if (!eligibility) return null;
 
@@ -65,10 +64,10 @@ const AcademicGuide = () => {
 
   return (
     <div className="space-y-8">
-      <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">
+      <h1 className="text-2xl sm:text-3xl font-bold text-[var(--text-main)]">
         Academic Guide
       </h1>
-      <p className="text-gray-600">
+      <p className="text-[var(--text-muted)]">
         Compare IT programs and choose the right academic path.
       </p>
 
@@ -76,26 +75,29 @@ const AcademicGuide = () => {
         {degrees.map((degree) => (
           <div
             key={degree.id}
-            className="bg-white rounded-2xl border border-gray-200 p-6 shadow-sm hover:shadow-md transition"
+            className="bg-[var(--bg-card)] rounded-2xl border border-[var(--border-main)] p-6 shadow-sm hover:shadow-md transition"
           >
             <div className="flex justify-between items-start">
-              <h2 className="text-xl font-semibold text-gray-900">
+              <h2 className="text-xl font-semibold text-[var(--text-main)]">
                 {degree.degree_code}
               </h2>
-              <Badge variant="blue">{degree.university}</Badge>
+              <Badge variant="purple">{degree.university}</Badge>
             </div>
-            <p className="text-gray-500 text-sm mt-1">{degree.full_name}</p>
+            <p className="text-[var(--text-muted)] text-sm mt-1">
+              {degree.full_name}
+            </p>
 
             <div className="mt-4 space-y-2 text-sm">
               <p>
-                <span className="font-medium">Duration:</span> {degree.duration}
+                <span className="font-medium text-[var(--text-main)]">Duration:</span>{" "}
+                <span className="text-[var(--text-muted)]">{degree.duration}</span>
               </p>
               <div>
-                <span className="font-medium">Eligibility:</span>
+                <span className="font-medium text-[var(--text-main)]">Eligibility:</span>
                 <EligibilityDisplay eligibility={degree.eligibility} />
               </div>
               <div>
-                <span className="font-medium">Focus:</span>
+                <span className="font-medium text-[var(--text-main)]">Focus:</span>
                 <div className="flex flex-wrap gap-2 mt-1">
                   {degree.focus_area?.split(",").map((focus, i) => (
                     <Badge key={i} variant="green">
