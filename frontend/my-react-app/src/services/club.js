@@ -6,7 +6,7 @@ export const getClubs = async (filters = {}) => {
   if (filters.page) params.set("page", filters.page);
   if (filters.limit) params.set("limit", filters.limit);
 
-  const response = await api.get(`/it-clubs?${params.toString()}`);
+  const response = await api.get(`/api/it-clubs?${params.toString()}`);
   return {
     clubs: response.data.data,
     pagination: response.data.pagination,
@@ -15,18 +15,18 @@ export const getClubs = async (filters = {}) => {
 
 // Get single club details by slug
 export const getClub = async (slug) => {
-  const response = await api.get(`/it-clubs/${slug}`);
+  const response = await api.get(`/api/it-clubs/${slug}`);
   return response.data;
 };
 
 // Join a club
 export const joinClub = async (clubId) => {
-  const response = await api.post(`/it-clubs/${clubId}/join`);
+  const response = await api.post(`/api/it-clubs/${clubId}/join`);
   return response.data;
 };
 
 // Leave a club
 export const leaveClub = async (clubId) => {
-  const response = await api.post(`/it-clubs/${clubId}/leave`);
+  const response = await api.post(`/api/it-clubs/${clubId}/leave`);
   return response.data;
 };

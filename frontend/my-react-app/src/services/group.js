@@ -5,37 +5,37 @@ export const getGroups = async ({ search, sort } = {}) => {
   const params = new URLSearchParams();
   if (search) params.set("search", search);
   if (sort) params.set("sort", sort);
-  const response = await api.get(`/groups?${params.toString()}`);
+  const response = await api.get(`/api/groups?${params.toString()}`);
   return response.data;
 };
 
 // Get single group details
 export const getGroup = async (groupId) => {
-  const response = await api.get(`/groups/${groupId}`);
+  const response = await api.get(`/api/groups/${groupId}`);
   return response.data;
 };
 
 // Get group members
 export const getGroupMembers = async (groupId) => {
-  const response = await api.get(`/groups/${groupId}/members`);
+  const response = await api.get(`/api/groups/${groupId}/members`);
   return response.data;
 };
 
 // Create a new group
 export const createGroup = async (data) => {
-  const response = await api.post("/groups", data);
+  const response = await api.post("/api/groups", data);
   return response.data;
 };
 
 // Join a group
 export const joinGroup = async (groupId) => {
-  const response = await api.post(`/groups/${groupId}/join`);
+  const response = await api.post(`/api/groups/${groupId}/join`);
   return response.data;
 };
 
 // Leave a group
 export const leaveGroup = async (groupId) => {
-  const response = await api.delete(`/groups/${groupId}/leave`);
+  const response = await api.delete(`/api/groups/${groupId}/leave`);
   return response.data;
 };
 
@@ -49,7 +49,7 @@ export const getGroupPosts = async (
   params.set("section", section);
   if (before) params.set("before", before);
   const response = await api.get(
-    `/groups/${groupId}/posts?${params.toString()}`,
+    `/api/groups/${groupId}/posts?${params.toString()}`,
   );
 
   const data = response.data || {};
@@ -67,7 +67,7 @@ export const createGroupPost = async (
   content,
   section = "general",
 ) => {
-  const response = await api.post(`/groups/${groupId}/posts`, {
+  const response = await api.post(`/api/groups/${groupId}/posts`, {
     content,
     section,
   });
@@ -78,13 +78,13 @@ export const createGroupPost = async (
 
 // Update group settings (name, description, privacy_type)
 export const updateGroup = async (groupId, data) => {
-  const response = await api.patch(`/groups/${groupId}`, data);
+  const response = await api.patch(`/api/groups/${groupId}`, data);
   return response.data;
 };
 
 // Update group image (with VXP/cooldown bypass body properties)
 export const updateGroupImage = async (groupId, formData) => {
-  const response = await api.post(`/groups/${groupId}/image`, formData, {
+  const response = await api.post(`/api/groups/${groupId}/image`, formData, {
     headers: { "Content-Type": "multipart/form-data" },
   });
   return response.data;
@@ -92,7 +92,7 @@ export const updateGroupImage = async (groupId, formData) => {
 
 // Update group banner (with VXP/cooldown bypass body properties)
 export const updateGroupBanner = async (groupId, formData) => {
-  const response = await api.post(`/groups/${groupId}/banner`, formData, {
+  const response = await api.post(`/api/groups/${groupId}/banner`, formData, {
     headers: { "Content-Type": "multipart/form-data" },
   });
   return response.data;
@@ -100,26 +100,26 @@ export const updateGroupBanner = async (groupId, formData) => {
 
 // Delete group
 export const deleteGroup = async (groupId) => {
-  const response = await api.delete(`/groups/${groupId}`);
+  const response = await api.delete(`/api/groups/${groupId}`);
   return response.data;
 };
 
 // Request to join a request-only group
 export const requestToJoin = async (groupId) => {
-  const response = await api.post(`/groups/${groupId}/request-join`);
+  const response = await api.post(`/api/groups/${groupId}/request-join`);
   return response.data;
 };
 
 // Get pending join requests (admin/owner only)
 export const getJoinRequests = async (groupId) => {
-  const response = await api.get(`/groups/${groupId}/join-requests`);
+  const response = await api.get(`/api/groups/${groupId}/join-requests`);
   return response.data;
 };
 
 // Approve join request
 export const approveJoinRequest = async (groupId, requestId) => {
   const response = await api.post(
-    `/groups/${groupId}/join-requests/${requestId}/approve`,
+    `/api/groups/${groupId}/join-requests/${requestId}/approve`,
   );
   return response.data;
 };
@@ -127,7 +127,7 @@ export const approveJoinRequest = async (groupId, requestId) => {
 // Decline join request
 export const declineJoinRequest = async (groupId, requestId) => {
   const response = await api.post(
-    `/groups/${groupId}/join-requests/${requestId}/decline`,
+    `/api/groups/${groupId}/join-requests/${requestId}/decline`,
   );
   return response.data;
 };
@@ -135,7 +135,7 @@ export const declineJoinRequest = async (groupId, requestId) => {
 // Appoint co-admin
 export const appointCoAdmin = async (groupId, memberId) => {
   const response = await api.post(
-    `/groups/${groupId}/members/${memberId}/appoint-co-admin`,
+    `/api/groups/${groupId}/members/${memberId}/appoint-co-admin`,
   );
   return response.data;
 };
@@ -143,7 +143,7 @@ export const appointCoAdmin = async (groupId, memberId) => {
 // Remove co-admin
 export const removeCoAdmin = async (groupId, memberId) => {
   const response = await api.delete(
-    `/groups/${groupId}/members/${memberId}/co-admin`,
+    `/api/groups/${groupId}/members/${memberId}/co-admin`,
   );
   return response.data;
 };
@@ -154,7 +154,7 @@ export const updateCoAdminPermissions = async (
   permissions,
 ) => {
   const response = await api.patch(
-    `/groups/${groupId}/members/${memberId}/permissions`,
+    `/api/groups/${groupId}/members/${memberId}/permissions`,
     permissions,
   );
   return response.data;
@@ -162,19 +162,21 @@ export const updateCoAdminPermissions = async (
 
 // Expand capacity using VXP
 export const expandCapacity = async (groupId) => {
-  const response = await api.post(`/groups/${groupId}/expand-capacity`);
+  const response = await api.post(`/api/groups/${groupId}/expand-capacity`);
   return response.data;
 };
 
 // Soft delete group (user-initiated) — records deletion + reason
 export const softDeleteGroup = async (groupId, reason) => {
-  const response = await api.post(`/groups/${groupId}/soft-delete`, { reason });
+  const response = await api.post(`/api/groups/${groupId}/soft-delete`, {
+    reason,
+  });
   return response.data;
 };
 
 // Soft delete group post (user-initiated) — records deletion + reason
 export const softDeleteGroupPost = async (postId, reason) => {
-  const response = await api.post(`/groups/posts/${postId}/soft-delete`, {
+  const response = await api.post(`/api/groups/posts/${postId}/soft-delete`, {
     reason,
   });
   return response.data;

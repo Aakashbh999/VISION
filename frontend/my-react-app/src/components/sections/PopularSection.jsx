@@ -5,15 +5,15 @@ const PopularSection = () => {
       description:
         "Frontend, Backend, Full Stack paths with local opportunities.",
       icon: "🌐",
-      color: "purple", // changed from blue to purple
+      color: "blue",
       badge: "High Demand",
-      bgClass: "bg-purple-50",
-      borderClass: "border-purple-100",
-      hoverBorderClass: "hover:border-purple-300",
-      badgeBg: "bg-purple-100",
-      badgeText: "text-purple-600",
-      badgeHoverBg: "group-hover:bg-purple-600",
-      iconBg: "bg-gradient-to-br from-purple-100 to-purple-200",
+      bgClass: "bg-blue-50",
+      borderClass: "border-blue-100",
+      hoverBorderClass: "hover:border-blue-300",
+      badgeBg: "bg-blue-100",
+      badgeText: "text-blue-600",
+      badgeHoverBg: "group-hover:bg-blue-600",
+      iconBg: "bg-gradient-to-br from-blue-100 to-blue-200",
     },
     {
       title: "Data Science",
@@ -48,12 +48,12 @@ const PopularSection = () => {
   return (
     <section className="">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-8 gap-4">
-        <h2 className="text-2xl sm:text-3xl font-bold text-[var(--text-main)]">
+        <h2 className="text-2xl sm:text-3xl font-bold text-gray-900">
           Popular Right Now
         </h2>
         <a
           href="#"
-          className="text-sm text-purple-600 hover:text-purple-800 font-medium flex items-center gap-2 transition-all duration-300"
+          className="text-sm text-blue-600 hover:text-blue-800 font-medium flex items-center gap-2 transition-all duration-300"
         >
           View all trends →
         </a>
@@ -76,10 +76,10 @@ const PopularSection = () => {
                 {item.badge}
               </span>
             </div>
-            <h4 className="font-bold text-base sm:text-lg text-[var(--text-main)] mb-1 sm:mb-2">
+            <h4 className="font-bold text-base sm:text-lg text-gray-800 mb-1 sm:mb-2">
               {item.title}
             </h4>
-            <p className="text-xs sm:text-sm text-[var(--text-muted)]">
+            <p className="text-xs sm:text-sm text-gray-600">
               {item.description}
             </p>
           </div>
