@@ -36,13 +36,22 @@ app.use(helmet()); // Security headers
 // CORS: restrict to whitelisted origins in production
 const allowedOrigins = process.env.CORS_ORIGINS
   ? process.env.CORS_ORIGINS.split(",").map((o) => o.trim())
-  : ["http://localhost:5173", "http://localhost:5174"];
+  : [
+      "http://localhost:5173", 
+      "http://localhost:5174",
+      "https://vision-two-beta.vercel.app"
+    ];
 
 app.use(
   cors({
     origin: (origin, callback) => {
       // Allow requests with no origin (mobile apps, curl, Postman)
-      if (!origin || allowedOrigins.includes(origin)) {
+      // Allow any Vercel deployment (preview or production domains)
+      if (
+        !origin || 
+        allowedOrigins.includes(origin) || 
+        (origin && origin.endsWith(".vercel.app"))
+      ) {
         return callback(null, true);
       }
       callback(new Error(`CORS policy: origin ${origin} not allowed`));
