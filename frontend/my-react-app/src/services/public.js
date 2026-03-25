@@ -2,46 +2,46 @@ import api from "./api";
 
 // IT Fields
 export const getItFields = async (page = 1, limit = 9) => {
-  const response = await api.get(`/it-fields?page=${page}&limit=${limit}`);
+  const response = await api.get(`/api/it-fields?page=${page}&limit=${limit}`);
   return response.data; // { data: [...], pagination: {...} }
 };
 
 export const getItFieldBySlug = async (slug) => {
-  const response = await api.get(`/it-fields/${slug}`);
+  const response = await api.get(`/api/it-fields/${slug}`);
   return response.data;
 };
 
 // Academic Degrees
 export const getAcademicDegrees = async (page = 1, limit = 9) => {
   const response = await api.get(
-    `/academic-degrees?page=${page}&limit=${limit}`,
+    `/api/academic-degrees?page=${page}&limit=${limit}`,
   );
   return response.data;
 };
 
 export const getAcademicDegreeBySlug = async (slug) => {
-  const response = await api.get(`/academic-degrees/${slug}`);
+  const response = await api.get(`/api/academic-degrees/${slug}`);
   return response.data;
 };
 
 // Job Market
 export const getJobMarket = async (page = 1, limit = 9) => {
-  const response = await api.get(`/job-market?page=${page}&limit=${limit}`);
+  const response = await api.get(`/api/job-market?page=${page}&limit=${limit}`);
   return response.data;
 };
 
 export const getJobMarketBySlug = async (slug) => {
-  const response = await api.get(`/job-market/${slug}`);
+  const response = await api.get(`/api/job-market/${slug}`);
   return response.data;
 };
 
 // IT Clubs
 export const getItClubs = async (page = 1, limit = 9) => {
-  const response = await api.get(`/it-clubs?page=${page}&limit=${limit}`);
+  const response = await api.get(`/api/it-clubs?page=${page}&limit=${limit}`);
   return response.data;
 };
 
 export const getItClubBySlug = async (slug) => {
-  const response = await api.get(`/it-clubs/${slug}`);
+  const response = await api.get(`/api/it-clubs/${slug}`);
   return response.data;
 };

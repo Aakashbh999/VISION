@@ -16,38 +16,38 @@ export const getDiscussions = async (filters = {}) => {
   if (filters.page) params.append("page", filters.page);
   if (filters.limit) params.append("limit", filters.limit);
 
-  const response = await api.get(`/discussions?${params.toString()}`);
+  const response = await api.get(`/api/discussions?${params.toString()}`);
   return response.data;
 };
 
 // Get single discussion with comments
 export const getDiscussion = async (id, sort = "newest") => {
-  const response = await api.get(`/discussions/${id}?sort=${sort}`);
+  const response = await api.get(`/api/discussions/${id}?sort=${sort}`);
   return response.data;
 };
 
 // Get trending discussions
 export const getTrendingDiscussions = async (limit = 10) => {
-  const response = await api.get(`/discussions/trending?limit=${limit}`);
+  const response = await api.get(`/api/discussions/trending?limit=${limit}`);
   return response.data;
 };
 
 // Get all tags for filtering
 export const getTags = async () => {
-  const response = await api.get("/discussions/tags");
+  const response = await api.get("/api/discussions/tags");
   return response.data;
 };
 
 // Get user's default filter preferences
 export const getUserDefaults = async () => {
-  const response = await api.get("/discussions/user/defaults");
+  const response = await api.get("/api/discussions/user/defaults");
   return response.data;
 };
 
 // Get user's saved discussions
 export const getSavedDiscussions = async (page = 1, limit = 20) => {
   const response = await api.get(
-    `/discussions/user/saved?page=${page}&limit=${limit}`,
+    `/api/discussions/user/saved?page=${page}&limit=${limit}`,
   );
   return response.data;
 };
@@ -55,32 +55,34 @@ export const getSavedDiscussions = async (page = 1, limit = 20) => {
 // Get user's own posts
 export const getMyPosts = async (page = 1, limit = 20) => {
   const response = await api.get(
-    `/discussions/user/my-posts?page=${page}&limit=${limit}`,
+    `/api/discussions/user/my-posts?page=${page}&limit=${limit}`,
   );
   return response.data;
 };
 
 // Create a new discussion
 export const createDiscussion = async (data) => {
-  const response = await api.post("/discussions", data);
+  const response = await api.post("/api/discussions", data);
   return response.data;
 };
 
 // Update a discussion (24-hour edit limit)
 export const updateDiscussion = async (id, data) => {
-  const response = await api.put(`/discussions/${id}`, data);
+  const response = await api.put(`/api/discussions/${id}`, data);
   return response.data;
 };
 
 // Delete a discussion (soft delete)
 export const deleteDiscussion = async (id, reason) => {
-  const response = await api.delete(`/discussions/${id}`, { data: { reason } });
+  const response = await api.delete(`/api/discussions/${id}`, {
+    data: { reason },
+  });
   return response.data;
 };
 
 // Permanently delete a discussion (hard delete)
 export const hardDeleteDiscussion = async (id) => {
-  const response = await api.delete(`/discussions/${id}/hard`);
+  const response = await api.delete(`/api/discussions/${id}/hard`);
   return response.data;
 };
 
@@ -91,7 +93,7 @@ export const addComment = async (
   parentId = null,
   website = "",
 ) => {
-  const response = await api.post(`/discussions/${discussionId}/comments`, {
+  const response = await api.post(`/api/discussions/${discussionId}/comments`, {
     content,
     parentId,
     website,
@@ -101,14 +103,14 @@ export const addComment = async (
 
 // Delete a comment
 export const deleteComment = async (commentId) => {
-  const response = await api.delete(`/discussions/comments/${commentId}`);
+  const response = await api.delete(`/api/discussions/comments/${commentId}`);
   return response.data;
 };
 
 // Soft delete a comment (user-initiated, records reason)
 export const softDeleteComment = async (commentId, reason) => {
   const response = await api.post(
-    `/discussions/comments/${commentId}/soft-delete`,
+    `/api/discussions/comments/${commentId}/soft-delete`,
     {
       reason,
     },
@@ -118,16 +120,19 @@ export const softDeleteComment = async (commentId, reason) => {
 
 // Vote (Upvote/Downvote) on a comment
 export const voteComment = async (commentId, voteType) => {
-  const response = await api.post(`/discussions/comments/${commentId}/vote`, {
-    vote_type: voteType,
-  });
+  const response = await api.post(
+    `/api/discussions/comments/${commentId}/vote`,
+    {
+      vote_type: voteType,
+    },
+  );
   return response.data;
 };
 
 // Vote (Upvote/Downvote)
 export const voteDiscussion = async (discussionId, voteType) => {
   // voteType: 1 (Up), -1 (Down), 0 (Neutral/Reset)
-  const response = await api.post(`/discussions/${discussionId}/vote`, {
+  const response = await api.post(`/api/discussions/${discussionId}/vote`, {
     vote_type: voteType,
   });
   return response.data;
@@ -140,13 +145,13 @@ export const toggleLike = async (discussionId) => {
 
 // Toggle save
 export const toggleSave = async (discussionId) => {
-  const response = await api.post(`/discussions/${discussionId}/save`);
+  const response = await api.post(`/api/discussions/${discussionId}/save`);
   return response.data;
 };
 
 // Boost a discussion
 export const boostDiscussion = async (discussionId) => {
-  const response = await api.post(`/discussions/${discussionId}/boost`);
+  const response = await api.post(`/api/discussions/${discussionId}/boost`);
   return response.data;
 };
 
@@ -154,7 +159,7 @@ export const boostDiscussion = async (discussionId) => {
 export const uploadDiscussionImage = async (file) => {
   const formData = new FormData();
   formData.append("file", file);
-  const response = await api.post("/discussions/upload", formData, {
+  const response = await api.post("/api/discussions/upload", formData, {
     headers: { "Content-Type": "multipart/form-data" },
   });
   return response.data;

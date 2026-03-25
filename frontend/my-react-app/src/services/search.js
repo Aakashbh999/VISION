@@ -111,7 +111,7 @@ const transformResults = (apiResponse) => {
  */
 export const getUniversalResults = async (query = "", limit = 5) => {
   try {
-    const response = await api.get("/search", {
+    const response = await api.get("/api/search", {
       params: { q: query.trim(), limit },
     });
 
@@ -165,7 +165,7 @@ export const getSearchSuggestions = async (query) => {
   }
 
   try {
-    const response = await api.get("/search/suggestions", {
+    const response = await api.get("/api/search/suggestions", {
       params: { q: query.trim() },
     });
     return response.data.suggestions || [];
