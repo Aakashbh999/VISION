@@ -1,11 +1,10 @@
 import axios from "axios";
 
-// Get the raw base URL and strip any trailing "/api" to prevent "/api/api/..."
-const rawBaseURL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000";
-const cleanBaseURL = rawBaseURL.replace(/\/api\/?$/, "");
+// Get the base URL directly from the environment variable
+const baseURL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000";
 
 const api = axios.create({
-  baseURL: cleanBaseURL,
+  baseURL: baseURL,
   headers: { "Content-Type": "application/json" },
 });
 
@@ -37,7 +36,11 @@ api.interceptors.request.use((config) => {
 api.interceptors.response.use(
   (response) => {
     // If the response follows our standard { success: true, data: ... } format, unwrap it
-    if (response.data && response.data.success === true && 'data' in response.data) {
+    if (
+      response.data &&
+      response.data.success === true &&
+      "data" in response.data
+    ) {
       return { ...response, data: response.data.data };
     }
     return response;
