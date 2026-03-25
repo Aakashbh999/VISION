@@ -31,7 +31,7 @@ exports.getDashboard = async (req, res) => {
        JOIN portal.roadmap_steps rs ON rs.roadmap_id = r.roadmap_id
        LEFT JOIN portal.user_roadmap_progress urp
          ON urp.step_id = rs.step_id AND urp.user_id = $1
-       WHERE pr.program_id = $2`,
+       WHERE pr.program_id = $2 AND r.is_active = TRUE`,
       [user_id, program_id],
     );
     const progress = parseFloat(progressRes.rows[0].percent).toFixed(2);
@@ -46,7 +46,7 @@ exports.getDashboard = async (req, res) => {
        JOIN portal.roadmap_steps rs ON rs.roadmap_id = r.roadmap_id
        LEFT JOIN portal.user_roadmap_progress urp
          ON urp.step_id = rs.step_id AND urp.user_id = $1
-       WHERE pr.program_id = $2
+       WHERE pr.program_id = $2 AND r.is_active = TRUE
          AND (urp.is_completed IS NULL OR urp.is_completed = FALSE)
        ORDER BY rs.step_order
        LIMIT 1`,
@@ -60,7 +60,7 @@ exports.getDashboard = async (req, res) => {
       `SELECT r.resource_id, r.title, r.url, rs.score
        FROM portal.resource_scores rs
        JOIN portal.resources r ON r.resource_id = rs.resource_id
-       WHERE rs.user_id = $1 AND r.status = 'approved'
+       WHERE rs.user_id = $1 AND r.status = 'approved' AND r.deleted_at IS NULL
        ORDER BY rs.score DESC
        LIMIT 5`,
       [user_id],
@@ -86,7 +86,7 @@ exports.getDashboard = async (req, res) => {
           `SELECT ${baseFields}, 'degree' AS feed_category
            FROM portal.discussions d
            JOIN portal.users u ON u.user_id = d.user_id
-           WHERE d.deleted_at IS NULL AND d.degree_id = $1
+           WHERE d.deleted_at IS NULL AND d.is_deleted = FALSE AND u.status = 'active' AND d.degree_id = $1
            ORDER BY d.created_at DESC LIMIT 6`,
           [academic_degree_id],
         ),
@@ -95,7 +95,7 @@ exports.getDashboard = async (req, res) => {
           `SELECT ${baseFields}, 'general' AS feed_category
            FROM portal.discussions d
            JOIN portal.users u ON u.user_id = d.user_id
-           WHERE d.deleted_at IS NULL AND d.degree_id IS NULL
+           WHERE d.deleted_at IS NULL AND d.is_deleted = FALSE AND u.status = 'active' AND d.degree_id IS NULL
            ORDER BY d.like_count DESC, d.created_at DESC LIMIT 3`,
         ),
         // 10% – cross-degree
@@ -103,7 +103,7 @@ exports.getDashboard = async (req, res) => {
           `SELECT ${baseFields}, 'cross' AS feed_category
            FROM portal.discussions d
            JOIN portal.users u ON u.user_id = d.user_id
-           WHERE d.deleted_at IS NULL
+           WHERE d.deleted_at IS NULL AND d.is_deleted = FALSE AND u.status = 'active'
              AND d.degree_id IS NOT NULL AND d.degree_id != $1
            ORDER BY d.like_count DESC LIMIT 1`,
           [academic_degree_id],
@@ -123,7 +123,7 @@ exports.getDashboard = async (req, res) => {
     const clubsRes = await pool.query(
       `SELECT c.club_id, c.name, COUNT(cm.user_id) AS members
        FROM portal.clubs c
-       LEFT JOIN portal.club_members cm ON cm.club_id = c.club_id
+       LEFT JOIN portal.club_members cm ON cm.club_id = c.club_id AND cm.status = 'approved'
        GROUP BY c.club_id
        ORDER BY members DESC
        LIMIT 5`,

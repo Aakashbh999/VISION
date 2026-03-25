@@ -4,8 +4,8 @@ import "react-circular-progressbar/dist/styles.css";
 const ProgressCard = ({ percent }) => {
   const percentage = parseFloat(percent) || 0;
   return (
-    <div className="bg-white rounded-2xl border border-gray-200 p-6 hover:shadow-lg transition-shadow">
-      <h3 className="text-sm font-medium text-gray-500 uppercase tracking-wider mb-2">
+    <div className="bg-[var(--bg-card)] rounded-2xl border border-[var(--border-main)] p-6 hover:shadow-lg transition-shadow">
+      <h3 className="text-sm font-medium text-[var(--text-muted)] uppercase tracking-wider mb-2">
         Overall Progress
       </h3>
       <div className="flex items-center gap-4">
@@ -15,13 +15,13 @@ const ProgressCard = ({ percent }) => {
             text={`${percentage}%`}
             styles={buildStyles({
               textSize: "16px",
-              pathColor: `rgba(37, 99, 235, ${percentage / 100})`,
-              textColor: "#1f2937",
-              trailColor: "#e5e7eb",
+              pathColor: `rgba(147, 51, 234, ${percentage / 100})`, // purple
+              textColor: "var(--text-main)",
+              trailColor: "var(--border-main)",
             })}
           />
         </div>
-        <p className="text-gray-600 text-sm">
+        <p className="text-[var(--text-muted)] text-sm">
           Keep going! You're making great progress.
         </p>
       </div>

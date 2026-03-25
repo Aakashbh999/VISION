@@ -12,7 +12,7 @@ const XPService = require("./xpService");
  * @returns {Object} - { whereClause, params, paramIndex }
  */
 const buildFilterConditions = (filters, startParamIndex = 1) => {
-  const conditions = ["d.deleted_at IS NULL"];
+  const conditions = ["d.deleted_at IS NULL", "d.is_deleted = FALSE"];
   const params = [];
   let paramIndex = startParamIndex;
 
@@ -154,7 +154,15 @@ exports.getDiscussions = async (filters = {}, currentUserId = null) => {
       d.created_at,
       d.updated_at,
       d.like_count,
-      d.comment_count,
+      (
+        SELECT count(*)::int 
+        FROM portal.discussion_comments c 
+        JOIN portal.users cu ON cu.user_id = c.user_id 
+        WHERE c.discussion_id = d.discussion_id 
+          AND c.deleted_at IS NULL 
+          AND c.is_deleted = FALSE 
+          AND cu.status = 'active'
+      ) AS comment_count,
       d.image_url,
       d.image_caption,
       d.is_boosted,
@@ -185,7 +193,7 @@ exports.getDiscussions = async (filters = {}, currentUserId = null) => {
     LEFT JOIN portal.academic_degrees ad ON ad.id = d.degree_id
     LEFT JOIN portal.job_market_insights jm ON jm.id = d.job_role_id
     LEFT JOIN portal.programs p ON p.program_id = d.program_id
-    WHERE ${whereClause}
+    WHERE ${whereClause} AND u.status = 'active'
     ${sortClause}
     LIMIT $${paramIndex} OFFSET $${paramIndex + 1}
   `;
@@ -193,7 +201,8 @@ exports.getDiscussions = async (filters = {}, currentUserId = null) => {
   const countQuery = `
     SELECT COUNT(*) AS total
     FROM portal.discussions d
-    WHERE ${whereClause}
+    JOIN portal.users u ON u.user_id = d.user_id
+    WHERE ${whereClause} AND u.status = 'active'
   `;
 
   // For count query, exclude limit, offset, and currentUserId params (if present)
@@ -268,7 +277,7 @@ exports.getDiscussionById = async (discussionId, currentUserId = null) => {
     LEFT JOIN portal.academic_degrees ad ON ad.id = d.degree_id
     LEFT JOIN portal.job_market_insights jm ON jm.id = d.job_role_id
     LEFT JOIN portal.programs p ON p.program_id = d.program_id
-    WHERE d.discussion_id = $1 AND d.deleted_at IS NULL
+    WHERE d.discussion_id = $1 AND d.deleted_at IS NULL AND d.is_deleted = FALSE AND u.status = 'active'
   `;
 
   const result = await pool.query(query, params);
@@ -361,7 +370,7 @@ exports.updateDiscussion = async (
   const discussion = checkResult.rows[0];
 
   // Check ownership
-  if (discussion.user_id !== userId && !isAdmin) {
+  if (Number(discussion.user_id) !== Number(userId) && !isAdmin) {
     throw new Error("Not authorized to edit this discussion");
   }
 
@@ -456,10 +465,10 @@ exports.deleteDiscussion = async (discussionId, userId, isAdmin = false) => {
       `DELETE FROM portal.discussions WHERE discussion_id = $1`,
       [discussionId],
     );
-  } else if (post.user_id === userId) {
+  } else if (Number(post.user_id) === Number(userId)) {
     // Owner performs SOFT DELETE
     await pool.query(
-      `UPDATE portal.discussions SET deleted_at = NOW() WHERE discussion_id = $1`,
+      `UPDATE portal.discussions SET deleted_at = NOW(), is_deleted = TRUE WHERE discussion_id = $1`,
       [discussionId],
     );
   } else {
@@ -772,7 +781,7 @@ exports.getComments = async (
       u.profile_image
      FROM portal.discussion_comments c
      JOIN portal.users u ON u.user_id = c.user_id
-     WHERE c.discussion_id = $1 AND c.deleted_at IS NULL
+     WHERE c.discussion_id = $1 AND c.deleted_at IS NULL AND c.is_deleted = FALSE AND u.status = 'active'
      ORDER BY ${orderBy}`,
     params,
   );
@@ -800,7 +809,7 @@ exports.deleteComment = async (commentId, userId, isAdmin = false) => {
       `DELETE FROM portal.discussion_comments WHERE comment_id = $1`,
       [commentId],
     );
-  } else if (comment.user_id === userId) {
+  } else if (Number(comment.user_id) === Number(userId)) {
     // Owner performs SOFT DELETE
     await pool.query(
       `UPDATE portal.discussion_comments SET deleted_at = NOW() WHERE comment_id = $1`,
@@ -953,7 +962,15 @@ exports.getSavedDiscussions = async (userId, page = 1, limit = 20) => {
       d.content,
       d.created_at,
       d.like_count,
-      d.comment_count,
+      (
+        SELECT count(*)::int 
+        FROM portal.discussion_comments c 
+        JOIN portal.users cu ON cu.user_id = c.user_id 
+        WHERE c.discussion_id = d.discussion_id 
+          AND c.deleted_at IS NULL 
+          AND c.is_deleted = FALSE 
+          AND cu.status = 'active'
+      ) AS comment_count,
       u.full_name AS author,
       sd.saved_at
     FROM portal.saved_discussions sd
@@ -1001,7 +1018,15 @@ exports.getMyPosts = async (userId, page = 1, limit = 20) => {
       d.created_at,
       d.updated_at,
       d.like_count,
-      d.comment_count,
+      (
+        SELECT count(*)::int 
+        FROM portal.discussion_comments c 
+        JOIN portal.users cu ON cu.user_id = c.user_id 
+        WHERE c.discussion_id = d.discussion_id 
+          AND c.deleted_at IS NULL 
+          AND c.is_deleted = FALSE 
+          AND cu.status = 'active'
+      ) AS comment_count,
       d.image_url,
       COALESCE(
         (
@@ -1051,7 +1076,15 @@ exports.getTrendingDiscussions = async (limit = 10) => {
       d.content,
       d.created_at,
       d.like_count,
-      d.comment_count,
+      (
+        SELECT count(*)::int 
+        FROM portal.discussion_comments c 
+        JOIN portal.users cu ON cu.user_id = c.user_id 
+        WHERE c.discussion_id = d.discussion_id 
+          AND c.deleted_at IS NULL 
+          AND c.is_deleted = FALSE 
+          AND cu.status = 'active'
+      ) AS comment_count,
       (d.like_count * 2 + d.comment_count) AS trending_score,
       u.full_name AS author,
       u.profile_image AS author_avatar

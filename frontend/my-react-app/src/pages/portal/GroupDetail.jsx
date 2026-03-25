@@ -40,7 +40,7 @@ import {
   Image as ImageIcon,
   Loader2,
 } from "lucide-react";
-import { AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 
 const SECTIONS = [
   {
@@ -306,7 +306,7 @@ const GroupDetail = () => {
 
   if (groupLoading)
     return (
-      <div className="h-[calc(100vh-64px)] flex flex-col bg-slate-50/50 p-6 space-y-8 animate-pulse">
+      <div className="h-[calc(100vh-64px)] flex flex-col bg-[var(--bg-main)]/50 p-6 space-y-8 animate-pulse">
         <div className="flex items-center gap-6">
           <Skeleton
             variant="rectangular"
@@ -324,7 +324,7 @@ const GroupDetail = () => {
 
   if (groupError || !group)
     return (
-      <div className="h-full flex flex-col items-center justify-center text-slate-400 font-black uppercase tracking-widest gap-4">
+      <div className="h-full flex flex-col items-center justify-center text-[var(--text-muted)] font-black uppercase tracking-widest gap-4">
         <div className="w-20 h-20 rounded-full bg-rose-50 flex items-center justify-center border border-rose-100">
           <ShieldCheck className="w-10 h-10 text-rose-500" />
         </div>
@@ -338,15 +338,15 @@ const GroupDetail = () => {
   // Private View Filter
   if (!isMember && group.privacy_type === "private") {
     return (
-      <div className="h-[calc(100vh-64px)] flex items-center justify-center bg-slate-50">
-        <div className="max-w-md w-full p-8 bg-white border border-slate-200 rounded-[2.5rem] shadow-xl text-center">
-          <div className="w-20 h-20 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-6">
-            <Lock className="w-8 h-8 text-slate-400" />
+      <div className="h-[calc(100vh-64px)] flex items-center justify-center bg-[var(--bg-main)]">
+        <div className="max-w-md w-full p-8 bg-[var(--bg-card)] border border-[var(--border-main)] rounded-[2.5rem] shadow-xl text-center">
+          <div className="w-20 h-20 bg-[var(--bg-active)] rounded-full flex items-center justify-center mx-auto mb-6">
+            <Lock className="w-8 h-8 text-[var(--text-muted)]" />
           </div>
-          <h2 className="text-xl font-bold text-slate-900 mb-2">
+          <h2 className="text-xl font-bold text-[var(--text-main)] mb-2">
             Private Directory
           </h2>
-          <p className="text-slate-500 text-sm mb-6 leading-relaxed">
+          <p className="text-[var(--text-muted)] text-sm mb-6 leading-relaxed">
             This sector is restricted. You need a verified invite link from the
             Labyrinth Master to access these files.
           </p>
@@ -361,12 +361,12 @@ const GroupDetail = () => {
   }
 
   return (
-    <div className="h-[calc(100vh-64px)] flex flex-col -m-4 md:-m-6 lg:-m-8 bg-slate-50/50 overflow-hidden">
+    <div className="h-[calc(100vh-64px)] flex flex-col -m-4 md:-m-6 lg:-m-8 bg-[var(--bg-main)]/50 overflow-hidden">
       <div className="flex-1 flex overflow-hidden">
         {/* Main Workspace Column */}
-        <div className="flex-1 flex flex-col min-w-0 bg-white relative">
+        <div className="flex-1 flex flex-col min-w-0 bg-[var(--bg-card)] relative">
           {/* Header */}
-          <div className="h-20 px-4 md:px-8 flex items-center justify-between border-b border-slate-200/50 sticky top-0 z-20 backdrop-blur-xl bg-slate-50/80">
+          <div className="h-20 px-4 md:px-8 flex items-center justify-between border-b border-[var(--border-main)]/50 sticky top-0 z-20 backdrop-blur-xl bg-[var(--bg-main)]/80">
             <div className="flex items-center gap-4">
               <Link to="/groups">
                 <Button variant="ghost" size="sm" className="p-2.5">
@@ -397,7 +397,7 @@ const GroupDetail = () => {
                   )}
                 </Link>
                 <div className="flex flex-col">
-                  <h1 className="font-black text-slate-900 text-base md:text-lg leading-tight flex items-center gap-3">
+                  <h1 className="font-black text-[var(--text-main)] text-base md:text-lg leading-tight flex items-center gap-3">
                     {group.name}
                     <Badge
                       color={
@@ -410,14 +410,14 @@ const GroupDetail = () => {
                       {SECTIONS.find((s) => s.id === activeSection)?.label}
                     </Badge>
                   </h1>
-                  <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                  <span className="text-[10px] font-black text-[var(--text-muted)] uppercase tracking-widest">
                     {group.members} Members • Capacity: {group.capacity}
                   </span>
                 </div>
               </div>
             </div>
 
-            <div className="flex items-center gap-3 border-l border-slate-200 pl-4">
+            <div className="flex items-center gap-3 border-l border-[var(--border-main)] pl-4">
               {!isMember ? (
                 group.has_pending_request ? (
                   <Button variant="outline" disabled size="sm">
@@ -469,16 +469,16 @@ const GroupDetail = () => {
                 initial={{ height: 0, opacity: 0 }}
                 animate={{ height: "auto", opacity: 1 }}
                 exit={{ height: 0, opacity: 0 }}
-                className="px-6 py-3 border-b border-slate-200 bg-slate-50 overflow-hidden"
+                className="px-6 py-3 border-b border-[var(--border-main)] bg-[var(--bg-main)] overflow-hidden"
               >
                 <div className="relative">
-                  <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                  <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--text-muted)]" />
                   <input
                     type="text"
                     placeholder="Search protocol..."
                     value={messageSearch}
                     onChange={(e) => setMessageSearch(e.target.value)}
-                    className="w-full pl-11 pr-4 py-2 bg-white border border-slate-200 rounded-xl text-sm font-bold focus:ring-2 focus:ring-purple-500"
+                    className="w-full pl-11 pr-4 py-2 bg-[var(--bg-card)] border border-[var(--border-main)] rounded-xl text-sm font-bold focus:ring-2 focus:ring-purple-500 text-[var(--text-main)]"
                     autoFocus
                   />
                 </div>
@@ -489,14 +489,18 @@ const GroupDetail = () => {
           {/* Feed Area */}
           <div
             ref={messagesContainerRef}
-            className={`flex-1 overflow-y-auto p-4 md:p-6 scroll-smooth ${activeSection === "discussion" || activeSection === "general" ? "bg-white" : "bg-slate-50/30"}`}
+            className={`flex-1 overflow-y-auto p-4 md:p-6 scroll-smooth ${
+              activeSection === "discussion" || activeSection === "general"
+                ? "bg-[var(--bg-main)]"
+                : "bg-[var(--bg-main)]/30"
+            }`}
           >
             {!isMember ? (
               <div className="py-20 flex flex-col items-center justify-center opacity-60">
-                <div className="w-20 h-20 rounded-full bg-slate-100 flex items-center justify-center mb-6">
-                  <Lock className="w-8 h-8 text-slate-400" />
+                <div className="w-20 h-20 rounded-full bg-[var(--bg-active)] flex items-center justify-center mb-6">
+                  <Lock className="w-8 h-8 text-[var(--text-muted)]" />
                 </div>
-                <p className="font-bold text-slate-500 text-sm">
+                <p className="font-bold text-[var(--text-muted)] text-sm">
                   You must join this group to view the network archives.
                 </p>
               </div>
@@ -507,7 +511,7 @@ const GroupDetail = () => {
                   activeSection !== "general" && (
                     <div className="mb-8 max-w-4xl mx-auto">
                       {activeSection !== "notice_board" || isAdmin ? (
-                        <div className="bg-white border border-slate-200 rounded-4xl p-5 shadow-sm group">
+                        <div className="bg-[var(--bg-card)] border border-[var(--border-main)] rounded-4xl p-5 shadow-sm group">
                           <div className="flex gap-4">
                             <Avatar
                               src={user?.profile_image}
@@ -520,10 +524,10 @@ const GroupDetail = () => {
                                 placeholder="Initialize data sequence..."
                                 value={newPost}
                                 onChange={(e) => setNewPost(e.target.value)}
-                                className="w-full bg-slate-50 p-4 border border-slate-100 rounded-2xl text-sm font-bold focus:outline-none focus:ring-2 focus:ring-purple-500 resize-none transition-all placeholder:text-slate-400"
+                                className="w-full bg-[var(--bg-active)] p-4 border border-[var(--border-main)] rounded-2xl text-sm font-bold focus:outline-none focus:ring-2 focus:ring-purple-500 resize-none transition-all placeholder:text-[var(--text-muted)] text-[var(--text-main)]"
                               />
                               <div className="flex items-center justify-between mt-3">
-                                <div className="flex gap-2 text-slate-400">
+                                <div className="flex gap-2 text-[var(--text-muted)]">
                                   <Type className="w-4 h-4 hover:text-purple-600 cursor-pointer" />
                                   <Code className="w-4 h-4 hover:text-purple-600 cursor-pointer" />
                                 </div>
@@ -540,8 +544,8 @@ const GroupDetail = () => {
                           </div>
                         </div>
                       ) : (
-                        <div className="bg-slate-50 border border-slate-200 rounded-3xl p-8 flex flex-col items-center justify-center text-center">
-                          <Megaphone className="w-8 h-8 text-slate-300 mb-3" />
+                        <div className="bg-[var(--bg-active)] border border-[var(--border-main)] rounded-3xl p-8 flex flex-col items-center justify-center text-center">
+                          <Megaphone className="w-8 h-8 text-[var(--text-muted)] mb-3" />
                           <Badge color="rose">Read-Only Notice Board</Badge>
                         </div>
                       )}
@@ -557,8 +561,8 @@ const GroupDetail = () => {
                 <div className="max-w-4xl mx-auto space-y-6">
                   {feedPosts.length === 0 ? (
                     <div className="py-20 flex flex-col items-center justify-center opacity-30 text-center">
-                      <MessagesSquare className="w-12 h-12 text-slate-400 mb-4" />
-                      <p className="font-black uppercase tracking-[0.2em] text-slate-500 text-xs">
+                      <MessagesSquare className="w-12 h-12 text-[var(--text-muted)] mb-4" />
+                      <p className="font-black uppercase tracking-[0.2em] text-[var(--text-muted)] text-xs">
                         Awaiting Transmissions
                       </p>
                     </div>
@@ -586,18 +590,22 @@ const GroupDetail = () => {
                               className={`flex flex-col ${isMe ? "items-end" : "items-start"} max-w-[80%]`}
                             >
                               <div className="flex items-center gap-2 mb-1 px-1">
-                                <span className="text-[10px] text-slate-400 font-bold uppercase">
+                                <span className="text-[10px] text-[var(--text-muted)] font-bold uppercase">
                                   {new Date(post.created_at).toLocaleTimeString(
                                     [],
                                     { hour: "2-digit", minute: "2-digit" },
                                   )}
                                 </span>
-                                <span className="text-[10px] text-slate-800 font-black tracking-wider">
+                                <span className="text-[10px] text-[var(--text-muted)] font-black tracking-wider">
                                   {isMe ? "You" : post.full_name}
                                 </span>
                               </div>
                               <div
-                                className={`px-4 py-2.5 rounded-[1.25rem] text-sm font-medium ${isMe ? "bg-purple-600 text-white rounded-tr-none" : "bg-white text-slate-800 border-slate-200 rounded-tl-none border"}`}
+                                className={`px-4 py-2.5 rounded-[1.25rem] text-sm font-medium ${
+                                  isMe
+                                    ? "bg-purple-600 text-white rounded-tr-none"
+                                    : "bg-[var(--bg-active)] text-[var(--text-main)] border-[var(--border-main)] rounded-tl-none border"
+                                }`}
                               >
                                 {post.content}
                               </div>
@@ -609,7 +617,7 @@ const GroupDetail = () => {
                       return (
                         <div
                           key={post.post_id}
-                          className="bg-white border border-slate-100 p-6 rounded-3xl shadow-sm hover:border-purple-200 transition-colors"
+                          className="bg-[var(--bg-card)] border border-[var(--border-main)] p-6 rounded-3xl shadow-sm hover:border-purple-200 transition-colors"
                         >
                           <div className="flex gap-4">
                             <Avatar
@@ -620,7 +628,7 @@ const GroupDetail = () => {
                             <div className="flex-1 min-w-0">
                               <header className="flex items-center justify-between mb-3">
                                 <div className="flex gap-2 items-center">
-                                  <span className="font-bold text-slate-900 leading-none">
+                                  <span className="font-bold text-[var(--text-main)] leading-none">
                                     {post.full_name}
                                   </span>
                                   {post.user_id === group.created_by && (
@@ -633,13 +641,13 @@ const GroupDetail = () => {
                                     </Badge>
                                   )}
                                 </div>
-                                <span className="text-[10px] text-slate-400 font-bold">
+                                <span className="text-[10px] text-[var(--text-muted)] font-bold">
                                   {new Date(
                                     post.created_at,
                                   ).toLocaleDateString()}
                                 </span>
                               </header>
-                              <div className="text-slate-700 text-sm whitespace-pre-wrap leading-relaxed">
+                              <div className="text-[var(--text-muted)] text-sm whitespace-pre-wrap leading-relaxed">
                                 {post.content}
                               </div>
                             </div>
@@ -657,18 +665,18 @@ const GroupDetail = () => {
           {/* Chat Input */}
           {isMember &&
             (activeSection === "discussion" || activeSection === "general") && (
-              <div className="p-4 md:p-6 bg-white border-t border-slate-100">
+              <div className="p-4 md:p-6 bg-[var(--bg-card)] border-t border-[var(--border-main)]">
                 <form
                   onSubmit={handlePostSubmit}
                   className="max-w-4xl mx-auto flex items-center gap-3"
                 >
-                  <div className="flex-1 bg-slate-50 rounded-2xl flex items-center px-4 py-3 border border-slate-200 focus-within:ring-2 focus-within:ring-purple-200">
+                  <div className="flex-1 bg-[var(--bg-active)] rounded-2xl flex items-center px-4 py-3 border border-[var(--border-main)] focus-within:ring-2 focus-within:ring-purple-200">
                     <input
                       type="text"
                       value={newPost}
                       onChange={(e) => setNewPost(e.target.value)}
                       placeholder="Type a message..."
-                      className="flex-1 bg-transparent border-none text-sm font-medium focus:outline-none placeholder:text-slate-400"
+                      className="flex-1 bg-transparent border-none text-sm font-medium focus:outline-none placeholder:text-[var(--text-muted)] text-[var(--text-main)]"
                     />
                   </div>
                   <Button
@@ -686,24 +694,24 @@ const GroupDetail = () => {
         </div>
 
         {/* Right Sidebar */}
-        <div className="hidden lg:flex flex-col w-88 bg-white border-l border-slate-200 z-10">
+        <div className="hidden lg:flex flex-col w-88 bg-[var(--bg-card)] border-l border-[var(--border-main)] z-10">
           {showAdminPanel && isAdmin ? (
             // ------------------ ADMIN PANEL ------------------
-            <div className="flex-1 flex flex-col h-full bg-slate-50/50">
-              <header className="px-6 py-5 border-b border-slate-200 bg-white">
-                <h2 className="font-black text-slate-900 tracking-tight flex items-center gap-2">
+            <div className="flex-1 flex flex-col h-full bg-[var(--bg-main)]/50">
+              <header className="px-6 py-5 border-b border-[var(--border-main)] bg-[var(--bg-card)]">
+                <h2 className="font-black text-[var(--text-main)] tracking-tight flex items-center gap-2">
                   <Settings className="w-5 h-5 text-purple-600" /> Server
                   Administration
                 </h2>
               </header>
               <div className="p-6 space-y-8 overflow-y-auto">
                 {/* Capacity Management */}
-                <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
-                  <h3 className="text-xs font-black uppercase text-slate-500 mb-4 tracking-wider">
+                <div className="bg-[var(--bg-card)] p-5 rounded-2xl border border-[var(--border-main)] shadow-sm">
+                  <h3 className="text-xs font-black uppercase text-[var(--text-muted)] mb-4 tracking-wider">
                     Capacity Matrix
                   </h3>
                   <div className="flex justify-between items-end mb-2">
-                    <span className="text-sm font-bold text-slate-800">
+                    <span className="text-sm font-bold text-[var(--text-main)]">
                       {group.members} / {group.capacity} Slots
                     </span>
                     <Badge
@@ -714,7 +722,7 @@ const GroupDetail = () => {
                       {group.members >= group.capacity ? "Full" : "Available"}
                     </Badge>
                   </div>
-                  <div className="w-full bg-slate-100 h-2 rounded-full overflow-hidden mb-4">
+                  <div className="w-full bg-[var(--bg-active)] h-2 rounded-full overflow-hidden mb-4">
                     <div
                       className={`h-full ${group.members >= group.capacity ? "bg-rose-500" : "bg-emerald-500"}`}
                       style={{
@@ -725,7 +733,7 @@ const GroupDetail = () => {
                   {isOwner && group.capacity < 25 && (
                     <Button
                       variant="outline"
-                      className="w-full text-xs font-bold dashed border-slate-300 gap-2"
+                      className="w-full text-xs font-bold dashed border-[var(--border-main)] gap-2"
                       onClick={() => expandCapacityMut.mutate()}
                       isLoading={expandCapacityMut.isPending}
                       title="Costs 100 VXP"
@@ -738,8 +746,8 @@ const GroupDetail = () => {
 
                 {/* Join Requests Queue */}
                 {canManageUsers && (
-                  <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
-                    <h3 className="text-xs font-black uppercase text-slate-500 mb-4 tracking-wider flex items-center justify-between">
+                  <div className="bg-[var(--bg-card)] p-5 rounded-2xl border border-[var(--border-main)] shadow-sm">
+                    <h3 className="text-xs font-black uppercase text-[var(--text-muted)] mb-4 tracking-wider flex items-center justify-between">
                       Approval Queue
                       {joinRequests?.length > 0 && (
                         <span className="bg-rose-100 text-rose-600 px-2 py-0.5 rounded-full text-[10px]">
@@ -752,7 +760,7 @@ const GroupDetail = () => {
                         {joinRequests.map((req) => (
                           <div
                             key={req.request_id}
-                            className="flex flex-col gap-2 p-3 bg-slate-50 rounded-xl border border-slate-100"
+                            className="flex flex-col gap-2 p-3 bg-[var(--bg-active)] rounded-xl border border-[var(--border-main)]"
                           >
                             <div className="flex items-center gap-3">
                               <Avatar
@@ -760,7 +768,7 @@ const GroupDetail = () => {
                                 name={req.full_name}
                                 size="sm"
                               />
-                              <span className="text-sm font-bold truncate flex-1">
+                              <span className="text-sm font-bold truncate flex-1 text-[var(--text-main)]">
                                 {req.full_name}
                               </span>
                             </div>
@@ -789,7 +797,7 @@ const GroupDetail = () => {
                         ))}
                       </div>
                     ) : (
-                      <p className="text-xs text-slate-400 font-bold text-center py-4">
+                      <p className="text-xs text-[var(--text-muted)] font-bold text-center py-4">
                         Queue is empty
                       </p>
                     )}
@@ -798,8 +806,8 @@ const GroupDetail = () => {
 
                 {/* Co-Admin Role Management */}
                 {isOwner && (
-                  <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
-                    <h3 className="text-xs font-black uppercase text-slate-500 mb-4 tracking-wider">
+                  <div className="bg-[var(--bg-card)] p-5 rounded-2xl border border-[var(--border-main)] shadow-sm">
+                    <h3 className="text-xs font-black uppercase text-[var(--text-muted)] mb-4 tracking-wider">
                       Council of Five Roles
                     </h3>
                     <div className="space-y-2">
@@ -811,7 +819,7 @@ const GroupDetail = () => {
                         .map((m) => (
                           <div
                             key={m.user_id}
-                            className="p-3 hover:bg-slate-50 rounded-lg group border border-slate-100"
+                            className="p-3 hover:bg-[var(--bg-active)] rounded-lg group border border-[var(--border-main)]"
                           >
                             <div className="flex items-center justify-between gap-3">
                               <div className="flex items-center gap-3">
@@ -821,7 +829,7 @@ const GroupDetail = () => {
                                   size="sm"
                                 />
                                 <div className="flex flex-col">
-                                  <span className="text-xs font-bold text-slate-800 truncate max-w-25">
+                                  <span className="text-xs font-bold text-[var(--text-main)] truncate max-w-25">
                                     {m.full_name}
                                   </span>
                                   {m.role === "co_admin" && (
@@ -836,7 +844,7 @@ const GroupDetail = () => {
                                   onClick={() =>
                                     appointCoAdminMut.mutate(m.user_id)
                                   }
-                                  className="text-[10px] font-bold text-slate-400 hover:text-purple-600 px-2 py-1 rounded bg-slate-100 hover:bg-purple-50 transition-colors opacity-0 group-hover:opacity-100"
+                                  className="text-[10px] font-bold text-[var(--text-muted)] hover:text-purple-600 px-2 py-1 rounded bg-[var(--bg-active)] hover:bg-purple-50 transition-colors opacity-0 group-hover:opacity-100"
                                 >
                                   Promote
                                 </button>
@@ -875,7 +883,7 @@ const GroupDetail = () => {
                                         className={`text-[10px] font-bold px-2.5 py-2 rounded-lg border transition-colors ${
                                           isEnabled
                                             ? "bg-purple-50 border-purple-200 text-purple-700"
-                                            : "bg-slate-50 border-slate-200 text-slate-500"
+                                            : "bg-[var(--bg-active)] border-[var(--border-main)] text-[var(--text-muted)]"
                                         } disabled:opacity-60`}
                                       >
                                         {permission.label}
@@ -895,8 +903,8 @@ const GroupDetail = () => {
           ) : (
             // ------------------ STANDARD REGISTRY PANEL ------------------
             <>
-              <header className="h-20 px-8 flex items-center justify-between border-b border-slate-200 bg-white shadow-sm z-10">
-                <span className="text-xs font-black text-slate-900 uppercase tracking-widest flex items-center gap-2">
+              <header className="h-20 px-8 flex items-center justify-between border-b border-[var(--border-main)] bg-[var(--bg-card)] shadow-sm z-10">
+                <span className="text-xs font-black text-[var(--text-main)] uppercase tracking-widest flex items-center gap-2">
                   <Users className="w-4 h-4 text-purple-600" /> Registry
                 </span>
                 <Badge variant="soft" color="slate">
@@ -907,7 +915,7 @@ const GroupDetail = () => {
               {/* Group identity card at top of sidebar */}
               <Link
                 to={`/groups/${id}/profile`}
-                className="flex items-center gap-3 mx-4 mt-4 mb-2 p-3 rounded-2xl border border-slate-100 hover:border-purple-200 hover:bg-purple-50/50 transition-all group/glink"
+                className="flex items-center gap-3 mx-4 mt-4 mb-2 p-3 rounded-2xl border border-[var(--border-main)] hover:border-purple-200 hover:bg-purple-50/50 transition-all group/glink"
               >
                 <div className="w-10 h-10 rounded-xl bg-slate-900 flex items-center justify-center overflow-hidden shrink-0 shadow-sm group-hover/glink:ring-2 group-hover/glink:ring-purple-400 transition-all">
                   {group.group_image ? (
@@ -923,20 +931,20 @@ const GroupDetail = () => {
                   )}
                 </div>
                 <div className="flex flex-col min-w-0">
-                  <span className="text-xs font-black text-slate-900 truncate group-hover/glink:text-purple-700 transition-colors">
+                  <span className="text-xs font-black text-[var(--text-main)] truncate group-hover/glink:text-purple-700 transition-colors">
                     {group.name}
                   </span>
-                  <span className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">
+                  <span className="text-[10px] text-[var(--text-muted)] font-bold uppercase tracking-widest">
                     View Group Profile
                   </span>
                 </div>
-                <ArrowUpRight className="w-4 h-4 text-slate-400 ml-auto group-hover/glink:text-purple-500 transition-colors shrink-0" />
+                <ArrowUpRight className="w-4 h-4 text-[var(--text-muted)] ml-auto group-hover/glink:text-purple-500 transition-colors shrink-0" />
               </Link>
 
               <div className="flex-1 overflow-y-auto p-6 space-y-10 custom-scrollbar">
                 {/* Sectors */}
                 <div className="space-y-4">
-                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-2">
+                  <label className="text-[10px] font-black text-[var(--text-muted)] uppercase tracking-widest px-2">
                     Sectors
                   </label>
                   <div className="grid gap-2">
@@ -950,7 +958,11 @@ const GroupDetail = () => {
                             setActiveSection(section.id);
                             isInitialLoad.current = true;
                           }}
-                          className={`flex items-center gap-3 p-3 rounded-xl transition-all ${isActive ? "bg-slate-900 border-slate-900" : "bg-white border hover:bg-slate-50"} border-slate-100`}
+                          className={`flex items-center gap-3 p-3 rounded-xl transition-all ${
+                            isActive
+                              ? "bg-slate-900 border-slate-900"
+                              : "bg-[var(--bg-card)] border hover:bg-[var(--bg-active)]"
+                          } border-[var(--border-main)]`}
                         >
                           <div
                             className={`p-2 rounded-lg ${isActive ? "bg-white/10" : section.bg}`}
@@ -960,7 +972,9 @@ const GroupDetail = () => {
                             />
                           </div>
                           <span
-                            className={`text-[11px] font-black uppercase tracking-wider ${isActive ? "text-white" : "text-slate-600"}`}
+                            className={`text-[11px] font-black uppercase tracking-wider ${
+                              isActive ? "text-white" : "text-[var(--text-main)]"
+                            }`}
                           >
                             {section.label}
                           </span>
@@ -975,7 +989,7 @@ const GroupDetail = () => {
 
                 {/* Members List */}
                 <div className="space-y-4">
-                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-2">
+                  <label className="text-[10px] font-black text-[var(--text-muted)] uppercase tracking-widest px-2">
                     Collaborators
                   </label>
                   <div className="grid gap-1">
@@ -983,7 +997,7 @@ const GroupDetail = () => {
                       <Link
                         to={`/profile/${m.user_id}`}
                         key={m.user_id}
-                        className="flex items-center gap-3 p-2 hover:bg-slate-50 rounded-xl transition-all border border-transparent hover:border-slate-100"
+                        className="flex items-center gap-3 p-2 hover:bg-[var(--bg-active)] rounded-xl transition-all border border-transparent hover:border-[var(--border-main)]"
                       >
                         <Avatar
                           src={m.profile_image}
@@ -992,14 +1006,18 @@ const GroupDetail = () => {
                           variant="circular"
                         />
                         <div className="flex flex-col min-w-0">
-                          <span className="text-sm font-bold text-slate-900 truncate">
+                          <span className="text-sm font-bold text-[var(--text-main)] truncate">
                             {String(m.user_id) === String(user?.portal_user_id)
                               ? "You"
                               : m.full_name}
                           </span>
                           {m.role !== "member" && (
                             <span
-                              className={`text-[10px] uppercase font-black tracking-widest ${m.role === "owner" ? "text-purple-600" : "text-blue-500"}`}
+                              className={`text-[10px] uppercase font-black tracking-widest ${
+                                m.role === "owner"
+                                  ? "text-purple-600"
+                                  : "text-blue-500"
+                              }`}
                             >
                               {m.role === "owner" ? "Master" : "Co-Admin"}
                             </span>

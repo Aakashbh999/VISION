@@ -45,14 +45,13 @@ const positions = [
   [15, 82],
 ];
 
-// Pre-generate animation parameters to avoid impure functions in render
 const animationParams = positions.map((_, i) => ({
   duration: 1.5 + Math.random() * 1,
   delay: i * 0.1 + Math.random() * 0.3,
 }));
 
 const DOT_COUNT = 108;
-const GLOW_RADIUS = 12; // percentage distance
+const GLOW_RADIUS = 12;
 
 const HeroFireflyIcons = () => {
   const containerRef = useRef(null);
@@ -60,7 +59,6 @@ const HeroFireflyIcons = () => {
   const [mousePos, setMousePos] = useState({ x: 50, y: 50 });
   const [isHovering, setIsHovering] = useState(false);
 
-  // Generate random dot positions once
   useEffect(() => {
     const dots = [];
     for (let i = 0; i < DOT_COUNT; i++) {
@@ -72,7 +70,6 @@ const HeroFireflyIcons = () => {
     setDotPositions(dots);
   }, []);
 
-  // Update mouse position on move
   const handleMouseMove = (e) => {
     if (!containerRef.current) return;
     const rect = containerRef.current.getBoundingClientRect();
@@ -81,7 +78,6 @@ const HeroFireflyIcons = () => {
     setMousePos({ x, y });
   };
 
-  // Compute which dots are within glow radius of mouse
   const activeIndices = useMemo(() => {
     if (!isHovering) return [];
     const indices = [];
@@ -105,7 +101,6 @@ const HeroFireflyIcons = () => {
       onMouseMove={handleMouseMove}
       onMouseLeave={() => setIsHovering(false)}
     >
-      {/* Background dots */}
       {dotPositions.map((pos, i) => {
         const isActive = activeIndices.includes(i);
         return (
@@ -113,8 +108,8 @@ const HeroFireflyIcons = () => {
             key={i}
             className={`absolute w-0.5 h-0.5 rounded-full transition-all duration-300 ${
               isActive
-                ? "bg-indigo-400/90 shadow-[0_0_10px_rgba(99,102,241,0.9)] scale-150"
-                : "bg-indigo-400/30"
+                ? "bg-purple-400/90 shadow-[0_0_10px_rgba(168,85,247,0.9)] scale-150"
+                : "bg-purple-400/30"
             }`}
             style={{
               top: `${pos.y}%`,
@@ -124,7 +119,6 @@ const HeroFireflyIcons = () => {
         );
       })}
 
-      {/* IT Icons with heartbeat animation */}
       {icons.map((Icon, i) => {
         const [x, y] = positions[i];
         const { duration, delay } = animationParams[i];
@@ -149,7 +143,7 @@ const HeroFireflyIcons = () => {
               delay: delay,
             }}
           >
-            <div className="p-2 rounded-lg text-indigo-500/70 hover:text-indigo-600 transition-colors">
+            <div className="p-2 rounded-lg text-purple-500/70 hover:text-purple-600 transition-colors">
               <Icon size={18} strokeWidth={1.6} />
             </div>
           </motion.div>

@@ -134,7 +134,7 @@ exports.getResources = async (req, res) => {
     const offset = (pageNum - 1) * limitNum;
 
     const params = [];
-    const conditions = ["r.status = 'approved'"];
+    const conditions = ["r.status = 'approved'", "r.deleted_at IS NULL"];
 
     if (program_id) {
       params.push(parseInt(program_id));
@@ -262,7 +262,7 @@ exports.getMyResources = async (req, res) => {
        FROM portal.resources r
        LEFT JOIN portal.academic_degrees ad ON ad.id = r.degree_id
        LEFT JOIN portal.programs p ON p.program_id = r.program_id
-       WHERE r.created_by = $1
+       WHERE r.created_by = $1 AND r.deleted_at IS NULL
        ORDER BY r.created_at DESC`,
       [userId],
     );
@@ -300,13 +300,13 @@ exports.getPendingResources = async (req, res) => {
          JOIN auth.users a     ON a.auth_user_id = u.auth_user_id
          LEFT JOIN portal.academic_degrees ad ON ad.id = r.degree_id
          LEFT JOIN portal.programs p          ON p.program_id = r.program_id
-         WHERE r.status = 'pending'
+         WHERE r.status = 'pending' AND r.deleted_at IS NULL
          ORDER BY r.created_at ASC
          LIMIT $1 OFFSET $2`,
         [limitNum, offset],
       ),
       pool.query(
-        `SELECT COUNT(*) FROM portal.resources WHERE status = 'pending'`,
+        `SELECT COUNT(*) FROM portal.resources WHERE status = 'pending' AND deleted_at IS NULL`,
       ),
     ]);
 

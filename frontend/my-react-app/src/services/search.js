@@ -10,6 +10,7 @@ export const SEARCH_CATEGORIES = {
   ROADMAPS: "Roadmaps",
   RESOURCES: "Resources",
   GROUPS: "Groups",
+  DISCUSSIONS: "Discussions",
 };
 
 // Icon mapping for result types
@@ -78,6 +79,23 @@ const transformResults = (apiResponse) => {
         memberCount: g.member_count,
         isMember: g.is_member,
         groupImage: g.group_image,
+        privacy_type: g.privacy_type,
+      });
+    });
+  }
+
+  // Process discussions
+  if (apiResponse.discussions?.length) {
+    apiResponse.discussions.forEach((d) => {
+      results.push({
+        id: `discussion-${d.id}`,
+        title: d.title,
+        category: SEARCH_CATEGORIES.DISCUSSIONS,
+        path: d.path || `/discussions/${d.id}`,
+        description: d.description || "",
+        author: d.author || "",
+        icon: "message-square",
+        score: d.score,
       });
     });
   }

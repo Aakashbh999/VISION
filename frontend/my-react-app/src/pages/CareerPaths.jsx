@@ -11,12 +11,11 @@ import {
   Terminal,
 } from "lucide-react";
 
-// Sample career path data for different specializations
 const careerPaths = {
   web: {
     title: "Web Development",
     icon: Code2,
-    color: "blue",
+    color: "purple",
     steps: [
       {
         id: 1,
@@ -241,6 +240,51 @@ const careerPaths = {
   },
 };
 
+const colorClasses = {
+  blue: {
+    bg: "bg-blue-50",
+    border: "border-blue-200",
+    text: "text-blue-600",
+    gradient: "from-blue-500 to-purple-500",
+    light: "bg-blue-100",
+  },
+  purple: {
+    bg: "bg-purple-50",
+    border: "border-purple-200",
+    text: "text-purple-600",
+    gradient: "from-purple-500 to-purple-700",
+    light: "bg-purple-100",
+  },
+  red: {
+    bg: "bg-red-50",
+    border: "border-red-200",
+    text: "text-red-600",
+    gradient: "from-red-500 to-orange-500",
+    light: "bg-red-100",
+  },
+  sky: {
+    bg: "bg-sky-50",
+    border: "border-sky-200",
+    text: "text-sky-600",
+    gradient: "from-sky-500 to-blue-500",
+    light: "bg-sky-100",
+  },
+  green: {
+    bg: "bg-green-50",
+    border: "border-green-200",
+    text: "text-green-600",
+    gradient: "from-green-500 to-teal-500",
+    light: "bg-green-100",
+  },
+  orange: {
+    bg: "bg-orange-50",
+    border: "border-orange-200",
+    text: "text-orange-600",
+    gradient: "from-orange-500 to-red-500",
+    light: "bg-orange-100",
+  },
+};
+
 const CareerPaths = () => {
   const [selectedPath, setSelectedPath] = useState("web");
   const [hoveredStep, setHoveredStep] = useState(null);
@@ -248,60 +292,13 @@ const CareerPaths = () => {
 
   const path = careerPaths[selectedPath];
   const Icon = path.icon;
-
-  // Color mapping
-  const colorClasses = {
-    blue: {
-      bg: "bg-blue-50",
-      border: "border-blue-200",
-      text: "text-blue-600",
-      gradient: "from-blue-500 to-purple-500",
-      light: "bg-blue-100",
-    },
-    purple: {
-      bg: "bg-purple-50",
-      border: "border-purple-200",
-      text: "text-purple-600",
-      gradient: "from-purple-500 to-pink-500",
-      light: "bg-purple-100",
-    },
-    red: {
-      bg: "bg-red-50",
-      border: "border-red-200",
-      text: "text-red-600",
-      gradient: "from-red-500 to-orange-500",
-      light: "bg-red-100",
-    },
-    sky: {
-      bg: "bg-sky-50",
-      border: "border-sky-200",
-      text: "text-sky-600",
-      gradient: "from-sky-500 to-blue-500",
-      light: "bg-sky-100",
-    },
-    green: {
-      bg: "bg-green-50",
-      border: "border-green-200",
-      text: "text-green-600",
-      gradient: "from-green-500 to-teal-500",
-      light: "bg-green-100",
-    },
-    orange: {
-      bg: "bg-orange-50",
-      border: "border-orange-200",
-      text: "text-orange-600",
-      gradient: "from-orange-500 to-red-500",
-      light: "bg-orange-100",
-    },
-  };
-
-  const colors = colorClasses[path.color] || colorClasses.blue;
+  const colors = colorClasses[path.color] || colorClasses.purple;
 
   return (
-    <div className="space-y-10">
+    <div className="space-y-10 px-4 sm:px-6 lg:px-8 py-6 sm:py-8 lg:py-10">
       {/* Header */}
       <div className="text-center max-w-3xl mx-auto">
-        <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-4">
+        <h1 className="text-3xl sm:text-4xl font-bold text-[var(--text-main)] mb-4">
           Your Career Path in{" "}
           <span
             className={`bg-gradient-to-r ${colors.gradient} bg-clip-text text-transparent`}
@@ -309,7 +306,7 @@ const CareerPaths = () => {
             {path.title}
           </span>
         </h1>
-        <p className="text-gray-600 text-lg">
+        <p className="text-[var(--text-muted)] text-lg">
           Visualize the journey from education to future opportunities. Choose a
           specialization below.
         </p>
@@ -320,7 +317,7 @@ const CareerPaths = () => {
         {Object.entries(careerPaths).map(([key, p]) => {
           const IconComponent = p.icon;
           const isSelected = selectedPath === key;
-          const color = colorClasses[p.color] || colorClasses.blue;
+          const color = colorClasses[p.color] || colorClasses.purple;
           return (
             <button
               key={key}
@@ -331,7 +328,7 @@ const CareerPaths = () => {
               className={`flex items-center gap-2 px-4 py-2 rounded-full border transition-all duration-300 ${
                 isSelected
                   ? `${color.bg} ${color.border} ${color.text} shadow-md scale-105`
-                  : "bg-white border-gray-200 text-gray-600 hover:border-gray-300"
+                  : "bg-white border-[var(--border-main)] text-[var(--text-main)] hover:border-purple-300"
               }`}
             >
               <IconComponent size={18} />
@@ -346,12 +343,11 @@ const CareerPaths = () => {
         {/* Desktop horizontal timeline */}
         <div className="hidden md:block">
           <div className="flex items-center justify-between relative">
-            {/* Connecting line */}
-            <div className="absolute top-8 left-0 right-0 h-0.5 bg-gray-200 -z-10" />
+            <div className="absolute top-8 left-0 right-0 h-0.5 bg-[var(--border-main)] -z-10" />
             <motion.div
-              className="absolute top-8 left-0 h-0.5 bg-gradient-to-r from-blue-500 to-purple-600 -z-10"
+              className="absolute top-8 left-0 h-0.5 bg-gradient-to-r from-purple-500 to-purple-700 -z-10"
               initial={{ width: "0%" }}
-              animate={{ width: `${(path.steps.length - 1) * 25}%` }} // approximate, better to use percentage based on active step
+              animate={{ width: `${(path.steps.length - 1) * 25}%` }}
               transition={{ duration: 0.5 }}
             />
 
@@ -366,7 +362,6 @@ const CareerPaths = () => {
                   onHoverEnd={() => setHoveredStep(null)}
                   onClick={() => setSelectedStep(step.id)}
                 >
-                  {/* Node */}
                   <motion.div
                     className={`w-16 h-16 mx-auto rounded-full flex items-center justify-center cursor-pointer relative z-10 transition-all ${
                       isSelected
@@ -381,15 +376,15 @@ const CareerPaths = () => {
                     <span className="text-xl font-bold">{step.id}</span>
                   </motion.div>
 
-                  {/* Step title */}
-                  <h3 className="mt-3 font-semibold text-gray-800">
+                  <h3 className="mt-3 font-semibold text-[var(--text-main)]">
                     {step.title}
                   </h3>
-                  <p className="text-xs text-gray-500">{step.description}</p>
+                  <p className="text-xs text-[var(--text-muted)]">
+                    {step.description}
+                  </p>
 
-                  {/* Arrow for next step (except last) */}
                   {index < path.steps.length - 1 && (
-                    <ChevronRight className="absolute top-6 -right-3 w-6 h-6 text-gray-300" />
+                    <ChevronRight className="absolute top-6 -right-3 w-6 h-6 text-[var(--text-muted)]/50" />
                   )}
                 </motion.div>
               );
@@ -410,7 +405,7 @@ const CareerPaths = () => {
                     ? `bg-gradient-to-r ${colors.gradient} text-white`
                     : isHovered
                       ? `${colors.bg} ${colors.border}`
-                      : "bg-white border-gray-200"
+                      : "bg-white border-[var(--border-main)]"
                 }`}
                 onHoverStart={() => setHoveredStep(step.id)}
                 onHoverEnd={() => setHoveredStep(null)}
@@ -429,7 +424,7 @@ const CareerPaths = () => {
                   <div>
                     <h3 className="font-semibold">{step.title}</h3>
                     <p
-                      className={`text-sm ${isSelected ? "text-white/80" : "text-gray-600"}`}
+                      className={`text-sm ${isSelected ? "text-white/80" : "text-[var(--text-muted)]"}`}
                     >
                       {step.description}
                     </p>
@@ -448,12 +443,12 @@ const CareerPaths = () => {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
-              className={`mt-8 p-6 rounded-xl border ${colors.border} bg-white shadow-lg`}
+              className={`mt-8 p-6 rounded-xl border ${colors.border} bg-[var(--bg-card)] shadow-lg`}
             >
-              <h4 className="text-lg font-bold text-gray-900 mb-2">
+              <h4 className="text-lg font-bold text-[var(--text-main)] mb-2">
                 {path.steps.find((s) => s.id === selectedStep)?.title}
               </h4>
-              <p className="text-gray-600 mb-4">
+              <p className="text-[var(--text-muted)] mb-4">
                 {path.steps.find((s) => s.id === selectedStep)?.details}
               </p>
               <div className="flex justify-end">
@@ -472,13 +467,13 @@ const CareerPaths = () => {
 
       {/* Bottom CTA */}
       <div className="text-center mt-12">
-        <p className="text-gray-600 mb-4">
+        <p className="text-[var(--text-muted)] mb-4">
           Ready to follow this path? Create a free account to track your
           progress.
         </p>
         <Link
           to="/register"
-          className="inline-block px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white font-medium rounded-lg hover:shadow-lg transition-shadow"
+          className="inline-block px-6 py-3 bg-gradient-to-r from-purple-600 to-purple-800 text-white font-medium rounded-lg hover:shadow-lg transition-shadow"
         >
           Join VISION for Free
         </Link>

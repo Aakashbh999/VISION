@@ -1,5 +1,5 @@
 import { useState, useRef } from "react";
-import { Menu, ChevronDown, Bell, User, LogOut, X, Check } from "lucide-react";
+import { Menu, ChevronDown, Bell, User, LogOut } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import { useUnreadCount } from "../../hooks/useUnreadCount";
@@ -12,7 +12,7 @@ const Navbar = ({ onMobileMenuToggle, variant, user }) => {
   const { logout, user: authUser } = useAuth();
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
   const [resourcesDropdownOpen, setResourcesDropdownOpen] = useState(false);
-  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false); // new state
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const isLoggedIn = !!authUser;
   const { data: unreadCount = 0 } = useUnreadCount(isLoggedIn);
 
@@ -21,7 +21,7 @@ const Navbar = ({ onMobileMenuToggle, variant, user }) => {
 
   useClickOutside(profileRef, () => {
     setProfileMenuOpen(false);
-    setShowLogoutConfirm(false); // reset confirmation when closing
+    setShowLogoutConfirm(false);
   });
   useClickOutside(resourcesRef, () => setResourcesDropdownOpen(false));
 
@@ -40,40 +40,48 @@ const Navbar = ({ onMobileMenuToggle, variant, user }) => {
   ];
 
   return (
-    <header className="fixed top-0 left-0 right-0 h-16 bg-white/90 dark:bg-slate-950/90 backdrop-blur-sm border-b border-gray-200 dark:border-slate-800 z-50 flex items-center justify-between px-4 sm:px-6 lg:px-8 shadow-sm">
+    <header className="fixed top-0 left-0 right-0 h-16 bg-[var(--bg-main)]/90 backdrop-blur-sm border-b border-[var(--border-main)] z-50 flex items-center justify-between px-4 sm:px-6 lg:px-8 shadow-sm transition-colors duration-300">
       {/* Left: logo + mobile menu button */}
       <div className="flex items-center gap-2">
         <button
           onClick={onMobileMenuToggle}
-          className="lg:hidden p-2 rounded-lg hover:bg-gray-100 transition-colors duration-300 mr-2"
+          className="lg:hidden p-2 rounded-lg hover:bg-[var(--bg-active)] transition-colors duration-300 mr-2"
           aria-label="Toggle menu"
         >
-          <Menu className="w-6 h-6 text-gray-700" />
+          <Menu className="w-6 h-6 text-[var(--text-main)]" />
         </button>
         <Link to={homeLink} className="relative">
-          <img src={visionLogo} alt="VISION Logo" className="h-40 w-auto" />
+          <img
+            src={visionLogo}
+            alt="VISION Logo"
+            className="h-[7.8rem] w-auto sm:h-[8rem] md:h-[9rem] transition-all duration-300"
+          />
         </Link>
       </div>
 
-      {/* Right side: all portal items together */}
+      {/* Right side: all items together */}
       <div className="flex items-center gap-4">
+        {/* Theme Toggle – always visible */}
+        <ThemeToggle />
+
         {variant === "portal" && user ? (
+          // Portal variant: explore dropdown, notification bell, user menu
           <>
-            {/* Explore dropdown */}
-            <div className="relative" ref={resourcesRef}>
+            {/* Explore dropdown – hidden on mobile */}
+            <div className="relative hidden sm:block" ref={resourcesRef}>
               <button
                 onClick={() => setResourcesDropdownOpen(!resourcesDropdownOpen)}
-                className="flex items-center gap-1 text-gray-700 hover:text-blue-600 transition-colors font-medium"
+                className="flex items-center gap-1 text-[var(--text-main)] hover:text-purple-600 transition-colors font-medium"
               >
                 Explore <ChevronDown className="w-4 h-4" />
               </button>
               {resourcesDropdownOpen && (
-                <div className="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-lg border border-gray-200 py-2 z-50">
+                <div className="absolute right-0 mt-2 w-48 bg-[var(--bg-card)] rounded-xl shadow-lg border border-[var(--border-main)] py-2 z-50">
                   {publicLinks.map((link) => (
                     <Link
                       key={link.href}
                       to={link.href}
-                      className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                      className="block px-4 py-2 text-sm text-[var(--text-main)] hover:bg-[var(--bg-active)]"
                       onClick={() => setResourcesDropdownOpen(false)}
                     >
                       {link.label}
@@ -83,15 +91,12 @@ const Navbar = ({ onMobileMenuToggle, variant, user }) => {
               )}
             </div>
 
-            {/* Theme Toggle */}
-            <ThemeToggle />
-
             {/* Notification bell */}
             <Link
               to="/notifications"
-              className="relative p-2 rounded-full hover:bg-gray-100 dark:hover:bg-slate-800 transition-colors"
+              className="relative p-2 rounded-full hover:bg-[var(--bg-active)] transition-colors"
             >
-              <Bell className="w-5 h-5 text-gray-700" />
+              <Bell className="w-5 h-5 text-[var(--text-main)]" />
               {unreadCount > 0 && (
                 <span className="absolute top-1 right-1 w-4 h-4 bg-red-500 text-white text-xs flex items-center justify-center rounded-full">
                   {unreadCount > 9 ? "9+" : unreadCount}
@@ -99,55 +104,53 @@ const Navbar = ({ onMobileMenuToggle, variant, user }) => {
               )}
             </Link>
 
-            {/* User avatar dropdown with logout confirmation */}
+            {/* User avatar dropdown */}
             <div className="relative" ref={profileRef}>
               <button
                 onClick={() => setProfileMenuOpen(!profileMenuOpen)}
-                className="flex items-center gap-2 p-2 rounded-full hover:bg-gray-100 transition-colors"
+                className="flex items-center gap-2 p-2 rounded-full hover:bg-[var(--bg-active)] transition-colors"
                 aria-label="User menu"
               >
-                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center text-white">
+                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-purple-500 to-purple-700 flex items-center justify-center text-white">
                   <User className="w-4 h-4" />
                 </div>
               </button>
               {profileMenuOpen && (
-                <div className="absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-lg border border-gray-200 py-2 z-50">
+                <div className="absolute right-0 mt-2 w-56 bg-[var(--bg-card)] rounded-xl shadow-lg border border-[var(--border-main)] py-2 z-50">
                   {!showLogoutConfirm ? (
-                    // Normal dropdown items
                     <>
-                      <div className="px-4 py-3 border-b border-gray-100 flex items-center justify-between">
+                      <div className="px-4 py-3 border-b border-[var(--border-main)] flex items-center justify-between">
                         <div className="flex flex-col">
-                          <span className="text-sm font-semibold text-gray-900">
+                          <span className="text-sm font-semibold text-[var(--text-main)]">
                             {authUser?.full_name || "Student"}
                           </span>
-                          <span className="text-xs text-gray-500">
+                          <span className="text-xs text-[var(--text-muted)]">
                             {authUser?.reputation_points || 0} Rep Points
                           </span>
                         </div>
                         {authUser?.is_moderator && (
-                          <span className="px-2 py-1 bg-blue-50 text-blue-600 border border-blue-200 rounded text-[10px] font-bold uppercase">
+                          <span className="px-2 py-1 bg-purple-50 text-purple-600 border border-purple-200 rounded text-[10px] font-bold uppercase">
                             Mod
                           </span>
                         )}
                       </div>
                       <Link
                         to="/profile"
-                        className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                        className="block px-4 py-2 text-sm text-[var(--text-main)] hover:bg-[var(--bg-active)]"
                         onClick={() => setProfileMenuOpen(false)}
                       >
                         Profile
                       </Link>
                       <button
                         onClick={() => setShowLogoutConfirm(true)}
-                        className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                        className="block w-full text-left px-4 py-2 text-sm text-[var(--text-main)] hover:bg-[var(--bg-active)]"
                       >
                         Logout
                       </button>
                     </>
                   ) : (
-                    // Logout confirmation view
                     <>
-                      <div className="px-4 py-3 text-sm text-gray-700 border-b border-gray-100">
+                      <div className="px-4 py-3 text-sm text-[var(--text-main)] border-b border-[var(--border-main)]">
                         Are you sure you want to logout?
                       </div>
                       <div className="flex items-center justify-between p-2 gap-2">
@@ -156,7 +159,7 @@ const Navbar = ({ onMobileMenuToggle, variant, user }) => {
                             setShowLogoutConfirm(false);
                             setProfileMenuOpen(false);
                           }}
-                          className="flex-1 px-3 py-1.5 text-sm border border-gray-300 rounded-lg hover:bg-gray-100 transition-colors"
+                          className="flex-1 px-3 py-1.5 text-sm border border-[var(--border-main)] rounded-lg hover:bg-[var(--bg-active)] transition-colors"
                         >
                           Cancel
                         </button>
@@ -178,18 +181,17 @@ const Navbar = ({ onMobileMenuToggle, variant, user }) => {
             </div>
           </>
         ) : (
-          // Public auth buttons
-          <div className="hidden sm:flex items-center gap-2">
-            <ThemeToggle />
+          // Public variant: login and register buttons
+          <div className="flex items-center gap-2">
             <Link
               to="/login"
-              className="text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 font-medium transition-all duration-300 hover:scale-105 px-3 py-1.5 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-900/20"
+              className="text-[var(--text-main)] hover:text-purple-600 font-medium transition-all duration-300 hover:scale-105 px-3 py-1.5 rounded-lg hover:bg-[var(--bg-active)]"
             >
               Login
             </Link>
             <Link
               to="/register"
-              className="px-5 py-2.5 rounded-lg bg-gradient-to-r from-blue-600 to-purple-600 text-white font-medium hover:shadow-lg hover:shadow-blue-500/30 transition-all duration-300 transform hover:-translate-y-0.5"
+              className="hidden lg:block px-5 py-2.5 rounded-lg bg-gradient-to-r from-purple-600 to-purple-800 text-white font-medium hover:shadow-lg hover:shadow-purple-500/30 transition-all duration-300 transform hover:-translate-y-0.5"
             >
               Register
             </Link>

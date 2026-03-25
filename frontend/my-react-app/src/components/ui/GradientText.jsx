@@ -1,7 +1,7 @@
 const GradientText = ({
   children,
   className = "",
-  gradient = "from-blue-600 to-purple-600",
+  gradient = "from-purple-600 to-purple-800",
 }) => {
   return (
     <span

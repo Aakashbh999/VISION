@@ -66,9 +66,9 @@ const Card = ({ title, description, icon, color = "blue", link, linkText }) => {
             className={`mt-4 sm:mt-5 pt-3 sm:pt-4 border-t border-border-main dark:border-border-main transition-all duration-300 ${"lg:opacity-0 lg:group-hover:opacity-100"}`}
           >
             <Link
-              to={link}
-              className={`text-text-main dark:text-text-main text-xs sm:text-sm font-medium hover:text-text-muted dark:hover:text-text-muted flex items-center gap-1`}
-            >
+  to={link}
+  className={`text-purple-600 text-xs sm:text-sm font-medium hover:text-purple-800 flex items-center gap-1`}
+>
               {linkText}
               <span className="transform group-hover:translate-x-1 transition-transform duration-300">
                 →

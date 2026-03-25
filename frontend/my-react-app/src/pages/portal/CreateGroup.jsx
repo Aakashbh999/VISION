@@ -90,22 +90,22 @@ const CreateGroup = () => {
   const prevStep = () => setStep(1);
 
   return (
-    <div className="max-w-xl mx-auto space-y-8 pb-10">
+    <div className="max-w-xl mx-auto space-y-8 pb-10 px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
       <Link
         to="/groups"
-        className="inline-flex items-center gap-2 text-sm font-black text-slate-400 hover:text-[#7c3aed] uppercase tracking-widest transition-colors group"
+        className="inline-flex items-center gap-2 text-sm font-black text-[var(--text-muted)] hover:text-purple-600 uppercase tracking-widest transition-colors group"
       >
         <ChevronLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
         Return to Labyrinth
       </Link>
 
-      <div className="relative bg-white/70 backdrop-blur-2xl rounded-[2.5rem] border border-slate-200/60 p-10 shadow-2xl shadow-purple-500/5 overflow-hidden">
+      <div className="relative bg-[var(--bg-card)]/70 backdrop-blur-2xl rounded-[2.5rem] border border-[var(--border-main)]/60 p-6 sm:p-10 shadow-2xl shadow-purple-500/5 overflow-hidden">
         {/* Progress Bar */}
-        <div className="absolute top-0 left-0 w-full h-1.5 bg-slate-100 flex">
+        <div className="absolute top-0 left-0 w-full h-1.5 bg-[var(--bg-active)] flex">
           <motion.div
             initial={{ width: "0%" }}
             animate={{ width: step === 1 ? "50%" : "100%" }}
-            className="h-full bg-gradient-to-r from-purple-500 to-indigo-600 shadow-[0_0_10px_rgba(124,58,237,0.5)]"
+            className="h-full bg-gradient-to-r from-purple-500 to-purple-600 shadow-[0_0_10px_rgba(124,58,237,0.5)]"
           />
         </div>
 
@@ -128,10 +128,10 @@ const CreateGroup = () => {
                 )}
               </AnimatePresence>
             </div>
-            <h1 className="text-3xl font-black text-slate-900 tracking-tight leading-none">
+            <h1 className="text-3xl font-black text-[var(--text-main)] tracking-tight leading-none">
               {step === 1 ? "Initialize Node" : "Select Identity"}
             </h1>
-            <p className="text-slate-500 font-medium">
+            <p className="text-[var(--text-muted)] font-medium">
               {step === 1
                 ? "Define the purpose and designation of your learning circle."
                 : "Choose an interface icon that represents your group's focus."}
@@ -148,7 +148,7 @@ const CreateGroup = () => {
                 className="space-y-6"
               >
                 <div className="space-y-2">
-                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">
+                  <label className="text-[10px] font-black text-[var(--text-muted)] uppercase tracking-widest ml-1">
                     Designation (Name)
                   </label>
                   <input
@@ -157,13 +157,13 @@ const CreateGroup = () => {
                     required
                     value={formData.name}
                     onChange={handleChange}
-                    className="w-full px-6 py-4 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-4 focus:ring-purple-500/10 focus:border-purple-500 outline-none transition-all font-bold text-slate-800"
+                    className="w-full px-6 py-4 bg-[var(--bg-active)] border border-[var(--border-main)] rounded-2xl focus:ring-4 focus:ring-purple-500/10 focus:border-purple-500 outline-none transition-all font-bold text-[var(--text-main)] placeholder:text-[var(--text-muted)]"
                     placeholder="e.g., QUANTUM_ALGORITHMS_2026"
                   />
                 </div>
 
                 <div className="space-y-2">
-                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">
+                  <label className="text-[10px] font-black text-[var(--text-muted)] uppercase tracking-widest ml-1">
                     Operational Scope (Description)
                   </label>
                   <textarea
@@ -171,11 +171,11 @@ const CreateGroup = () => {
                     rows="4"
                     value={formData.description}
                     onChange={handleChange}
-                    className="w-full px-6 py-4 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-4 focus:ring-purple-500/10 focus:border-purple-500 outline-none resize-none transition-all font-medium text-slate-800"
+                    className="w-full px-6 py-4 bg-[var(--bg-active)] border border-[var(--border-main)] rounded-2xl focus:ring-4 focus:ring-purple-500/10 focus:border-purple-500 outline-none resize-none transition-all font-medium text-[var(--text-main)] placeholder:text-[var(--text-muted)]"
                     placeholder="What is the mission of this node?"
                   />
                   <p
-                    className={`text-xs text-right ${countWords(formData.description) > MAX_GROUP_DESCRIPTION_WORDS ? "text-red-600" : "text-slate-500"}`}
+                    className={`text-xs text-right ${countWords(formData.description) > MAX_GROUP_DESCRIPTION_WORDS ? "text-red-600" : "text-[var(--text-muted)]"}`}
                   >
                     {countWords(formData.description)}/{MAX_GROUP_DESCRIPTION_WORDS} words
                   </p>
@@ -218,14 +218,14 @@ const CreateGroup = () => {
                         className={`group p-6 rounded-3xl border-2 transition-all flex flex-col items-center gap-3 ${
                           isActive
                             ? "bg-purple-50 border-purple-500 shadow-lg shadow-purple-500/10"
-                            : "bg-slate-50 border-slate-100 hover:border-slate-200"
+                            : "bg-[var(--bg-active)] border-[var(--border-main)] hover:border-[var(--border-main)]"
                         }`}
                       >
                         <IconComp
-                          className={`w-8 h-8 ${isActive ? item.color : "text-slate-400 group-hover:text-slate-600"}`}
+                          className={`w-8 h-8 ${isActive ? item.color : "text-[var(--text-muted)] group-hover:text-[var(--text-main)]"}`}
                         />
                         <span
-                          className={`text-[9px] font-black uppercase tracking-tighter text-center ${isActive ? "text-purple-700" : "text-slate-400"}`}
+                          className={`text-[9px] font-black uppercase tracking-tighter text-center ${isActive ? "text-purple-700" : "text-[var(--text-muted)]"}`}
                         >
                           {item.label}
                         </span>
@@ -234,8 +234,8 @@ const CreateGroup = () => {
                   })}
                 </div>
 
-                <div className="space-y-4 pt-4 border-t border-slate-100">
-                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">
+                <div className="space-y-4 pt-4 border-t border-[var(--border-main)]">
+                  <label className="text-[10px] font-black text-[var(--text-muted)] uppercase tracking-widest ml-1">
                     Security Policy
                   </label>
                   <div className="grid grid-cols-1 gap-3">
@@ -249,21 +249,21 @@ const CreateGroup = () => {
                         className={`flex items-start text-left gap-4 p-4 rounded-2xl border-2 transition-all ${
                           formData.privacy_type === type.id
                             ? "bg-purple-50 border-purple-500 shadow-sm"
-                            : "bg-white border-slate-100 hover:border-slate-200"
+                            : "bg-[var(--bg-card)] border-[var(--border-main)] hover:border-[var(--border-main)]"
                         }`}
                       >
                         <div
-                          className={`mt-0.5 p-1 rounded-full ${formData.privacy_type === type.id ? "bg-purple-500" : "bg-slate-200"}`}
+                          className={`mt-0.5 p-1 rounded-full ${formData.privacy_type === type.id ? "bg-purple-500" : "bg-[var(--text-muted)]"}`}
                         >
                           <div className="w-2 h-2 rounded-full bg-white" />
                         </div>
                         <div className="flex flex-col">
                           <span
-                            className={`text-sm font-bold ${formData.privacy_type === type.id ? "text-purple-900" : "text-slate-700"}`}
+                            className={`text-sm font-bold ${formData.privacy_type === type.id ? "text-purple-900" : "text-[var(--text-main)]"}`}
                           >
                             {type.label}
                           </span>
-                          <span className="text-xs font-medium text-slate-500">{type.desc}</span>
+                          <span className="text-xs font-medium text-[var(--text-muted)]">{type.desc}</span>
                         </div>
                       </button>
                     ))}
@@ -274,14 +274,14 @@ const CreateGroup = () => {
                   <button
                     type="button"
                     onClick={prevStep}
-                    className="flex-1 py-4 bg-slate-100 text-slate-600 font-black rounded-2xl hover:bg-slate-200 transition-all"
+                    className="flex-1 py-4 bg-[var(--bg-active)] text-[var(--text-main)] font-black rounded-2xl hover:bg-[var(--border-main)] transition-all"
                   >
                     Back
                   </button>
                   <button
                     onClick={handleSubmit}
                     disabled={mutation.isLoading}
-                    className="flex-[2] relative overflow-hidden group py-4 bg-[#7c3aed] text-white font-black rounded-2xl shadow-xl shadow-purple-500/30 hover:shadow-purple-500/50 transition-all active:scale-[0.98]"
+                    className="flex-[2] relative overflow-hidden group py-4 bg-purple-600 text-white font-black rounded-2xl shadow-xl shadow-purple-500/30 hover:shadow-purple-500/50 transition-all active:scale-[0.98]"
                   >
                     <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
                     <div className="flex items-center justify-center gap-2">
@@ -297,7 +297,7 @@ const CreateGroup = () => {
       </div>
 
       <footer className="text-center px-6">
-        <p className="text-[10px] text-slate-400 font-bold uppercase tracking-[0.2em] flex items-center justify-center gap-2">
+        <p className="text-[10px] text-[var(--text-muted)] font-bold uppercase tracking-[0.2em] flex items-center justify-center gap-2">
           <Shield className="w-3 h-3" /> VisionXP Protocol v4.0.1 — Secure Creation Mode
         </p>
       </footer>

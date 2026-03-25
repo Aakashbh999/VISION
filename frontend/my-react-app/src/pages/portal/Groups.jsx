@@ -17,7 +17,6 @@ import {
   ShieldAlert,
   EyeOff,
 } from "lucide-react";
-// eslint-disable-next-line no-unused-vars
 import { motion, AnimatePresence } from "framer-motion";
 import api from "../../services/api";
 import { toast } from "react-toastify";
@@ -26,7 +25,6 @@ import UniversalSearch from "../../components/ui/UniversalSearch";
 const Groups = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const [sort, setSort] = useState(searchParams.get("sort") || "latest");
-  const [degree, setDegree] = useState(searchParams.get("degree") || "");
   const [filters, setFilters] = useState({
     search: searchParams.get("search") || "",
     sort: searchParams.get("sort") || "latest",
@@ -51,8 +49,6 @@ const Groups = () => {
     fetchDegrees();
   }, []);
 
-  // Update URL params efficiently
-
   useEffect(() => {
     const params = new URLSearchParams();
     if (filters.search) params.set("search", filters.search);
@@ -67,7 +63,6 @@ const Groups = () => {
     error,
   } = useGroups(filters);
 
-  // Extract groups from possibly structured response (fallback case)
   const groupsList = Array.isArray(data) ? data : (data?.groups || []);
 
   const containerVariants = {
@@ -96,7 +91,7 @@ const Groups = () => {
   return (
     <div className="max-w-6xl mx-auto space-y-8 pb-20 px-4">
       {/* Premium Header Section */}
-      <div className="relative overflow-hidden bg-white/40 backdrop-blur-xl border border-white/40 rounded-3xl p-8 shadow-2xl shadow-purple-500/5">
+      <div className="relative overflow-hidden bg-[var(--bg-card)]/40 backdrop-blur-xl border border-[var(--border-main)]/40 rounded-3xl p-8 shadow-2xl shadow-purple-500/5">
         <div className="absolute top-0 right-0 -mr-20 -mt-20 w-64 h-64 bg-purple-500/10 rounded-full blur-3xl pointer-events-none" />
         <div className="absolute bottom-0 left-0 -ml-20 -mb-20 w-64 h-64 bg-blue-500/10 rounded-full blur-3xl pointer-events-none" />
 
@@ -105,14 +100,14 @@ const Groups = () => {
             <motion.h1
               initial={{ x: -20, opacity: 0 }}
               animate={{ x: 0, opacity: 1 }}
-              className="text-4xl font-black text-slate-900 tracking-tight flex items-center gap-3"
+              className="text-4xl font-black text-[var(--text-main)] tracking-tight flex items-center gap-3"
             >
               <div className="p-3 bg-purple-600 rounded-2xl shadow-lg shadow-purple-500/30">
                 <Users className="w-8 h-8 text-white" />
               </div>
               Learning Circles
             </motion.h1>
-            <p className="text-slate-500 font-medium text-lg ml-1">
+            <p className="text-[var(--text-muted)] font-medium text-lg ml-1">
               Connect, collaborate, and conquer complex topics together.
             </p>
           </div>
@@ -147,8 +142,8 @@ const Groups = () => {
               }}
               className={`group px-8 py-3.5 font-black rounded-2xl transition-all flex items-center justify-center gap-2 shadow-xl shrink-0 ${
                 canCreateGroup
-                  ? "bg-[#7c3aed] text-white hover:bg-purple-700 shadow-purple-500/40 relative overflow-hidden"
-                  : "bg-slate-100 text-slate-400 cursor-not-allowed border border-slate-200"
+                  ? "bg-purple-600 text-white hover:bg-purple-700 shadow-purple-500/40 relative overflow-hidden"
+                  : "bg-[var(--bg-active)] text-[var(--text-muted)] cursor-not-allowed border border-[var(--border-main)]"
               }`}
             >
               {canCreateGroup && (
@@ -165,7 +160,7 @@ const Groups = () => {
         </div>
 
         {/* Dynamic Filters Bar */}
-        <div className="mt-10 flex flex-col md:flex-row gap-4 p-2 bg-slate-100/50 rounded-[2rem] border border-slate-200/50 backdrop-blur-sm">
+        <div className="mt-10 flex flex-col md:flex-row gap-4 p-2 bg-[var(--bg-active)]/50 rounded-[2rem] border border-[var(--border-main)]/50 backdrop-blur-sm">
           <div className="flex-1">
             <UniversalSearch
               placeholder="Search by topic, group name, or mentor..."
@@ -176,11 +171,15 @@ const Groups = () => {
             />
           </div>
 
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap gap-2 items-center">
             <select
-              value={degree}
-              onChange={(e) => setDegree(e.target.value)}
-              className="bg-white border border-slate-200 rounded-2xl px-6 py-2 text-sm font-black text-slate-600 focus:outline-none focus:ring-4 focus:ring-purple-500/10 appearance-none cursor-pointer hover:border-purple-300 transition-all"
+              value={filters.degree}
+              onChange={(e) => {
+                const val = e.target.value;
+                setSort(val === "" ? sort : sort);
+                setFilters(prev => ({ ...prev, degree: val }));
+              }}
+              className="min-w-0 flex-1 sm:flex-none bg-[var(--bg-card)] border border-[var(--border-main)] rounded-2xl px-4 py-2 text-sm font-black text-[var(--text-main)] focus:outline-none focus:ring-4 focus:ring-purple-500/10 appearance-none cursor-pointer hover:border-purple-300 transition-all"
             >
               <option value="">All Branches</option>
               {degrees.map((deg) => (
@@ -190,7 +189,7 @@ const Groups = () => {
               ))}
             </select>
 
-            <div className="flex bg-white/80 p-1 rounded-2xl border border-slate-200 shadow-sm">
+            <div className="flex bg-[var(--bg-card)]/80 p-1 rounded-2xl border border-[var(--border-main)] shadow-sm">
               {[
                 { value: "latest", label: "Recent", icon: Sparkles },
                 { value: "active", label: "Hot", icon: TrendingUp },
@@ -198,11 +197,14 @@ const Groups = () => {
               ].map(({ value, label, icon: SectionIcon }) => (
                 <button
                   key={value}
-                  onClick={() => setSort(value)}
+                  onClick={() => {
+                    setSort(value);
+                    setFilters(prev => ({ ...prev, sort: value }));
+                  }}
                   className={`flex items-center gap-2 px-5 py-2 text-xs font-black rounded-xl transition-all ${
                     sort === value
                       ? "bg-purple-600 text-white shadow-lg shadow-purple-500/30"
-                      : "text-slate-500 hover:text-slate-900 hover:bg-slate-50"
+                      : "text-[var(--text-muted)] hover:text-[var(--text-main)] hover:bg-[var(--bg-active)]"
                   }`}
                 >
                   {createElement(SectionIcon, { className: "w-3.5 h-3.5" })}{" "}
@@ -219,7 +221,7 @@ const Groups = () => {
         {isLoading ? (
           <div className="flex flex-col items-center justify-center py-24">
             <LoadingSpinner />
-            <p className="text-slate-400 font-bold mt-4 uppercase tracking-widest text-xs">Summoning Circles...</p>
+            <p className="text-[var(--text-muted)] font-bold mt-4 uppercase tracking-widest text-xs">Summoning Circles...</p>
           </div>
         ) : error ? (
            <div className="bg-rose-50 border border-rose-100 text-rose-600 p-12 rounded-[2.5rem] text-center font-bold">
@@ -234,18 +236,18 @@ const Groups = () => {
           >
             <motion.div
               variants={itemVariants}
-              className="bg-white/60 backdrop-blur-xl border border-slate-200/50 rounded-[3rem] p-24 text-center shadow-inner"
+              className="bg-[var(--bg-card)]/60 backdrop-blur-xl border border-[var(--border-main)]/50 rounded-[3rem] p-24 text-center shadow-inner"
             >
               {data?.noResults ? (
                 <div className="max-w-2xl mx-auto space-y-10 px-4 text-left">
-                  <div className="w-24 h-24 bg-indigo-50 rounded-full flex items-center justify-center mx-auto shadow-sm">
-                      <Search className="w-10 h-10 text-indigo-400" />
+                  <div className="w-24 h-24 bg-purple-50 rounded-full flex items-center justify-center mx-auto shadow-sm">
+                      <Search className="w-10 h-10 text-purple-400" />
                   </div>
                   <div className="space-y-3 text-center">
-                      <h3 className="text-3xl font-black text-slate-900 tracking-tight uppercase">
+                      <h3 className="text-3xl font-black text-[var(--text-main)] tracking-tight uppercase">
                           No matches for "{filters.search}"
                       </h3>
-                      <p className="text-slate-500 font-bold text-lg">
+                      <p className="text-[var(--text-muted)] font-bold text-lg">
                           We couldn't find exactly that, but these growing circles might be perfect for you:
                       </p>
                   </div>
@@ -255,14 +257,14 @@ const Groups = () => {
                           <Link 
                               key={rec.id}
                               to={`/groups/${rec.id}`}
-                              className="group p-6 bg-white border border-slate-100 rounded-3xl hover:border-indigo-200 hover:shadow-2xl transition-all duration-300 flex items-center gap-5"
+                              className="group p-6 bg-[var(--bg-card)] border border-[var(--border-main)] rounded-3xl hover:border-purple-200 hover:shadow-2xl transition-all duration-300 flex items-center gap-5"
                           >
-                              <div className="w-14 h-14 rounded-2xl bg-slate-50 flex items-center justify-center text-indigo-600 font-black text-xl shrink-0 group-hover:scale-110 transition-transform">
+                              <div className="w-14 h-14 rounded-2xl bg-[var(--bg-active)] flex items-center justify-center text-purple-600 font-black text-xl shrink-0 group-hover:scale-110 transition-transform">
                                   {rec.group_image ? <img src={rec.group_image} className="w-full h-full object-cover rounded-2xl" /> : rec.name.charAt(0)}
                               </div>
                               <div className="flex-1 min-w-0">
-                                  <div className="font-black text-slate-800 truncate group-hover:text-indigo-600 transition-colors uppercase tracking-tight text-sm">{rec.name}</div>
-                                  <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1 flex items-center gap-1.5">
+                                  <div className="font-black text-[var(--text-main)] truncate group-hover:text-purple-600 transition-colors uppercase tracking-tight text-sm">{rec.name}</div>
+                                  <div className="text-[10px] font-black text-[var(--text-muted)] uppercase tracking-widest mt-1 flex items-center gap-1.5">
                                       <Users className="w-3 h-3" /> {rec.member_count} Members
                                   </div>
                               </div>
@@ -272,13 +274,13 @@ const Groups = () => {
                 </div>
               ) : (
                 <div className="text-center">
-                  <div className="w-24 h-24 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-6">
-                    <Users className="w-10 h-10 text-slate-300" />
+                  <div className="w-24 h-24 bg-[var(--bg-active)] rounded-full flex items-center justify-center mx-auto mb-6">
+                    <Users className="w-10 h-10 text-[var(--text-muted)]" />
                   </div>
-                  <h3 className="text-2xl font-black text-slate-900 mb-2">
+                  <h3 className="text-2xl font-black text-[var(--text-main)] mb-2">
                     No Circles Found
                   </h3>
-                  <p className="text-slate-500 max-w-xs mx-auto">
+                  <p className="text-[var(--text-muted)] max-w-xs mx-auto">
                     {filters.search
                       ? "Try adjusting your filters or search terms."
                       : "The labyrinth is empty. Be the first to start a circle."}
@@ -306,9 +308,9 @@ const Groups = () => {
                 >
                   <Link
                     to={`/groups/${groupId}`}
-                    className="relative block h-full bg-white/70 backdrop-blur-xl border border-slate-200/60 rounded-[2.5rem] overflow-hidden hover:shadow-[0_32px_64px_-16px_rgba(124,58,237,0.12)] hover:border-purple-300 transition-all duration-500 flex flex-col group shadow-sm"
+                    className="relative block h-full bg-[var(--bg-card)]/70 backdrop-blur-xl border border-[var(--border-main)]/60 rounded-[2.5rem] overflow-hidden hover:shadow-[0_32px_64px_-16px_rgba(124,58,237,0.12)] hover:border-purple-300 transition-all duration-500 flex flex-col group shadow-sm"
                   >
-                    <div className="h-28 relative overflow-hidden bg-slate-600">
+                    <div className="h-28 relative overflow-hidden bg-purple-600/30">
                       <div className="absolute inset-0 opacity-40 bg-[radial-gradient(at_top_right,rgba(124,58,237,0.8),transparent_50%),radial-gradient(at_bottom_left,rgba(59,130,246,0.8),transparent_50%)] animate-pulse-slow" />
                       {group.banner_image && (
                         <img
@@ -337,7 +339,7 @@ const Groups = () => {
                     </div>
 
                     <div className="px-6 pb-6 -mt-10 relative flex-1 flex flex-col">
-                      <div className="w-20 h-20 rounded-full bg-white p-1 shadow-2xl shadow-purple-500/20 mb-4 group-hover:rotate-6 transition-transform">
+                      <div className="w-20 h-20 rounded-full bg-[var(--bg-card)] p-1 shadow-2xl shadow-purple-500/20 mb-4 group-hover:rotate-6 transition-transform">
                         <div className="w-full h-full rounded-full bg-purple-50 border-2 border-purple-100 flex items-center justify-center text-purple-600 font-black text-2xl overflow-hidden shadow-inner">
                           {group.group_image ? (
                             <img
@@ -352,37 +354,37 @@ const Groups = () => {
                       </div>
 
                       <div className="space-y-1 mb-4">
-                        <h2 className="text-xl font-black text-slate-900 group-hover:text-purple-600 transition-colors leading-snug">
+                        <h2 className="text-xl font-black text-[var(--text-main)] group-hover:text-purple-600 transition-colors leading-snug">
                           {group.name}
                         </h2>
-                        <p className="text-sm text-slate-500 line-clamp-2 font-medium leading-relaxed">
+                        <p className="text-sm text-[var(--text-muted)] line-clamp-2 font-medium leading-relaxed">
                           {group.description ||
                             "Synthesizing collective knowledge through structured collaboration."}
                         </p>
                       </div>
 
-                      <div className="mt-auto pt-6 border-t border-slate-100 flex items-center justify-between">
+                      <div className="mt-auto pt-6 border-t border-[var(--border-main)] flex items-center justify-between">
                         <div className="flex items-center">
                           <div className="flex -space-x-3 overflow-hidden">
                             {[...Array(Math.min(3, group.members || 0))].map(
                               (_, i) => (
                                 <div
                                   key={i}
-                                  className="inline-block h-8 w-8 rounded-full ring-2 ring-white bg-slate-100 border border-slate-200 flex items-center justify-center text-[10px] font-black text-slate-400"
+                                  className="inline-block h-8 w-8 rounded-full ring-2 ring-[var(--bg-card)] bg-[var(--bg-active)] border border-[var(--border-main)] flex items-center justify-center text-[10px] font-black text-[var(--text-muted)]"
                                 >
                                   {String.fromCharCode(65 + i)}
                                 </div>
                               ),
                             )}
                           </div>
-                          <span className="ml-3 text-xs font-black text-slate-400 uppercase tracking-tight">
+                          <span className="ml-3 text-xs font-black text-[var(--text-muted)] uppercase tracking-tight">
                             {group.members > 3
                               ? `+${group.members - 3} collaborators`
                               : `${group.members} active`}
                           </span>
                         </div>
 
-                        <div className="w-10 h-10 rounded-2xl bg-slate-50 flex items-center justify-center text-slate-400 group-hover:bg-purple-600 group-hover:text-white transition-all shadow-sm">
+                        <div className="w-10 h-10 rounded-2xl bg-[var(--bg-active)] flex items-center justify-center text-[var(--text-muted)] group-hover:bg-purple-600 group-hover:text-white transition-all shadow-sm">
                           <ArrowRight className="w-5 h-5" />
                         </div>
                       </div>

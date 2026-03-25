@@ -62,10 +62,10 @@ const Clubs = () => {
   };
 
   return (
-    <div className="max-w-6xl mx-auto space-y-8 pb-20 px-4">
+    <div className="max-w-6xl mx-auto space-y-8 pb-20 px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
       {/* Header Section */}
-      <div className="relative bg-white/40 backdrop-blur-xl border border-white/40 rounded-[2.5rem] p-8 shadow-2xl shadow-indigo-500/5 overflow-hidden">
-        <div className="absolute top-0 right-0 -mr-20 -mt-20 w-64 h-64 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none" />
+      <div className="relative bg-[var(--bg-card)]/40 backdrop-blur-xl border border-[var(--border-main)]/40 rounded-[2.5rem] p-8 shadow-2xl shadow-purple-500/5 overflow-hidden">
+        <div className="absolute top-0 right-0 -mr-20 -mt-20 w-64 h-64 bg-purple-500/10 rounded-full blur-3xl pointer-events-none" />
         <div className="absolute bottom-0 left-0 -ml-20 -mb-20 w-64 h-64 bg-purple-500/10 rounded-full blur-3xl pointer-events-none" />
 
         <div className="relative flex flex-col md:flex-row md:items-center justify-between gap-6">
@@ -73,14 +73,14 @@ const Clubs = () => {
             <motion.h1 
               initial={{ x: -20, opacity: 0 }}
               animate={{ x: 0, opacity: 1 }}
-              className="text-4xl font-black text-slate-900 tracking-tight flex items-center gap-3"
+              className="text-4xl font-black text-[var(--text-main)] tracking-tight flex items-center gap-3"
             >
-              <div className="p-3 bg-indigo-600 rounded-2xl shadow-lg shadow-indigo-500/30">
+              <div className="p-3 bg-purple-600 rounded-2xl shadow-lg shadow-purple-500/30">
                 <Building2 className="w-8 h-8 text-white" />
               </div>
               Campus Hub
             </motion.h1>
-            <p className="text-slate-500 font-medium text-lg ml-1">
+            <p className="text-[var(--text-muted)] font-medium text-lg ml-1">
               Find your community. Discover IT clubs and organizations.
             </p>
           </div>
@@ -100,8 +100,8 @@ const Clubs = () => {
       {(!isLoading && !error && !filters.search && forYouClubs.length > 0) && (
         <div className="space-y-4">
           <div className="flex items-center gap-2 px-2">
-            <Sparkles className="w-5 h-5 text-indigo-500" />
-            <h2 className="text-xl font-black text-slate-900">For You</h2>
+            <Sparkles className="w-5 h-5 text-purple-500" />
+            <h2 className="text-xl font-black text-[var(--text-main)]">For You</h2>
           </div>
           
           <div className="flex gap-6 overflow-x-auto pb-6 pt-2 px-2 snap-x hide-scrollbar">
@@ -109,14 +109,14 @@ const Clubs = () => {
               <Link 
                 key={`foryou-${club.id}`} 
                 to={`/clubs/${club.slug}`}
-                className="snap-start shrink-0 w-80 group relative bg-white border border-slate-200 rounded-[2rem] p-6 hover:shadow-2xl hover:shadow-indigo-500/10 hover:border-indigo-200 transition-all duration-300"
+                className="snap-start shrink-0 w-80 group relative bg-[var(--bg-card)] border border-[var(--border-main)] rounded-[2rem] p-6 hover:shadow-2xl hover:shadow-purple-500/10 hover:border-purple-200 transition-all duration-300"
               >
                 <div className="absolute top-4 right-4 flex gap-2">
                 </div>
                 
                 <div className="flex flex-col items-center text-center space-y-4 mt-4">
-                  <div className="w-20 h-20 rounded-full bg-slate-50 p-1 shadow-inner border border-slate-100 group-hover:scale-105 transition-transform duration-300">
-                    <div className="w-full h-full rounded-full bg-white flex items-center justify-center overflow-hidden text-indigo-600 font-black text-2xl">
+                  <div className="w-20 h-20 rounded-full bg-[var(--bg-active)] p-1 shadow-inner border border-[var(--border-main)] group-hover:scale-105 transition-transform duration-300">
+                    <div className="w-full h-full rounded-full bg-[var(--bg-card)] flex items-center justify-center overflow-hidden text-purple-600 font-black text-2xl">
                       {club.logo_url ? (
                         <img src={club.logo_url} className="w-full h-full object-cover" alt="" />
                       ) : (
@@ -125,8 +125,8 @@ const Clubs = () => {
                     </div>
                   </div>
                   <div>
-                    <h3 className="font-black text-lg text-slate-900 group-hover:text-indigo-600 transition-colors line-clamp-1">{club.club_name}</h3>
-                    <p className="text-sm font-medium text-slate-500 mt-1">{club.specialty || 'General Tech'}</p>
+                    <h3 className="font-black text-lg text-[var(--text-main)] group-hover:text-purple-600 transition-colors line-clamp-1">{club.club_name}</h3>
+                    <p className="text-sm font-medium text-[var(--text-muted)] mt-1">{club.specialty || 'General Tech'}</p>
                   </div>
                 </div>
               </Link>
@@ -143,8 +143,8 @@ const Clubs = () => {
             onClick={() => setFilters({ ...filters, specialty: s === "All" ? "" : s })}
             className={`whitespace-nowrap px-5 py-2.5 rounded-2xl text-sm font-black transition-all ${
               activeSpecialty === s 
-                ? "bg-slate-900 text-white shadow-lg shadow-slate-900/20" 
-                : "bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 hover:border-slate-300 hover:-translate-y-0.5"
+                ? "bg-purple-600 text-white shadow-lg shadow-purple-500/20" 
+                : "bg-[var(--bg-card)] border border-[var(--border-main)] text-[var(--text-main)] hover:bg-[var(--bg-active)] hover:border-[var(--border-main)] hover:-translate-y-0.5"
             }`}
           >
             {s === "All" ? "All Clubs" : `#${s}`}
@@ -157,7 +157,7 @@ const Clubs = () => {
         {isLoading ? (
           <div className="flex flex-col items-center justify-center py-24">
             <LoadingSpinner />
-            <p className="text-slate-400 font-bold mt-4 uppercase tracking-widest text-xs">Finding Communities...</p>
+            <p className="text-[var(--text-muted)] font-bold mt-4 uppercase tracking-widest text-xs">Finding Communities...</p>
           </div>
         ) : error ? (
            <div className="bg-rose-50 border border-rose-100 text-rose-600 p-12 rounded-[2.5rem] text-center font-bold">
@@ -167,23 +167,23 @@ const Clubs = () => {
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="bg-white/60 backdrop-blur-xl border border-slate-200/50 rounded-[3rem] p-24 text-center shadow-inner"
+            className="bg-[var(--bg-card)]/60 backdrop-blur-xl border border-[var(--border-main)]/50 rounded-[3rem] p-24 text-center shadow-inner"
           >
             <div className="max-w-md mx-auto space-y-6">
-              <div className="w-24 h-24 bg-indigo-50 rounded-[2rem] flex items-center justify-center mx-auto shadow-sm rotate-12">
-                <Search className="w-10 h-10 text-indigo-400 -rotate-12" />
+              <div className="w-24 h-24 bg-purple-50 rounded-[2rem] flex items-center justify-center mx-auto shadow-sm rotate-12">
+                <Search className="w-10 h-10 text-purple-400 -rotate-12" />
               </div>
               <div>
-                <h3 className="text-2xl font-black text-slate-900 mb-2">
+                <h3 className="text-2xl font-black text-[var(--text-main)] mb-2">
                   No clubs found for "{filters.search}"
                 </h3>
-                <p className="text-slate-500 font-medium">
+                <p className="text-[var(--text-muted)] font-medium">
                   We couldn't track down any communities matching your criteria. Want to start a movement?
                 </p>
               </div>
               <button 
                 onClick={() => window.open('mailto:admin@vision.edu.np?subject=New Club Request', '_blank')}
-                className="mt-4 px-8 py-3.5 bg-slate-900 text-white font-black rounded-2xl hover:bg-indigo-600 transition-colors shadow-lg shadow-slate-900/20 hover:-translate-y-1"
+                className="mt-4 px-8 py-3.5 bg-purple-600 text-white font-black rounded-2xl hover:bg-purple-700 transition-colors shadow-lg shadow-purple-500/20 hover:-translate-y-1"
               >
                 Register a New Club
               </button>
@@ -200,16 +200,16 @@ const Clubs = () => {
               <motion.div key={club.id} variants={itemVariants} className="group h-full">
                 <Link
                   to={`/clubs/${club.slug}`}
-                  className="relative block h-full bg-white border border-slate-200 rounded-[2.5rem] p-6 hover:shadow-[0_20px_40px_-15px_rgba(79,70,229,0.15)] hover:border-indigo-300 transition-all duration-300 flex flex-col overflow-hidden"
+                  className="relative block h-full bg-[var(--bg-card)] border border-[var(--border-main)] rounded-[2.5rem] p-6 hover:shadow-[0_20px_40px_-15px_rgba(124,58,237,0.15)] hover:border-purple-300 transition-all duration-300 flex flex-col overflow-hidden"
                 >
                   <div className="absolute top-0 right-0 p-4">
-                     <span className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest px-3 py-1.5 bg-slate-50 border border-slate-100 text-slate-600 rounded-full">
+                     <span className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest px-3 py-1.5 bg-[var(--bg-active)] border border-[var(--border-main)] text-[var(--text-muted)] rounded-full">
                         <Building2 className="w-3 h-3" /> Directory
                      </span>
                   </div>
 
                   <div className="flex items-start gap-4 pr-16">
-                    <div className="w-14 h-14 rounded-[1.25rem] bg-indigo-50 flex items-center justify-center text-indigo-600 font-black text-xl shrink-0 border border-indigo-100 shadow-sm group-hover:scale-105 transition-transform duration-300">
+                    <div className="w-14 h-14 rounded-[1.25rem] bg-purple-50 flex items-center justify-center text-purple-600 font-black text-xl shrink-0 border border-purple-100 shadow-sm group-hover:scale-105 transition-transform duration-300">
                       {club.logo_url ? (
                         <img
                           src={club.logo_url}
@@ -222,11 +222,11 @@ const Clubs = () => {
                     </div>
 
                     <div className="flex-1 min-w-0 pt-1">
-                      <h2 className="font-black text-lg text-slate-900 group-hover:text-indigo-600 transition-colors truncate">
+                      <h2 className="font-black text-lg text-[var(--text-main)] group-hover:text-purple-600 transition-colors truncate">
                         {club.club_name}
                       </h2>
 
-                      <div className="flex items-center gap-1.5 text-xs font-black text-slate-400 uppercase tracking-widest mt-1">
+                      <div className="flex items-center gap-1.5 text-xs font-black text-[var(--text-muted)] uppercase tracking-widest mt-1">
                         <MapPin className="w-3 h-3" />
                         <span className="truncate">
                           {club.location}
@@ -236,18 +236,18 @@ const Clubs = () => {
                     </div>
                   </div>
 
-                  <div className="mt-6 flex text-sm text-slate-500 font-medium line-clamp-2 leading-relaxed flex-1">
+                  <div className="mt-6 flex text-sm text-[var(--text-muted)] font-medium line-clamp-2 leading-relaxed flex-1">
                     {club.description_full ? club.description_full.substring(0, 100) + '...' : 'A technology community focusing on innovation and collaboration.'}
                   </div>
 
-                  <div className="flex items-center justify-between mt-6 pt-5 border-t border-slate-100/80">
+                  <div className="flex items-center justify-between mt-6 pt-5 border-t border-[var(--border-main)]/80">
                     <div className="flex items-center gap-2">
-                      <span className="inline-flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest px-2.5 py-1 text-indigo-600 bg-indigo-50 rounded-lg">
+                      <span className="inline-flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest px-2.5 py-1 text-purple-600 bg-purple-50 rounded-lg">
                         <Tag className="w-3 h-3" /> {club.specialty || "General"}
                       </span>
                     </div>
 
-                    <div className="w-8 h-8 rounded-full bg-slate-50 flex items-center justify-center text-slate-400 group-hover:bg-indigo-600 group-hover:text-white transition-all">
+                    <div className="w-8 h-8 rounded-full bg-[var(--bg-active)] flex items-center justify-center text-[var(--text-muted)] group-hover:bg-purple-600 group-hover:text-white transition-all">
                       <ArrowRight className="w-4 h-4" />
                     </div>
                   </div>

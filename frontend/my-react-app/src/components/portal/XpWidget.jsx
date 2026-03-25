@@ -43,7 +43,7 @@ const XpWidget = () => {
 
   if (isLoading || !stats) {
     return (
-      <div className="w-48 h-10 bg-gray-100 animate-pulse rounded-full border border-gray-200" />
+      <div className="w-48 h-10 bg-[var(--bg-active)] animate-pulse rounded-full border border-[var(--border-main)]" />
     );
   }
 
@@ -63,10 +63,10 @@ const XpWidget = () => {
   );
 
   return (
-    <div className="flex items-center gap-4 bg-white px-4 py-2 rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow group">
+    <div className="flex items-center gap-4 bg-[var(--bg-card)] px-4 py-2 rounded-2xl border border-[var(--border-main)] shadow-sm hover:shadow-md transition-shadow group">
       {/* Level Badge (Hexagon-like) */}
       <div className="relative flex items-center justify-center">
-        <div className="w-10 h-10 bg-[#7c3aed] rotate-45 rounded-lg shadow-lg shadow-purple-500/20" />
+        <div className="w-10 h-10 bg-purple-600 rotate-45 rounded-lg shadow-lg shadow-purple-500/20" />
         <div className="absolute inset-0 flex flex-col items-center justify-center text-white">
           <span className="text-[8px] font-black uppercase leading-none opacity-60">
             LVL
@@ -83,24 +83,24 @@ const XpWidget = () => {
       {/* XP Info & Progress */}
       <div className="flex flex-col gap-1.5 min-w-[120px]">
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-1.5 text-[#7c3aed]">
+          <div className="flex items-center gap-1.5 text-purple-600">
             <Zap className="w-3 h-3 fill-current" />
             <span className="text-[10px] font-black uppercase tracking-widest">
               <AnimatedCounter value={total_xp} /> VXP
             </span>
           </div>
-          <span className="text-[9px] font-bold text-gray-400 uppercase tracking-tight">
+          <span className="text-[9px] font-bold text-[var(--text-muted)] uppercase tracking-tight">
             Next: {nextLevelXP}
           </span>
         </div>
 
         {/* Progress Bar */}
-        <div className="relative h-1.5 w-full bg-gray-100 rounded-full overflow-hidden border border-gray-50">
+        <div className="relative h-1.5 w-full bg-[var(--bg-active)] rounded-full overflow-hidden border border-[var(--border-main)]">
           <motion.div
             initial={{ width: 0 }}
             animate={{ width: `${progressPercent}%` }}
             transition={{ duration: 1.5, ease: "easeOut" }}
-            className="h-full bg-gradient-to-r from-[#7c3aed] to-[#a78bfa] rounded-full relative"
+            className="h-full bg-gradient-to-r from-purple-600 to-purple-400 rounded-full relative"
           >
             <div className="absolute top-0 right-0 w-8 h-full bg-white/20 skew-x-12 animate-pulse" />
           </motion.div>

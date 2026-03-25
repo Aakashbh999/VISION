@@ -24,7 +24,7 @@ const ActionMenu = ({
     <div className={`relative inline-block ${className}`} ref={menuRef}>
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="p-1.5 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-all duration-200"
+        className="p-1.5 rounded-lg text-[var(--text-muted)] hover:text-[var(--text-main)] hover:bg-[var(--bg-active)] transition-all duration-200"
         aria-label="Actions"
       >
         {trigger}
@@ -36,26 +36,31 @@ const ActionMenu = ({
             initial={{ opacity: 0, scale: 0.95, y: 10 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 10 }}
-            className={`absolute z-30 ${alignClasses[align] || alignClasses.right} min-w-[160px] bg-white border border-gray-100 rounded-xl shadow-xl overflow-hidden`}
+            className={`absolute z-30 ${alignClasses[align] || alignClasses.right} min-w-[160px] bg-[var(--bg-card)] border border-[var(--border-main)] rounded-xl shadow-xl overflow-hidden`}
           >
             <div className="py-1">
-              {actions.map((action, index) => (
-                <button
-                  key={index}
-                  onClick={() => {
-                    action.onClick();
-                    setIsOpen(false);
-                  }}
-                  className={`w-full flex items-center gap-3 px-4 py-2.5 text-xs font-black uppercase tracking-widest transition-colors duration-150 ${
-                    action.variant === "danger" 
-                      ? "text-red-600 hover:bg-red-50" 
-                      : "text-gray-700 hover:bg-gray-50"
-                  }`}
-                >
-                  {action.icon && <span className="w-4 h-4">{action.icon}</span>}
-                  {action.label}
-                </button>
-              ))}
+              {actions.map((action, index) => {
+                if (action.render) {
+                  return <div key={index} onClick={() => setIsOpen(false)}>{action.render()}</div>;
+                }
+                return (
+                  <button
+                    key={index}
+                    onClick={() => {
+                      action.onClick?.();
+                      setIsOpen(false);
+                    }}
+                    className={`w-full flex items-center gap-3 px-4 py-2.5 text-xs font-black uppercase tracking-widest transition-colors duration-150 ${
+                      action.variant === "danger" 
+                        ? "text-red-600 hover:bg-red-50" 
+                        : "text-[var(--text-main)] hover:bg-[var(--bg-active)]"
+                    }`}
+                  >
+                    {action.icon && <span className="w-4 h-4">{action.icon}</span>}
+                    {action.label}
+                  </button>
+                );
+              })}
             </div>
           </motion.div>
         )}

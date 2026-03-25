@@ -2,8 +2,37 @@ import { useState } from "react";
 import { useItFields } from "../hooks/useItFields";
 import LoadingSpinner from "../components/ui/LoadingSpinner";
 import Pagination from "../components/ui/Pagination";
-import { Link } from "react-router-dom";
-import { ChevronRight } from "lucide-react";
+import ITFieldCard from "../components/ui/ITFieldCard";
+import {
+  Code2,
+  Shield,
+  Brain,
+  Cloud,
+  Database,
+  Smartphone,
+  BarChart3,
+  GitBranch,
+  Globe,
+  Lock,
+  Zap,
+  Terminal,
+  Server,
+  Wifi,
+} from "lucide-react";
+
+// Helper to pick an icon based on the field name
+const getIconForField = (fieldName) => {
+  const name = fieldName.toLowerCase();
+  if (name.includes("web")) return Code2;
+  if (name.includes("security") || name.includes("cyber")) return Shield;
+  if (name.includes("ai") || name.includes("machine")) return Brain;
+  if (name.includes("cloud")) return Cloud;
+  if (name.includes("data")) return Database;
+  if (name.includes("mobile")) return Smartphone;
+  if (name.includes("devops")) return GitBranch;
+  if (name.includes("analytics")) return BarChart3;
+  return Code2; // fallback
+};
 
 const ITFields = () => {
   const [page, setPage] = useState(1);
@@ -17,44 +46,27 @@ const ITFields = () => {
   const pagination = data?.pagination;
 
   return (
-    <div className="space-y-8">
-      <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">
+    <div className="space-y-8 px-4 sm:px-6 lg:px-8 py-6 sm:py-8 lg:py-10">
+      <h1 className="text-2xl sm:text-3xl font-bold text-[var(--text-main)]">
         Career Fields
       </h1>
-      <p className="text-gray-600">
+      <p className="text-[var(--text-muted)]">
         Explore various IT fields and find the right path for your career.
       </p>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {fields.map((field) => (
-          <div
+          <ITFieldCard
             key={field.id}
-            className="bg-white rounded-2xl border border-gray-200 p-6 hover:shadow-xl transition-shadow"
-          >
-            <h2 className="text-xl font-semibold text-gray-900 mb-2">
-              {field.field_name}
-            </h2>
-            <p className="text-gray-600 mb-4">{field.short_description}</p>
-            <div className="flex items-center justify-between">
-              <span
-                className={`text-sm px-2 py-1 rounded-full ${
-                  field.demand === "High"
-                    ? "bg-green-100 text-green-700"
-                    : field.demand === "Medium"
-                      ? "bg-yellow-100 text-yellow-700"
-                      : "bg-gray-100 text-gray-700"
-                }`}
-              >
-                {field.demand} Demand
-              </span>
-              <Link
-                to={`/it-fields/${field.slug}`}
-                className="text-blue-600 text-sm font-medium flex items-center gap-1 hover:gap-2 transition-all"
-              >
-                View Details <ChevronRight className="w-4 h-4" />
-              </Link>
-            </div>
-          </div>
+            item={{
+              name: field.field_name,
+              shortDescription: field.short_description,
+              demand: field.demand,
+              slug: field.slug,
+              icon: getIconForField(field.field_name),
+              motivation: field.motivation, // if available
+            }}
+          />
         ))}
       </div>
 

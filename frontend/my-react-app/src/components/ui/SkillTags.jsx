@@ -5,7 +5,6 @@ const SkillTags = ({ skillsString }) => {
 
   if (!skillsString) return null;
 
-  // Parse skills (handle both JSON array and comma-separated string)
   let skills = [];
   try {
     skills = JSON.parse(skillsString);
@@ -26,7 +25,7 @@ const SkillTags = ({ skillsString }) => {
       {visibleSkills.map((skill, idx) => (
         <span
           key={idx}
-          className="text-xs bg-gray-100 px-2 py-1 rounded-full text-gray-700"
+          className="text-xs bg-[var(--bg-active)] px-2 py-1 rounded-full text-[var(--text-main)]"
         >
           {skill}
         </span>
@@ -34,7 +33,7 @@ const SkillTags = ({ skillsString }) => {
       {!showAll && hiddenCount > 0 && (
         <button
           onClick={() => setShowAll(true)}
-          className="text-xs bg-gray-100 px-2 py-1 rounded-full text-gray-700 hover:bg-gray-200 transition-colors"
+          className="text-xs bg-[var(--bg-active)] px-2 py-1 rounded-full text-[var(--text-muted)] hover:bg-[var(--border-main)] transition-colors"
         >
           +{hiddenCount} more
         </button>
@@ -42,7 +41,7 @@ const SkillTags = ({ skillsString }) => {
       {showAll && hiddenCount > 0 && (
         <button
           onClick={() => setShowAll(false)}
-          className="text-xs bg-gray-100 px-2 py-1 rounded-full text-gray-700 hover:bg-gray-200 transition-colors"
+          className="text-xs bg-[var(--bg-active)] px-2 py-1 rounded-full text-[var(--text-muted)] hover:bg-[var(--border-main)] transition-colors"
         >
           Show less
         </button>

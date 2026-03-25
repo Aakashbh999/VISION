@@ -73,8 +73,8 @@ export const updateDiscussion = async (id, data) => {
 };
 
 // Delete a discussion (soft delete)
-export const deleteDiscussion = async (id) => {
-  const response = await api.delete(`/discussions/${id}`);
+export const deleteDiscussion = async (id, reason) => {
+  const response = await api.delete(`/discussions/${id}`, { data: { reason } });
   return response.data;
 };
 

@@ -36,7 +36,7 @@ const Avatar = ({
     relative inline-flex items-center justify-center shrink-0
     ${variant === "circular" ? "rounded-full" : "rounded-xl"}
     ${sizeClasses[size]}
-    bg-sidebar-hover-bg border border-border-main overflow-hidden
+    bg-[var(--sidebar-hover-bg)] border border-[var(--border-main)] overflow-hidden
     ${className}
   `;
 
@@ -50,7 +50,7 @@ const Avatar = ({
           loading="lazy"
         />
       ) : (
-        <span className="font-black text-text-muted tracking-tighter">
+        <span className="font-black text-[var(--text-muted)] tracking-tighter">
           {initials}
         </span>
       )}
@@ -60,7 +60,7 @@ const Avatar = ({
           className={`
           absolute bottom-0 right-0 
           block w-[25%] h-[25%] rounded-full 
-          border-2 border-bg-main 
+          border-2 border-[var(--bg-main)] 
           ${statusColors[status]}
         `}
         />

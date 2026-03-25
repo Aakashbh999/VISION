@@ -1,34 +1,36 @@
-import { useState } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { AlertTriangle, Trash2, X, ChevronDown } from "lucide-react";
 
-const DEFAULT_REASONS = [
-  { id: "spam", label: "Spam or inappropriate content", emoji: "🚫" },
-  { id: "inactive", label: "Group is no longer active", emoji: "🚫" },
-  { id: "duplicate", label: "Duplicate group", emoji: "🔄" },
-  { id: "merge", label: "Merging with another group", emoji: "🔗" },
-  { id: "revamp", label: "Starting fresh with new group", emoji: "✨" },
-  { id: "other", label: "Other reason", emoji: "📝" },
-];
+const REASONS_CONFIG = {
+  group: [
+    { id: "inactive", label: "Group is no longer active" },
+    { id: "duplicate", label: "Duplicate of another group" },
+    { id: "rules", label: "Violated community guidelines" },
+    { id: "private", label: "Moving to a private platform" },
+  ],
+  post: [
+    { id: "mistake", label: "Posted in the wrong category" },
+    { id: "outdated", label: "Information is no longer relevant" },
+    { id: "resolved", label: "Question/Issue has been resolved" },
+    { id: "spam", label: "Spam or low quality content" },
+  ],
+  comment: [
+    { id: "typo", label: "Contains errors or typos" },
+    { id: "irrelevant", label: "Not contributing to discussion" },
+    { id: "changed_mind", label: "Changed my mind/opinion" },
+    { id: "offensive", label: "Inappropriate tone or language" },
+  ],
+  resource: [
+    { id: "broken", label: "Link or file is broken/unavailable" },
+    { id: "copyright", label: "Copyright or permission issue" },
+    { id: "better_version", label: "Replaced by a better resource" },
+    { id: "incorrect", label: "Content contains inaccuracies" },
+  ],
+};
 
-/**
- * DeleteConfirmationModal
- *
- * Reusable deletion confirmation component supporting:
- * - 5 preset deletion reasons + custom input
- * - Multiple entity types (group, post, comment, resource)
- * - Soft-delete for users, hard-delete for admins
- *
- * Props:
- *   - isOpen: bool — modal visibility
- *   - onClose: () => void
- *   - onConfirm: (reason: string) => Promise<void>
- *   - title: string — "Delete Group", "Delete Post", etc.
- *   - description: string — warning text explaining deletion
- *   - isPending: bool — loading state of mutation
- *   - itemName: string (optional) — entity name to display in confirmation
- *   - entityType: string (optional) — 'group' | 'post' | 'comment' | 'resource' for styling
- */
+const OTHER_REASON = { id: "other", label: "Other reason" };
+
 export default function DeleteConfirmationModal({
   isOpen,
   onClose,
@@ -37,206 +39,206 @@ export default function DeleteConfirmationModal({
   description = "This action cannot be undone.",
   isPending = false,
   itemName = "",
-  entityType = "group", // group | post | comment | resource
+  entityType = "post",
 }) {
-  const [selectedReason, setSelectedReason] = useState("spam");
+  const availableReasons = useMemo(() => {
+    const base = REASONS_CONFIG[entityType] || REASONS_CONFIG.post;
+    return [...base, OTHER_REASON];
+  }, [entityType]);
+
+  const [selectedReasonId, setSelectedReasonId] = useState(availableReasons[0].id);
   const [customReason, setCustomReason] = useState("");
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
-  // Get reason object
-  const reasonObj = DEFAULT_REASONS.find((r) => r.id === selectedReason);
-  const isCustom = selectedReason === "other";
-  const finalReason = isCustom
-    ? customReason
-    : reasonObj?.label || "No reason provided";
+  useEffect(() => {
+    if (isOpen) {
+      setSelectedReasonId(availableReasons[0].id);
+      setCustomReason("");
+      setIsDropdownOpen(false);
+    }
+  }, [isOpen, availableReasons]);
 
-  const handleConfirm = async () => {
-    if (isCustom && !customReason.trim()) {
-      alert("Please provide a reason for deletion");
+  useEffect(() => {
+    const handleClickOutside = () => setIsDropdownOpen(false);
+    if (isDropdownOpen) {
+      window.addEventListener("click", handleClickOutside);
+    }
+    return () => window.removeEventListener("click", handleClickOutside);
+  }, [isDropdownOpen]);
+
+  const selectedObj = availableReasons.find((r) => r.id === selectedReasonId);
+  const isCustom = selectedReasonId === "other";
+
+  const handleConfirm = async (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    const finalReasonText = isCustom ? customReason : selectedObj?.label;
+
+    if (isCustom && (!customReason.trim() || customReason.length < 10)) {
       return;
     }
-    await onConfirm(finalReason);
-    onClose();
+
+    await onConfirm(finalReasonText);
   };
 
   if (!isOpen) return null;
 
-  // Color config by entity type
-  const colorConfig = {
-    group: {
-      bg: "bg-red-50",
-      border: "border-red-200",
-      button: "bg-red-600 hover:bg-red-700",
-    },
-    post: {
-      bg: "bg-amber-50",
-      border: "border-amber-200",
-      button: "bg-amber-600 hover:bg-amber-700",
-    },
-    comment: {
-      bg: "bg-orange-50",
-      border: "border-orange-200",
-      button: "bg-orange-600 hover:bg-orange-700",
-    },
-    resource: {
-      bg: "bg-rose-50",
-      border: "border-rose-200",
-      button: "bg-rose-600 hover:bg-rose-700",
-    },
-  };
-
-  const colors = colorConfig[entityType] || colorConfig.group;
-
   return (
     <AnimatePresence>
-      {isOpen && (
-        <>
-          {/* Backdrop */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            onClick={onClose}
-            className="fixed inset-0 bg-black/40 backdrop-blur-sm z-40"
-          />
+      <div className="fixed inset-0 flex items-center justify-center z-50 p-4">
+        {/* Backdrop */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          onClick={onClose}
+          className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+        />
 
-          {/* Modal */}
-          <motion.div
-            initial={{ opacity: 0, scale: 0.95, y: 20 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.95, y: 20 }}
-            className={`fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-md ${colors.bg} border ${colors.border} rounded-2xl shadow-2xl z-50 p-8`}
-          >
-            {/* Close button */}
-            <button
-              onClick={onClose}
-              disabled={isPending}
-              className="absolute top-4 right-4 p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors disabled:opacity-50"
-            >
-              <X className="w-5 h-5" />
-            </button>
-
-            {/* Header */}
-            <div className="flex items-start gap-4 mb-6">
-              <div className="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center flex-shrink-0">
-                <AlertTriangle className="w-6 h-6 text-red-600" />
+        {/* Modal Surface – increased width */}
+        <motion.div
+          initial={{ opacity: 0, scale: 0.98, y: 8 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          exit={{ opacity: 0, scale: 0.98, y: 8 }}
+          onClick={(e) => e.stopPropagation()}
+          className="relative w-full max-w-lg bg-[var(--bg-card)] rounded-2xl shadow-2xl overflow-hidden border border-[var(--border-main)]"
+        >
+          <div className="p-7">
+            {/* Header Section */}
+            <div className="flex gap-4 mb-6">
+              <div className="w-10 h-10 rounded-xl bg-red-50 flex items-center justify-center flex-shrink-0">
+                <AlertTriangle className="w-5 h-5 text-red-600" />
               </div>
-              <div className="flex-1">
-                <h2 className="text-xl font-black text-slate-900">{title}</h2>
-                {itemName && (
-                  <p className="text-sm text-slate-600 mt-1 font-semibold truncate">
-                    "{itemName}"
-                  </p>
-                )}
+              <div className="flex-1 min-w-0">
+                <h2 className="text-lg font-bold text-[var(--text-main)] leading-tight">
+                  {title}
+                </h2>
+                <p className="text-sm text-[var(--text-muted)] mt-1 font-medium truncate">
+                  {itemName ? itemName : description}
+                </p>
               </div>
+              <button
+                onClick={onClose}
+                className="p-1.5 hover:bg-[var(--bg-active)] rounded-lg transition-colors"
+              >
+                <X className="w-4 h-4 text-[var(--text-muted)]" />
+              </button>
             </div>
 
-            {/* Warning text */}
-            <p className="text-sm text-slate-600 leading-relaxed mb-6">
-              {description}
-            </p>
-
-            {/* Reason selector */}
-            <div className="mb-6 space-y-3">
-              <label className="text-xs font-black text-slate-700 uppercase tracking-widest">
-                Why are you deleting this {entityType}?
+            {/* Dropdown Logic – wider container */}
+            <div className="space-y-4 mb-10 flex flex-col items-center">
+              <label className="text-[12px] font-bold text-[var(--text-muted)] uppercase tracking-wider self-start">
+                Reason for removal
               </label>
 
-              <div className="relative">
+              <div className="relative w-full">
                 <button
-                  onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                  disabled={isPending}
-                  className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl text-left text-sm font-semibold text-slate-700 flex items-center justify-between hover:border-slate-300 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setIsDropdownOpen(!isDropdownOpen);
+                  }}
+                  className="w-full flex items-center justify-between px-5 py-4 bg-[var(--bg-main)] border border-[var(--border-main)] hover:border-purple-300 rounded-xl transition-all text-base"
                 >
-                  <span className="flex items-center gap-2">
-                    <span className="text-lg">{reasonObj?.emoji}</span>
-                    {reasonObj?.label}
+                  <span className="font-semibold text-[var(--text-main)] text-base">
+                    {selectedObj?.label}
                   </span>
                   <ChevronDown
-                    className={`w-4 h-4 text-slate-400 transition-transform ${
-                      isDropdownOpen ? "rotate-180" : ""
-                    }`}
+                    className={`w-5 h-5 text-[var(--text-muted)] transition-transform ${isDropdownOpen ? "rotate-180" : ""}`}
                   />
                 </button>
 
-                {/* Dropdown */}
-                {isDropdownOpen && (
-                  <motion.div
-                    initial={{ opacity: 0, y: -8 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -8 }}
-                    className="absolute top-full left-0 right-0 mt-2 bg-white border border-slate-200 rounded-xl shadow-lg z-10"
-                  >
-                    {DEFAULT_REASONS.map((reason) => (
-                      <button
-                        key={reason.id}
-                        onClick={() => {
-                          setSelectedReason(reason.id);
-                          setIsDropdownOpen(false);
-                        }}
-                        className="w-full px-4 py-3 text-left text-sm font-semibold text-slate-700 hover:bg-slate-50 flex items-center gap-2 first:rounded-t-xl last:rounded-b-xl border-b last:border-b-0 border-slate-100 transition-colors"
-                      >
-                        <span className="text-lg">{reason.emoji}</span>
-                        {reason.label}
-                      </button>
-                    ))}
-                  </motion.div>
-                )}
+                <AnimatePresence>
+                  {isDropdownOpen && (
+                    <motion.div
+                      initial={{ opacity: 0, y: -4 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -4 }}
+                      className="absolute top-full left-0 right-0 mt-1.5 bg-[var(--bg-card)] border border-[var(--border-main)] rounded-xl shadow-xl z-20 py-1 max-h-60 overflow-y-auto"
+                    >
+                      {availableReasons.map((reason) => (
+                        <button
+                          key={reason.id}
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            setSelectedReasonId(reason.id);
+                            setIsDropdownOpen(false);
+                          }}
+                          className={`w-full px-5 py-3 text-left text-base font-medium transition-colors border-l-2 ${
+                            selectedReasonId === reason.id
+                              ? "bg-purple-50 border-purple-500 text-purple-700"
+                              : "bg-transparent border-transparent text-[var(--text-main)] hover:bg-[var(--bg-active)]"
+                          }`}
+                        >
+                          {reason.label}
+                        </button>
+                      ))}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </div>
 
-              {/* Custom reason input — only show if "Other" selected */}
-              {isCustom && (
-                <motion.textarea
-                  initial={{ opacity: 0, height: 0 }}
-                  animate={{ opacity: 1, height: "auto" }}
-                  exit={{ opacity: 0, height: 0 }}
-                  value={customReason}
-                  onChange={(e) => setCustomReason(e.target.value)}
-                  placeholder={`Tell us why you're deleting this ${entityType}...`}
-                  maxLength={500}
-                  rows={3}
-                  className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl text-sm text-slate-700 placeholder-slate-400 focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all resize-none"
-                  disabled={isPending}
-                />
-              )}
+              {/* Custom Reason Box */}
+              <AnimatePresence>
+                {isCustom && (
+                  <motion.div
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: "auto", opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    className="overflow-hidden w-full"
+                  >
+                    <textarea
+                      value={customReason}
+                      onChange={(e) => setCustomReason(e.target.value)}
+                      placeholder="Please specify your reason..."
+                      className="w-full p-4 bg-[var(--bg-active)] border border-[var(--border-main)] rounded-xl text-base font-medium focus:ring-2 focus:ring-purple-200 focus:border-purple-400 outline-none transition-all mt-2 resize-none text-[var(--text-main)]"
+                      rows={3}
+                      maxLength={450}
+                    />
+                    <div className="flex justify-end mt-1 px-1">
+                      <span
+                        className={`text-[11px] font-bold uppercase ${customReason.length > 400 ? "text-red-500" : "text-[var(--text-muted)]"}`}
+                      >
+                        {customReason.length} / 450
+                      </span>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
 
-            {/* Action buttons */}
-            <div className="flex gap-3">
+            {/* Footer Actions – removed shadow/glow from delete button */}
+            <div className="flex gap-6 justify-center items-center mt-8">
               <button
+                type="button"
                 onClick={onClose}
                 disabled={isPending}
-                className="flex-1 px-4 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex-1 py-3 text-[var(--text-muted)] font-bold text-sm uppercase tracking-widest hover:bg-[var(--bg-active)] rounded-xl transition-colors disabled:opacity-50 max-w-[140px]"
               >
                 Cancel
               </button>
               <button
                 onClick={handleConfirm}
-                disabled={isPending || (isCustom && !customReason.trim())}
-                className={`flex-1 px-4 py-3 ${colors.button} text-white font-bold rounded-xl transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed`}
+                disabled={
+                  isPending || (isCustom && customReason.trim().length < 10)
+                }
+                className="flex-[1.5] py-3 bg-red-600 hover:bg-red-700 disabled:bg-[var(--bg-active)] disabled:text-[var(--text-muted)] text-white font-bold text-sm uppercase tracking-widest rounded-xl transition-all flex items-center justify-center gap-2 max-w-[180px]"
               >
                 {isPending ? (
-                  <>
-                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                    Deleting...
-                  </>
+                  <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                 ) : (
                   <>
                     <Trash2 className="w-4 h-4" />
-                    Delete{" "}
-                    {entityType.charAt(0).toUpperCase() + entityType.slice(1)}
+                    Delete Item
                   </>
                 )}
               </button>
             </div>
-
-            {/* Info text for soft delete */}
-            <p className="text-[10px] text-slate-400 text-center mt-4 uppercase tracking-widest">
-              This deletion will be recorded for moderation purposes
-            </p>
-          </motion.div>
-        </>
-      )}
+          </div>
+        </motion.div>
+      </div>
     </AnimatePresence>
   );
 }

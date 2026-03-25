@@ -55,7 +55,6 @@ const Discussions = () => {
   const [degrees, setDegrees] = useState([]);
   const { data, isLoading, error } = useDiscussions(filters);
 
-  // Update URL params efficiently
   useEffect(() => {
     const params = new URLSearchParams();
     Object.entries(filters).forEach(([key, value]) => {
@@ -64,7 +63,6 @@ const Discussions = () => {
     setSearchParams(params);
   }, [filters, setSearchParams]);
 
-  // Like mutation with loading state tracking
   const likeMutation = useMutation({
     mutationFn: toggleLike,
     onMutate: (discId) => {
@@ -78,7 +76,6 @@ const Discussions = () => {
     },
   });
 
-  // Save mutation with loading state tracking
   const saveMutation = useMutation({
     mutationFn: toggleSave,
     onMutate: (discId) => {
@@ -102,7 +99,6 @@ const Discussions = () => {
       toast.info("Please login to vote on discussions");
       return;
     }
-    // Clear downvote state when upvoting
     setDownvotedPosts((prev) => ({ ...prev, [discId]: false }));
     likeMutation.mutate(discId);
   };
@@ -118,15 +114,11 @@ const Discussions = () => {
     const isCurrentlyDownvoted = downvotedPosts[discId];
 
     if (isCurrentlyDownvoted) {
-      // Already downvoted, clicking again goes back to neutral
       setDownvotedPosts((prev) => ({ ...prev, [discId]: false }));
     } else {
-      // Not downvoted yet
       if (isCurrentlyLiked) {
-        // Remove the like first (call backend), then show downvote
         likeMutation.mutate(discId);
       }
-      // Set local downvote state
       setDownvotedPosts((prev) => ({ ...prev, [discId]: true }));
     }
   };
@@ -152,14 +144,6 @@ const Discussions = () => {
     };
     fetchReferenceData();
   }, []);
-
-  useEffect(() => {
-    const params = new URLSearchParams();
-    Object.entries(filters).forEach(([key, value]) => {
-      if (value && value !== "latest" && value !== 1) params.set(key, value);
-    });
-    setSearchParams(params);
-  }, [filters, setSearchParams]);
 
   const updateFilter = (key, value) => {
     setFilters((prev) => ({ ...prev, [key]: value, page: 1 }));
@@ -211,7 +195,7 @@ const Discussions = () => {
   };
 
   return (
-    <div className="max-w-[824px] mx-auto space-y-4">
+    <div className="max-w-[824px] mx-auto space-y-4 px-4 sm:px-6 lg:px-8 py-6 sm:py-8 lg:py-10">
       {/* Lightbox */}
       <ImageLightbox
         isOpen={lightbox.isOpen}
@@ -220,7 +204,7 @@ const Discussions = () => {
         onClose={() => setLightbox({ ...lightbox, isOpen: false })}
       />
       {/* Header & Controls */}
-      <div className="bg-white border border-gray-200 rounded-md p-4 space-y-4">
+      <div className="bg-[var(--bg-card)] border border-[var(--border-main)] rounded-md p-4 space-y-4">
         <div className="flex flex-col md:flex-row justify-between gap-4">
           <UniversalSearch
             placeholder="Search VISION Discussions..."
@@ -233,32 +217,32 @@ const Discussions = () => {
             {user && (
               <Link
                 to="/discussions/saved"
-                className="px-4 py-2 border border-gray-300 text-gray-700 text-sm font-bold rounded-full hover:bg-gray-50 transition-colors text-center flex items-center gap-1"
+                className="px-4 py-2 border border-[var(--border-main)] text-[var(--text-main)] text-sm font-bold rounded-full hover:bg-[var(--bg-active)] transition-colors text-center flex items-center gap-1"
               >
                 <BookmarkCheck className="w-4 h-4" /> Saved
               </Link>
             )}
             <Link
               to="/discussions/new"
-              className="px-6 py-2 bg-blue-600 text-white text-sm font-bold rounded-full hover:bg-blue-700 transition-colors text-center"
+              className="px-6 py-2 bg-purple-600 text-white text-sm font-bold rounded-full hover:bg-purple-700 transition-colors text-center"
             >
               Create Post
             </Link>
           </div>
         </div>
 
-        <div className="flex items-center justify-between border-t border-gray-100 pt-3">
+        <div className="flex items-center justify-between border-t border-[var(--border-main)] pt-3">
           <div className="flex gap-4">
             <button
               onClick={() => setShowFilters(!showFilters)}
-              className="flex items-center gap-1 text-xs font-bold text-gray-500 hover:bg-gray-100 px-2 py-1 rounded"
+              className="flex items-center gap-1 text-xs font-bold text-[var(--text-muted)] hover:bg-[var(--bg-active)] px-2 py-1 rounded"
             >
               <Filter className="w-4 h-4" /> Filters
             </button>
             <select
               value={filters.degree}
               onChange={(e) => updateFilter("degree", e.target.value)}
-              className="text-xs font-bold text-gray-500 bg-transparent cursor-pointer border border-gray-200 rounded px-2 py-1 focus:outline-none focus:border-blue-500"
+              className="text-xs font-bold text-[var(--text-muted)] bg-transparent cursor-pointer border border-[var(--border-main)] rounded px-2 py-1 focus:outline-none focus:border-purple-500"
             >
               <option value="">All Degrees</option>
               {degrees.map((deg) => (
@@ -270,7 +254,7 @@ const Discussions = () => {
             <select
               value={filters.sort}
               onChange={(e) => updateFilter("sort", e.target.value)}
-              className="text-xs font-bold text-gray-500 bg-transparent cursor-pointer focus:outline-none"
+              className="text-xs font-bold text-[var(--text-muted)] bg-transparent cursor-pointer focus:outline-none"
             >
               <option value="latest">New</option>
               <option value="popular">Top</option>
@@ -283,48 +267,50 @@ const Discussions = () => {
       {/* Discussion List */}
       <div className="space-y-4 min-h-[400px]">
         {isLoading ? (
-          <div className="py-20 flex flex-col items-center justify-center bg-white border border-gray-100 rounded-xl shadow-sm">
+          <div className="py-20 flex flex-col items-center justify-center bg-[var(--bg-card)] border border-[var(--border-main)] rounded-xl shadow-sm">
             <LoadingSpinner />
-            <p className="mt-4 text-xs font-black text-slate-400 uppercase tracking-widest">Loading conversations...</p>
+            <p className="mt-4 text-xs font-black text-[var(--text-muted)] uppercase tracking-widest">Loading conversations...</p>
           </div>
         ) : error ? (
           <div className="bg-rose-50 border border-rose-100 p-12 rounded-xl text-center font-bold text-rose-600">
-             Failed to load discussions. Please try again.
+            Failed to load discussions. Please try again.
           </div>
         ) : data?.noResults ? (
-           <div className="bg-white border border-gray-200 rounded-xl p-10 space-y-8 shadow-sm">
-              <div className="max-w-xl mx-auto text-center space-y-4">
-                <div className="w-16 h-16 bg-blue-50 rounded-full flex items-center justify-center mx-auto">
-                    <Search className="w-8 h-8 text-blue-400" />
-                </div>
-                <div className="space-y-1">
-                    <h3 className="text-xl font-black text-slate-900 uppercase">No matches for "{filters.search}"</h3>
-                    <p className="text-sm font-bold text-slate-500">Try these trending discussions from your program:</p>
-                </div>
+          <div className="bg-[var(--bg-card)] border border-[var(--border-main)] rounded-xl p-10 space-y-8 shadow-sm">
+            <div className="max-w-xl mx-auto text-center space-y-4">
+              <div className="w-16 h-16 bg-purple-50 rounded-full flex items-center justify-center mx-auto">
+                <Search className="w-8 h-8 text-purple-400" />
               </div>
+              <div className="space-y-1">
+                <h3 className="text-xl font-black text-[var(--text-main)] uppercase">No matches for "{filters.search}"</h3>
+                <p className="text-sm font-bold text-[var(--text-muted)]">Try these trending discussions from your program:</p>
+              </div>
+            </div>
 
-              <div className="grid grid-cols-1 gap-4">
-                  {data.recommendations?.discussions?.map(rec => (
-                      <Link 
-                          key={rec.id}
-                          to={`/discussions/${rec.id}`}
-                          className="group flex items-start gap-4 p-5 bg-slate-50 border border-transparent hover:border-blue-200 hover:bg-white hover:shadow-lg rounded-xl transition-all"
-                      >
-                          <div className="p-3 bg-white rounded-lg shadow-sm group-hover:bg-blue-50 transition-colors">
-                              <MessageSquare className="w-5 h-5 text-blue-500" />
-                          </div>
-                          <div className="flex-1 min-w-0">
-                              <div className="font-bold text-slate-900 group-hover:text-blue-600 transition-colors truncate">{rec.title}</div>
-                              <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1 flex items-center gap-2">
-                                  {rec.tags?.slice(0, 2).map(tag => <span key={tag}>#{tag}</span>)}
-                                  <span>•</span>
-                                  <span>{rec.upvotes} UPVOTES</span>
-                              </div>
-                          </div>
-                      </Link>
-                  ))}
-              </div>
-           </div>
+            <div className="grid grid-cols-1 gap-4">
+              {data.recommendations?.discussions?.map((rec) => (
+                <Link
+                  key={rec.id}
+                  to={`/discussions/${rec.id}`}
+                  className="group flex items-start gap-4 p-5 bg-[var(--bg-active)] border border-transparent hover:border-purple-200 hover:bg-[var(--bg-card)] hover:shadow-lg rounded-xl transition-all"
+                >
+                  <div className="p-3 bg-[var(--bg-card)] rounded-lg shadow-sm group-hover:bg-purple-50 transition-colors">
+                    <MessageSquare className="w-5 h-5 text-purple-500" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="font-bold text-[var(--text-main)] group-hover:text-purple-600 transition-colors truncate">{rec.title}</div>
+                    <div className="text-[10px] font-black text-[var(--text-muted)] uppercase tracking-widest mt-1 flex items-center gap-2">
+                      {rec.tags?.slice(0, 2).map((tag) => (
+                        <span key={tag}>#{tag}</span>
+                      ))}
+                      <span>•</span>
+                      <span>{rec.upvotes} UPVOTES</span>
+                    </div>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </div>
         ) : (
           <>
             {discussions.map((disc) => (
@@ -344,17 +330,17 @@ const Discussions = () => {
             ))}
 
             {discussions.length === 0 && (
-              <div className="bg-white border border-dashed border-gray-200 rounded-xl p-20 text-center space-y-4">
+              <div className="bg-[var(--bg-card)] border border-dashed border-[var(--border-main)] rounded-xl p-20 text-center space-y-4">
                 <div className="flex justify-center">
-                  <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center text-slate-300">
+                  <div className="w-16 h-16 bg-[var(--bg-active)] rounded-full flex items-center justify-center text-[var(--text-muted)]">
                     <Search className="w-8 h-8" />
                   </div>
                 </div>
                 <div className="space-y-1">
-                  <h3 className="text-sm font-black text-slate-900 uppercase">
+                  <h3 className="text-sm font-black text-[var(--text-main)] uppercase">
                     No discussions found
                   </h3>
-                  <p className="text-xs font-bold text-slate-400">
+                  <p className="text-xs font-bold text-[var(--text-muted)]">
                     Try adjusting your filters or search terms
                   </p>
                 </div>

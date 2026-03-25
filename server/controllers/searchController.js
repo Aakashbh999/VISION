@@ -81,119 +81,189 @@ exports.universalSearch = async (req, res) => {
         query: null,
         isRecommendation: true,
         ...recommendations,
-        total: recommendations.roadmaps.length + recommendations.groups.length + recommendations.resources.length
+        total:
+          recommendations.roadmaps.length +
+          recommendations.groups.length +
+          recommendations.resources.length,
       });
     }
 
     const searchTerm = q.trim();
     const maxResults = Math.min(parseInt(limit) || 5, 10);
 
-    // Parallel search across all indices - METADATA ONLY (no group_messages)
-    const [roadmapsResult, groupsResult, resourcesResult] = await Promise.all([
-      // Search Roadmaps
-      pool.query(
-        `SELECT 
-          roadmap_id as id,
-          title,
-          description,
-          difficulty_level,
-          'roadmap' as type
-        FROM portal.roadmaps
-        WHERE is_active = TRUE
-          AND (
-            title % $1 
-            OR description % $1
-            OR title ILIKE $2
-            OR description ILIKE $2
-          )
-        ORDER BY 
-          similarity(title, $1) DESC,
-          title
-        LIMIT $3`,
-        [searchTerm, `%${searchTerm}%`, maxResults],
-      ),
-
-      // Search Groups
-      pool.query(
-        `${buildGroupQueryBase(userId, 4)}
-        WHERE (
-          g.name % $1 
-          OR g.description % $1
-          OR g.name ILIKE $2
-          OR g.description ILIKE $2
-        )
-        GROUP BY g.group_id, g.name, g.description, g.group_image, g.is_public, g.degree_id, ad.full_name
-        ORDER BY 
-          similarity(g.name, $1) DESC,
-          g.name
-        LIMIT $3`,
-        userId
-          ? [searchTerm, `%${searchTerm}%`, maxResults, userId]
-          : [searchTerm, `%${searchTerm}%`, maxResults],
-      ),
-
-      // Search Resources (approved only) with avg_score and tags
-      pool.query(
-        `${buildResourceQueryBase()}
-        WHERE r.status = 'approved' AND (
-            r.title % $1 
-            OR r.description % $1
-            OR r.title ILIKE $2
-            OR r.description ILIKE $2
-            OR EXISTS (
-              SELECT 1 FROM portal.resource_tags rt 
-              JOIN portal.tags t ON t.tag_id = rt.tag_id 
-              WHERE rt.resource_id = r.resource_id AND (t.name % $1 OR t.name ILIKE $2)
+    // Parallel search across all indices (inline SQL — no external helpers needed)
+    const [roadmapsResult, groupsResult, resourcesResult, discussionsResult] =
+      await Promise.all([
+        // ── ROADMAPS ──────────────────────────────────────────────────────────
+        pool.query(
+          `SELECT
+            roadmap_id AS id,
+            title,
+            description,
+            difficulty_level,
+            'roadmap' AS type
+          FROM portal.roadmaps
+          WHERE is_active = TRUE
+            AND (
+              title % $1
+              OR title ILIKE $2
             )
+          ORDER BY similarity(title, $1) DESC, title
+          LIMIT $3`,
+          [searchTerm, `%${searchTerm}%`, maxResults],
+        ),
+
+        // ── STUDY GROUPS (exclude private unless member) ──────────────────────
+        userId
+          ? pool.query(
+              `SELECT
+                g.group_id AS id,
+                g.name,
+                g.description,
+                g.group_image,
+                g.is_public,
+                g.privacy_type,
+                COUNT(DISTINCT gm2.user_id) AS members,
+                EXISTS(
+                  SELECT 1 FROM portal.group_members gm3
+                  WHERE gm3.group_id = g.group_id AND gm3.user_id = $4
+                ) AS is_member
+              FROM portal.study_groups g
+              LEFT JOIN portal.group_members gm2 ON gm2.group_id = g.group_id
+              WHERE g.deleted_at IS NULL AND (
+                  g.privacy_type != 'private'
+                  OR EXISTS(
+                    SELECT 1 FROM portal.group_members
+                    WHERE group_id = g.group_id AND user_id = $4
+                  )
+                )
+                AND (
+                  g.name % $1
+                  OR g.name ILIKE $2
+                )
+              GROUP BY g.group_id, g.name, g.description, g.group_image, g.is_public, g.privacy_type
+              ORDER BY similarity(g.name, $1) DESC, g.name
+              LIMIT $3`,
+              [searchTerm, `%${searchTerm}%`, maxResults, userId],
+            )
+          : pool.query(
+              `SELECT
+                g.group_id AS id,
+                g.name,
+                g.description,
+                g.group_image,
+                g.is_public,
+                g.privacy_type,
+                COUNT(DISTINCT gm2.user_id) AS members,
+                FALSE AS is_member
+              FROM portal.study_groups g
+              LEFT JOIN portal.group_members gm2 ON gm2.group_id = g.group_id
+              WHERE g.deleted_at IS NULL AND g.privacy_type != 'private'
+                AND (
+                  g.name % $1
+                  OR g.name ILIKE $2
+                )
+              GROUP BY g.group_id, g.name, g.description, g.group_image, g.is_public, g.privacy_type
+              ORDER BY similarity(g.name, $1) DESC, g.name
+              LIMIT $3`,
+              [searchTerm, `%${searchTerm}%`, maxResults],
+            ),
+
+        // ── RESOURCES (approved only) ─────────────────────────────────────────
+        pool.query(
+          `SELECT
+            r.resource_id AS id,
+            r.title,
+            r.description,
+            r.semester,
+            r.program_id,
+            COALESCE(rs.avg_score, 0) AS avg_score,
+            ARRAY(
+              SELECT t.name FROM portal.resource_tags rt
+              JOIN portal.tags t ON t.tag_id = rt.tag_id
+              WHERE rt.resource_id = r.resource_id
+            ) AS tags,
+            'resource' AS type
+          FROM portal.resources r
+          LEFT JOIN (
+            SELECT resource_id, AVG(score) AS avg_score
+            FROM portal.resource_scores
+            GROUP BY resource_id
+          ) rs ON rs.resource_id = r.resource_id
+          WHERE r.status = 'approved' AND r.deleted_at IS NULL
+            AND (
+              r.title % $1
+              OR r.title ILIKE $2
+              OR EXISTS (
+                SELECT 1 FROM portal.resource_tags rt
+                JOIN portal.tags t ON t.tag_id = rt.tag_id
+                WHERE rt.resource_id = r.resource_id
+                  AND (t.name % $1 OR t.name ILIKE $2)
+              )
+            )
+          ORDER BY similarity(r.title, $1) DESC, COALESCE(rs.avg_score, 0) DESC, r.title
+          LIMIT $3`,
+          [searchTerm, `%${searchTerm}%`, maxResults],
+        ),
+
+        // ── DISCUSSIONS ───────────────────────────────────────────────────────
+        pool.query(
+          `SELECT
+            d.discussion_id AS id,
+            d.title,
+            d.content AS description,
+            u.full_name AS author,
+            'discussion' AS type
+          FROM portal.discussions d
+          JOIN portal.users u ON u.user_id = d.user_id
+          WHERE d.deleted_at IS NULL AND d.is_deleted = FALSE
+          AND (
+            d.title % $1
+            OR d.title ILIKE $2
           )
-        GROUP BY r.resource_id, r.title, r.description, r.semester, r.program_id, rs.avg_score
-        ORDER BY 
-          similarity(r.title, $1) DESC,
-          COALESCE(rs.avg_score, 0) DESC,
-          r.title
-        LIMIT $3`,
-        [searchTerm, `%${searchTerm}%`, maxResults],
-      ),
-    ]);
+          ORDER BY similarity(d.title, $1) DESC, d.created_at DESC
+          LIMIT $3`,
+          [searchTerm, `%${searchTerm}%`, maxResults],
+        ),
+      ]);
 
     // Score and format results
     const roadmaps = roadmapsResult.rows
       .map((r) => ({
         ...r,
-        score: calculateScore(searchTerm, {
-          title: r.title,
-          description: r.description,
-        }),
-        path: `/portal/roadmaps/${r.id}`,
+        score: calculateScore(searchTerm, { title: r.title, description: r.description }),
+        path: `/roadmaps/${r.id}`,
       }))
       .sort((a, b) => b.score - a.score);
 
     const groups = groupsResult.rows
       .map((g) => ({
         ...g,
-        score: calculateScore(searchTerm, {
-          name: g.name,
-          description: g.description,
-        }),
-        path: `/portal/groups/${g.id}`,
+        score: calculateScore(searchTerm, { name: g.name, description: g.description }),
+        path: `/groups/${g.id}`,
       }))
       .sort((a, b) => b.score - a.score);
 
     const resources = resourcesResult.rows
       .map((r) => ({
         ...r,
-        score: calculateScore(searchTerm, {
-          name: r.title, // resource_name aliased as title
-          description: r.description,
-          tags: r.tags,
-        }),
-        path: `/portal/resources?id=${r.id}`,
+        score: calculateScore(searchTerm, { name: r.title, description: r.description, tags: r.tags }),
+        path: `/resources?id=${r.id}`,
       }))
       .sort((a, b) => b.score - a.score);
 
-    const total = roadmaps.length + groups.length + resources.length;
+    const discussions = discussionsResult.rows
+      .map((d) => ({
+        ...d,
+        score: calculateScore(searchTerm, { title: d.title, description: d.description }),
+        path: `/discussions/${d.id}`,
+      }))
+      .sort((a, b) => b.score - a.score);
 
-    // Recommendation Fallback if no results found
+    const total =
+      roadmaps.length + groups.length + resources.length + discussions.length;
+
+    // Recommendation fallback if no results found
     if (total === 0) {
       const recommendations = await recommendationService.getRecommendations(
         userId,
@@ -209,13 +279,7 @@ exports.universalSearch = async (req, res) => {
       });
     }
 
-    res.json({
-      query: searchTerm,
-      roadmaps,
-      groups,
-      resources,
-      total,
-    });
+    res.json({ query: searchTerm, roadmaps, groups, resources, discussions, total });
   } catch (err) {
     console.error("Universal search error:", err);
     res.status(500).json({ error: "Search failed" });
@@ -230,6 +294,7 @@ exports.universalSearch = async (req, res) => {
 exports.getSearchSuggestions = async (req, res) => {
   try {
     const { q } = req.query;
+    const userId = req.user?.portal_user_id;
 
     if (!q || q.trim().length < 2) {
       return res.json({ suggestions: [] });
@@ -237,14 +302,33 @@ exports.getSearchSuggestions = async (req, res) => {
 
     const searchTerm = q.trim();
 
+    // Build group privacy clause: exclude private groups unless the user is a member
+    const groupPrivacyClause = userId
+      ? `(privacy_type != 'private' OR EXISTS(
+          SELECT 1 FROM portal.group_members
+          WHERE group_id = study_groups.group_id AND user_id = ${userId}
+        ))`
+      : `privacy_type != 'private'`;
+
     // Get unique titles from all searchable entities with trigram fuzzy matching
     const suggestions = await pool.query(
       `SELECT DISTINCT suggestion, type FROM (
-        SELECT title as suggestion, 'roadmap' as type FROM portal.roadmaps WHERE (title % $1 OR title ILIKE $2) AND is_active = TRUE
+        SELECT title AS suggestion, 'roadmap' AS type
+          FROM portal.roadmaps
+          WHERE (title % $1 OR title ILIKE $2) AND is_active = TRUE
         UNION ALL
-        SELECT name as suggestion, 'group' as type FROM portal.study_groups WHERE (name % $1 OR name ILIKE $2)
+        SELECT name AS suggestion, 'group' AS type
+          FROM portal.study_groups
+          WHERE (name % $1 OR name ILIKE $2) AND deleted_at IS NULL
+            AND ${groupPrivacyClause}
         UNION ALL
-        SELECT title as suggestion, 'resource' as type FROM portal.resources WHERE (title % $1 OR title ILIKE $2) AND status = 'approved'
+        SELECT title AS suggestion, 'resource' AS type
+          FROM portal.resources
+          WHERE (title % $1 OR title ILIKE $2) AND status = 'approved' AND deleted_at IS NULL
+        UNION ALL
+        SELECT title AS suggestion, 'discussion' AS type
+          FROM portal.discussions
+          WHERE (title % $1 OR title ILIKE $2) AND deleted_at IS NULL AND is_deleted = FALSE
       ) combined
       ORDER BY similarity(suggestion, $1) DESC, suggestion
       LIMIT 8`,

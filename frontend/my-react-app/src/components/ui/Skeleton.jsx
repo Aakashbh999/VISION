@@ -1,12 +1,10 @@
-import React from 'react';
-
 const Skeleton = ({ 
   variant = "text", 
   width, 
   height, 
   className = "" 
 }) => {
-  const baseClasses = "animate-pulse bg-slate-200 rounded";
+  const baseClasses = "animate-pulse bg-[var(--bg-active)] rounded";
   
   const variantClasses = {
     text: "h-3 w-full my-2",

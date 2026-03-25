@@ -13,15 +13,19 @@ const LibraryLayout = ({ children }) => {
           isCollapsed={isCollapsed}
           onToggle={() => setIsCollapsed(!isCollapsed)}
         />
-        
+
         {/* Reopen button when sidebar is collapsed */}
         {isCollapsed && (
           <button
             onClick={() => setIsCollapsed(false)}
-            className="absolute -right-4 top-4 z-30 bg-white shadow-md border border-gray-100 p-2 rounded-full hover:bg-gray-50 transition-all hover:scale-105"
+            className="fixed top-[120px] z-[100] bg-purple-600 border-2 border-purple-300 p-2 rounded-full hover:bg-purple-700 transition-all hover:scale-105 shadow-lg"
             title="Open Library Sidebar"
+            style={{
+              left: "max(60px, var(--main-sidebar-width, 60px))",
+              boxShadow: "0 2px 12px 0 rgba(80,0,120,0.12)",
+            }}
           >
-            <ChevronRight size={18} className="text-gray-500" />
+            <ChevronRight size={20} className="text-white" />
           </button>
         )}
       </div>

@@ -59,7 +59,14 @@ exports.getUserStats = async (req, res) => {
     const stats = await XPService.getUserStats(userId);
     
     if (!stats) {
-      return res.status(404).json({ error: "Stats not found" });
+      // Return default stats instead of 404 for a better UX
+      return res.json({
+        user_id: userId,
+        total_xp: 0,
+        current_level: 1,
+        roadmaps_completed: 0,
+        last_activity: new Date()
+      });
     }
 
     res.json(stats);
