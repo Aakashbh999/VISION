@@ -1,12 +1,8 @@
 const pool = require("../config/db");
 const XPService = require("../services/xpService");
 const { successResponse, errorResponse } = require("../utils/response");
-const {
-  validateDescription,
-} = require("../utils/validation");
-const {
-  MAX_DESCRIPTION_WORDS,
-} = require("../utils/constants");
+const { validateDescription } = require("../utils/validation");
+const { MAX_DESCRIPTION_WORDS } = require("../utils/constants");
 const {
   getMembership,
   hasGroupPermission,
@@ -50,13 +46,14 @@ exports.getGroups = async (req, res) => {
     let paramIndex = params.length;
     const conditions = ["g.privacy_type != 'private'", "g.deleted_at IS NULL"]; // Hide private and deleted groups from listing
 
+    let searchParamIndex = null;
     if (search) {
+      paramIndex++;
+      searchParamIndex = paramIndex;
       conditions.push(
-        `(g.name % $${paramIndex + 1} OR g.description % $${paramIndex + 1} OR g.name ILIKE $${paramIndex + 2} OR g.description ILIKE $${paramIndex + 2})`,
+        `(g.name ILIKE $${paramIndex} OR g.description ILIKE $${paramIndex})`,
       );
-      params.push(search);
       params.push(`%${search}%`);
-      paramIndex += 2;
     }
     if (degree) {
       paramIndex++;
@@ -67,14 +64,15 @@ exports.getGroups = async (req, res) => {
     query += ` WHERE ${conditions.join(" AND ")}`;
     query += ` GROUP BY g.group_id, g.name, g.description, g.created_at, g.group_image, g.banner_image, g.is_public, g.privacy_type, g.capacity, g.created_by, g.degree_id, ad.full_name, u.full_name`;
 
-    if (search && (!sort || sort === "latest")) {
-      const searchParamIndex = params.indexOf(search) + 1;
-      query += ` ORDER BY similarity(g.name, $${searchParamIndex}) DESC, g.created_at DESC`;
-    } else if (sort === "active")
+    if (searchParamIndex && (!sort || sort === "latest")) {
+      query += ` ORDER BY CASE WHEN g.name ILIKE $${searchParamIndex} THEN 0 WHEN g.description ILIKE $${searchParamIndex} THEN 1 ELSE 2 END, g.created_at DESC`;
+    } else if (sort === "active") {
       query += ` ORDER BY last_activity DESC NULLS LAST, g.created_at DESC`;
-    else if (sort === "popular")
+    } else if (sort === "popular") {
       query += ` ORDER BY members DESC, g.created_at DESC`;
-    else query += ` ORDER BY g.created_at DESC`;
+    } else {
+      query += ` ORDER BY g.created_at DESC`;
+    }
 
     const result = await pool.query(query, params);
 
@@ -200,7 +198,13 @@ exports.getGroupDetails = async (req, res) => {
 ================================ */
 exports.createGroup = async (req, res) => {
   try {
-    const { name, description, degree_id, privacy_type = "public", tags } = req.body;
+    const {
+      name,
+      description,
+      degree_id,
+      privacy_type = "public",
+      tags,
+    } = req.body;
     const userId = req.user.portal_user_id;
 
     const stats = await XPService.getUserStats(userId);
@@ -223,11 +227,19 @@ exports.createGroup = async (req, res) => {
     // Normalize tags: clean, lowercase, deduplicate
     let normalizedTags = null;
     if (Array.isArray(tags) && tags.length > 0) {
-      normalizedTags = [...new Set(
-        tags
-          .map((t) => String(t).toLowerCase().replace(/^#+/, "").replace(/[^a-z0-9_]/g, "").slice(0, 30))
-          .filter(Boolean)
-      )].slice(0, 10);
+      normalizedTags = [
+        ...new Set(
+          tags
+            .map((t) =>
+              String(t)
+                .toLowerCase()
+                .replace(/^#+/, "")
+                .replace(/[^a-z0-9_]/g, "")
+                .slice(0, 30),
+            )
+            .filter(Boolean),
+        ),
+      ].slice(0, 10);
     }
 
     const client = await pool.connect();
@@ -353,11 +365,7 @@ exports.softDeleteGroup = async (req, res) => {
       [userId, reason || "No reason provided", id],
     );
 
-    return successResponse(
-      res,
-      result.rows[0],
-      "Group deleted successfully",
-    );
+    return successResponse(res, result.rows[0], "Group deleted successfully");
   } catch (err) {
     console.error(err);
     return errorResponse(res, "Failed to delete group");

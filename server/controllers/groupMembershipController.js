@@ -21,9 +21,9 @@ const { buildPresenceSelect } = require("../utils/presence");
 exports.getGroupMembers = async (req, res) => {
   try {
     const { id } = req.params;
+    const { limit } = req.query;
 
-    const members = await pool.query(
-      `SELECT 
+    let query = `SELECT 
         u.user_id, u.full_name, u.profile_image,
         ${buildPresenceSelect("u")},
         gm.joined_at, gm.role, gm.permissions
@@ -32,9 +32,17 @@ exports.getGroupMembers = async (req, res) => {
       WHERE gm.group_id = $1
       ORDER BY 
         CASE gm.role WHEN 'owner' THEN 0 WHEN 'co_admin' THEN 1 ELSE 2 END,
-        gm.joined_at ASC`,
-      [id],
-    );
+        gm.joined_at ASC`;
+
+    const params = [id];
+
+    // Add limit if specified
+    if (limit) {
+      query += ` LIMIT $2`;
+      params.push(parseInt(limit));
+    }
+
+    const members = await pool.query(query, params);
 
     return successResponse(
       res,

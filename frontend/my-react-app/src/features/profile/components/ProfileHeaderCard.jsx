@@ -135,7 +135,7 @@ const ProfileHeaderCard = ({
                 <img
                   src={profile.profile_image}
                   alt={profile.full_name}
-                  className="w-full h-full object-cover"
+                  className="w-full h-full object-cover relative z-0"
                 />
               ) : (
                 <span className="text-5xl font-bold text-white">
@@ -144,9 +144,9 @@ const ProfileHeaderCard = ({
               )}
 
               {profile.is_online && (
-                <span className="absolute bottom-3 right-3 flex h-4 w-4">
+                <span className="absolute bottom-1 right-1 flex h-7 w-7 z-10">
                   <span className="absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75 animate-ping" />
-                  <span className="relative inline-flex h-4 w-4 rounded-full bg-emerald-500 border-2 border-white shadow-sm" />
+                  <span className="relative inline-flex h-7 w-7 rounded-full bg-emerald-500 border-3 border-white shadow-lg" />
                 </span>
               )}
 
@@ -202,7 +202,7 @@ const ProfileHeaderCard = ({
               </h1>
             )}
 
-            {profile.is_online && (
+            {profile.is_online && !isOwner && (
               <p className="mt-2 text-xs font-bold uppercase tracking-[0.2em] text-emerald-600">
                 Active recently
               </p>

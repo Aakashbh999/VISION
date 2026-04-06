@@ -2,6 +2,7 @@ import { useState, useEffect, createElement } from "react";
 import { useGroups } from "../../../hooks/useGroupHooks";
 import { Link, useSearchParams, useNavigate } from "react-router-dom";
 import LoadingSpinner from "../../../components/ui/LoadingSpinner";
+import LazyGroupMemberAvatars from "../../../components/groups/LazyGroupMemberAvatars";
 import { useUserStats } from "../../../hooks/useUserStats";
 import {
   Users,
@@ -305,7 +306,7 @@ const Groups = () => {
             variants={containerVariants}
             initial="hidden"
             animate="visible"
-            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
+            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 place-items-center"
           >
             {groupsList.map((group) => {
               const groupId = group.group_id ?? group.id;
@@ -315,19 +316,18 @@ const Groups = () => {
                   key={groupId}
                   variants={itemVariants}
                   whileHover={{ y: -8 }}
-                  className="group"
+                  className="group w-full max-w-sm"
                 >
                   <Link
                     to={`/groups/${groupId}`}
-                    className="relative block h-full bg-[var(--bg-card)]/70 backdrop-blur-xl border border-[var(--border-main)]/60 border-x-0 sm:border-x rounded-[2.5rem] overflow-hidden hover:shadow-[0_32px_64px_-16px_rgba(124,58,237,0.12)] hover:border-purple-300 transition-all duration-500 flex flex-col group shadow-sm"
+                    className="relative block h-full bg-[var(--bg-card)]/70 backdrop-blur-xl border border-[var(--border-main)]/60 border-x-0 sm:border-x rounded-[2.5rem] overflow-hidden hover:shadow-[0_20px_40px_-12px_rgba(0,0,0,0.1)] transition-all duration-500 flex flex-col group shadow-sm"
                   >
-                    <div className="h-28 relative overflow-hidden bg-purple-600/30">
-                      <div className="absolute inset-0 opacity-40 bg-[radial-gradient(at_top_right,rgba(124,58,237,0.8),transparent_50%),radial-gradient(at_bottom_left,rgba(59,130,246,0.8),transparent_50%)] animate-pulse-slow" />
+                    <div className="h-28 relative overflow-hidden bg-gradient-to-br from-slate-200 to-slate-300 dark:from-slate-700 dark:to-slate-800">
                       {group.banner_image && (
                         <img
                           src={group.banner_image}
                           alt=""
-                          className="w-full h-full object-cover mix-blend-overlay opacity-60 group-hover:scale-110 transition-transform duration-700"
+                          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
                         />
                       )}
                       <div className="absolute top-4 right-4 z-10 flex flex-col gap-2 items-end">
@@ -350,8 +350,8 @@ const Groups = () => {
                     </div>
 
                     <div className="px-6 pb-6 -mt-10 relative flex-1 flex flex-col">
-                      <div className="w-20 h-20 rounded-full bg-[var(--bg-card)] p-1 shadow-2xl shadow-purple-500/20 mb-4 group-hover:rotate-6 transition-transform">
-                        <div className="w-full h-full rounded-full bg-purple-50 border-2 border-purple-100 flex items-center justify-center text-purple-600 font-black text-xl sm:text-2xl overflow-hidden shadow-inner">
+                      <div className="w-20 h-20 rounded-full bg-[var(--bg-card)] p-1 shadow-lg mb-4 group-hover:rotate-6 transition-transform">
+                        <div className="w-full h-full rounded-full bg-[var(--bg-active)] border-2 border-[var(--border-main)] flex items-center justify-center text-[var(--text-main)] font-black text-xl sm:text-2xl overflow-hidden shadow-inner">
                           {group.group_image ? (
                             <img
                               src={group.group_image}
@@ -365,7 +365,7 @@ const Groups = () => {
                       </div>
 
                       <div className="space-y-1 mb-4">
-                        <h2 className="text-lg sm:text-xl font-black text-[var(--text-main)] group-hover:text-purple-600 transition-colors leading-snug">
+                        <h2 className="text-lg sm:text-xl font-black text-[var(--text-main)] group-hover:text-[var(--text-main)]/80 transition-colors leading-snug">
                           {group.name}
                         </h2>
                         <p className="text-sm text-[var(--text-muted)] line-clamp-2 font-medium leading-relaxed">
@@ -375,27 +375,12 @@ const Groups = () => {
                       </div>
 
                       <div className="mt-auto pt-6 border-t border-[var(--border-main)] flex items-center justify-between">
-                        <div className="flex items-center">
-                          <div className="flex -space-x-3 overflow-hidden">
-                            {[...Array(Math.min(3, group.members || 0))].map(
-                              (_, i) => (
-                                <div
-                                  key={i}
-                                  className="inline-block h-8 w-8 rounded-full ring-2 ring-[var(--bg-card)] bg-[var(--bg-active)] border border-[var(--border-main)] flex items-center justify-center text-[10px] font-black text-[var(--text-muted)]"
-                                >
-                                  {String.fromCharCode(65 + i)}
-                                </div>
-                              ),
-                            )}
-                          </div>
-                          <span className="ml-3 text-xs font-black text-[var(--text-muted)] uppercase tracking-tight">
-                            {group.members > 3
-                              ? `+${group.members - 3} collaborators`
-                              : `${group.members} active`}
-                          </span>
-                        </div>
+                        <LazyGroupMemberAvatars
+                          groupId={groupId}
+                          memberCount={group.members || 0}
+                        />
 
-                        <div className="w-10 h-10 rounded-2xl bg-[var(--bg-active)] flex items-center justify-center text-[var(--text-muted)] group-hover:bg-purple-600 group-hover:text-white transition-all shadow-sm">
+                        <div className="w-10 h-10 rounded-2xl bg-[var(--bg-active)] flex items-center justify-center text-[var(--text-muted)] group-hover:bg-[var(--text-main)] group-hover:text-[var(--bg-card)] transition-all shadow-sm">
                           <ArrowRight className="w-5 h-5" />
                         </div>
                       </div>
