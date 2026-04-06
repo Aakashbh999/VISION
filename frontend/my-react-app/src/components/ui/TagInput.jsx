@@ -1,6 +1,5 @@
 import { useState, useRef } from "react";
 import { X, Hash } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
 
 const MAX_TAGS = 10;
 const MAX_TAG_LENGTH = 30;
@@ -8,7 +7,7 @@ const MAX_TAG_LENGTH = 30;
 const TagInput = ({
   tags = [],
   onChange,
-  placeholder = 'Add tags (e.g., #javascript, #career_tips)...',
+  placeholder = "Add tags (e.g., #javascript, #career_tips)...",
   className = "",
 }) => {
   const [inputValue, setInputValue] = useState("");
@@ -61,7 +60,9 @@ const TagInput = ({
           <Hash className="w-3 h-3" />
           Tags
         </label>
-        <span className={`text-[10px] font-bold ${tags.length >= MAX_TAGS ? "text-red-500" : "text-[var(--text-muted)]"}`}>
+        <span
+          className={`text-[10px] font-bold ${tags.length >= MAX_TAGS ? "text-red-500" : "text-[var(--text-muted)]"}`}
+        >
           {tags.length} / {MAX_TAGS}
         </span>
       </div>
@@ -71,34 +72,33 @@ const TagInput = ({
         className={`
           relative flex flex-wrap gap-2 min-h-[52px] w-full px-3 py-2.5
           border rounded-xl bg-[var(--bg-active)] cursor-text transition-all duration-200
-          ${isFocused
-            ? "border-purple-500 ring-4 ring-purple-500/10 bg-[var(--bg-main)]"
-            : "border-[var(--border-main)] hover:border-[var(--text-muted)]/30"
+          ${
+            isFocused
+              ? "border-purple-500 ring-4 ring-purple-500/10 bg-[var(--bg-main)]"
+              : "border-[var(--border-main)] hover:border-[var(--text-muted)]/30"
           }
         `}
       >
-        <AnimatePresence>
-          {tags.map((tag, i) => (
-            <motion.span
-              key={tag}
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.7 }}
-              className="inline-flex items-center gap-1 py-1 px-2.5 bg-purple-50 border border-purple-200 text-purple-700 text-[11px] font-black rounded-lg tracking-tight select-none"
+        {tags.map((tag, i) => (
+          <span
+            key={tag}
+            className="inline-flex items-center gap-1 py-1 px-2.5 bg-purple-50 border border-purple-200 text-purple-700 text-[11px] font-black rounded-lg tracking-tight select-none"
+          >
+            <span className="text-purple-400">#</span>
+            {tag}
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                removeTag(i);
+              }}
+              className="ml-0.5 text-purple-400 hover:text-purple-700 transition-colors rounded-full hover:bg-purple-200 p-0.5"
+              aria-label={`Remove #${tag}`}
             >
-              <span className="text-purple-400">#</span>
-              {tag}
-              <button
-                type="button"
-                onClick={(e) => { e.stopPropagation(); removeTag(i); }}
-                className="ml-0.5 text-purple-400 hover:text-purple-700 transition-colors rounded-full hover:bg-purple-200 p-0.5"
-                aria-label={`Remove #${tag}`}
-              >
-                <X className="w-2.5 h-2.5" />
-              </button>
-            </motion.span>
-          ))}
-        </AnimatePresence>
+              <X className="w-2.5 h-2.5" />
+            </button>
+          </span>
+        ))}
 
         <input
           ref={inputRef}
@@ -108,14 +108,28 @@ const TagInput = ({
           onKeyDown={handleKeyDown}
           onFocus={() => setIsFocused(true)}
           onBlur={handleBlur}
-          placeholder={tags.length === 0 ? placeholder : tags.length < MAX_TAGS ? "Add another tag..." : ""}
+          placeholder={
+            tags.length === 0
+              ? placeholder
+              : tags.length < MAX_TAGS
+                ? "Add another tag..."
+                : ""
+          }
           disabled={tags.length >= MAX_TAGS}
           className="flex-1 min-w-[180px] bg-transparent outline-none text-sm font-medium text-[var(--text-main)] placeholder:text-[var(--text-muted)]/50 disabled:cursor-not-allowed"
         />
       </div>
 
       <p className="text-[10px] text-[var(--text-muted)] font-medium">
-        Press <kbd className="px-1 py-0.5 bg-[var(--bg-active)] border border-[var(--border-main)] rounded text-[9px] font-black">Enter</kbd> or <kbd className="px-1 py-0.5 bg-[var(--bg-active)] border border-[var(--border-main)] rounded text-[9px] font-black">,</kbd> to add a tag. Backspace removes the last one.
+        Press{" "}
+        <kbd className="px-1 py-0.5 bg-[var(--bg-active)] border border-[var(--border-main)] rounded text-[9px] font-black">
+          Enter
+        </kbd>{" "}
+        or{" "}
+        <kbd className="px-1 py-0.5 bg-[var(--bg-active)] border border-[var(--border-main)] rounded text-[9px] font-black">
+          ,
+        </kbd>{" "}
+        to add a tag. Backspace removes the last one.
       </p>
     </div>
   );

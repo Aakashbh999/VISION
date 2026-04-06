@@ -57,9 +57,13 @@ const Breadcrumb = () => {
     <nav className="flex items-center text-sm">
       {breadcrumbs.map((crumb, index) => (
         <div key={crumb.path} className="flex items-center">
-          {index > 0 && <ChevronRight className="w-4 h-4 mx-2 text-[var(--text-muted)]" />}
+          {index > 0 && (
+            <ChevronRight className="w-4 h-4 mx-2 text-[var(--text-muted)]" />
+          )}
           {crumb.isLast ? (
-            <span className="text-[var(--text-main)] font-medium">{crumb.label}</span>
+            <span className="text-[var(--text-main)] font-medium">
+              {crumb.label}
+            </span>
           ) : (
             <Link
               to={crumb.path}
@@ -218,7 +222,9 @@ const TopNavBar = () => {
                         <p className="text-sm font-semibold text-[var(--text-main)]">
                           {user?.full_name || "Student"}
                         </p>
-                        <p className="text-xs text-[var(--text-muted)]">{user?.email}</p>
+                        <p className="text-xs text-[var(--text-muted)]">
+                          {user?.email}
+                        </p>
                       </div>
                       {user?.is_moderator && (
                         <span className="px-2 py-0.5 bg-purple-50 text-purple-600 border border-purple-200 rounded text-[10px] font-bold uppercase">

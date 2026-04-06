@@ -1,5 +1,6 @@
 @import url("https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=Outfit:wght@100..900&family=Plus+Jakarta+Sans:ital,wght@0,200..800;1,200..800&family=JetBrains+Mono:ital,wght@0,100..800;1,100..800&display=swap");
 @import "tailwindcss";
+@custom-variant dark (&:where(.dark, .dark *));
 
 /* ===== Tailwind 4 Theme: Shades of Purple ===== */
 @theme {
@@ -61,7 +62,7 @@
   --text-main: #111827;
   --text-muted: #4b5563;
   --border-main: #e5e7eb;
-  
+
   --sidebar-bg: #fefefe;
   --sidebar-active-bg: #f3e8ff;
   --sidebar-hover-bg: #faf5ff;

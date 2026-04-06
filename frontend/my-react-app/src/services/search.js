@@ -20,6 +20,16 @@ const CATEGORY_ICONS = {
   group: "users",
 };
 
+const resolveEntityId = (entity, keys = [], fallback = "") => {
+  for (const key of keys) {
+    const value = entity?.[key];
+    if (value !== undefined && value !== null && String(value).trim() !== "") {
+      return String(value);
+    }
+  }
+  return fallback;
+};
+
 /**
  * Transform API response to unified search result format
  */
@@ -28,12 +38,13 @@ const transformResults = (apiResponse) => {
 
   // Process roadmaps
   if (apiResponse.roadmaps?.length) {
-    apiResponse.roadmaps.forEach((r) => {
+    apiResponse.roadmaps.forEach((r, idx) => {
+      const roadmapId = resolveEntityId(r, ["id", "roadmap_id"], `idx-${idx}`);
       results.push({
-        id: `roadmap-${r.id}`,
+        id: `roadmap-${roadmapId}`,
         title: r.title,
         category: SEARCH_CATEGORIES.ROADMAPS,
-        path: r.path || `/portal/roadmaps/${r.id}`,
+        path: r.path || `/portal/roadmaps/${roadmapId}`,
         description: r.description || "",
         icon: CATEGORY_ICONS.roadmap,
         score: r.score,
@@ -45,12 +56,17 @@ const transformResults = (apiResponse) => {
 
   // Process resources
   if (apiResponse.resources?.length) {
-    apiResponse.resources.forEach((r) => {
+    apiResponse.resources.forEach((r, idx) => {
+      const resourceId = resolveEntityId(
+        r,
+        ["id", "resource_id"],
+        `idx-${idx}`,
+      );
       results.push({
-        id: `resource-${r.id}`,
+        id: `resource-${resourceId}`,
         title: r.title,
         category: SEARCH_CATEGORIES.RESOURCES,
-        path: r.path || `/portal/resources?id=${r.id}`,
+        path: r.path || `/portal/resources?id=${resourceId}`,
         description: r.description || r.resource_type || "",
         icon: CATEGORY_ICONS.resource,
         score: r.score,
@@ -66,12 +82,13 @@ const transformResults = (apiResponse) => {
 
   // Process groups
   if (apiResponse.groups?.length) {
-    apiResponse.groups.forEach((g) => {
+    apiResponse.groups.forEach((g, idx) => {
+      const groupId = resolveEntityId(g, ["id", "group_id"], `idx-${idx}`);
       results.push({
-        id: `group-${g.id}`,
+        id: `group-${groupId}`,
         title: g.name,
         category: SEARCH_CATEGORIES.GROUPS,
-        path: g.path || `/groups/${g.id}/profile`,
+        path: g.path || `/groups/${groupId}/profile`,
         description: g.description || "",
         icon: CATEGORY_ICONS.group,
         score: g.score,
@@ -86,12 +103,17 @@ const transformResults = (apiResponse) => {
 
   // Process discussions
   if (apiResponse.discussions?.length) {
-    apiResponse.discussions.forEach((d) => {
+    apiResponse.discussions.forEach((d, idx) => {
+      const discussionId = resolveEntityId(
+        d,
+        ["id", "discussion_id"],
+        `idx-${idx}`,
+      );
       results.push({
-        id: `discussion-${d.id}`,
+        id: `discussion-${discussionId}`,
         title: d.title,
         category: SEARCH_CATEGORIES.DISCUSSIONS,
-        path: d.path || `/discussions/${d.id}`,
+        path: d.path || `/discussions/${discussionId}`,
         description: d.description || "",
         author: d.author || "",
         icon: "message-square",

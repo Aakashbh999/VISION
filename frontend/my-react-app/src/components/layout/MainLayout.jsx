@@ -1,5 +1,4 @@
 import { Outlet, useLocation } from "react-router-dom";
-import { motion } from "framer-motion";
 import { SidebarProvider, useSidebar } from "../../hooks/useSidebar";
 import TopNavBar from "./TopNavBar";
 import PortalSidebarNew from "../portal/PortalSidebarNew";
@@ -26,13 +25,11 @@ const MainLayoutContent = () => {
       <PortalSidebarNew />
 
       {/* Main Content Area */}
-      <motion.main
-        layout
+      <main
         className={`
           flex-1 pt-16 layout-transition flex flex-col
           ${isMobile ? "ml-0" : isCollapsed ? "lg:ml-18" : "lg:ml-64"}
         `}
-        transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1] }}
       >
         {/* Library/Resources page manages its own padding */}
         {isLibraryRoute ? (
@@ -40,14 +37,14 @@ const MainLayoutContent = () => {
             <Outlet />
           </div>
         ) : (
-          <div className="flex-1 min-h-[calc(100vh-4rem)] px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+          <div className="flex-1 min-h-[calc(100vh-4rem)] px-0 sm:px-6 lg:px-8 py-6 sm:py-8">
             <Outlet />
           </div>
         )}
 
         {/* Footer: no sidebar offset needed here because main already has the margin */}
         {!hideFooter && <Footer withSidebarOffset={false} />}
-      </motion.main>
+      </main>
     </div>
   );
 };

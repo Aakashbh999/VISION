@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { createElement, useState } from "react";
 
 const CategoryPage = ({
   title,
@@ -17,7 +17,7 @@ const CategoryPage = ({
       : data.filter((item) => getFilterValue(item) === filter);
 
   return (
-    <div className="px-4 sm:px-6 lg:px-8 py-6 sm:py-8 lg:py-10">
+    <div className="px-0 sm:px-6 lg:px-8 py-6 sm:py-8 lg:py-10">
       {/* Header */}
       <div className="max-w-3xl">
         <h1 className="text-2xl sm:text-3xl font-bold text-[var(--text-main)]">
@@ -47,9 +47,9 @@ const CategoryPage = ({
 
       {/* Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mt-8">
-        {filteredData.map((item) => (
-          <CardComponent key={item.id} item={item} />
-        ))}
+        {filteredData.map((item) =>
+          createElement(CardComponent, { key: item.id, item }),
+        )}
       </div>
 
       {/* Empty state */}

@@ -1,13 +1,20 @@
 const pool = require("../config/db");
 const cloudinary = require("../config/cloudinary");
 const { successResponse, errorResponse } = require("../utils/response");
-const { handleImageUploadWithCooldown } = require("../utils/imageUploadService");
+const {
+  handleImageUploadWithCooldown,
+} = require("../utils/imageUploadService");
 const XPService = require("../services/xpService");
-const { countWords, isCooldownActive, getCooldownDaysLeft } = require("../utils/validation");
+const {
+  countWords,
+  isCooldownActive,
+  getCooldownDaysLeft,
+} = require("../utils/validation");
 const {
   calculateSemesterFromBatch,
   resolveEffectiveSemester,
 } = require("../utils/academicUtils");
+const { buildPresenceSelect } = require("../utils/presence");
 const {
   PROFILE_PIC_COOLDOWN_DAYS,
   BANNER_COOLDOWN_DAYS,
@@ -33,7 +40,6 @@ function normalizeAcademicProfile(profile) {
   };
 }
 
-
 /**
  * GET /api/profile/:userId  — Public profile view
  */
@@ -56,6 +62,7 @@ exports.getPublicProfile = async (req, res) => {
         u.semester_is_manual,
         u.program_id,
         u.is_moderator,
+        ${buildPresenceSelect("u")},
         p.program_name,
         us.total_xp,
         us.current_level,
@@ -86,7 +93,7 @@ exports.getPublicProfile = async (req, res) => {
        LEFT JOIN portal.discussions d  ON d.user_id     = u.user_id AND d.deleted_at IS NULL AND d.is_deleted = FALSE
        LEFT JOIN portal.resources r    ON r.created_by = u.user_id AND r.deleted_at IS NULL
        WHERE u.user_id = $1 AND u.status = 'active'
-       GROUP BY u.user_id, p.program_name, us.total_xp, us.current_level`,
+       GROUP BY u.user_id, u.last_seen_at, p.program_name, us.total_xp, us.current_level`,
       viewerId ? [userId, viewerId] : [userId],
     );
 
@@ -134,6 +141,7 @@ exports.getOwnProfile = async (req, res) => {
         u.last_banner_update,
         u.profile_pic_free_skips,
         u.banner_free_skips,
+        ${buildPresenceSelect("u")},
         a.email,
         a.email_status,
         p.program_name,
@@ -158,7 +166,7 @@ exports.getOwnProfile = async (req, res) => {
        LEFT JOIN portal.discussions d  ON d.user_id     = u.user_id AND d.deleted_at IS NULL AND d.is_deleted = FALSE
        LEFT JOIN portal.resources r    ON r.created_by = u.user_id AND r.deleted_at IS NULL
        WHERE u.user_id = $1
-       GROUP BY u.user_id, a.email, a.email_status, p.program_name, us.total_xp, us.current_level`,
+       GROUP BY u.user_id, u.last_seen_at, a.email, a.email_status, p.program_name, us.total_xp, us.current_level`,
       [userId],
     );
 
@@ -247,14 +255,22 @@ exports.updateProfile = async (req, res) => {
         ? semester_is_manual === true || semester_is_manual === "true"
         : current.semester_is_manual;
 
-    const nextLinkedin = linkedin_url !== undefined ? linkedin_url : current.linkedin_url;
-    const nextFacebook = facebook_url !== undefined ? facebook_url : current.facebook_url;
-    const nextInstagram = instagram_url !== undefined ? instagram_url : current.instagram_url;
-    const nextYoutube = youtube_url !== undefined ? youtube_url : current.youtube_url;
-    const nextReddit = reddit_url !== undefined ? reddit_url : current.reddit_url;
-    const nextTwitter = twitter_url !== undefined ? twitter_url : current.twitter_url;
-    const nextGithub = github_url !== undefined ? github_url : current.github_url;
-    const nextWebsite = website_url !== undefined ? website_url : current.website_url;
+    const nextLinkedin =
+      linkedin_url !== undefined ? linkedin_url : current.linkedin_url;
+    const nextFacebook =
+      facebook_url !== undefined ? facebook_url : current.facebook_url;
+    const nextInstagram =
+      instagram_url !== undefined ? instagram_url : current.instagram_url;
+    const nextYoutube =
+      youtube_url !== undefined ? youtube_url : current.youtube_url;
+    const nextReddit =
+      reddit_url !== undefined ? reddit_url : current.reddit_url;
+    const nextTwitter =
+      twitter_url !== undefined ? twitter_url : current.twitter_url;
+    const nextGithub =
+      github_url !== undefined ? github_url : current.github_url;
+    const nextWebsite =
+      website_url !== undefined ? website_url : current.website_url;
 
     let nextSemester =
       semester !== undefined && semester !== null && semester !== ""
@@ -405,7 +421,10 @@ exports.updateProfileImage = async (req, res) => {
       } else if (spend_vxp === "true" || spend_vxp === true) {
         // VXP deduction handled in transaction below
       } else {
-        const daysLeft = getCooldownDaysLeft(last_profile_pic_update, PROFILE_PIC_COOLDOWN_DAYS);
+        const daysLeft = getCooldownDaysLeft(
+          last_profile_pic_update,
+          PROFILE_PIC_COOLDOWN_DAYS,
+        );
         return errorResponse(
           res,
           `Profile picture cooldown active. ${daysLeft} day(s) remaining.`,
@@ -468,7 +487,10 @@ exports.updateProfileBanner = async (req, res) => {
       } else if (spend_vxp === "true" || spend_vxp === true) {
         // handled in transaction
       } else {
-        const daysLeft = getCooldownDaysLeft(last_banner_update, BANNER_COOLDOWN_DAYS);
+        const daysLeft = getCooldownDaysLeft(
+          last_banner_update,
+          BANNER_COOLDOWN_DAYS,
+        );
         return errorResponse(
           res,
           `Banner cooldown active. ${daysLeft} day(s) remaining.`,
@@ -506,12 +528,16 @@ async function handleImageRemoval(req, res, type) {
   try {
     const userId = req.user.portal_user_id;
     const isProfile = type === "profile";
-    
+
     // Determine column names
-    const publicIdCol = isProfile ? "profile_image_public_id" : "banner_image_public_id";
+    const publicIdCol = isProfile
+      ? "profile_image_public_id"
+      : "banner_image_public_id";
     const imageCol = isProfile ? "profile_image" : "banner_image";
     const returnKey = isProfile ? "profile_image" : "banner_image";
-    const successMsg = isProfile ? "Profile picture removed successfully" : "Banner removed successfully";
+    const successMsg = isProfile
+      ? "Profile picture removed successfully"
+      : "Banner removed successfully";
 
     const current = await pool.query(
       `SELECT ${publicIdCol} FROM portal.users WHERE user_id = $1`,
@@ -527,7 +553,10 @@ async function handleImageRemoval(req, res, type) {
       try {
         await cloudinary.uploader.destroy(publicId, { resource_type: "image" });
       } catch (cloudErr) {
-        console.error(`handleImageRemoval cloudinary destroy error for ${type}:`, cloudErr);
+        console.error(
+          `handleImageRemoval cloudinary destroy error for ${type}:`,
+          cloudErr,
+        );
       }
     }
 

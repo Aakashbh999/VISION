@@ -1,6 +1,5 @@
-import { useState, useEffect } from "react";
-import { useSavedDiscussions, useToggleSave } from "../../hooks/useDiscussionHooks";
-import { useAuth } from "../../context/AuthContext";
+import { useState } from "react";
+import { useSavedDiscussions } from "../../hooks/useDiscussionHooks";
 import { Link } from "react-router-dom";
 import LoadingSpinner from "../../components/ui/LoadingSpinner";
 import ButtonLoader from "../../components/ui/ButtonLoader";
@@ -36,7 +35,7 @@ const SavedDiscussions = () => {
   const pagination = data?.pagination || { page: 1, totalPages: 1 };
 
   return (
-    <div className="space-y-6 px-4 sm:px-6 lg:px-8 py-6 sm:py-8 lg:py-10">
+    <div className="space-y-6 px-0 sm:px-6 lg:px-8 py-6 sm:py-8 lg:py-10">
       {/* Header */}
       <div className="flex items-center gap-4">
         <Link
@@ -45,7 +44,7 @@ const SavedDiscussions = () => {
         >
           <ChevronLeft className="w-4 h-4" /> Back
         </Link>
-        <h1 className="text-2xl font-bold text-[var(--text-main)]">
+        <h1 className="text-xl sm:text-2xl font-bold text-[var(--text-main)]">
           <Bookmark className="w-6 h-6 inline mr-2" />
           Saved Discussions
         </h1>
@@ -54,9 +53,11 @@ const SavedDiscussions = () => {
       {/* Posts list */}
       <div className="space-y-4">
         {discussions.length === 0 ? (
-          <div className="text-center py-12 bg-[var(--bg-card)] rounded-xl border border-[var(--border-main)]">
+          <div className="text-center py-12 bg-[var(--bg-card)] rounded-xl border border-[var(--border-main)] border-x-0 sm:border-x">
             <Bookmark className="w-12 h-12 mx-auto text-[var(--text-muted)] mb-4" />
-            <p className="text-[var(--text-muted)]">No saved discussions yet.</p>
+            <p className="text-[var(--text-muted)]">
+              No saved discussions yet.
+            </p>
             <p className="text-sm text-[var(--text-muted)] mt-1">
               Save discussions to read them later!
             </p>
@@ -72,11 +73,11 @@ const SavedDiscussions = () => {
             <Link
               key={disc.discussion_id}
               to={`/discussions/${disc.discussion_id}`}
-              className="block bg-[var(--bg-card)] rounded-xl border border-[var(--border-main)] p-5 hover:shadow-md transition-shadow"
+              className="block bg-[var(--bg-card)] rounded-xl border border-[var(--border-main)] border-x-0 sm:border-x p-5 hover:shadow-md transition-shadow"
             >
               <div className="flex items-start justify-between">
                 <div className="flex-1">
-                  <h2 className="text-lg font-semibold text-[var(--text-main)] mb-1">
+                  <h2 className="text-base sm:text-lg font-semibold text-[var(--text-main)] mb-1">
                     {disc.title}
                   </h2>
                   <p className="text-sm text-[var(--text-muted)] mb-2 line-clamp-2">
@@ -108,7 +109,9 @@ const SavedDiscussions = () => {
                     onClick={(e) => handleUnsave(disc.discussion_id, e)}
                     disabled={loadingUnsave === disc.discussion_id}
                     className={`p-1.5 text-yellow-500 hover:text-gray-500 rounded transition-all ${
-                      loadingUnsave === disc.discussion_id ? "opacity-50 cursor-wait" : ""
+                      loadingUnsave === disc.discussion_id
+                        ? "opacity-50 cursor-wait"
+                        : ""
                     }`}
                     title="Remove from saved"
                   >

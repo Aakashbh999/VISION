@@ -24,7 +24,7 @@ const LibrarySidebar = ({ isCollapsed, onToggle }) => {
   return (
     <aside
       className={`relative h-full bg-[var(--bg-card)] border-r border-[var(--border-main)] flex flex-col shadow-sm
-      transition-all duration-300 ease-in-out z-20 overflow-hidden
+      transition-all duration-300 ease-in-out z-20 overflow-visible
       ${isCollapsed ? "w-0 opacity-0 border-none" : "w-64 opacity-100"}`}
     >
       <div className="w-64 flex flex-col h-full">
@@ -33,13 +33,9 @@ const LibrarySidebar = ({ isCollapsed, onToggle }) => {
           <h2 className="font-bold text-[var(--text-main)]">Library</h2>
           <button
             onClick={onToggle}
-            className="sticky right-0 top-1/2 -translate-y-1/2 p-1.5 hover:bg-[var(--bg-active)] rounded-lg text-[var(--text-muted)] transition-colors z-40 bg-[var(--bg-card)] shadow"
-            style={{
-              position: "absolute",
-              right: "-18px",
-              top: "50%",
-              transform: "translateY(-50%)",
-            }}
+            className="absolute top-1/2 -right-3 -translate-y-1/2 w-7 h-7 rounded-full bg-[var(--bg-card)] border border-[var(--border-main)] shadow-md hover:bg-[var(--bg-active)] hover:border-purple-300 text-[var(--text-muted)] hover:text-[var(--text-main)] transition-all z-40 flex items-center justify-center"
+            title="Minimize Library Sidebar"
+            aria-label="Minimize Library Sidebar"
           >
             <ChevronLeft size={18} />
           </button>
@@ -60,7 +56,9 @@ const LibrarySidebar = ({ isCollapsed, onToggle }) => {
               <item.icon
                 size={20}
                 className={
-                  filters.view === item.id ? "text-purple-600" : "text-[var(--text-muted)]"
+                  filters.view === item.id
+                    ? "text-purple-600"
+                    : "text-[var(--text-muted)]"
                 }
               />
               <span className="whitespace-nowrap">{item.label}</span>

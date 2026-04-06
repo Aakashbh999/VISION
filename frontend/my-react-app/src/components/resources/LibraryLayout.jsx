@@ -18,21 +18,21 @@ const LibraryLayout = ({ children }) => {
         {isCollapsed && (
           <button
             onClick={() => setIsCollapsed(false)}
-            className="fixed top-[120px] z-[100] bg-purple-600 border-2 border-purple-300 p-2 rounded-full hover:bg-purple-700 transition-all hover:scale-105 shadow-lg"
+            className="absolute top-1/2 -translate-y-1/2 -right-4 z-[100] w-10 h-10 rounded-full bg-purple-700 border-2 border-white/90 text-white hover:bg-purple-800 hover:border-white transition-all hover:scale-110 shadow-2xl ring-2 ring-purple-300/70 focus:outline-none focus:ring-4 focus:ring-purple-400/80 flex items-center justify-center"
             title="Open Library Sidebar"
+            aria-label="Open Library Sidebar"
             style={{
-              left: "max(60px, var(--main-sidebar-width, 60px))",
-              boxShadow: "0 2px 12px 0 rgba(80,0,120,0.12)",
+              boxShadow: "0 8px 24px rgba(76, 29, 149, 0.42)",
             }}
           >
-            <ChevronRight size={20} className="text-white" />
+            <ChevronRight size={22} className="text-white" />
           </button>
         )}
       </div>
 
       {/* Main Content */}
       <main className="flex-1 min-w-0 pb-20">
-        <div className="max-w-[1400px] mx-auto p-4 md:p-8 lg:p-10">
+        <div className="max-w-[1400px] mx-auto px-0 py-4 md:p-8 lg:p-10">
           {children}
         </div>
       </main>

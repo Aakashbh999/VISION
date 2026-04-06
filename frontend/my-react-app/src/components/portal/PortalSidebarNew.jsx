@@ -9,8 +9,6 @@ import {
   Globe,
   FolderOpen,
   User,
-  ChevronLeft,
-  ChevronRight,
   ChevronDown,
   Library,
   X,
@@ -180,33 +178,19 @@ const NavItem = ({ item, isCollapsed, depth = 0 }) => {
 };
 
 const PortalSidebarNew = () => {
-  const { isCollapsed, setIsCollapsed, isMobileOpen, closeMobile, isMobile } =
-    useSidebar();
+  const { isCollapsed, isMobileOpen, closeMobile, isMobile } = useSidebar();
   const { open: openSearch } = useSearchModal();
   const { data: stats } = useUserStats();
   const streak = stats?.learning_streak ?? stats?.streak ?? null;
 
   const sidebarContent = (
     <div className="flex flex-col h-full">
-      {/* Collapse toggle (desktop only) */}
-      {!isMobile && (
-        <button
-          onClick={() => setIsCollapsed(!isCollapsed)}
-          className="absolute -right-3 top-20 w-6 h-6 bg-[var(--bg-card)] border border-[var(--border-main)] rounded-full flex items-center justify-center shadow-sm hover:bg-[var(--bg-active)] hover:border-purple-200 transition-colors z-50"
-          aria-label={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
-        >
-          {isCollapsed ? (
-            <ChevronRight className="w-3.5 h-3.5 text-[var(--text-muted)]" />
-          ) : (
-            <ChevronLeft className="w-3.5 h-3.5 text-[var(--text-muted)]" />
-          )}
-        </button>
-      )}
-
       {/* Mobile close button */}
       {isMobile && (
         <div className="flex items-center justify-between px-4 py-3 border-b border-[var(--border-main)]">
-          <span className="text-lg font-semibold text-[var(--text-main)]">Menu</span>
+          <span className="text-base sm:text-lg font-semibold text-[var(--text-main)]">
+            Menu
+          </span>
           <button
             onClick={closeMobile}
             className="p-1.5 rounded-lg hover:bg-[var(--bg-active)] transition-colors"
@@ -220,12 +204,17 @@ const PortalSidebarNew = () => {
       {isMobile && (
         <div className="px-4 py-4 border-b border-[var(--border-main)]">
           <button
-            onClick={() => { closeMobile(); openSearch(); }}
+            onClick={() => {
+              closeMobile();
+              openSearch();
+            }}
             className="w-full flex items-center gap-2 pl-9 pr-3 py-2 bg-[var(--bg-active)] border border-[var(--border-main)] rounded-xl text-sm text-[var(--text-muted)] hover:bg-[var(--bg-card)] hover:border-purple-300 transition-all relative group"
           >
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--text-muted)] group-hover:text-purple-500 transition-colors" />
             Quick search...
-            <kbd className="ml-auto text-[10px] font-medium px-1.5 py-0.5 bg-[var(--bg-active)] border border-[var(--border-main)] rounded text-[var(--text-muted)]">⌘K</kbd>
+            <kbd className="ml-auto text-[10px] font-medium px-1.5 py-0.5 bg-[var(--bg-active)] border border-[var(--border-main)] rounded text-[var(--text-muted)]">
+              ⌘K
+            </kbd>
           </button>
         </div>
       )}
@@ -245,12 +234,18 @@ const PortalSidebarNew = () => {
       {(!isCollapsed || isMobile) && (
         <div className="p-3 border-t border-[var(--border-main)]">
           <div className="p-3 rounded-lg bg-[var(--sidebar-active-bg)] border border-[var(--border-main)]">
-            <p className="text-xs text-[var(--text-muted)] font-medium">Learning Streak</p>
+            <p className="text-xs text-[var(--text-muted)] font-medium">
+              Learning Streak
+            </p>
             <p className="text-sm font-semibold text-purple-600 flex items-center gap-1">
               {streak !== null && streak > 0 ? (
-                <><span>🔥</span> {streak} day{streak !== 1 ? 's' : ''}</>
+                <>
+                  <span>🔥</span> {streak} day{streak !== 1 ? "s" : ""}
+                </>
               ) : (
-                <><Zap className="w-3.5 h-3.5" /> Start your streak today!</>
+                <>
+                  <Zap className="w-3.5 h-3.5" /> Start your streak today!
+                </>
               )}
             </p>
           </div>

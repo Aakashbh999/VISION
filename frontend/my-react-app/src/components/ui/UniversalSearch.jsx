@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
 import { Search, X, Loader2 } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
 
 const UniversalSearch = ({
   placeholder = "Search...",
@@ -21,7 +20,7 @@ const UniversalSearch = ({
       onSearch?.(value);
     }, delay);
     return () => clearTimeout(timer);
-  }, [value, delay]);
+  }, [value, delay, onSearch]);
 
   const handleClear = () => {
     setValue("");
@@ -47,29 +46,18 @@ const UniversalSearch = ({
       />
 
       <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center">
-        <AnimatePresence mode="wait">
-          {isLoading ? (
-            <motion.div
-              key="loader"
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.8 }}
-            >
-              <Loader2 className="w-4 h-4 text-purple-500 animate-spin" />
-            </motion.div>
-          ) : value ? (
-            <motion.button
-              key="clear"
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.8 }}
-              onClick={handleClear}
-              className="p-1.5 rounded-lg hover:bg-[var(--bg-active)] text-[var(--text-muted)] hover:text-[var(--text-main)] transition-colors"
-            >
-              <X className="w-4 h-4" />
-            </motion.button>
-          ) : null}
-        </AnimatePresence>
+        {isLoading ? (
+          <div>
+            <Loader2 className="w-4 h-4 text-purple-500 animate-spin" />
+          </div>
+        ) : value ? (
+          <button
+            onClick={handleClear}
+            className="p-1.5 rounded-lg hover:bg-[var(--bg-active)] text-[var(--text-muted)] hover:text-[var(--text-main)] transition-colors"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        ) : null}
       </div>
 
       <div className="absolute -inset-0.5 bg-gradient-to-r from-purple-500 to-purple-600 rounded-2xl opacity-0 group-focus-within:opacity-10 blur-md -z-10 transition-opacity pointer-events-none" />

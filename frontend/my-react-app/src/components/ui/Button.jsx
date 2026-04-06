@@ -1,3 +1,5 @@
+import { createElement } from "react";
+
 const Button = ({
   children,
   variant = "primary",
@@ -5,7 +7,7 @@ const Button = ({
   className = "",
   isLoading = false,
   disabled = false,
-  as: Component = "button",
+  as: component = "button",
   ...props
 }) => {
   const baseStyles =
@@ -17,7 +19,7 @@ const Button = ({
     shiny:
       "bg-gradient-to-r from-purple-600 to-purple-800 text-white hover:from-purple-700 hover:to-purple-900 shadow-lg shadow-purple-500/20 focus:ring-purple-500/20 rounded-xl",
     secondary:
-      "bg-white border border-slate-200 text-slate-900 hover:bg-slate-50 focus:ring-slate-100 rounded-xl",
+      "bg-[var(--bg-card)] border border-[var(--border-main)] text-[var(--text-main)] hover:bg-[var(--bg-active)] focus:ring-slate-100 rounded-xl",
     ghost:
       "bg-transparent text-purple-700 hover:bg-purple-50 hover:text-purple-800 focus:ring-purple-100 rounded-xl",
     danger:
@@ -32,17 +34,17 @@ const Button = ({
     lg: "px-8 py-4 text-sm gap-3",
   };
 
-  return (
-    <Component
-      className={`${baseStyles} ${variants[variant]} ${sizes[size]} ${className}`}
-      disabled={disabled || isLoading}
-      {...props}
-    >
-      {isLoading && (
-        <span className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin mr-2" />
-      )}
-      {children}
-    </Component>
+  return createElement(
+    component,
+    {
+      className: `${baseStyles} ${variants[variant]} ${sizes[size]} ${className}`,
+      disabled: disabled || isLoading,
+      ...props,
+    },
+    isLoading ? (
+      <span className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin mr-2" />
+    ) : null,
+    children,
   );
 };
 

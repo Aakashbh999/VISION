@@ -38,7 +38,12 @@ const getThumbnailUrl = (url, width = 300) => {
   return url.replace("/upload/", `/upload/w_${width},c_fill,q_auto,f_auto/`);
 };
 
-const getDownloadFilename = (originalFilename, fileUrl, title, resourceType) => {
+const getDownloadFilename = (
+  originalFilename,
+  fileUrl,
+  title,
+  resourceType,
+) => {
   if (originalFilename && originalFilename.includes(".")) {
     return originalFilename;
   }
@@ -56,8 +61,13 @@ const getDownloadFilename = (originalFilename, fileUrl, title, resourceType) => 
     .substring(0, 50);
   let extension = "";
   if (fileUrl) {
-    if (fileUrl.includes("/raw/upload/") || fileUrl.includes("/image/upload/")) {
-      const match = fileUrl.match(/\.(pdf|doc|docx|txt|ppt|pptx|xls|xlsx|zip|rar)/i);
+    if (
+      fileUrl.includes("/raw/upload/") ||
+      fileUrl.includes("/image/upload/")
+    ) {
+      const match = fileUrl.match(
+        /\.(pdf|doc|docx|txt|ppt|pptx|xls|xlsx|zip|rar)/i,
+      );
       if (match) {
         extension = `.${match[1].toLowerCase()}`;
       } else if (fileUrl.includes("/raw/upload/")) {
@@ -231,7 +241,7 @@ const ResourceCard = ({
         </div>
       )}
 
-      <div className="bg-[var(--bg-card)] rounded-xl shadow-sm border border-[var(--border-main)] hover:shadow-md transition-all duration-300 overflow-hidden flex flex-col h-full group">
+      <div className="w-full mx-0 bg-[var(--bg-card)] rounded-xl shadow-sm border border-[var(--border-main)] border-x-0 sm:border-x hover:shadow-md transition-all duration-300 overflow-hidden flex flex-col h-full group">
         {/* Image Thumbnail Preview */}
         {hasImagePreview && thumbnailUrl ? (
           <div
@@ -248,7 +258,7 @@ const ResourceCard = ({
               }}
             />
             <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center">
-              <div className="opacity-0 group-hover:opacity-100 transition-opacity bg-white/90 rounded-full p-3 shadow-lg">
+              <div className="opacity-0 group-hover:opacity-100 transition-opacity bg-[var(--bg-card)]/90 rounded-full p-3 shadow-lg border border-[var(--border-main)]">
                 <Eye className="w-5 h-5 text-[var(--text-main)]" />
               </div>
             </div>
@@ -270,14 +280,14 @@ const ResourceCard = ({
               </p>
             </div>
             <div className="absolute top-2 right-2 opacity-0 group-hover/preview:opacity-100 transition-opacity">
-              <div className="bg-white/80 backdrop-blur-sm rounded-full p-1.5 shadow-sm">
+              <div className="bg-[var(--bg-card)]/80 backdrop-blur-sm rounded-full p-1.5 shadow-sm border border-[var(--border-main)]">
                 <Eye className="w-3.5 h-3.5 text-[var(--text-muted)]" />
               </div>
             </div>
           </div>
         )}
 
-        <div className="p-5 flex-1 flex flex-col">
+        <div className="p-4 sm:p-5 flex-1 flex flex-col">
           {/* Header: Type and Status */}
           <div className="flex justify-between items-start mb-4">
             <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-purple-50 text-purple-600 text-xs font-semibold capitalize border border-purple-100">
@@ -337,7 +347,7 @@ const ResourceCard = ({
         </div>
 
         {/* Footer / Actions */}
-        <div className="border-t border-[var(--border-main)] bg-[var(--bg-active)]/50 p-4">
+        <div className="border-t border-[var(--border-main)] bg-[var(--bg-active)]/50 p-3 sm:p-4">
           {isModeratorView ? (
             <div className="space-y-2">
               {file_url && resource_type !== "link" && (

@@ -28,7 +28,7 @@ const RoadmapDetail = () => {
   };
 
   return (
-    <div className="space-y-8 px-4 sm:px-6 lg:px-8 py-6 sm:py-8 lg:py-10">
+    <div className="space-y-8 px-0 sm:px-6 lg:px-8 py-6 sm:py-8 lg:py-10">
       {/* Back button and title */}
       <div>
         <Link
@@ -58,7 +58,7 @@ const RoadmapDetail = () => {
           <h2 className="text-sm font-medium text-[var(--text-muted)] uppercase tracking-wider">
             Steps
           </h2>
-          <div className="bg-[var(--bg-card)] rounded-xl border border-[var(--border-main)] divide-y">
+          <div className="bg-[var(--bg-card)] rounded-sm sm:rounded-xl border border-[var(--border-main)] border-x-0 sm:border-x divide-y">
             {steps?.map((step) => (
               <button
                 key={step.step_id}
@@ -94,10 +94,10 @@ const RoadmapDetail = () => {
         {/* Step details and resources */}
         <div className="lg:col-span-2">
           {selectedStep ? (
-            <div className="bg-[var(--bg-card)] rounded-xl border border-[var(--border-main)] p-6">
+            <div className="bg-[var(--bg-card)] rounded-sm sm:rounded-xl border border-[var(--border-main)] border-x-0 sm:border-x p-6">
               <div className="flex items-start justify-between mb-4">
                 <div>
-                  <h2 className="text-xl font-semibold text-[var(--text-main)]">
+                  <h2 className="text-lg sm:text-xl font-semibold text-[var(--text-main)]">
                     {selectedStep.title}
                   </h2>
                   <p className="text-[var(--text-muted)] mt-1">
@@ -107,7 +107,7 @@ const RoadmapDetail = () => {
                 {!selectedStep.is_completed && (
                   <button
                     onClick={() => handleComplete(selectedStep.step_id)}
-                    className="px-4 py-2 bg-green-600 text-white rounded-lg text-sm hover:bg-green-700 transition-colors"
+                    className="px-4 py-2 bg-green-600 text-white rounded-sm sm:rounded-lg text-sm hover:bg-green-700 transition-colors"
                   >
                     Mark Complete
                   </button>
@@ -129,7 +129,7 @@ const RoadmapDetail = () => {
                         href={resource.url}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="flex items-center justify-between p-3 rounded-lg bg-[var(--bg-active)] hover:bg-[var(--border-main)] transition-colors group"
+                        className="flex items-center justify-between p-3 rounded-sm sm:rounded-lg bg-[var(--bg-active)] hover:bg-[var(--border-main)] transition-colors group"
                       >
                         <div className="flex-1">
                           <div className="flex items-center gap-2">
@@ -174,14 +174,16 @@ const RoadmapDetail = () => {
                       </a>
                     ))}
                     {(!resources || resources.length === 0) && (
-                      <p className="text-sm text-[var(--text-muted)]">No resources yet.</p>
+                      <p className="text-sm text-[var(--text-muted)]">
+                        No resources yet.
+                      </p>
                     )}
                   </div>
                 )}
               </div>
             </div>
           ) : (
-            <div className="bg-[var(--bg-card)] rounded-xl border border-[var(--border-main)] p-6 text-center text-[var(--text-muted)]">
+            <div className="bg-[var(--bg-card)] rounded-sm sm:rounded-xl border border-[var(--border-main)] border-x-0 sm:border-x p-6 text-center text-[var(--text-muted)]">
               Select a step to view details and resources.
             </div>
           )}

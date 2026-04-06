@@ -5,7 +5,7 @@ import {
   useState,
   useCallback,
 } from "react";
-import { getUserProfile } from "../services/auth";
+import { getUserProfile, updatePresence } from "../services/auth";
 import { useQuery } from "@tanstack/react-query";
 
 const AuthContext = createContext(null);
@@ -15,15 +15,18 @@ export const AuthProvider = ({ children }) => {
   const [refreshToken, setRefreshToken] = useState(
     localStorage.getItem("refreshToken"),
   );
-  const [user, setUser] = useState(null);
 
   // Fetch user profile if token exists
-  const { data, isLoading, error, refetch } = useQuery({
+  const { data, isLoading, refetch } = useQuery({
     queryKey: ["me", token],
     queryFn: () => getUserProfile(token),
     enabled: !!token,
     retry: false,
     staleTime: 5 * 60 * 1000, // Consider data fresh for 5 minutes
+    onError: () => {
+      // Token invalid and refresh failed - force logout.
+      logout();
+    },
   });
 
   // Logout function
@@ -32,7 +35,6 @@ export const AuthProvider = ({ children }) => {
     localStorage.removeItem("refreshToken");
     setToken(null);
     setRefreshToken(null);
-    setUser(null);
   }, []);
 
   // Listen for logout events from api interceptor
@@ -46,6 +48,43 @@ export const AuthProvider = ({ children }) => {
       window.removeEventListener("auth:logout", handleLogout);
     };
   }, [logout]);
+
+  useEffect(() => {
+    if (!token) return;
+
+    let cancelled = false;
+
+    const pingPresence = async () => {
+      try {
+        await updatePresence();
+        if (!cancelled) {
+          refetch();
+        }
+      } catch {
+        // Presence updates are best-effort.
+      }
+    };
+
+    pingPresence();
+
+    const intervalId = window.setInterval(pingPresence, 3 * 60 * 1000);
+    const handleFocus = () => pingPresence();
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "visible") {
+        pingPresence();
+      }
+    };
+
+    window.addEventListener("focus", handleFocus);
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
+    return () => {
+      cancelled = true;
+      window.clearInterval(intervalId);
+      window.removeEventListener("focus", handleFocus);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
+  }, [token, refetch]);
 
   // Sync token from localStorage (in case it was refreshed by interceptor)
   useEffect(() => {
@@ -66,15 +105,6 @@ export const AuthProvider = ({ children }) => {
     };
   }, [token, refreshToken]);
 
-  useEffect(() => {
-    if (data) {
-      setUser(data);
-    } else if (error) {
-      // Token invalid and refresh failed – logout
-      logout();
-    }
-  }, [data, error, logout]);
-
   const login = (tokens) => {
     // Support both old format (string) and new format (object with tokens)
     if (typeof tokens === "string") {
@@ -92,9 +122,9 @@ export const AuthProvider = ({ children }) => {
   };
 
   const value = {
-    user,
+    user: data || null,
     token,
-    isAuthenticated: !!user,
+    isAuthenticated: !!data,
     isLoading,
     login,
     logout,

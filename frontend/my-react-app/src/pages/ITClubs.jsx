@@ -17,7 +17,7 @@ const ITClubs = () => {
   const pagination = data?.pagination;
 
   return (
-    <div className="space-y-8 px-4 sm:px-6 lg:px-8 py-6 sm:py-8 lg:py-10">
+    <div className="space-y-8 px-0 sm:px-6 lg:px-8 py-6 sm:py-8 lg:py-10">
       <h1 className="text-2xl sm:text-3xl font-bold text-[var(--text-main)]">
         IT Clubs & Communities
       </h1>
@@ -40,7 +40,7 @@ const ITClubs = () => {
           return (
             <div
               key={club.id}
-              className="bg-[var(--bg-card)] rounded-2xl border border-[var(--border-main)] p-6 shadow-sm hover:shadow-md transition space-y-3"
+              className="bg-[var(--bg-card)] rounded-sm sm:rounded-2xl border border-[var(--border-main)] p-6 shadow-sm hover:shadow-md transition space-y-3"
             >
               <h2 className="text-lg font-semibold text-[var(--text-main)]">
                 {club.club_name}

@@ -1,5 +1,6 @@
 const pool = require("../config/db");
 const XPService = require("../services/xpService");
+const { buildPresenceSelect } = require("../utils/presence");
 
 exports.getMe = async (req, res) => {
   try {
@@ -18,6 +19,7 @@ exports.getMe = async (req, res) => {
         p.is_suspended,
         p.reputation_points,
         p.is_moderator,
+        ${buildPresenceSelect("p")},
         p.academic_degree_id,
         pr.program_name
        FROM auth.users a
@@ -53,11 +55,34 @@ exports.getMe = async (req, res) => {
     res.status(500).json({ error: "Failed to fetch profile" });
   }
 };
+
+exports.updatePresence = async (req, res) => {
+  try {
+    const userId = req.user.portal_user_id;
+
+    const result = await pool.query(
+      `UPDATE portal.users
+       SET last_seen_at = NOW()
+       WHERE user_id = $1
+       RETURNING last_seen_at`,
+      [userId],
+    );
+
+    return res.json({
+      last_seen_at: result.rows[0]?.last_seen_at || new Date(),
+      is_online: true,
+    });
+  } catch (err) {
+    console.error("Error in updatePresence:", err);
+    return res.status(500).json({ error: "Failed to update presence" });
+  }
+};
+
 exports.getUserStats = async (req, res) => {
   try {
     const userId = req.user.portal_user_id;
     const stats = await XPService.getUserStats(userId);
-    
+
     if (!stats) {
       // Return default stats instead of 404 for a better UX
       return res.json({
@@ -65,7 +90,7 @@ exports.getUserStats = async (req, res) => {
         total_xp: 0,
         current_level: 1,
         roadmaps_completed: 0,
-        last_activity: new Date()
+        last_activity: new Date(),
       });
     }
 

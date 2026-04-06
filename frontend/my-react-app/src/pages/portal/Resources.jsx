@@ -35,10 +35,10 @@ const ResourcesContent = () => {
       {/* Header Section */}
       <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6 mb-10">
         <div className="space-y-1">
-          <h1 className="text-4xl font-black text-[var(--text-main)] tracking-tight">
+          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-black text-[var(--text-main)] tracking-tight">
             {filters.view === "my" ? "My Uploads" : "Resource Library"}
           </h1>
-          <p className="text-[var(--text-muted)] text-lg font-medium">
+          <p className="text-[var(--text-muted)] text-sm sm:text-base lg:text-lg font-medium">
             {filters.semester
               ? `Browsing materials for Semester ${filters.semester}`
               : "Access notes, books, and projects from across the university."}
@@ -55,16 +55,14 @@ const ResourcesContent = () => {
       </div>
 
       {/* Filters Section */}
-      <div className="bg-[var(--bg-card)] p-6 rounded-2xl shadow-sm border border-[var(--border-main)] mb-8">
+      <div className="bg-[var(--bg-card)] p-4 sm:p-6 rounded-sm sm:rounded-2xl shadow-sm border border-[var(--border-main)] border-x-0 sm:border-x mb-8">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2 text-[var(--text-muted)] font-bold uppercase text-xs tracking-widest">
             <Filter className="w-4 h-4 text-purple-600" />
             Quick Filters
           </div>
 
-          {(filters.search ||
-            filters.program_id ||
-            filters.resource_type) && (
+          {(filters.search || filters.program_id || filters.resource_type) && (
             <button
               onClick={resetFilters}
               className="text-xs font-black text-red-500 hover:bg-red-50 px-3 py-1.5 rounded-lg flex items-center gap-1 transition-colors"
@@ -119,17 +117,17 @@ const ResourcesContent = () => {
           <LoadingSpinner size="lg" />
         </div>
       ) : error ? (
-        <div className="text-center py-12 bg-red-50 text-red-600 rounded-2xl font-bold border border-red-100">
+        <div className="text-center py-12 bg-red-50 text-red-600 rounded-sm sm:rounded-2xl font-bold border border-red-100 border-x-0 sm:border-x">
           Failed to load resources. Please check your connection.
         </div>
       ) : !resourcesData?.data?.length || resourcesData?.noResults ? (
-        <div className="text-center py-20 bg-[var(--bg-card)] border-2 border-dashed border-[var(--border-main)] rounded-3xl">
+        <div className="text-center py-20 bg-[var(--bg-card)] border-2 border-dashed border-[var(--border-main)] border-x-0 sm:border-x rounded-sm sm:rounded-3xl">
           {resourcesData?.noResults ? (
             <div className="max-w-3xl mx-auto px-6">
               <div className="w-16 h-16 bg-purple-50 rounded-2xl flex items-center justify-center mx-auto mb-6">
                 <Search className="w-8 h-8 text-purple-600" />
               </div>
-              <h3 className="text-2xl font-black text-[var(--text-main)] uppercase mb-2">
+              <h3 className="text-xl sm:text-2xl font-black text-[var(--text-main)] uppercase mb-2">
                 No matches for "{filters.search}"
               </h3>
               <p className="text-[var(--text-muted)] font-bold mb-10">
@@ -165,7 +163,7 @@ const ResourcesContent = () => {
               <div className="w-16 h-16 bg-[var(--bg-active)] rounded-full flex items-center justify-center mx-auto mb-4">
                 <Search className="w-8 h-8 text-[var(--text-muted)]" />
               </div>
-              <h3 className="text-lg font-bold text-[var(--text-main)] uppercase">
+              <h3 className="text-base sm:text-lg font-bold text-[var(--text-main)] uppercase">
                 No results found
               </h3>
               <p className="text-sm text-[var(--text-muted)]">

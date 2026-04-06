@@ -21,6 +21,11 @@ export const getUserProfile = async () => {
   return response.data;
 };
 
+export const updatePresence = async () => {
+  const response = await api.post("/users/presence");
+  return response.data;
+};
+
 export const refreshAccessToken = async (refreshToken) => {
   const response = await api.post("/auth/refresh-token", { refreshToken });
   return {

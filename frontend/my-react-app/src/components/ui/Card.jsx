@@ -43,7 +43,7 @@ const Card = ({ title, description, icon, color = "blue", link, linkText }) => {
 
       {/* Deep Navy theme-aware card */}
       <div
-        className={`relative h-full flex flex-col bg-bg-card dark:bg-bg-card p-5 sm:p-6 lg:p-7 rounded-2xl border border-border-main dark:border-border-main hover:shadow-xl hover:-translate-y-2 transform transition-all duration-500 ${variant.border} hover:bg-bg-active dark:hover:bg-bg-active`}
+        className={`relative h-full flex flex-col bg-bg-card dark:bg-bg-card p-5 sm:p-6 lg:p-7 rounded-sm sm:rounded-2xl border border-border-main border-x-0 sm:border-x dark:border-border-main hover:shadow-xl hover:-translate-y-2 transform transition-all duration-500 ${variant.border} hover:bg-bg-active dark:hover:bg-bg-active`}
       >
         <div
           className={`w-10 h-10 sm:w-12 sm:h-12 rounded-xl ${variant.bg} shrink-0 flex items-center justify-center mb-4 sm:mb-5 group-hover:scale-110 transition-transform duration-300 dark:bg-blue-500/10 dark:border dark:border-blue-500/20`}
@@ -66,9 +66,9 @@ const Card = ({ title, description, icon, color = "blue", link, linkText }) => {
             className={`mt-4 sm:mt-5 pt-3 sm:pt-4 border-t border-border-main dark:border-border-main transition-all duration-300 ${"lg:opacity-0 lg:group-hover:opacity-100"}`}
           >
             <Link
-  to={link}
-  className={`text-purple-600 text-xs sm:text-sm font-medium hover:text-purple-800 flex items-center gap-1`}
->
+              to={link}
+              className={`text-purple-600 text-xs sm:text-sm font-medium hover:text-purple-800 flex items-center gap-1`}
+            >
               {linkText}
               <span className="transform group-hover:translate-x-1 transition-transform duration-300">
                 →

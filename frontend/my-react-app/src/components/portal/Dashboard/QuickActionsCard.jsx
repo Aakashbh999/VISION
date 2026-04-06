@@ -30,7 +30,7 @@ const actions = [
 
 const QuickActionsCard = () => {
   return (
-    <div className="bg-[var(--bg-card)] rounded-2xl border border-[var(--border-main)] p-6">
+    <div className="bg-[var(--bg-card)] rounded-sm sm:rounded-2xl border border-[var(--border-main)] border-x-0 sm:border-x p-6">
       <h3 className="text-sm font-medium text-[var(--text-muted)] uppercase tracking-wider mb-3">
         Quick Actions
       </h3>
