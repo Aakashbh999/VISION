@@ -1,4 +1,4 @@
-const dns = require("dns");
+const dns = require("node:dns");
 const nodemailer = require("nodemailer");
 const {
   emailVerificationTemplate,
@@ -8,9 +8,10 @@ const {
   securityAlertTemplate,
 } = require("./emailTemplates");
 
-// Render environments can be IPv4-only for outbound traffic.
-// Prefer IPv4 so smtp.gmail.com does not resolve to unreachable IPv6 addresses.
-dns.setDefaultResultOrder("ipv4first");
+// Render environments can fail on outbound IPv6 routes; prefer IPv4 for DNS lookups.
+if (typeof dns.setDefaultResultOrder === "function") {
+  dns.setDefaultResultOrder("ipv4first");
+}
 
 const transporter = nodemailer.createTransport({
   host: process.env.EMAIL_HOST,
