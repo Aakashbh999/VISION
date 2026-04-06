@@ -58,7 +58,7 @@ const Avatar = ({
       {status && (
         <span
           className={`
-          absolute bottom-0 right-0 
+          absolute bottom-0 right-0 z-10
           block w-[25%] h-[25%] rounded-full 
           border-2 border-(--bg-main) 
           ${statusColors[status]}
