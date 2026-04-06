@@ -430,7 +430,8 @@ exports.resendVerificationEmail = async (req, res) => {
 
     res.json({ message: "Verification email sent successfully" });
   } catch (err) {
-    console.error("Resend verification error:", err.message, err.stack);
+    console.error("[AUTH] Resend verification error:", err.message);
+    console.error("[AUTH] Stack:", err.stack);
     res.status(500).json({ error: "Failed to resend verification email" });
   }
 };

@@ -22,6 +22,19 @@ const transporter = nodemailer.createTransport({
   },
 });
 
+// Verify SMTP config on startup
+transporter.verify((err, success) => {
+  if (err) {
+    console.error("[EMAIL] ✗ SMTP configuration error on startup:");
+    console.error("[EMAIL] Error:", err.message);
+    console.error(
+      "[EMAIL] Check EMAIL_HOST, EMAIL_PORT, EMAIL_USER, EMAIL_PASS",
+    );
+  } else {
+    console.log("[EMAIL] ✓ SMTP server is ready. Email service initialized.");
+  }
+});
+
 /**
  * Send a generic email
  */
@@ -44,12 +57,25 @@ exports.sendVerificationEmail = async ({ to, userName, verificationLink }) => {
     expiresIn: "24 hours",
   });
 
-  await transporter.sendMail({
-    from: process.env.EMAIL_FROM,
-    to,
-    subject: "Verify Your Email - VISION",
-    html,
-  });
+  try {
+    console.log(`[EMAIL] Sending verification email to ${to}...`);
+    const result = await transporter.sendMail({
+      from: process.env.EMAIL_FROM,
+      to,
+      subject: "Verify Your Email - VISION",
+      html,
+    });
+    console.log(
+      `[EMAIL] ✓ Verification email sent successfully to ${to}. Message ID: ${result.messageId}`,
+    );
+    return result;
+  } catch (err) {
+    console.error(`[EMAIL] ✗ Failed to send verification email to ${to}:`);
+    console.error(`[EMAIL] Error Code: ${err.code}`);
+    console.error(`[EMAIL] Error Message: ${err.message}`);
+    console.error(`[EMAIL] Full Error:`, err);
+    throw err;
+  }
 };
 
 /**
