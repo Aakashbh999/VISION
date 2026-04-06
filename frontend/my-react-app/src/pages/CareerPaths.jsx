@@ -242,46 +242,46 @@ const careerPaths = {
 
 const colorClasses = {
   blue: {
-    bg: "bg-blue-50",
-    border: "border-blue-200",
-    text: "text-blue-600",
+    bg: "bg-blue-50 dark:bg-blue-950/30",
+    border: "border-blue-200 dark:border-blue-800",
+    text: "text-blue-600 dark:text-blue-300",
     gradient: "from-blue-500 to-purple-500",
-    light: "bg-blue-100",
+    light: "bg-blue-100 dark:bg-blue-900/50",
   },
   purple: {
-    bg: "bg-purple-50",
-    border: "border-purple-200",
-    text: "text-purple-600",
+    bg: "bg-purple-50 dark:bg-purple-950/30",
+    border: "border-purple-200 dark:border-purple-800",
+    text: "text-purple-600 dark:text-purple-300",
     gradient: "from-purple-500 to-purple-700",
-    light: "bg-purple-100",
+    light: "bg-purple-100 dark:bg-purple-900/50",
   },
   red: {
-    bg: "bg-red-50",
-    border: "border-red-200",
-    text: "text-red-600",
+    bg: "bg-red-50 dark:bg-red-950/30",
+    border: "border-red-200 dark:border-red-800",
+    text: "text-red-600 dark:text-red-300",
     gradient: "from-red-500 to-orange-500",
-    light: "bg-red-100",
+    light: "bg-red-100 dark:bg-red-900/50",
   },
   sky: {
-    bg: "bg-sky-50",
-    border: "border-sky-200",
-    text: "text-sky-600",
+    bg: "bg-sky-50 dark:bg-sky-950/30",
+    border: "border-sky-200 dark:border-sky-800",
+    text: "text-sky-600 dark:text-sky-300",
     gradient: "from-sky-500 to-blue-500",
-    light: "bg-sky-100",
+    light: "bg-sky-100 dark:bg-sky-900/50",
   },
   green: {
-    bg: "bg-green-50",
-    border: "border-green-200",
-    text: "text-green-600",
+    bg: "bg-green-50 dark:bg-green-950/30",
+    border: "border-green-200 dark:border-green-800",
+    text: "text-green-600 dark:text-green-300",
     gradient: "from-green-500 to-teal-500",
-    light: "bg-green-100",
+    light: "bg-green-100 dark:bg-green-900/50",
   },
   orange: {
-    bg: "bg-orange-50",
-    border: "border-orange-200",
-    text: "text-orange-600",
+    bg: "bg-orange-50 dark:bg-orange-950/30",
+    border: "border-orange-200 dark:border-orange-800",
+    text: "text-orange-600 dark:text-orange-300",
     gradient: "from-orange-500 to-red-500",
-    light: "bg-orange-100",
+    light: "bg-orange-100 dark:bg-orange-900/50",
   },
 };
 
@@ -295,7 +295,7 @@ const CareerPaths = () => {
   const colors = colorClasses[path.color] || colorClasses.purple;
 
   return (
-    <div className="space-y-10 px-4 sm:px-6 lg:px-8 py-6 sm:py-8 lg:py-10">
+    <div className="space-y-10 px-0 sm:px-6 lg:px-8 py-6 sm:py-8 lg:py-10">
       {/* Header */}
       <div className="text-center max-w-3xl mx-auto">
         <h1 className="text-3xl sm:text-4xl font-bold text-[var(--text-main)] mb-4">
@@ -328,7 +328,7 @@ const CareerPaths = () => {
               className={`flex items-center gap-2 px-4 py-2 rounded-full border transition-all duration-300 ${
                 isSelected
                   ? `${color.bg} ${color.border} ${color.text} shadow-md scale-105`
-                  : "bg-white border-[var(--border-main)] text-[var(--text-main)] hover:border-purple-300"
+                  : "bg-[var(--bg-card)] border-[var(--border-main)] text-[var(--text-main)] hover:border-purple-300"
               }`}
             >
               <IconComponent size={18} />
@@ -368,7 +368,7 @@ const CareerPaths = () => {
                         ? `bg-gradient-to-r ${colors.gradient} text-white scale-110`
                         : isHovered
                           ? `${colors.light} ${colors.text} scale-105`
-                          : `bg-white border-2 ${colors.border} ${colors.text}`
+                          : `bg-[var(--bg-card)] border-2 ${colors.border} ${colors.text}`
                     }`}
                     whileHover={{ scale: 1.1 }}
                     whileTap={{ scale: 0.95 }}
@@ -394,7 +394,7 @@ const CareerPaths = () => {
 
         {/* Mobile vertical stack */}
         <div className="md:hidden space-y-6">
-          {path.steps.map((step, index) => {
+          {path.steps.map((step) => {
             const isHovered = hoveredStep === step.id;
             const isSelected = selectedStep === step.id;
             return (
@@ -405,7 +405,7 @@ const CareerPaths = () => {
                     ? `bg-gradient-to-r ${colors.gradient} text-white`
                     : isHovered
                       ? `${colors.bg} ${colors.border}`
-                      : "bg-white border-[var(--border-main)]"
+                      : "bg-[var(--bg-card)] border-[var(--border-main)]"
                 }`}
                 onHoverStart={() => setHoveredStep(step.id)}
                 onHoverEnd={() => setHoveredStep(null)}

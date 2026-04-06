@@ -4,7 +4,7 @@ import "react-circular-progressbar/dist/styles.css";
 const ProgressCard = ({ percent }) => {
   const percentage = parseFloat(percent) || 0;
   return (
-    <div className="bg-[var(--bg-card)] rounded-2xl border border-[var(--border-main)] p-6 hover:shadow-lg transition-shadow">
+    <div className="bg-[var(--bg-card)] rounded-sm sm:rounded-2xl border border-[var(--border-main)] border-x-0 sm:border-x p-6 hover:shadow-lg transition-shadow">
       <h3 className="text-sm font-medium text-[var(--text-muted)] uppercase tracking-wider mb-2">
         Overall Progress
       </h3>

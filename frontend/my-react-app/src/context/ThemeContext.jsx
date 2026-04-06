@@ -6,13 +6,20 @@ export const ThemeProvider = ({ children }) => {
   const [theme, setTheme] = useState(() => {
     // Check localStorage first
     const savedTheme = localStorage.getItem("theme");
-    if (savedTheme) return savedTheme;
-    
+    if (savedTheme === "light" || savedTheme === "dark") {
+      return savedTheme;
+    }
+
+    // Legacy values (like empty string) should default to light.
+    if (savedTheme !== null) {
+      return "light";
+    }
+
     // Check system preference
     if (window.matchMedia("(prefers-color-scheme: dark)").matches) {
       return "dark";
     }
-    
+
     return "light";
   });
 

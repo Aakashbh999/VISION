@@ -25,7 +25,7 @@ const MyPosts = () => {
   const pagination = data?.pagination || { page: 1, totalPages: 1 };
 
   return (
-    <div className="space-y-6 px-4 sm:px-6 lg:px-8 py-6 sm:py-8 lg:py-10">
+    <div className="space-y-6 px-0 sm:px-6 lg:px-8 py-6 sm:py-8 lg:py-10">
       {/* Header */}
       <div className="flex items-center gap-4">
         <Link
@@ -34,13 +34,15 @@ const MyPosts = () => {
         >
           <ChevronLeft className="w-4 h-4" /> Back
         </Link>
-        <h1 className="text-2xl font-bold text-[var(--text-main)]">My Posts</h1>
+        <h1 className="text-xl sm:text-2xl font-bold text-[var(--text-main)]">
+          My Posts
+        </h1>
       </div>
 
       {/* Posts list */}
       <div className="space-y-4">
         {discussions.length === 0 ? (
-          <div className="text-center py-12 bg-[var(--bg-card)] rounded-xl border border-[var(--border-main)]">
+          <div className="text-center py-12 bg-[var(--bg-card)] rounded-sm sm:rounded-xl border border-[var(--border-main)] border-x-0 sm:border-x">
             <p className="text-[var(--text-muted)]">
               You haven't posted any discussions yet.
             </p>
@@ -55,12 +57,12 @@ const MyPosts = () => {
           discussions.map((disc) => (
             <div
               key={disc.discussion_id}
-              className="relative block bg-[var(--bg-card)] rounded-xl border border-[var(--border-main)] p-5 hover:shadow-md transition-shadow cursor-pointer"
+              className="relative block bg-[var(--bg-card)] rounded-sm sm:rounded-xl border border-[var(--border-main)] border-x-0 sm:border-x p-5 hover:shadow-md transition-shadow cursor-pointer"
               onClick={() => navigate(`/discussions/${disc.discussion_id}`)}
             >
               <div className="flex items-start justify-between">
                 <div className="flex-1">
-                  <h2 className="text-lg font-semibold text-[var(--text-main)] mb-1">
+                  <h2 className="text-base sm:text-lg font-semibold text-[var(--text-main)] mb-1">
                     {disc.title}
                   </h2>
                   <p className="text-sm text-[var(--text-muted)] mb-2 line-clamp-2">

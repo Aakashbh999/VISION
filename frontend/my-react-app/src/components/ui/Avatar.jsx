@@ -4,7 +4,7 @@ const Avatar = ({
   src,
   name,
   size = "md",
-  status = "online",
+  status = null,
   className = "",
   variant = "circular",
 }) => {
@@ -20,7 +20,7 @@ const Avatar = ({
     online: "bg-emerald-500",
     away: "bg-amber-500",
     busy: "bg-rose-500",
-    offline: "bg-text-muted/40",
+    offline: "bg-[var(--text-muted)]/40",
   };
 
   const initials = name
@@ -50,7 +50,7 @@ const Avatar = ({
           loading="lazy"
         />
       ) : (
-        <span className="font-black text-[var(--text-muted)] tracking-tighter">
+        <span className="font-black text-(--text-muted) tracking-tighter">
           {initials}
         </span>
       )}
@@ -60,7 +60,7 @@ const Avatar = ({
           className={`
           absolute bottom-0 right-0 
           block w-[25%] h-[25%] rounded-full 
-          border-2 border-[var(--bg-main)] 
+          border-2 border-(--bg-main) 
           ${statusColors[status]}
         `}
         />

@@ -127,7 +127,9 @@ const PageLoader = () => (
   <div className="min-h-[60vh] flex items-center justify-center">
     <div className="flex flex-col items-center gap-3">
       <div className="animate-spin rounded-full h-8 w-8 border-2 border-purple-200 border-t-purple-600" />
-      <p className="text-xs text-text-muted font-medium uppercase tracking-widest">Loading page...</p>
+      <p className="text-xs text-text-muted font-medium uppercase tracking-widest">
+        Loading page...
+      </p>
     </div>
   </div>
 );
@@ -159,7 +161,7 @@ function PublicLayout() {
         {isAdminRoute && <AdminSidebar />}
         {!isAdminRoute && <Sidebar />}
 
-        <main className="w-full px-4 sm:px-6 lg:px-8 py-6 sm:py-8 lg:py-10 lg:ml-64">
+        <main className="w-full px-0 sm:px-6 lg:px-8 py-6 sm:py-8 lg:py-10 lg:ml-64">
           <Routes>
             {/* Public routes */}
             {publicRoutes.map(({ path, element }) => (
@@ -194,7 +196,10 @@ function PublicLayout() {
               ))}
             </Route>
 
-            <Route path="/portal/*" element={<Navigate to="/dashboard" replace />} />
+            <Route
+              path="/portal/*"
+              element={<Navigate to="/dashboard" replace />}
+            />
           </Routes>
         </main>
       </div>
@@ -224,11 +229,11 @@ function AppContent() {
     "/profile",
     "/feed",
   ];
-  
+
   const isPortalRoute = portalPaths.some(
     (p) => location.pathname === p || location.pathname.startsWith(p + "/"),
   );
-  
+
   const isApprovedUser = user?.student_status === "approved";
   const isPendingUser =
     isAuthenticated &&
@@ -258,7 +263,10 @@ function AppContent() {
               {portalContentRoutes.map(({ path, element }) => (
                 <Route key={path} path={path} element={element} />
               ))}
-              <Route path="/profile" element={<Navigate to="/profile/me" replace />} />
+              <Route
+                path="/profile"
+                element={<Navigate to="/profile/me" replace />}
+              />
             </Route>
           </Route>
         </Routes>

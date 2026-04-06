@@ -1,0 +1,139 @@
+import { MAX_BIO_WORDS } from "../utils/profileHelpers";
+import { useProfilePageState } from "../hooks/useProfilePageState";
+import ProfileHeaderCard from "../components/ProfileHeaderCard";
+import ProfileStatsSidebar from "../components/ProfileStatsSidebar";
+import AboutMeCard from "../components/AboutMeCard";
+import AcademicBackgroundCard from "../components/AcademicBackgroundCard";
+import ProfileImageEditors from "../components/ProfileImageEditors";
+import ProfileAvatarModal from "../components/ProfileAvatarModal";
+import ProfileEditActionBar from "../components/ProfileEditActionBar";
+
+const ProfilePage = () => {
+  const {
+    profile,
+    isLoading,
+    isOwner,
+    programs,
+    updateAvatarMut,
+    updateBannerMut,
+    removeAvatarMut,
+    removeBannerMut,
+    followMut,
+    isEditMode,
+    draftProfile,
+    setDraftProfile,
+    followDropdownOpen,
+    setFollowDropdownOpen,
+    followDropdownRef,
+    activeEditor,
+    setActiveEditor,
+    viewingAvatar,
+    setViewingAvatar,
+    isSavingProfile,
+    currentBioWords,
+    autoSemester,
+    programName,
+    handleDraftChange,
+    handleEditStart,
+    handleEditCancel,
+    handleSaveChanges,
+    handleAvatarDone,
+    handleBannerDone,
+    handleFollowToggle,
+  } = useProfilePageState();
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="flex flex-col items-center gap-3">
+          <div className="animate-spin rounded-full h-10 w-10 border-2 border-purple-200 border-t-purple-600"></div>
+          <p className="text-sm text-[var(--text-muted)]">Loading profile...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!profile) {
+    return (
+      <div className="p-8 text-center text-[var(--text-muted)]">
+        Profile not found.
+      </div>
+    );
+  }
+
+  return (
+    <div className="px-0 sm:px-6 lg:px-8 py-6 sm:py-8 space-y-8 max-w-5xl mx-auto pb-28">
+      <ProfileHeaderCard
+        profile={profile}
+        isOwner={isOwner}
+        isEditMode={isEditMode}
+        followDropdownOpen={followDropdownOpen}
+        setFollowDropdownOpen={setFollowDropdownOpen}
+        followDropdownRef={followDropdownRef}
+        followMut={followMut}
+        handleFollowToggle={handleFollowToggle}
+        handleEditStart={handleEditStart}
+        setActiveEditor={setActiveEditor}
+        setViewingAvatar={setViewingAvatar}
+        removeAvatarMut={removeAvatarMut}
+        removeBannerMut={removeBannerMut}
+        draftProfile={draftProfile}
+        handleDraftChange={handleDraftChange}
+        programName={programName}
+      />
+
+      <ProfileImageEditors
+        isOwner={isOwner}
+        activeEditor={activeEditor}
+        setActiveEditor={setActiveEditor}
+        updateAvatarMut={updateAvatarMut}
+        updateBannerMut={updateBannerMut}
+        handleAvatarDone={handleAvatarDone}
+        handleBannerDone={handleBannerDone}
+      />
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="lg:col-span-2 space-y-8">
+          <AboutMeCard
+            profile={profile}
+            isOwner={isOwner}
+            isEditMode={isEditMode}
+            draftProfile={draftProfile}
+            currentBioWords={currentBioWords}
+            handleDraftChange={handleDraftChange}
+            maxBioWords={MAX_BIO_WORDS}
+          />
+
+          <AcademicBackgroundCard
+            profile={profile}
+            programs={programs}
+            isOwner={isOwner}
+            isEditMode={isEditMode}
+            draftProfile={draftProfile}
+            autoSemester={autoSemester}
+            setDraftProfile={setDraftProfile}
+            handleDraftChange={handleDraftChange}
+          />
+        </div>
+
+        <ProfileStatsSidebar profile={profile} isOwner={isOwner} />
+      </div>
+
+      <ProfileAvatarModal
+        viewingAvatar={viewingAvatar}
+        setViewingAvatar={setViewingAvatar}
+        profile={profile}
+      />
+
+      <ProfileEditActionBar
+        isOwner={isOwner}
+        isEditMode={isEditMode}
+        isSavingProfile={isSavingProfile}
+        handleEditCancel={handleEditCancel}
+        handleSaveChanges={handleSaveChanges}
+      />
+    </div>
+  );
+};
+
+export default ProfilePage;

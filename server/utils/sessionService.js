@@ -120,8 +120,8 @@ const createTokens = async (user, req) => {
   try {
     await pool.query(
       `INSERT INTO auth.refresh_tokens 
-       (auth_user_id, token_hash, device_id, device_info, ip_address, user_agent, expires_at)
-       VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+       (auth_user_id, token_hash, device_id, device_info, ip_address, user_agent, expires_at, last_used_at)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, NOW())`,
       [
         user.auth_user_id,
         tokenHash,
@@ -222,15 +222,6 @@ const rotateRefreshToken = async (refreshToken, req) => {
     // Generate new token pair
     const user = { auth_user_id: token.auth_user_id, role: token.role };
     const tokens = await createTokens(user, req);
-
-    // Update last_used_at for analytics
-    await pool.query(
-      `UPDATE auth.refresh_tokens 
-       SET last_used_at = NOW() 
-       WHERE auth_user_id = $1 AND revoked = false
-       ORDER BY created_at DESC LIMIT 1`,
-      [token.auth_user_id],
-    );
 
     return {
       ...tokens,

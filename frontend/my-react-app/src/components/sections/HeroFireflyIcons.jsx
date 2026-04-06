@@ -1,5 +1,4 @@
-import { useState, useEffect, useRef, useMemo } from "react";
-import { motion } from "framer-motion";
+import { useState, useRef, useMemo } from "react";
 import {
   Code2,
   Database,
@@ -45,30 +44,18 @@ const positions = [
   [15, 82],
 ];
 
-const animationParams = positions.map((_, i) => ({
-  duration: 1.5 + Math.random() * 1,
-  delay: i * 0.1 + Math.random() * 0.3,
-}));
-
 const DOT_COUNT = 108;
 const GLOW_RADIUS = 12;
+const INITIAL_DOT_POSITIONS = Array.from({ length: DOT_COUNT }, () => ({
+  x: Math.random() * 100,
+  y: Math.random() * 100,
+}));
 
 const HeroFireflyIcons = () => {
   const containerRef = useRef(null);
-  const [dotPositions, setDotPositions] = useState([]);
+  const [dotPositions] = useState(INITIAL_DOT_POSITIONS);
   const [mousePos, setMousePos] = useState({ x: 50, y: 50 });
   const [isHovering, setIsHovering] = useState(false);
-
-  useEffect(() => {
-    const dots = [];
-    for (let i = 0; i < DOT_COUNT; i++) {
-      dots.push({
-        x: Math.random() * 100,
-        y: Math.random() * 100,
-      });
-    }
-    setDotPositions(dots);
-  }, []);
 
   const handleMouseMove = (e) => {
     if (!containerRef.current) return;
@@ -121,10 +108,9 @@ const HeroFireflyIcons = () => {
 
       {icons.map((Icon, i) => {
         const [x, y] = positions[i];
-        const { duration, delay } = animationParams[i];
 
         return (
-          <motion.div
+          <div
             key={i}
             className="absolute"
             style={{
@@ -132,21 +118,11 @@ const HeroFireflyIcons = () => {
               left: `${x}%`,
               transform: "translate(-50%, -50%)",
             }}
-            animate={{
-              scale: [1, 1.25, 1, 1.15, 1],
-            }}
-            transition={{
-              duration: duration,
-              times: [0, 0.15, 0.3, 0.45, 1],
-              repeat: Infinity,
-              ease: "easeInOut",
-              delay: delay,
-            }}
           >
             <div className="p-2 rounded-lg text-purple-500/70 hover:text-purple-600 transition-colors">
               <Icon size={18} strokeWidth={1.6} />
             </div>
-          </motion.div>
+          </div>
         );
       })}
     </div>

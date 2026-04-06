@@ -7,13 +7,14 @@ const PopularSection = () => {
       icon: "🌐",
       color: "blue",
       badge: "High Demand",
-      bgClass: "bg-blue-50",
-      borderClass: "border-blue-100",
-      hoverBorderClass: "hover:border-blue-300",
-      badgeBg: "bg-blue-100",
-      badgeText: "text-blue-600",
-      badgeHoverBg: "group-hover:bg-blue-600",
-      iconBg: "bg-gradient-to-br from-blue-100 to-blue-200",
+      bgClass: "bg-blue-50 dark:bg-blue-950/30",
+      borderClass: "border-blue-100 dark:border-blue-800",
+      hoverBorderClass: "hover:border-blue-300 dark:hover:border-blue-700",
+      badgeBg: "bg-blue-100 dark:bg-blue-900",
+      badgeText: "text-blue-600 dark:text-blue-300",
+      badgeHoverBg: "group-hover:bg-blue-600 dark:group-hover:bg-blue-700",
+      iconBg:
+        "bg-gradient-to-br from-blue-100 to-blue-200 dark:from-blue-900/50 dark:to-blue-800/50",
     },
     {
       title: "Data Science",
@@ -21,13 +22,14 @@ const PopularSection = () => {
       icon: "📊",
       color: "green",
       badge: "Growing Field",
-      bgClass: "bg-green-50",
-      borderClass: "border-green-100",
-      hoverBorderClass: "hover:border-green-300",
-      badgeBg: "bg-green-100",
-      badgeText: "text-green-600",
-      badgeHoverBg: "group-hover:bg-green-600",
-      iconBg: "bg-gradient-to-br from-green-100 to-green-200",
+      bgClass: "bg-green-50 dark:bg-green-950/30",
+      borderClass: "border-green-100 dark:border-green-800",
+      hoverBorderClass: "hover:border-green-300 dark:hover:border-green-700",
+      badgeBg: "bg-green-100 dark:bg-green-900",
+      badgeText: "text-green-600 dark:text-green-300",
+      badgeHoverBg: "group-hover:bg-green-600 dark:group-hover:bg-green-700",
+      iconBg:
+        "bg-gradient-to-br from-green-100 to-green-200 dark:from-green-900/50 dark:to-green-800/50",
     },
     {
       title: "XYZ IT Club",
@@ -35,25 +37,26 @@ const PopularSection = () => {
       icon: "👥",
       color: "orange",
       badge: "Active Community",
-      bgClass: "bg-orange-50",
-      borderClass: "border-orange-100",
-      hoverBorderClass: "hover:border-orange-300",
-      badgeBg: "bg-orange-100",
-      badgeText: "text-orange-600",
-      badgeHoverBg: "group-hover:bg-orange-600",
-      iconBg: "bg-gradient-to-br from-orange-100 to-orange-200",
+      bgClass: "bg-orange-50 dark:bg-orange-950/30",
+      borderClass: "border-orange-100 dark:border-orange-800",
+      hoverBorderClass: "hover:border-orange-300 dark:hover:border-orange-700",
+      badgeBg: "bg-orange-100 dark:bg-orange-900",
+      badgeText: "text-orange-600 dark:text-orange-300",
+      badgeHoverBg: "group-hover:bg-orange-600 dark:group-hover:bg-orange-700",
+      iconBg:
+        "bg-gradient-to-br from-orange-100 to-orange-200 dark:from-orange-900/50 dark:to-orange-800/50",
     },
   ];
 
   return (
     <section className="">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-8 gap-4">
-        <h2 className="text-2xl sm:text-3xl font-bold text-gray-900">
+        <h2 className="text-2xl sm:text-3xl font-bold text-[var(--text-main)]">
           Popular Right Now
         </h2>
         <a
           href="#"
-          className="text-sm text-blue-600 hover:text-blue-800 font-medium flex items-center gap-2 transition-all duration-300"
+          className="text-sm text-purple-600 hover:text-purple-800 dark:text-purple-400 dark:hover:text-purple-300 font-medium flex items-center gap-2 transition-all duration-300"
         >
           View all trends →
         </a>
@@ -62,7 +65,7 @@ const PopularSection = () => {
         {popularItems.map((item, index) => (
           <div
             key={index}
-            className={`group bg-gradient-to-br from-white ${item.bgClass} p-6 rounded-2xl border ${item.borderClass} ${item.hoverBorderClass} hover:shadow-lg transform transition-all duration-300 hover:-translate-y-1 cursor-pointer`}
+            className={`group bg-gradient-to-br from-[var(--bg-card)] ${item.bgClass} p-6 rounded-sm sm:rounded-2xl border ${item.borderClass} ${item.hoverBorderClass} hover:shadow-lg transform transition-all duration-300 hover:-translate-y-1 cursor-pointer`}
           >
             <div className="flex items-center justify-between mb-3 sm:mb-4">
               <div
@@ -76,10 +79,10 @@ const PopularSection = () => {
                 {item.badge}
               </span>
             </div>
-            <h4 className="font-bold text-base sm:text-lg text-gray-800 mb-1 sm:mb-2">
+            <h4 className="font-bold text-base sm:text-lg text-[var(--text-main)] mb-1 sm:mb-2">
               {item.title}
             </h4>
-            <p className="text-xs sm:text-sm text-gray-600">
+            <p className="text-xs sm:text-sm text-[var(--text-muted)]">
               {item.description}
             </p>
           </div>

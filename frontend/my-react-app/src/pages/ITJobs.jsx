@@ -32,7 +32,7 @@ const ITJobs = () => {
   const pagination = data?.pagination;
 
   return (
-    <div className="space-y-8 px-4 sm:px-6 lg:px-8 py-6 sm:py-8 lg:py-10">
+    <div className="space-y-8 px-0 sm:px-6 lg:px-8 py-6 sm:py-8 lg:py-10">
       <h1 className="text-2xl sm:text-3xl font-bold text-[var(--text-main)]">
         IT Jobs & Market
       </h1>
@@ -44,7 +44,7 @@ const ITJobs = () => {
         {jobs.map((job) => (
           <div
             key={job.id}
-            className="bg-[var(--bg-card)] rounded-2xl border border-[var(--border-main)] p-6 shadow-sm hover:shadow-md transition"
+            className="bg-[var(--bg-card)] rounded-sm sm:rounded-2xl border border-[var(--border-main)] p-6 shadow-sm hover:shadow-md transition"
           >
             <div className="flex justify-between items-start">
               <h2 className="text-xl font-semibold text-[var(--text-main)]">
@@ -61,8 +61,12 @@ const ITJobs = () => {
 
             <div className="mt-4 space-y-2 text-sm">
               <p>
-                <span className="font-medium text-[var(--text-main)]">Salary Range:</span>{" "}
-                <span className="text-[var(--text-muted)]">{job.salary_range}</span>
+                <span className="font-medium text-[var(--text-main)]">
+                  Salary Range:
+                </span>{" "}
+                <span className="text-[var(--text-muted)]">
+                  {job.salary_range}
+                </span>
               </p>
               <SkillTags skillsString={job.key_skills} />
             </div>

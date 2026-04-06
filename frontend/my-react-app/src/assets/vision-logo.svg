@@ -1,0 +1,12 @@
+<svg width="240" height="72" viewBox="0 0 240 72" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="VISION">
+  <defs>
+    <linearGradient id="visionGradient" x1="12" y1="12" x2="228" y2="60" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#7C3AED" />
+      <stop offset="1" stop-color="#A855F7" />
+    </linearGradient>
+  </defs>
+  <rect x="4" y="4" width="64" height="64" rx="20" fill="url(#visionGradient)" />
+  <path d="M22 22L31.5 50H36.7L46 22H40.6L34.2 43.2L27.6 22H22Z" fill="white" />
+  <path d="M52 22H46.8V50H52V22Z" fill="white" />
+  <text x="80" y="44" fill="currentColor" font-family="Inter, Arial, sans-serif" font-size="30" font-weight="800" letter-spacing="2">VISION</text>
+</svg>

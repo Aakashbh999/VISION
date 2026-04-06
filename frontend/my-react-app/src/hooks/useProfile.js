@@ -9,6 +9,7 @@ export const usePublicProfile = (userId) => {
     queryFn: () => profileService.getPublicProfile(userId),
     enabled: !!userId,
     retry: 1,
+    refetchInterval: 60 * 1000,
     onError: (err) => {
       console.error(err);
       showToast.error("Failed to load profile.");
@@ -23,6 +24,7 @@ export const useOwnProfile = (options = {}) => {
     queryFn: profileService.getOwnProfile,
     enabled: options.enabled ?? true,
     staleTime: 5 * 60 * 1000,
+    refetchInterval: 60 * 1000,
     onError: (err) => {
       console.error(err);
     },

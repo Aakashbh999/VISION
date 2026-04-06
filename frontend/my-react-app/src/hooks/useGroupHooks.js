@@ -1,4 +1,9 @@
-import { useQuery, useMutation, useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  useQuery,
+  useMutation,
+  useInfiniteQuery,
+  useQueryClient,
+} from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import {
   getGroup,
@@ -35,10 +40,11 @@ export const useGroupMembers = (groupId) => {
     queryFn: () => getGroupMembers(groupId),
     enabled: !!groupId,
     staleTime: 2 * 60 * 1000,
+    refetchInterval: 60 * 1000,
   });
 };
 
-export const useGroupPosts = (groupId, section = 'general') => {
+export const useGroupPosts = (groupId, section = "general") => {
   return useInfiniteQuery({
     queryKey: ["groupPosts", groupId, section],
     queryFn: ({ pageParam }) =>
@@ -58,7 +64,7 @@ export const useCreateGroup = () => {
   return useMutation({
     mutationFn: createGroup,
     onSuccess: (data) => {
-      queryClient.invalidateQueries(['groups']);
+      queryClient.invalidateQueries(["groups"]);
       navigate(`/portal/groups/${data.group_id}`);
     },
   });
@@ -91,7 +97,8 @@ export const useLeaveGroup = (groupId) => {
 export const useCreatePost = (groupId) => {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ content, section }) => createGroupPost(groupId, content, section),
+    mutationFn: ({ content, section }) =>
+      createGroupPost(groupId, content, section),
     onSuccess: () => {
       // Invalidate both the general and specific section queries
       queryClient.invalidateQueries({ queryKey: ["groupPosts", groupId] });

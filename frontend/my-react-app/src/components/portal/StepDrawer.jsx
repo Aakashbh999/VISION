@@ -76,11 +76,11 @@ const StepDrawer = ({ isOpen, onClose, step, onComplete }) => {
           >
             {/* Header */}
             <div className="sticky top-0 bg-[var(--bg-card)]/80 backdrop-blur-md border-b border-[var(--border-main)] p-6 flex items-center justify-between z-10">
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-3 min-w-0">
                 <div className="w-10 h-10 rounded-lg bg-purple-100 flex items-center justify-center text-purple-600">
                   <BookOpen className="w-5 h-5" />
                 </div>
-                <h2 className="text-xl font-bold text-[var(--text-main)] leading-tight">
+                <h2 className="text-base sm:text-lg md:text-xl font-bold text-[var(--text-main)] leading-tight break-words">
                   {step.title}
                 </h2>
               </div>

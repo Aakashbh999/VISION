@@ -1,7 +1,7 @@
-import React, { useState, useEffect, useRef } from "react";
-import { motion, animate } from "framer-motion";
+import { useState, useEffect, useRef } from "react";
+import { animate } from "framer-motion";
 import { useUserStats } from "../../hooks/useUserStats";
-import { Shield, TrendingUp, Zap } from "lucide-react";
+import { Zap } from "lucide-react";
 
 /**
  * AnimatedCounter component for the XP number
@@ -13,7 +13,6 @@ const AnimatedCounter = ({ value }) => {
   useEffect(() => {
     const from = previousValueRef.current;
     if (from === value) {
-      setCount(value);
       return;
     }
 
@@ -63,7 +62,7 @@ const XpWidget = () => {
   );
 
   return (
-    <div className="flex items-center gap-4 bg-[var(--bg-card)] px-4 py-2 rounded-2xl border border-[var(--border-main)] shadow-sm hover:shadow-md transition-shadow group">
+    <div className="flex items-center gap-4 bg-[var(--bg-card)] px-4 py-2 rounded-sm sm:rounded-2xl border border-[var(--border-main)] shadow-sm hover:shadow-md transition-shadow group">
       {/* Level Badge (Hexagon-like) */}
       <div className="relative flex items-center justify-center">
         <div className="w-10 h-10 bg-purple-600 rotate-45 rounded-lg shadow-lg shadow-purple-500/20" />
@@ -96,14 +95,12 @@ const XpWidget = () => {
 
         {/* Progress Bar */}
         <div className="relative h-1.5 w-full bg-[var(--bg-active)] rounded-full overflow-hidden border border-[var(--border-main)]">
-          <motion.div
-            initial={{ width: 0 }}
-            animate={{ width: `${progressPercent}%` }}
-            transition={{ duration: 1.5, ease: "easeOut" }}
-            className="h-full bg-gradient-to-r from-purple-600 to-purple-400 rounded-full relative"
+          <div
+            style={{ width: `${progressPercent}%` }}
+            className="h-full bg-gradient-to-r from-purple-600 to-purple-400 rounded-full relative transition-all duration-700 ease-out"
           >
-            <div className="absolute top-0 right-0 w-8 h-full bg-white/20 skew-x-12 animate-pulse" />
-          </motion.div>
+            <div className="absolute top-0 right-0 w-8 h-full bg-[var(--bg-main)]/20 skew-x-12 animate-pulse" />
+          </div>
         </div>
       </div>
     </div>

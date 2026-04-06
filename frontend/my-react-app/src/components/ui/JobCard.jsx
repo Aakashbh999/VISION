@@ -10,13 +10,15 @@ const JobCard = ({ item }) => {
     }[item.demand] || "gray";
 
   return (
-    <div className="bg-[var(--bg-card)] rounded-2xl border border-[var(--border-main)] p-6 hover:shadow-xl hover:-translate-y-1 hover:border-purple-200 transition-all duration-300 flex flex-col h-full">
+    <div className="bg-[var(--bg-card)] rounded-sm sm:rounded-2xl border border-[var(--border-main)] border-x-0 sm:border-x p-6 hover:shadow-xl hover:-translate-y-1 hover:border-purple-200 transition-all duration-300 flex flex-col h-full">
       <div className="flex items-start gap-3">
         <div className="w-10 h-10 rounded-xl bg-purple-50 flex items-center justify-center text-purple-600 flex-shrink-0">
           <Briefcase className="w-5 h-5" />
         </div>
         <div>
-          <h3 className="font-semibold text-lg text-[var(--text-main)]">{item.title}</h3>
+          <h3 className="font-semibold text-lg text-[var(--text-main)]">
+            {item.title}
+          </h3>
           <p className="text-sm text-[var(--text-muted)]">{item.company}</p>
         </div>
       </div>

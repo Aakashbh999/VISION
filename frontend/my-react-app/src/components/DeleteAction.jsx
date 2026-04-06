@@ -11,15 +11,18 @@ const CONFIG = {
   discussion: {
     entityType: "post",
     title: "Delete Discussion?",
-    description: "This discussion will be archived and recorded for moderation.",
+    description:
+      "This discussion will be archived and recorded for moderation.",
+    modalSurfaceClassName: "lg:max-w-2xl",
     mutationFn: (targetId, reason) => deleteDiscussion(targetId, reason),
     successMessage: "Discussion deleted successfully.",
-    invalidateKeys: ["discussions", "myPosts"],
+    invalidateKeys: ["discussions", "my-posts", "saved-discussions"],
   },
   comment: {
     entityType: "comment",
     title: "Delete Comment?",
-    description: "This comment will be soft-deleted and recorded for moderation.",
+    description:
+      "This comment will be soft-deleted and recorded for moderation.",
     mutationFn: (targetId, reason) => softDeleteComment(targetId, reason),
     successMessage: "Comment deleted successfully.",
     invalidateKeys: ["discussion", "discussions"],
@@ -27,10 +30,11 @@ const CONFIG = {
   resource: {
     entityType: "resource",
     title: "Delete Resource?",
-    description: "This resource will be soft-deleted and recorded for moderation.",
+    description:
+      "This resource will be soft-deleted and recorded for moderation.",
     mutationFn: (targetId, reason) => softDeleteResource(targetId, reason),
     successMessage: "Resource deleted successfully.",
-    invalidateKeys: ["resources", "myResources"],
+    invalidateKeys: ["resources", "my-resources"],
   },
   group: {
     entityType: "group",
@@ -38,12 +42,13 @@ const CONFIG = {
     description: "This group will be soft-deleted and recorded for moderation.",
     mutationFn: (targetId, reason) => softDeleteGroup(targetId, reason),
     successMessage: "Group deleted successfully.",
-    invalidateKeys: ["groups", "myGroups"],
+    invalidateKeys: ["groups"],
   },
   group_post: {
     entityType: "post",
     title: "Delete Post?",
-    description: "This group post will be soft-deleted and recorded for moderation.",
+    description:
+      "This group post will be soft-deleted and recorded for moderation.",
     mutationFn: (targetId, reason) => softDeleteGroupPost(targetId, reason),
     successMessage: "Post deleted successfully.",
     invalidateKeys: ["groupPosts"],
@@ -62,7 +67,7 @@ export default function DeleteAction({
 }) {
   const [isOpen, setIsOpen] = useState(false);
   const queryClient = useQueryClient();
-  
+
   const config = CONFIG[targetType] || null;
 
   const mutation = useMutation({
@@ -77,28 +82,32 @@ export default function DeleteAction({
             queryClient.invalidateQueries({
               queryKey: [key],
               exact: false,
-            })
-          )
+            }),
+          ),
         );
       }
-      
+
       showToast.success(config?.successMessage || "Deleted successfully");
       setIsOpen(false);
       onDeleted?.();
     },
     onError: (err) => {
-      const errorMsg = err.response?.data?.error || "Delete failed. Please try again.";
+      const errorMsg =
+        err.response?.data?.error || "Delete failed. Please try again.";
       showToast.error(errorMsg);
     },
   });
 
-  const handleOpenModal = useCallback((e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    if (!disabled && !mutation.isPending) {
-      setIsOpen(true);
-    }
-  }, [disabled, mutation.isPending]);
+  const handleOpenModal = useCallback(
+    (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      if (!disabled && !mutation.isPending) {
+        setIsOpen(true);
+      }
+    },
+    [disabled, mutation.isPending],
+  );
 
   if (!config) return null;
 
@@ -123,6 +132,7 @@ export default function DeleteAction({
         isPending={mutation.isPending}
         itemName={itemName}
         entityType={config.entityType}
+        surfaceClassName={config.modalSurfaceClassName}
       />
     </>
   );

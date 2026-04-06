@@ -92,7 +92,9 @@ const StationNode = ({ step, isActive, onClick }) => {
               key="icon"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              className={isActive ? "text-purple-700" : "text-[var(--text-muted)]"}
+              className={
+                isActive ? "text-purple-700" : "text-[var(--text-muted)]"
+              }
             >
               <Icon className="w-7 h-7" />
             </motion.div>
@@ -164,9 +166,9 @@ const RoadmapView = () => {
 
       const stepIndex = steps.findIndex((s) => s.step_id === stepId);
       if (stepIndex !== -1) {
-        const rect = document
-          .querySelectorAll(".group")
-          [stepIndex]?.getBoundingClientRect();
+        const rect = (
+          document.querySelectorAll(".group")[stepIndex] || null
+        )?.getBoundingClientRect?.();
         if (rect) {
           confetti({
             particleCount: 150,
@@ -207,14 +209,14 @@ const RoadmapView = () => {
             <h1 className="text-4xl sm:text-6xl font-black text-[var(--text-main)] tracking-tighter leading-[0.9]">
               {isLoading ? "..." : data?.roadmap?.title}
             </h1>
-            <p className="text-[var(--text-muted)] font-medium text-lg leading-relaxed max-w-xl">
+            <p className="text-[var(--text-muted)] font-medium text-base sm:text-lg leading-relaxed max-w-xl">
               {isLoading
                 ? "Fetching roadmap data..."
                 : data?.roadmap?.description}
             </p>
           </div>
           {!isLoading && (
-            <div className="flex items-center gap-6 bg-[var(--bg-card)] p-4 rounded-2xl border border-[var(--border-main)] shadow-sm min-w-[240px]">
+            <div className="flex items-center gap-6 bg-[var(--bg-card)] p-4 rounded-sm sm:rounded-2xl border border-[var(--border-main)] border-x-0 sm:border-x shadow-sm min-w-[240px]">
               <div className="flex-1">
                 <div className="flex items-center justify-between mb-2">
                   <span className="text-[10px] font-black uppercase text-[var(--text-muted)]">
@@ -240,7 +242,7 @@ const RoadmapView = () => {
 
       {/* Linear Track Area */}
       <div className="max-w-7xl mx-auto px-6">
-        <div className="bg-[var(--bg-card)] rounded-[2.5rem] border border-[var(--border-main)] shadow-2xl shadow-purple-900/5 p-8 sm:p-24 overflow-x-auto overflow-y-visible scrollbar-hide">
+        <div className="bg-[var(--bg-card)] rounded-sm sm:rounded-[2.5rem] border border-[var(--border-main)] border-x-0 sm:border-x shadow-2xl shadow-purple-900/5 p-8 sm:p-24 overflow-x-auto overflow-y-visible scrollbar-hide">
           {isLoading ? (
             <div className="h-64 flex items-center justify-center">
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-700" />

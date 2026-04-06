@@ -13,6 +13,7 @@ const {
   hasGroupPermission,
   normalizePermissions,
 } = require("../utils/groupPermissions");
+const { buildPresenceSelect } = require("../utils/presence");
 
 /* ===============================
    GET GROUP MEMBERS
@@ -24,6 +25,7 @@ exports.getGroupMembers = async (req, res) => {
     const members = await pool.query(
       `SELECT 
         u.user_id, u.full_name, u.profile_image,
+        ${buildPresenceSelect("u")},
         gm.joined_at, gm.role, gm.permissions
       FROM portal.group_members gm
       JOIN portal.users u ON u.user_id = gm.user_id
@@ -472,7 +474,11 @@ exports.leaveGroup = async (req, res) => {
       [id],
     );
     if (group.rows[0]?.created_by === userId) {
-      return errorResponse(res, "Owner cannot leave. Transfer ownership or delete the group.", 400);
+      return errorResponse(
+        res,
+        "Owner cannot leave. Transfer ownership or delete the group.",
+        400,
+      );
     }
 
     await pool.query(
