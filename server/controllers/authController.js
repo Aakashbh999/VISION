@@ -113,7 +113,7 @@ exports.register = async (req, res) => {
       [
         authUserId,
         full_name,
-        university || 'TU',
+        university || "TU",
         campus,
         program_id ? parseInt(program_id, 10) : null,
         normalizedSemester,
@@ -121,7 +121,7 @@ exports.register = async (req, res) => {
         normalizedManualSemester,
         tu_registration_no,
         studentIdImageUrl,
-        career_scope
+        career_scope,
       ],
     );
 
@@ -131,7 +131,7 @@ exports.register = async (req, res) => {
     await client.query(
       `INSERT INTO portal.user_stats (user_id, total_xp, current_level)
        VALUES ($1, 0, 1)`,
-      [portalUserId]
+      [portalUserId],
     );
 
     // 5. Verification token generation
@@ -160,13 +160,20 @@ exports.register = async (req, res) => {
     const verificationLink = `${process.env.BASE_URL}/api/auth/verify-email?token=${emailToken}`;
 
     try {
-      await sendVerificationEmail({
-        to: email,
-        userName: full_name,
-        verificationLink,
-      });
+      const emailTimeout = new Promise((_, reject) =>
+        setTimeout(() => reject(new Error("Email sending timeout")), 15000),
+      );
+
+      await Promise.race([
+        sendVerificationEmail({
+          to: email,
+          userName: full_name,
+          verificationLink,
+        }),
+        emailTimeout,
+      ]);
     } catch (emailErr) {
-      console.error("Non-blocking email failure:", emailErr);
+      console.error("Non-blocking email failure:", emailErr.message);
     }
 
     res.status(201).json({
@@ -176,17 +183,19 @@ exports.register = async (req, res) => {
   } catch (err) {
     await client.query("ROLLBACK");
     console.error("Atomic registration failure:", err);
-    
+
     // Specific handling for DB unique constraint violations
-    if (err.code === '23505') {
-       if (err.detail.includes('tu_registration_no')) {
-           return res.status(400).json({ error: "TU Registration Number already in use." });
-       }
-       if (err.detail.includes('email')) {
-           return res.status(400).json({ error: "Email already registered." });
-       }
+    if (err.code === "23505") {
+      if (err.detail.includes("tu_registration_no")) {
+        return res
+          .status(400)
+          .json({ error: "TU Registration Number already in use." });
+      }
+      if (err.detail.includes("email")) {
+        return res.status(400).json({ error: "Email already registered." });
+      }
     }
-    
+
     res.status(500).json({ error: "Registration failed. Please try again." });
   } finally {
     client.release();
@@ -336,12 +345,19 @@ exports.verifyEmail = async (req, res) => {
     if (userInfo.rows.length > 0) {
       const { email, full_name } = userInfo.rows[0];
       try {
-        await sendWelcomeEmail({
-          to: email,
-          userName: full_name,
-        });
+        const emailTimeout = new Promise((_, reject) =>
+          setTimeout(() => reject(new Error("Email sending timeout")), 15000),
+        );
+
+        await Promise.race([
+          sendWelcomeEmail({
+            to: email,
+            userName: full_name,
+          }),
+          emailTimeout,
+        ]);
       } catch (emailErr) {
-        console.error("Failed to send welcome email:", emailErr);
+        console.error("Failed to send welcome email:", emailErr.message);
       }
     }
 
@@ -395,18 +411,26 @@ exports.resendVerificationEmail = async (req, res) => {
       [auth_user_id, emailToken],
     );
 
-    // Send verification email
+    // Send verification email with timeout
     const verificationLink = `${process.env.BASE_URL}/api/auth/verify-email?token=${emailToken}`;
 
-    await sendVerificationEmail({
-      to: email,
-      userName: full_name,
-      verificationLink,
-    });
+    // Wrap with timeout promise to catch hanging Gmail SMTP
+    const emailTimeout = new Promise((_, reject) =>
+      setTimeout(() => reject(new Error("Email sending timeout")), 15000),
+    );
+
+    await Promise.race([
+      sendVerificationEmail({
+        to: email,
+        userName: full_name,
+        verificationLink,
+      }),
+      emailTimeout,
+    ]);
 
     res.json({ message: "Verification email sent successfully" });
   } catch (err) {
-    console.error("Resend verification error:", err);
+    console.error("Resend verification error:", err.message, err.stack);
     res.status(500).json({ error: "Failed to resend verification email" });
   }
 };
@@ -457,13 +481,25 @@ exports.forgotPassword = async (req, res) => {
     const ipAddress = req.ip || req.connection.remoteAddress;
     const userAgent = req.headers["user-agent"];
 
-    await sendPasswordResetEmail({
-      to: email,
-      userName: null, // Don't expose name in password reset for privacy
-      resetLink,
-      ipAddress,
-      userAgent,
-    });
+    try {
+      const emailTimeout = new Promise((_, reject) =>
+        setTimeout(() => reject(new Error("Email sending timeout")), 15000),
+      );
+
+      await Promise.race([
+        sendPasswordResetEmail({
+          to: email,
+          userName: null, // Don't expose name in password reset for privacy
+          resetLink,
+          ipAddress,
+          userAgent,
+        }),
+        emailTimeout,
+      ]);
+    } catch (emailErr) {
+      console.error("Password reset email timeout:", emailErr.message);
+      // Still respond success to prevent user enumeration
+    }
 
     res.json({
       message:

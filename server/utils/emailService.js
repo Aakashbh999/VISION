@@ -15,6 +15,11 @@ const transporter = nodemailer.createTransport({
     user: process.env.EMAIL_USER,
     pass: process.env.EMAIL_PASS,
   },
+  connectionTimeout: 5000, // 5 seconds to establish connection
+  socketTimeout: 10000, // 10 seconds per operation
+  tls: {
+    rejectUnauthorized: false, // Allow self-signed certs (Gmail may use intermediate)
+  },
 });
 
 /**
