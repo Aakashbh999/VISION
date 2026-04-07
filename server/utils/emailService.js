@@ -8,68 +8,150 @@ const {
   securityAlertTemplate,
 } = require("./emailTemplates");
 
-const SMTP_HOST = process.env.EMAIL_HOST;
-const SMTP_PORT = Number(process.env.EMAIL_PORT);
+const RESEND_API_URL = "https://api.resend.com/emails";
+const EMAIL_PROVIDER = (process.env.EMAIL_PROVIDER || "").toLowerCase();
 
-// Render environments can fail on outbound IPv6 routes; prefer IPv4 for DNS lookups.
 if (typeof dns.setDefaultResultOrder === "function") {
   dns.setDefaultResultOrder("ipv4first");
 }
 
-const resolveSmtpHostToIPv4 = async () => {
+const isResendConfigured = () =>
+  Boolean(process.env.RESEND_API_KEY && process.env.EMAIL_FROM);
+
+const isSmtpConfigured = () =>
+  Boolean(
+    process.env.EMAIL_HOST &&
+    process.env.EMAIL_PORT &&
+    process.env.EMAIL_USER &&
+    process.env.EMAIL_PASS &&
+    process.env.EMAIL_FROM,
+  );
+
+const resolveSmtpHostToIPv4 = async (host) => {
   try {
-    const addresses = await dns.promises.resolve4(SMTP_HOST);
+    const addresses = await dns.promises.resolve4(host);
     if (addresses.length > 0) {
       return addresses[0];
     }
   } catch (err) {
     console.warn(
-      `[EMAIL] IPv4 DNS resolution failed for ${SMTP_HOST}, falling back to hostname: ${err.message}`,
+      `[EMAIL] IPv4 DNS resolution failed for ${host}: ${err.message}`,
     );
   }
 
-  return SMTP_HOST;
+  return host;
 };
 
-const createTransporter = async () => {
-  const smtpIPv4Host = await resolveSmtpHostToIPv4();
+const checkEmailHealth = () => {
+  const provider = EMAIL_PROVIDER || (isResendConfigured() ? "resend" : "smtp");
 
-  return nodemailer.createTransport({
-    host: smtpIPv4Host,
-    port: SMTP_PORT,
-    secure: false,
-    family: 4,
-    auth: {
-      user: process.env.EMAIL_USER,
-      pass: process.env.EMAIL_PASS,
-    },
-    connectionTimeout: 5000, // 5 seconds to establish connection
-    socketTimeout: 10000, // 10 seconds per operation
-    greetingTimeout: 10000,
-    tls: {
-      servername: SMTP_HOST,
-      rejectUnauthorized: false, // Allow self-signed certs (Gmail may use intermediate)
-    },
-  });
+  if (provider === "smtp") {
+    const missing = [];
+
+    if (!process.env.EMAIL_HOST) missing.push("EMAIL_HOST");
+    if (!process.env.EMAIL_PORT) missing.push("EMAIL_PORT");
+    if (!process.env.EMAIL_USER) missing.push("EMAIL_USER");
+    if (!process.env.EMAIL_PASS) missing.push("EMAIL_PASS");
+    if (!process.env.EMAIL_FROM) missing.push("EMAIL_FROM");
+
+    return {
+      ok: missing.length === 0,
+      provider: "smtp",
+      missing,
+    };
+  }
+
+  const missing = [];
+
+  if (!process.env.RESEND_API_KEY) missing.push("RESEND_API_KEY");
+  if (!process.env.EMAIL_FROM) missing.push("EMAIL_FROM");
+
+  return {
+    ok: missing.length === 0,
+    provider: "resend",
+    missing,
+  };
 };
 
 const sendMail = async (mailOptions) => {
-  const transporter = await createTransporter();
-  return transporter.sendMail(mailOptions);
+  const provider = EMAIL_PROVIDER || (isResendConfigured() ? "resend" : "smtp");
+
+  if (provider === "smtp") {
+    if (!isSmtpConfigured()) {
+      throw new Error("Missing SMTP configuration");
+    }
+
+    const smtpHost = await resolveSmtpHostToIPv4(process.env.EMAIL_HOST);
+    const transporter = nodemailer.createTransport({
+      host: smtpHost,
+      port: Number(process.env.EMAIL_PORT),
+      secure: Number(process.env.EMAIL_PORT) === 465,
+      family: 4,
+      auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS,
+      },
+      connectionTimeout: 5000,
+      socketTimeout: 10000,
+      greetingTimeout: 10000,
+      tls: {
+        servername: process.env.EMAIL_HOST,
+        rejectUnauthorized: false,
+      },
+    });
+
+    const info = await transporter.sendMail(mailOptions);
+    return { messageId: info.messageId };
+  }
+
+  if (!process.env.RESEND_API_KEY) {
+    throw new Error("Missing RESEND_API_KEY");
+  }
+
+  const payload = {
+    from: mailOptions.from,
+    to: Array.isArray(mailOptions.to) ? mailOptions.to : [mailOptions.to],
+    subject: mailOptions.subject,
+    html: mailOptions.html,
+  };
+
+  const response = await fetch(RESEND_API_URL, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${process.env.RESEND_API_KEY}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(payload),
+  });
+
+  const data = await response.json().catch(() => ({}));
+
+  if (!response.ok) {
+    const message = data?.message || data?.error || `HTTP ${response.status}`;
+    const err = new Error(`Resend send failed: ${message}`);
+    err.code = "RESEND_SEND_FAILED";
+    err.status = response.status;
+    throw err;
+  }
+
+  return { messageId: data?.id };
 };
 
-// Verify SMTP config on startup
+// Verify HTTP email config on startup
 (async () => {
   try {
-    const transporter = await createTransporter();
-    await transporter.verify();
-    console.log("[EMAIL] ✓ SMTP server is ready. Email service initialized.");
-  } catch (err) {
-    console.error("[EMAIL] ✗ SMTP configuration error on startup:");
-    console.error("[EMAIL] Error:", err.message);
-    console.error(
-      "[EMAIL] Check EMAIL_HOST, EMAIL_PORT, EMAIL_USER, EMAIL_PASS",
+    const health = checkEmailHealth();
+    if (!health.ok) {
+      throw new Error(`Missing ${health.missing.join(", ")}`);
+    }
+
+    console.log(
+      `[EMAIL] ✓ ${health.provider.toUpperCase()} email service initialized.`,
     );
+  } catch (err) {
+    console.error("[EMAIL] ✗ Email configuration error on startup:");
+    console.error("[EMAIL] Error:", err.message);
+    console.error("[EMAIL] Check EMAIL_PROVIDER and related env vars");
   }
 })();
 
@@ -212,3 +294,5 @@ exports.sendSecurityAlert = async ({
     html,
   });
 };
+
+exports.checkEmailHealth = checkEmailHealth;
