@@ -30,6 +30,9 @@ require("dotenv").config();
 const app = express();
 const PORT = process.env.PORT || 5000;
 
+// Render sits behind a proxy; trust it so rate-limiting and client IPs work correctly.
+app.set("trust proxy", 1);
+
 // Middleware
 app.use(helmet()); // Security headers
 
@@ -37,9 +40,9 @@ app.use(helmet()); // Security headers
 const allowedOrigins = process.env.CORS_ORIGINS
   ? process.env.CORS_ORIGINS.split(",").map((o) => o.trim())
   : [
-      "http://localhost:5173", 
+      "http://localhost:5173",
       "http://localhost:5174",
-      "https://vision-two-beta.vercel.app"
+      "https://vision-two-beta.vercel.app",
     ];
 
 app.use(
@@ -48,8 +51,8 @@ app.use(
       // Allow requests with no origin (mobile apps, curl, Postman)
       // Allow any Vercel deployment (preview or production domains)
       if (
-        !origin || 
-        allowedOrigins.includes(origin) || 
+        !origin ||
+        allowedOrigins.includes(origin) ||
         (origin && origin.endsWith(".vercel.app"))
       ) {
         return callback(null, true);
