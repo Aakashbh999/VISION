@@ -3,6 +3,7 @@ const cors = require("cors");
 const helmet = require("helmet");
 const rateLimit = require("express-rate-limit");
 const path = require("path");
+require("dotenv").config();
 const authRoutes = require("./routes/authRoutes");
 const itRoutes = require("./routes/itRoutes");
 const userRoutes = require("./routes/userRoutes");
@@ -23,9 +24,9 @@ const searchRoutes = require("./routes/searchRoutes");
 const profileRoutes = require("./routes/profileRoutes");
 const clubRoutes = require("./routes/clubRoutes");
 const studyGroupRoutes = require("./routes/studyGroupRoutes");
+const { checkEmailHealth } = require("./utils/emailService");
 
 const pool = require("./config/db");
-require("dotenv").config();
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -115,6 +116,24 @@ app.get("/api/health", async (req, res) => {
       error: err.message,
     });
   }
+});
+
+app.get("/api/health/email", (req, res) => {
+  const emailHealth = checkEmailHealth();
+
+  if (!emailHealth.ok) {
+    return res.status(503).json({
+      status: "degraded",
+      email: emailHealth,
+      message: "Email service is not fully configured",
+    });
+  }
+
+  return res.json({
+    status: "online",
+    email: emailHealth,
+    message: "Email service configuration is healthy",
+  });
 });
 // 🚀 Use the Modular Routes
 // This means all routes in itRoutes will now start with /api
