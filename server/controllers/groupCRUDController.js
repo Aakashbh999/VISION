@@ -249,9 +249,10 @@ exports.createGroup = catchAsync(async (req, res) => {
   const {
     name,
     description,
-    degree_id,
     privacy_type = "public",
     tags,
+    system_tags,
+    custom_tags,
   } = req.body;
   const userId = req.user.portal_user_id;
 
@@ -272,27 +273,52 @@ exports.createGroup = catchAsync(async (req, res) => {
     return errorResponse(res, descCheck.error, 400);
   }
 
-  // Normalize tags: clean, lowercase, deduplicate
-  let normalizedTags = null;
-  if (Array.isArray(tags) && tags.length > 0) {
-    normalizedTags = [
-      ...new Set(
-        tags
-          .map((t) =>
-            String(t)
-              .toLowerCase()
-              .replace(/^#+/, "")
-              .replace(/[^a-z0-9_]/g, "")
-              .slice(0, 30),
-          )
-          .filter(Boolean),
-      ),
-    ].slice(0, 10);
+  if (Array.isArray(system_tags) && system_tags.map(Number).filter((n) => Number.isInteger(n) && n > 0).length > 5) {
+    return errorResponse(res, "Maximum 5 system tags allowed.", 400);
+  }
+  if (Array.isArray(custom_tags) && custom_tags.length > 2) {
+    return errorResponse(res, "Maximum 2 custom tags allowed.", 400);
   }
 
   const client = await pool.connect();
   try {
     await client.query("BEGIN");
+
+    // Process system and custom tags
+    let rawTags = [];
+    if (Array.isArray(system_tags) && system_tags.length > 0) {
+      const tagIds = system_tags.map(Number).filter((n) => Number.isInteger(n) && n > 0);
+      if (tagIds.length > 0) {
+        const sysTagsQuery = await client.query("SELECT name FROM portal.tags WHERE tag_id = ANY($1::int[])", [tagIds]);
+        rawTags.push(...sysTagsQuery.rows.map(r => r.name));
+      }
+    }
+    
+    if (Array.isArray(custom_tags)) {
+      rawTags.push(...custom_tags);
+    }
+    
+    if (Array.isArray(tags)) {
+      rawTags.push(...tags);
+    }
+
+    // Normalize tags: clean, lowercase, deduplicate
+    let normalizedTags = null;
+    if (rawTags.length > 0) {
+      normalizedTags = [
+        ...new Set(
+          rawTags
+            .map((t) =>
+              String(t)
+                .toLowerCase()
+                .replace(/^#+/, "")
+                .replace(/[^a-z0-9_]/g, "")
+                .slice(0, 30),
+            )
+            .filter(Boolean),
+        ),
+      ].slice(0, 10);
+    }
 
     const group = await client.query(
       `INSERT INTO portal.study_groups (name, description, created_by, degree_id, privacy_type, tags)

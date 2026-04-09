@@ -178,7 +178,7 @@ const SearchModal = ({ isOpen, onClose }) => {
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
         transition={{ duration: 0.15 }}
-        className="fixed inset-0 z-100 flex items-start justify-center pt-[15vh] px-4"
+        className="fixed inset-0 z-[100] flex items-start justify-center pt-[15vh] px-4"
         onClick={onClose}
       >
         <motion.div
@@ -467,8 +467,21 @@ export const useSearchModal = () => {
         setIsOpen((prev) => !prev);
       }
     };
+
+    const handleOpenSearch = () => {
+      setIsOpen(true);
+    };
+
     document.addEventListener("keydown", handleKeyDown);
-    return () => document.removeEventListener("keydown", handleKeyDown);
+    window.addEventListener("vision:open-universal-search", handleOpenSearch);
+
+    return () => {
+      document.removeEventListener("keydown", handleKeyDown);
+      window.removeEventListener(
+        "vision:open-universal-search",
+        handleOpenSearch,
+      );
+    };
   }, []);
 
   return {

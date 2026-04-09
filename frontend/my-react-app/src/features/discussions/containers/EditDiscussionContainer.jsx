@@ -14,18 +14,19 @@ const EditDiscussionContainer = () => {
     canEdit,
     formData,
     errors,
-    tagInput,
-    setTagInput,
+    customTagInput,
+    setCustomTagInput,
     specializations,
     degrees,
-    availableTags,
+    systemTagOptions,
+    isLoadingTags,
     updateMutation,
     handleChange,
-    handleAddTag,
-    handleRemoveTag,
-    handleAddCustomTag,
+    toggleSystemTag,
+    addCustomTag,
+    removeCustomTag,
+    handleCustomTagKeyDown,
     handleSubmit,
-    getTagName,
   } = useEditDiscussionState();
 
   if (isLoading) {
@@ -45,18 +46,19 @@ const EditDiscussionContainer = () => {
       id={id}
       formData={formData}
       errors={errors}
-      tagInput={tagInput}
-      setTagInput={setTagInput}
+      customTagInput={customTagInput}
+      setCustomTagInput={setCustomTagInput}
       specializations={specializations}
       degrees={degrees}
-      availableTags={availableTags}
+      systemTagOptions={systemTagOptions}
+      isLoadingTags={isLoadingTags}
       updateMutation={updateMutation}
       onChange={handleChange}
-      onAddTag={handleAddTag}
-      onRemoveTag={handleRemoveTag}
-      onAddCustomTag={handleAddCustomTag}
+      toggleSystemTag={toggleSystemTag}
+      addCustomTag={addCustomTag}
+      removeCustomTag={removeCustomTag}
+      handleCustomTagKeyDown={handleCustomTagKeyDown}
       onSubmit={handleSubmit}
-      getTagName={getTagName}
     />
   );
 };

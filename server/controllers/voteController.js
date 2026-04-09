@@ -1,6 +1,6 @@
 const discussionService = require("../services/discussionService");
-const XPService = require("../services/xpService");
 const catchAsync = require("../utils/catchAsync");
+
 
 /**
  * Vote Controller

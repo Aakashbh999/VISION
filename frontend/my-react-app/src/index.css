@@ -82,9 +82,18 @@
 }
 
 /* Base styles */
+html,
+body {
+  background-color: var(--bg-main);
+  color: var(--text-main);
+  /* Resetting overscroll to default 'auto' to allow the bounce, but background-color above ensures it's themed */
+  overscroll-behavior-y: auto; 
+}
+
 body {
   font-family: "Inter", sans-serif;
   overflow-x: hidden;
+  min-height: 100vh;
 }
 
 /* Custom Text Gradients */
@@ -246,4 +255,58 @@ body {
 
 .animate-shimmer {
   animation: shimmer 1.5s infinite linear;
+}
+
+/* ===== Toastify Theme (Brand Aligned) ===== */
+:root {
+  --toastify-color-light: var(--bg-card);
+  --toastify-text-color-light: var(--text-main);
+  --toastify-color-success: var(--color-brand-primary);
+  --toastify-color-info: var(--color-brand-secondary);
+  --toastify-color-warning: #f59e0b;
+  --toastify-color-error: #ef4444;
+  --toastify-color-progress-light: linear-gradient(
+    90deg,
+    var(--color-brand-primary),
+    var(--color-brand-accent)
+  );
+}
+
+.Toastify__toast-container {
+  padding: 0.5rem;
+}
+
+.Toastify__toast {
+  background: var(--bg-card);
+  color: var(--text-main);
+  border: 1px solid var(--border-main);
+  border-left: 4px solid var(--color-brand-primary);
+  border-radius: 0.875rem;
+  box-shadow: 0 12px 30px rgba(124, 58, 237, 0.14);
+}
+
+.Toastify__toast-body {
+  font-family: "Inter", sans-serif;
+  font-size: 0.92rem;
+  font-weight: 500;
+}
+
+.Toastify__progress-bar {
+  height: 3px;
+}
+
+.Toastify__close-button {
+  color: var(--text-muted);
+  opacity: 0.8;
+}
+
+.Toastify__toast--success,
+.Toastify__toast--info,
+.Toastify__toast--warning,
+.Toastify__toast--error {
+  border-left-color: var(--color-brand-primary);
+}
+
+.dark .Toastify__toast {
+  box-shadow: 0 14px 34px rgba(0, 0, 0, 0.45);
 }

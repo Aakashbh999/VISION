@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { ChevronLeft, UserPlus, Settings, Menu, Compass } from "lucide-react";
 import Button from "../../../../components/ui/Button";
 import Badge from "../../../../components/ui/Badge";
@@ -17,6 +17,7 @@ const GroupDetailHeader = ({
   handleJoinAction,
   isJoining,
 }) => {
+  const navigate = useNavigate();
   const currentSectionIconKey = SECTIONS.find(
     (section) => section.id === activeSection,
   )?.icon;
@@ -35,11 +36,14 @@ const GroupDetailHeader = ({
     <>
       <div className="h-20 px-4 md:px-8 flex items-center justify-between border-b border-(--border-main)/50 sticky top-0 z-20 backdrop-blur-xl bg-(--bg-main)/80">
         <div className="flex items-center gap-4">
-          <Link to="/groups">
-            <Button variant="ghost" size="sm" className="p-2.5">
-              <ChevronLeft className="w-5 h-5" />
-            </Button>
-          </Link>
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            className="p-2.5"
+            onClick={() => navigate(-1)}
+          >
+            <ChevronLeft className="w-5 h-5" />
+          </Button>
           <div className="flex items-center gap-4">
             <Link
               to={`/groups/${id}/profile`}

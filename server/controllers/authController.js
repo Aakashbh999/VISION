@@ -142,6 +142,28 @@ exports.register = catchAsync(async (req, res) => {
 
     const portalUserId = portalInsert.rows[0].user_id;
 
+    // 3.5 Populate Recommendation Engine (portal.user_interests)
+    if (career_scope && typeof career_scope === "string") {
+      const interests = career_scope.split(",").map((t) => t.trim()).filter(Boolean);
+      if (interests.length > 0) {
+        // Find matching system tag IDs based on name
+        const tagsRes = await client.query(
+          `SELECT tag_id FROM portal.tags WHERE name = ANY($1)`,
+          [interests]
+        );
+        
+        // Insert into user_interests (which recommendation engine queries)
+        if (tagsRes.rows.length > 0) {
+          const insertVals = tagsRes.rows.map(r => `(${portalUserId}, ${r.tag_id})`).join(", ");
+          await client.query(`
+            INSERT INTO portal.user_interests (user_id, tag_id) 
+            VALUES ${insertVals} 
+            ON CONFLICT DO NOTHING
+          `);
+        }
+      }
+    }
+
     // 4. Initialize User Stats (VisionXP)
     await client.query(
       `INSERT INTO portal.user_stats (user_id, total_xp, current_level)
@@ -218,11 +240,18 @@ exports.register = catchAsync(async (req, res) => {
 exports.login = catchAsync(async (req, res) => {
     const { email, password } = req.body;
 
-    // Single query to fetch all needed fields
+    // Single query fetches auth + portal user data atomically
     const result = await pool.query(
-      `SELECT auth_user_id, password_hash, role, email_status
-       FROM auth.users
-       WHERE email = $1`,
+      `SELECT
+         a.auth_user_id,
+         a.password_hash,
+         a.role,
+         a.email_status,
+         p.is_suspended,
+         p.full_name
+       FROM auth.users a
+       JOIN portal.users p ON p.auth_user_id = a.auth_user_id
+       WHERE a.email = $1`,
       [email],
     );
 
@@ -251,13 +280,8 @@ exports.login = catchAsync(async (req, res) => {
       throw new Error("Invalid credentials");
     }
 
-    // \ud83d\udeab Block suspended user
-    const portalUser = await pool.query(
-      `SELECT is_suspended, full_name FROM portal.users WHERE auth_user_id = $1`,
-      [user.auth_user_id],
-    );
-
-    if (portalUser.rows[0]?.is_suspended) {
+    // 🚫 Block suspended users
+    if (user.is_suspended) {
       await logAuthEvent(
         req,
         AuditActions.LOGIN_FAILED,
@@ -267,19 +291,14 @@ exports.login = catchAsync(async (req, res) => {
       throw new Error("Your account is suspended.");
     }
 
-    // \u2705 Create tokens with refresh token rotation
+    // ✅ Create tokens with refresh token rotation
     const tokens = await createTokens(user, req);
 
-    // Log successful login
-    await logAuthEvent(req, AuditActions.LOGIN_SUCCESS, {
-      authUserId: user.auth_user_id,
-    });
-
-    // Update last_login timestamp
-    await pool.query(
-      `UPDATE auth.users SET last_login = NOW() WHERE auth_user_id = $1`,
-      [user.auth_user_id],
-    );
+    // Log successful login and update last_login in parallel
+    await Promise.all([
+      logAuthEvent(req, AuditActions.LOGIN_SUCCESS, { authUserId: user.auth_user_id }),
+      pool.query(`UPDATE auth.users SET last_login = NOW() WHERE auth_user_id = $1`, [user.auth_user_id]),
+    ]);
 
     res.json({
       accessToken: tokens.accessToken,

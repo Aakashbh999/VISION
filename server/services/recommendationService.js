@@ -20,6 +20,8 @@ SELECT
       WHERE rt.resource_id = r.resource_id), 
     ARRAY[]::text[]
   ) as tags,
+  -- tag_count: number of intentional tags linked via resource_tags (used in scoring)
+  (SELECT COUNT(*) FROM portal.resource_tags rt WHERE rt.resource_id = r.resource_id) as tag_count,
   'resource' as type
 FROM portal.resources r
 LEFT JOIN (
@@ -75,7 +77,12 @@ exports.getRecommendations = async (
         resourceQuery += ` AND (r.program_id = $${params.length} OR r.program_id IS NULL)`;
       }
       params.push(limit);
-      resourceQuery += ` GROUP BY r.resource_id, r.title, r.description, r.semester, r.program_id, rs.avg_score ORDER BY COALESCE(rs.avg_score, 0) DESC LIMIT $${params.length}`;
+      // Composite score: review quality (60%) + tag coverage bonus (5 pts/tag) + popularity (2 pts/review, capped at 10)
+      resourceQuery += ` GROUP BY r.resource_id, r.title, r.description, r.semester, r.program_id, rs.avg_score ORDER BY (
+        COALESCE(rs.avg_score, 0) * 0.6
+        + (SELECT COUNT(*) FROM portal.resource_tags rt2 WHERE rt2.resource_id = r.resource_id) * 5
+        + LEAST(COUNT(rs_all.score), 10) * 2
+      ) DESC LIMIT $${params.length}`;
       
       const res = await pool.query(resourceQuery, params);
       recommendations.resources = res.rows;

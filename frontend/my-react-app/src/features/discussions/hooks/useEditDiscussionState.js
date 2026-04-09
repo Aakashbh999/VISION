@@ -22,7 +22,8 @@ export const useEditDiscussionState = () => {
       content: discussion?.content || "",
       specializationId: discussion?.specialization_id?.toString() || "",
       degreeId: discussion?.degree_id?.toString() || "",
-      tags: discussion?.tags?.map((tag) => tag.tag_id) || [],
+      system_tags: discussion?.tags?.filter((t) => t.tag_type === "system").map((t) => t.tag_id) || [],
+      custom_tags: discussion?.tags?.filter((t) => t.tag_type === "custom").map((t) => t.name) || [],
     }),
     [discussion],
   );
@@ -30,9 +31,11 @@ export const useEditDiscussionState = () => {
   const [draftFormData, setDraftFormData] = useState(null);
   const formData = draftFormData || initialFormData;
   const [errors, setErrors] = useState({});
-  const [tagInput, setTagInput] = useState("");
+  const [customTagInput, setCustomTagInput] = useState("");
   const [specializations, setSpecializations] = useState([]);
   const [degrees, setDegrees] = useState([]);
+  const [systemTagOptions, setSystemTagOptions] = useState([]);
+  const [isLoadingTags, setIsLoadingTags] = useState(false);
 
   useEffect(() => {
     const fetchReferenceData = async () => {
@@ -49,7 +52,20 @@ export const useEditDiscussionState = () => {
       }
     };
 
+    const fetchSystemTags = async () => {
+      setIsLoadingTags(true);
+      try {
+        const res = await api.get("/discussions/tags", { params: { type: "system" } });
+        setSystemTagOptions(Array.isArray(res.data) ? res.data : []);
+      } catch (err) {
+        setSystemTagOptions([]);
+      } finally {
+        setIsLoadingTags(false);
+      }
+    };
+
     fetchReferenceData();
+    fetchSystemTags();
   }, []);
 
   const canEdit = discussion?.can_edit ?? true;
@@ -66,41 +82,42 @@ export const useEditDiscussionState = () => {
     }
   };
 
-  const handleAddTag = (tagId) => {
-    if (formData.tags.includes(tagId) || formData.tags.length >= 5) {
-      return;
-    }
-
+  const toggleSystemTag = (tagId) => {
     setDraftFormData((prev) => {
       const base = prev || initialFormData;
-      return { ...base, tags: [...base.tags, tagId] };
+      const already = base.system_tags.includes(tagId);
+      if (already) {
+        return { ...base, system_tags: base.system_tags.filter((id) => id !== tagId) };
+      }
+      if (base.system_tags.length >= 5) return base; // MAX 5 SYSTEM TAGS
+      return { ...base, system_tags: [...base.system_tags, tagId] };
     });
   };
 
-  const handleRemoveTag = (tagId) => {
+  const addCustomTag = () => {
+    const tag = customTagInput.trim();
+    if (!tag) return;
     setDraftFormData((prev) => {
       const base = prev || initialFormData;
-      return {
-        ...base,
-        tags: base.tags.filter((tag) => tag !== tagId),
-      };
+      if (base.custom_tags.length >= 2) return base; // MAX 2 CUSTOM TAGS
+      if (base.custom_tags.map(t => t.toLowerCase()).includes(tag.toLowerCase())) return base;
+      return { ...base, custom_tags: [...base.custom_tags, tag] };
+    });
+    setCustomTagInput("");
+  };
+
+  const removeCustomTag = (tag) => {
+    setDraftFormData((prev) => {
+      const base = prev || initialFormData;
+      return { ...base, custom_tags: base.custom_tags.filter((t) => t !== tag) };
     });
   };
 
-  const handleAddCustomTag = () => {
-    if (!tagInput.trim() || formData.tags.length >= 5) {
-      return;
+  const handleCustomTagKeyDown = (e) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      addCustomTag();
     }
-
-    const customTag = tagInput.trim();
-    if (!formData.tags.includes(customTag)) {
-      setDraftFormData((prev) => {
-        const base = prev || initialFormData;
-        return { ...base, tags: [...base.tags, customTag] };
-      });
-    }
-
-    setTagInput("");
   };
 
   const validate = () => {
@@ -136,7 +153,8 @@ export const useEditDiscussionState = () => {
       degreeId: formData.degreeId
         ? Number.parseInt(formData.degreeId, 10)
         : null,
-      tags: formData.tags,
+      system_tags: formData.system_tags,
+      custom_tags: formData.custom_tags,
     };
 
     updateMutation.mutate(submitData, {
@@ -169,17 +187,18 @@ export const useEditDiscussionState = () => {
     canEdit,
     formData,
     errors,
-    tagInput,
-    setTagInput,
+    customTagInput,
+    setCustomTagInput,
     specializations,
     degrees,
-    availableTags,
+    systemTagOptions,
+    isLoadingTags,
     updateMutation,
     handleChange,
-    handleAddTag,
-    handleRemoveTag,
-    handleAddCustomTag,
+    toggleSystemTag,
+    addCustomTag,
+    removeCustomTag,
+    handleCustomTagKeyDown,
     handleSubmit,
-    getTagName,
   };
 };

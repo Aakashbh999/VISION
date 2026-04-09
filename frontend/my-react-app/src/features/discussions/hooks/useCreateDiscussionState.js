@@ -8,6 +8,9 @@ import {
   uploadDiscussionImage,
 } from "../../../services/discussion";
 
+export const SYSTEM_TAG_CAP = 5;
+export const CUSTOM_TAG_CAP = 2;
+
 export const useCreateDiscussionState = () => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -19,24 +22,39 @@ export const useCreateDiscussionState = () => {
     content: "",
     imageCaption: "",
     specializationId: "",
-    tags: [],
+    system_tags: [], // Array of system tag IDs (max 5)
+    custom_tags: [], // Array of custom tag strings (max 2)
     username_verification: "",
   });
   const [selectedFile, setSelectedFile] = useState(null);
   const [previewUrl, setPreviewUrl] = useState(null);
   const [specializations, setSpecializations] = useState([]);
+  const [systemTagOptions, setSystemTagOptions] = useState([]);
+  const [isLoadingTags, setIsLoadingTags] = useState(false);
+  const [customTagInput, setCustomTagInput] = useState("");
   const [uploading, setUploading] = useState(false);
 
   useEffect(() => {
+    // Fetch specializations
     api
       .get("/discussions/specializations")
       .then((response) => setSpecializations(response.data || []));
+
+    // Fetch system tags
+    setIsLoadingTags(true);
+    api.get("/discussions/tags", { params: { type: "system" } })
+      .then((res) => {
+        setSystemTagOptions(Array.isArray(res.data) ? res.data : []);
+      })
+      .catch(() => setSystemTagOptions([]))
+      .finally(() => setIsLoadingTags(false));
   }, []);
 
   const createMutation = useMutation({
     mutationFn: createDiscussion,
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["discussions"] });
+      queryClient.invalidateQueries({ queryKey: ["userStats"] });
       toast.success("Post published!");
       navigate(`/discussions/${data.discussion_id}`);
     },
@@ -86,6 +104,41 @@ export const useCreateDiscussionState = () => {
     }
 
     toast.error("Drop an image file");
+  };
+
+  // Toggle a system tag on/off (respects cap)
+  const toggleSystemTag = (tagId) => {
+    setFormData((prev) => {
+      const already = prev.system_tags.includes(tagId);
+      if (already) {
+        return { ...prev, system_tags: prev.system_tags.filter((id) => id !== tagId) };
+      }
+      if (prev.system_tags.length >= SYSTEM_TAG_CAP) return prev;
+      return { ...prev, system_tags: [...prev.system_tags, tagId] };
+    });
+  };
+
+  const addCustomTag = () => {
+    const tag = customTagInput.trim();
+    if (!tag) return;
+    if (formData.custom_tags.length >= CUSTOM_TAG_CAP) return;
+    if (formData.custom_tags.map((t) => t.toLowerCase()).includes(tag.toLowerCase())) return;
+    setFormData((prev) => ({ ...prev, custom_tags: [...prev.custom_tags, tag] }));
+    setCustomTagInput("");
+  };
+
+  const removeCustomTag = (tag) => {
+    setFormData((prev) => ({
+      ...prev,
+      custom_tags: prev.custom_tags.filter((t) => t !== tag),
+    }));
+  };
+
+  const handleCustomTagKeyDown = (e) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      addCustomTag();
+    }
   };
 
   const handleSubmit = async (event) => {
@@ -146,6 +199,14 @@ export const useCreateDiscussionState = () => {
     selectedFile,
     previewUrl,
     specializations,
+    systemTagOptions,
+    isLoadingTags,
+    customTagInput,
+    setCustomTagInput,
+    toggleSystemTag,
+    addCustomTag,
+    removeCustomTag,
+    handleCustomTagKeyDown,
     uploading,
     createMutation,
     handleFileSelect,
