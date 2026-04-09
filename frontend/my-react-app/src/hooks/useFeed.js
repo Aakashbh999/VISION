@@ -10,6 +10,7 @@ export const useFeed = (input = 10) => {
           page: input?.page || 1,
           search: input?.search || "",
           actionType: input?.actionType || "",
+          tab: input?.tab || "for-you",
         };
 
   return useQuery({

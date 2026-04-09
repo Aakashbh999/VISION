@@ -1122,15 +1122,19 @@ exports.getTrendingDiscussions = async (limit = 10) => {
 /**
  * Get all tags for filter options
  */
-exports.getAllTags = async () => {
+exports.getAllTags = async (type = null) => {
   try {
-    const result = await pool.query(
-      `SELECT tag_id, name, slug FROM portal.tags ORDER BY name`,
-    );
+    let query = `SELECT tag_id, name, slug, tag_type FROM portal.tags`;
+    const params = [];
+    if (type === "system" || type === "custom") {
+      query += ` WHERE tag_type = $1`;
+      params.push(type);
+    }
+    query += ` ORDER BY tag_type ASC, name ASC`;
+    const result = await pool.query(query, params);
     return result.rows;
   } catch (err) {
-    // Table may not exist yet - return empty array
-    console.error("getAllTags error (table may not exist):", err.message);
+    console.error("getAllTags error:", err.message);
     return [];
   }
 };
@@ -1156,9 +1160,9 @@ exports.getOrCreateTags = async (tagNames) => {
     if (result.rows.length > 0) {
       tags.push(result.rows[0].tag_id);
     } else {
-      // Create new tag
+      // Create new tag explicitly as 'custom' type
       result = await pool.query(
-        `INSERT INTO portal.tags (name, slug) VALUES ($1, $2) RETURNING tag_id`,
+        `INSERT INTO portal.tags (name, slug, tag_type) VALUES ($1, $2, 'custom') RETURNING tag_id`,
         [name, slug],
       );
       tags.push(result.rows[0].tag_id);

@@ -77,12 +77,12 @@ const DiscussionDetailContainer = () => {
         onClose={() => setLightbox({ ...lightbox, isOpen: false })}
       />
 
-      <Link
-        to="/discussions"
-        className="inline-flex items-center text-xs font-black text-[var(--text-muted)] mb-6 hover:text-purple-600 uppercase tracking-widest"
+      <button
+        onClick={() => navigate(-1)}
+        className="inline-flex items-center text-xs font-black text-[var(--text-muted)] mb-6 hover:text-purple-600 uppercase tracking-widest transition-colors"
       >
-        <ChevronLeft className="w-4 h-4 mr-1" /> Back to Feed
-      </Link>
+        <ChevronLeft className="w-4 h-4 mr-1" /> Back
+      </button>
 
       <DiscussionPostCard
         discussion={discussion}

@@ -77,7 +77,7 @@ export const useDeleteDiscussion = () => {
     },
     onError: (err) => {
       toast.error(err.response?.data?.error || "Failed to archive post");
-    }
+    },
   });
 };
 
@@ -115,8 +115,10 @@ export const useBoostDiscussion = () => {
       // also invalidate profile to update reputation points
     },
     onError: (error) => {
-      toast.error(error.response?.data?.message || "Failed to boost discussion");
-    }
+      toast.error(
+        error.response?.data?.message || "Failed to boost discussion",
+      );
+    },
   });
 };
 
@@ -151,6 +153,7 @@ export const useCreateDiscussion = () => {
     mutationFn: createDiscussion,
     onSuccess: (data) => {
       queryClient.invalidateQueries(["discussions"]);
+      queryClient.invalidateQueries(["userStats"]);
       navigate(`/portal/discussions/${data.discussion_id}`);
     },
   });
@@ -159,7 +162,8 @@ export const useCreateDiscussion = () => {
 export const useAddComment = (discussionId) => {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ content, parentId, website }) => addComment(discussionId, content, parentId, website),
+    mutationFn: ({ content, parentId, website }) =>
+      addComment(discussionId, content, parentId, website),
     onSuccess: () => {
       queryClient.invalidateQueries(["discussion", discussionId]);
     },
@@ -202,6 +206,3 @@ export const useToggleSave = (discussionId) => {
     },
   });
 };
-
-
-

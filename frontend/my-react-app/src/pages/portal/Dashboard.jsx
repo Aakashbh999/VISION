@@ -26,14 +26,15 @@ const Dashboard = () => {
     isLoading: dashLoading,
     error: dashError,
   } = useDashboard();
-  const { data: notifications, isLoading: notifLoading } = useNotifications(5);
+  const { data: notificationsPayload, isLoading: notifLoading } = useNotifications(5);
+  const notifications = notificationsPayload?.data || [];
   const { data: feedPayload, isLoading: feedLoading } = useFeed(5);
   const feed = feedPayload?.data || [];
 
   const dashboardStats = [
     {
       label: "Notifications",
-      value: notifications?.length ?? 0,
+      value: notifications.length,
     },
     {
       label: "Current progress",

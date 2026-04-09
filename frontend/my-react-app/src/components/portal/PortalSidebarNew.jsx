@@ -14,7 +14,7 @@ import {
   Search,
 } from "lucide-react";
 import { useSidebar } from "../../hooks/useSidebar";
-import { useSearchModal } from "../ui/SearchModal";
+import SearchModal from "../ui/SearchModal";
 
 // Navigation items with nested sub-menus support
 const navItems = [
@@ -169,7 +169,7 @@ const NavItem = ({ item, isCollapsed, depth = 0 }) => {
 
 const PortalSidebarNew = () => {
   const { isCollapsed, isMobileOpen, closeMobile, isMobile } = useSidebar();
-  const { open: openSearch } = useSearchModal();
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
 
   const sidebarContent = (
     <div className="flex flex-col h-full">
@@ -194,7 +194,7 @@ const PortalSidebarNew = () => {
           <button
             onClick={() => {
               closeMobile();
-              openSearch();
+              setIsSearchOpen(true);
             }}
             className="w-full flex items-center gap-2 pl-9 pr-3 py-2 bg-[var(--bg-active)] border border-[var(--border-main)] rounded-xl text-sm text-[var(--text-muted)] hover:bg-[var(--bg-card)] hover:border-purple-300 transition-all relative group"
           >
@@ -223,31 +223,38 @@ const PortalSidebarNew = () => {
   // Mobile: Drawer with backdrop
   if (isMobile) {
     return (
-      <AnimatePresence>
-        {isMobileOpen && (
-          <>
-            {/* Backdrop */}
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              onClick={closeMobile}
-              className="fixed inset-0 sidebar-backdrop z-40 lg:hidden"
-            />
+      <>
+        <AnimatePresence>
+          {isMobileOpen && (
+            <>
+              {/* Backdrop */}
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                onClick={closeMobile}
+                className="fixed inset-0 sidebar-backdrop z-40 lg:hidden"
+              />
 
-            {/* Drawer */}
-            <motion.aside
-              initial={{ x: "-100%" }}
-              animate={{ x: 0 }}
-              exit={{ x: "-100%" }}
-              transition={{ type: "spring", damping: 25, stiffness: 300 }}
-              className="fixed left-0 top-0 h-full w-64 bg-[var(--bg-main)] border-r border-[var(--border-main)] shadow-xl z-50 lg:hidden"
-            >
-              {sidebarContent}
-            </motion.aside>
-          </>
-        )}
-      </AnimatePresence>
+              {/* Drawer */}
+              <motion.aside
+                initial={{ x: "-100%" }}
+                animate={{ x: 0 }}
+                exit={{ x: "-100%" }}
+                transition={{ type: "spring", damping: 25, stiffness: 300 }}
+                className="fixed left-0 top-0 h-full w-64 bg-[var(--bg-main)] border-r border-[var(--border-main)] shadow-xl z-50 lg:hidden"
+              >
+                {sidebarContent}
+              </motion.aside>
+            </>
+          )}
+        </AnimatePresence>
+
+        <SearchModal
+          isOpen={isSearchOpen}
+          onClose={() => setIsSearchOpen(false)}
+        />
+      </>
     );
   }
 

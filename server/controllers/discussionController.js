@@ -90,7 +90,9 @@ exports.getUserDefaults = catchAsync(async (req, res) => {
     GET ALL TAGS
   ================================ */
 exports.getAllTags = catchAsync(async (req, res) => {
-    const tags = await discussionService.getAllTags();
+    const { type } = req.query;
+    const validType = type === "system" || type === "custom" ? type : null;
+    const tags = await discussionService.getAllTags(validType);
     res.json(tags || []);
 });
 
@@ -177,6 +179,8 @@ exports.createDiscussion = catchAsync(async (req, res) => {
       jobRoleId,
       programId,
       tags,
+      system_tags,
+      custom_tags,
       imageUrl,
       imagePublicId,
       imageCaption,
@@ -197,8 +201,33 @@ exports.createDiscussion = catchAsync(async (req, res) => {
     title = profanityService.cleanText(title);
     content = profanityService.cleanText(content);
 
-    // Process tags using shared helper (DRY)
-    const tagIds = await processTagInput(tags);
+    // Process tags: new split format (system_tags + custom_tags) takes precedence over legacy tags array.
+    // Limits enforced ONLY on new posts (existing posts are grandfathered).
+    let tagIds = [];
+    if (system_tags !== undefined || custom_tags !== undefined) {
+      const systemIds = (Array.isArray(system_tags) ? system_tags : [])
+        .map(Number)
+        .filter((n) => Number.isInteger(n) && n > 0);
+      const customNames = (Array.isArray(custom_tags) ? custom_tags : [])
+        .map(String)
+        .filter(Boolean);
+
+      if (systemIds.length > 5) {
+        return errorResponse(res, "Maximum 5 system tags allowed.", 400);
+      }
+      if (customNames.length > 2) {
+        return errorResponse(res, "Maximum 2 custom tags allowed.", 400);
+      }
+
+      const customIds =
+        customNames.length > 0
+          ? await discussionService.getOrCreateTags(customNames)
+          : [];
+      tagIds = [...systemIds, ...customIds];
+    } else {
+      // Legacy format (tags array with mixed IDs/names)
+      tagIds = await processTagInput(tags);
+    }
 
     const discussion = await discussionService.createDiscussion({
       userId,
@@ -240,16 +269,36 @@ exports.updateDiscussion = catchAsync(async (req, res) => {
     const { id } = req.params;
     const userId = req.user.portal_user_id;
     const isAdmin = req.user.role === "admin";
-    let { title, content, specializationId, degreeId, jobRoleId, tags } =
+    let { title, content, specializationId, degreeId, jobRoleId, tags, system_tags, custom_tags } =
       req.body;
 
     // Clean profanity if title/content provided
     if (title) title = profanityService.cleanText(title);
     if (content) content = profanityService.cleanText(content);
 
-    // Process tags using shared helper (DRY)
+    // Process tags: new split format takes precedence; existing posts are grandfathered (no retroactive cap).
     let tagIds = null;
-    if (tags && Array.isArray(tags)) {
+    if (system_tags !== undefined || custom_tags !== undefined) {
+      const systemIds = (Array.isArray(system_tags) ? system_tags : [])
+        .map(Number)
+        .filter((n) => Number.isInteger(n) && n > 0);
+      const customNames = (Array.isArray(custom_tags) ? custom_tags : [])
+        .map(String)
+        .filter(Boolean);
+
+      if (systemIds.length > 5) {
+        return errorResponse(res, "Maximum 5 system tags allowed.", 400);
+      }
+      if (customNames.length > 2) {
+        return errorResponse(res, "Maximum 2 custom tags allowed.", 400);
+      }
+
+      const customIds =
+        customNames.length > 0
+          ? await discussionService.getOrCreateTags(customNames)
+          : [];
+      tagIds = [...systemIds, ...customIds];
+    } else if (tags && Array.isArray(tags)) {
       tagIds = await processTagInput(tags);
     }
 

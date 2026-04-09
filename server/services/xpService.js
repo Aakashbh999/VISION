@@ -55,8 +55,17 @@ class XPService {
                 [newXP, newLevel, userId]
             );
 
-            // Log activity (optional, but good for transparency)
-            console.log(`[XP] User ${userId} gained ${amount} XP for "${reason}". New Total: ${newXP}, Level: ${newLevel}`);
+            // Write to audit log
+            try {
+              await db.query(
+                `INSERT INTO portal.xp_activity_log
+                 (user_id, amount, reason, new_total, new_level, created_at)
+                 VALUES ($1, $2, $3, $4, $5, NOW())`,
+                [userId, amount, reason, newXP, newLevel]
+              );
+            } catch (logErr) {
+              console.error('[XP] Failed to write activity log:', logErr.message);
+            }
 
             return { level: newLevel, xp: newXP, leveledUp };
         } catch (error) {
@@ -66,11 +75,12 @@ class XPService {
     }
 
     /**
-     * Get User Stats
+     * Get User Stats (explicit columns only — no SELECT *)
      */
     static async getUserStats(userId) {
         const res = await pool.query(
-            'SELECT * FROM portal.user_stats WHERE user_id = $1',
+            `SELECT user_id, total_xp, current_level, last_activity
+             FROM portal.user_stats WHERE user_id = $1`,
             [userId]
         );
         return res.rows[0] || null;

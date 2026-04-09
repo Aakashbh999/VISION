@@ -27,40 +27,42 @@ import PendingApproval from "./pages/PendingApproval";
 import ProtectedRoute from "./components/ProtectedRoute";
 import RequireAuth from "./components/RequireAuth";
 import AdminRoute from "./components/AdminRoute";
-import Dashboard from "./pages/portal/Dashboard";
-import Notifications from "./pages/portal/Notifications";
-import Roadmaps from "./pages/portal/Roadmaps";
-import RoadmapView from "./pages/portal/RoadmapView";
-import Discussions from "./pages/portal/Discussions";
-import CreateDiscussion from "./pages/portal/CreateDiscussion";
-import EditDiscussion from "./pages/portal/EditDiscussion";
-import MyPosts from "./pages/portal/MyPosts";
-import SavedDiscussions from "./pages/portal/SavedDiscussions";
-import Groups from "./pages/portal/Groups";
-import CreateGroup from "./pages/portal/CreateGroup";
-import Clubs from "./pages/portal/Clubs";
 import RedirectIfAuthenticated from "./components/RedirectIfAuthenticated";
 import CareerPaths from "./pages/CareerPaths";
-import Resources from "./pages/portal/Resources";
-import MyResources from "./pages/portal/MyResources";
-import ManageContent from "./pages/portal/ManageContent";
-import Feed from "./pages/portal/Feed";
 import PendingAccessMessage from "./components/portal/PendingAccessMessage";
-// Admin pages
+import ModeratorRoute from "./components/ModeratorRoute";
+
+// Admin pages — kept static as they are low-traffic, role-gated pages
 import AdminDashboard from "./pages/admin/Dashboard";
 import AdminPending from "./pages/admin/PendingStudents";
 import AdminStudents from "./pages/admin/StudentsList";
 import AdminReports from "./pages/admin/Reports";
 import AdminPendingResources from "./pages/admin/PendingResources";
 import AdminLogs from "./pages/admin/AdminLogs";
-import ModeratorRoute from "./components/ModeratorRoute";
 
-// Lazy-loaded heavy pages (reduces initial bundle size significantly)
-const Profile = lazy(() => import("./pages/portal/Profile"));
-const GroupDetail = lazy(() => import("./pages/portal/GroupDetail"));
-const GroupProfile = lazy(() => import("./pages/portal/GroupProfile"));
-const DiscussionDetail = lazy(() => import("./pages/portal/DiscussionDetail"));
-const ClubDetail = lazy(() => import("./pages/portal/ClubDetail"));
+// All portal pages lazy-loaded to minimise initial bundle size
+const Dashboard       = lazy(() => import("./pages/portal/Dashboard"));
+const Notifications   = lazy(() => import("./pages/portal/Notifications"));
+const Roadmaps        = lazy(() => import("./pages/portal/Roadmaps"));
+const RoadmapView     = lazy(() => import("./pages/portal/RoadmapView"));
+const Discussions     = lazy(() => import("./pages/portal/Discussions"));
+const CreateDiscussion= lazy(() => import("./pages/portal/CreateDiscussion"));
+const EditDiscussion  = lazy(() => import("./pages/portal/EditDiscussion"));
+const MyPosts         = lazy(() => import("./pages/portal/MyPosts"));
+const SavedDiscussions= lazy(() => import("./pages/portal/SavedDiscussions"));
+const Groups          = lazy(() => import("./pages/portal/Groups"));
+const CreateGroup     = lazy(() => import("./pages/portal/CreateGroup"));
+const Clubs           = lazy(() => import("./pages/portal/Clubs"));
+const Resources       = lazy(() => import("./pages/portal/Resources"));
+const MyResources     = lazy(() => import("./pages/portal/MyResources"));
+const ManageContent   = lazy(() => import("./pages/portal/ManageContent"));
+const Feed            = lazy(() => import("./pages/portal/Feed"));
+const Profile         = lazy(() => import("./pages/portal/Profile"));
+const GroupDetail     = lazy(() => import("./pages/portal/GroupDetail"));
+const GroupProfile    = lazy(() => import("./pages/portal/GroupProfile"));
+const DiscussionDetail= lazy(() => import("./pages/portal/DiscussionDetail"));
+const ClubDetail      = lazy(() => import("./pages/portal/ClubDetail"));
+
 
 // Route Configurations
 const publicRoutes = [
@@ -206,6 +208,9 @@ function PublicLayout() {
               path="/portal/*"
               element={<Navigate to="/dashboard" replace />}
             />
+
+            {/* 404 catch-all */}
+            <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </main>
       </div>
@@ -298,7 +303,7 @@ function App() {
         pauseOnFocusLoss
         draggable
         pauseOnHover
-        theme="colored"
+        theme={window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light"}
       />
     </Router>
   );

@@ -9,7 +9,7 @@ import LoadingSpinner from "../../components/ui/LoadingSpinner";
 import { CheckCircle, X, Trash2 } from "lucide-react";
 
 const Notifications = () => {
-  const { data: notifications, isLoading, error } = useNotifications(50);
+  const { data: notificationsPayload, isLoading, error } = useNotifications(50);
   const queryClient = useQueryClient();
 
   const markReadMutation = useMutation({
@@ -48,8 +48,9 @@ const Notifications = () => {
   if (error)
     return <div className="p-8 text-red-500">Failed to load notifications</div>;
 
-  const unread = notifications?.filter((n) => !n.is_read) || [];
-  const read = notifications?.filter((n) => n.is_read) || [];
+  const notifications = notificationsPayload?.data || [];
+  const unread = notifications.filter((n) => !n.is_read);
+  const read = notifications.filter((n) => n.is_read);
 
   return (
     <div className="space-y-6 px-2 sm:px-6 lg:px-8 py-5 sm:py-8 lg:py-10">
@@ -57,7 +58,7 @@ const Notifications = () => {
         <h1 className="text-xl sm:text-2xl font-bold text-[var(--text-main)]">
           Notifications
         </h1>
-        {notifications?.length > 0 && (
+        {notifications.length > 0 && (
           <button
             onClick={() => clearAllMutation.mutate()}
             className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-red-600 bg-red-50 hover:bg-red-100 dark:bg-red-950/30 dark:text-red-400 dark:hover:bg-red-900/50 rounded-lg transition-colors"
@@ -68,7 +69,7 @@ const Notifications = () => {
         )}
       </div>
 
-      {notifications?.length === 0 ? (
+      {notifications.length === 0 ? (
         <p className="text-[var(--text-muted)]">No notifications yet.</p>
       ) : (
         <>

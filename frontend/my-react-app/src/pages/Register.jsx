@@ -23,8 +23,9 @@ import {
 import LoadingSpinner from "../components/ui/LoadingSpinner";
 import { calculateSemesterFromBatch } from "../utils/academic";
 import { toast } from "react-toastify";
-import TagInput from "../components/ui/TagInput";
+import { Tag } from "lucide-react";
 import Button from "../components/ui/Button";
+import api from "../services/api";
 
 const Register = () => {
   const navigate = useNavigate();
@@ -34,20 +35,40 @@ const Register = () => {
   const [formData, setFormData] = useState({
     email: "",
     password: "",
+    confirmPassword: "",
     full_name: "",
     university: "TU",
     campus: "",
     program_id: "",
     batch_year: "",
+    batch_date: "", // New field for calendar picker
     semester: "",
     semester_is_manual: false,
     tu_registration_no: "",
     career_scope: [],
   });
 
+  const [systemTagOptions, setSystemTagOptions] = useState([]);
+  const [isLoadingTags, setIsLoadingTags] = useState(false);
+  const [showAllTags, setShowAllTags] = useState(false);
   const [studentIdFile, setStudentIdFile] = useState(null);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    const fetchTags = async () => {
+      setIsLoadingTags(true);
+      try {
+        const res = await api.get("/discussions/tags", { params: { type: "system" } });
+        setSystemTagOptions(Array.isArray(res.data) ? res.data : []);
+      } catch (err) {
+        setSystemTagOptions([]);
+      } finally {
+        setIsLoadingTags(false);
+      }
+    };
+    fetchTags();
+  }, []);
 
   // Auto-calculate semester logic
   useEffect(() => {
@@ -62,15 +83,51 @@ const Register = () => {
   }, [formData.batch_year, formData.semester_is_manual]);
 
   const handleChange = (e) => {
-    const { name, value, type, checked } = e.target;
+    let { name, value, type, checked } = e.target;
+
+    // Special handling for semester limit and manual override
+    if (name === "semester") {
+      let numValue = parseInt(value, 10);
+      if (!isNaN(numValue)) {
+        if (numValue < 1) numValue = 1;
+        if (numValue > 12) numValue = 12;
+        value = String(numValue);
+      }
+      setFormData((prev) => ({
+        ...prev,
+        [name]: value,
+        semester_is_manual: true,
+      }));
+      return;
+    }
+
+    // Special handling for batch date
+    if (name === "batch_date") {
+      const year = value ? value.split("-")[0] : "";
+      setFormData((prev) => ({
+        ...prev,
+        batch_date: value,
+        batch_year: year,
+        semester_is_manual: false, // Reset manual override when batch changes
+      }));
+      return;
+    }
+
     setFormData((prev) => ({
       ...prev,
       [name]: type === "checkbox" ? checked : value,
     }));
   };
 
-  const handleTagsChange = (tags) => {
-    setFormData((prev) => ({ ...prev, career_scope: tags }));
+  const toggleCareerScope = (tagName) => {
+    setFormData((prev) => {
+      const already = prev.career_scope.includes(tagName);
+      if (already) {
+        return { ...prev, career_scope: prev.career_scope.filter((t) => t !== tagName) };
+      }
+      if (prev.career_scope.length >= 5) return prev;
+      return { ...prev, career_scope: [...prev.career_scope, tagName] };
+    });
   };
 
   const handleFileChange = (e) => {
@@ -83,12 +140,20 @@ const Register = () => {
   };
 
   const validateStep1 = () => {
-    if (!formData.email || !formData.password || !formData.full_name) {
+    if (!formData.email || !formData.password || !formData.confirmPassword || !formData.full_name) {
       setError("Fill in all required fields.");
       return false;
     }
     if (formData.password.length < 8) {
       setError("Password must be at least 8 characters.");
+      return false;
+    }
+    if (!/[A-Z]/.test(formData.password) || !/[a-z]/.test(formData.password) || !/[0-9]/.test(formData.password)) {
+      setError("Password must include uppercase, lowercase, and a number.");
+      return false;
+    }
+    if (formData.password !== formData.confirmPassword) {
+      setError("Passwords do not match.");
       return false;
     }
     setError("");
@@ -245,6 +310,24 @@ const Register = () => {
                   Use a mix of uppercase, lowercase, and numbers.
                 </p>
               </div>
+
+              <div>
+                <label className="text-[10px] font-black uppercase text-[var(--text-muted)] tracking-widest mb-2 block">
+                  Confirm Password
+                </label>
+                <div className="relative group">
+                  <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[var(--text-muted)] group-focus-within:text-purple-500 transition-colors" />
+                  <input
+                    type="password"
+                    name="confirmPassword"
+                    required
+                    value={formData.confirmPassword}
+                    onChange={handleChange}
+                    className="w-full pl-12 pr-4 py-3.5 bg-[var(--bg-active)] border border-[var(--border-main)] rounded-2xl focus:bg-[var(--bg-card)] focus:ring-4 focus:ring-purple-500/10 focus:border-purple-500 outline-none transition-all font-medium text-[var(--text-main)]"
+                    placeholder="Confirm your password"
+                  />
+                </div>
+              </div>
             </div>
 
             <Button
@@ -328,25 +411,26 @@ const Register = () => {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
-                <div>
+              <div className="grid grid-cols-12 gap-3">
+                <div className="col-span-7">
                   <label className="text-[10px] font-black uppercase text-[var(--text-muted)] tracking-widest mb-2 block">
-                    Batch
+                    Batch Enrollment
                   </label>
                   <div className="relative">
-                    <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--text-muted)]" />
+                    <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--text-muted)] pointer-events-none" />
                     <input
-                      type="number"
-                      name="batch_year"
+                      type="date"
+                      name="batch_date"
                       required
-                      value={formData.batch_year}
+                      max={new Date().toISOString().split("T")[0]}
+                      value={formData.batch_date}
                       onChange={handleChange}
-                      className="w-full pl-9 pr-3 py-3.5 bg-[var(--bg-active)] border border-[var(--border-main)] rounded-2xl focus:bg-[var(--bg-card)] outline-none transition-all font-bold text-[var(--text-main)]"
-                      placeholder="2078"
+                      onKeyDown={(e) => e.preventDefault()}
+                      className="w-full pl-9 pr-3 py-3.5 bg-[var(--bg-active)] border border-[var(--border-main)] rounded-2xl focus:bg-[var(--bg-card)] outline-none transition-all font-bold text-[var(--text-main)] [color-scheme:dark]"
                     />
                   </div>
                 </div>
-                <div>
+                <div className="col-span-5">
                   <label className="text-[10px] font-black uppercase text-[var(--text-muted)] tracking-widest mb-2 block">
                     Semester
                   </label>
@@ -356,6 +440,8 @@ const Register = () => {
                       type="number"
                       name="semester"
                       required
+                      min="1"
+                      max="12"
                       value={formData.semester}
                       onChange={handleChange}
                       className="w-full pl-9 pr-3 py-3.5 bg-[var(--bg-active)] border border-[var(--border-main)] rounded-2xl focus:bg-[var(--bg-card)] outline-none transition-all font-bold text-[var(--text-main)]"
@@ -384,11 +470,59 @@ const Register = () => {
               </div>
             </div>
 
-            <TagInput
-              tags={formData.career_scope}
-              onChange={handleTagsChange}
-              placeholder="Add career tags (e.g. web-dev, data-science, ai)..."
-            />
+            <div>
+              <div className="flex items-center justify-between mb-2">
+                <label className="flex items-center gap-1.5 text-[10px] font-black text-[var(--text-muted)] uppercase tracking-widest ml-1">
+                  <Tag className="w-3.5 h-3.5 text-purple-500" />
+                  Interested Areas
+                </label>
+                <span
+                  className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                    formData.career_scope.length >= 5
+                      ? "bg-purple-100 text-purple-700"
+                      : "text-[var(--text-muted)]"
+                  }`}
+                >
+                  {formData.career_scope.length}/5 selected
+                </span>
+              </div>
+              <div className="flex flex-wrap gap-2 px-1">
+                {isLoadingTags && (
+                  <p className="text-xs text-[var(--text-muted)] italic">Loading tags…</p>
+                )}
+                {(showAllTags ? systemTagOptions : systemTagOptions.slice(0, 7)).map((tag) => {
+                  const isSelected = formData.career_scope.includes(tag.name);
+                  const isDisabled =
+                    !isSelected && formData.career_scope.length >= 5;
+                  return (
+                    <button
+                      key={tag.tag_id}
+                      type="button"
+                      onClick={() => toggleCareerScope(tag.name)}
+                      disabled={isDisabled}
+                      className={`px-3 py-1.5 rounded-full text-[11px] font-medium border transition-all ${
+                        isSelected
+                          ? "bg-purple-600 text-white border-purple-600 shadow-sm"
+                          : isDisabled
+                          ? "bg-[var(--bg-active)] text-[var(--text-muted)] border-[var(--border-main)] opacity-40 cursor-not-allowed"
+                          : "bg-[var(--bg-active)] text-[var(--text-main)] border-[var(--border-main)] hover:border-purple-400 hover:text-purple-600 cursor-pointer"
+                      }`}
+                    >
+                      {tag.name}
+                    </button>
+                  );
+                })}
+                {systemTagOptions.length > 7 && (
+                  <button
+                    type="button"
+                    onClick={() => setShowAllTags(!showAllTags)}
+                    className="px-3 py-1.5 rounded-full text-[11px] font-medium border border-transparent text-purple-600 hover:bg-purple-50 transition-colors"
+                  >
+                    {showAllTags ? "Show less" : `+${systemTagOptions.length - 7} more`}
+                  </button>
+                )}
+              </div>
+            </div>
 
             <div>
               <label className="text-[10px] font-black uppercase text-[var(--text-muted)] tracking-widest mb-2 block">

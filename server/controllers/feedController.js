@@ -90,6 +90,18 @@ const buildRankedFeedQuery = ({ config, includeBreakdown = false }) => {
           OR af.action_type ILIKE '%' || $3 || '%'
           OR COALESCE(d.title, r.title, rs.title, sg.name, '') ILIKE '%' || $3 || '%'
         )
+        -- Tab-specific filtering logic
+        AND (
+          $6::text IS NULL OR $6 = 'for-you' OR
+          ($6 = 'discussions' AND af.action_type = 'discussion_created') OR
+          ($6 = 'groups' AND af.action_type IN ('group_notice_posted', 'group_posted')) OR
+          ($6 = 'resources' AND af.action_type = 'resource_uploaded')
+        )
+        -- For You specific: Filter out noisy audit logs like 'followed' or 'joined' unless specifically requested
+        AND (
+          $6::text <> 'for-you' OR 
+          af.action_type NOT IN ('group_join_approved', 'group_joined', 'user_followed', 'completed_step')
+        )
     ),
     scored AS (
       SELECT
@@ -98,6 +110,7 @@ const buildRankedFeedQuery = ({ config, includeBreakdown = false }) => {
           WHEN fb.action_type = 'group_notice_posted' THEN ${aw.group_notice_posted}
           WHEN fb.action_type = 'resource_uploaded' THEN ${aw.resource_uploaded}
           WHEN fb.action_type = 'discussion_created' THEN ${aw.discussion_created}
+          WHEN fb.action_type = 'group_posted' THEN ${aw.group_posted}
           WHEN fb.action_type = 'group_join_approved' THEN ${aw.group_join_approved}
           WHEN fb.action_type = 'group_joined' THEN ${aw.group_joined}
           WHEN fb.action_type = 'completed_step' THEN ${aw.completed_step}
@@ -190,12 +203,16 @@ const buildRankedFeedQuery = ({ config, includeBreakdown = false }) => {
         r.group_name,
         r.post_preview,
         r.metadata ->> 'title'
-      ) AS entity_title
-      ${breakdownSelect},
-      COUNT(*) OVER()::INTEGER AS total_count
-    FROM ranked r
-    ORDER BY r.relevance_score DESC, r.created_at DESC
-    LIMIT $4 OFFSET $5`;
+    ) AS entity_title,
+    r.event_group_id,
+    r.post_section,
+    r.post_preview,
+    r.is_following_actor
+    ${breakdownSelect},
+    COUNT(*) OVER()::INTEGER AS total_count
+  FROM ranked r
+  ORDER BY r.relevance_score DESC, r.created_at DESC
+  LIMIT $4 OFFSET $5`;
 };
 
 const fetchRankedFeed = async ({
@@ -204,11 +221,12 @@ const fetchRankedFeed = async ({
   search,
   limit,
   offset,
+  tab, // Pass tab to the query
   config,
   includeBreakdown = false,
 }) => {
   const sql = buildRankedFeedQuery({ config, includeBreakdown });
-  return pool.query(sql, [viewerId, actionType, search, limit, offset]);
+  return pool.query(sql, [viewerId, actionType, search, limit, offset, tab]);
 };
 
 exports.getFeed = catchAsync(async (req, res) => {
@@ -223,6 +241,7 @@ exports.getFeed = catchAsync(async (req, res) => {
       ? String(req.query.actionType).trim()
       : null;
     const search = req.query.search ? String(req.query.search).trim() : null;
+    const tab = req.query.tab ? String(req.query.tab).trim() : 'for-you';
     const config = resolveFeedRankingConfig(req.query);
 
     const feedResult = await fetchRankedFeed({
@@ -231,6 +250,7 @@ exports.getFeed = catchAsync(async (req, res) => {
       search,
       limit,
       offset,
+      tab,
       config,
       includeBreakdown: req.query.debug === "1",
     });

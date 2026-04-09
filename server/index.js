@@ -158,21 +158,6 @@ app.use("/api/profile", profileRoutes);
 app.use("/api/clubs", clubRoutes);
 app.use("/api/study-groups", studyGroupRoutes);
 
-// 🔐 Protected Portal Route
-const {
-  verifyJWT,
-  requireApprovedStudent,
-} = require("./middleware/authMiddleware");
-
-app.get(
-  "/api/portal/dashboard",
-  verifyJWT,
-  requireApprovedStudent,
-  (req, res) => {
-    res.json({ message: "Welcome to VISION Portal" });
-  },
-);
-
 // Root Test Route
 app.get("/", (req, res) => {
   res.send(
