@@ -18,6 +18,14 @@ const CreateDiscussionContainer = () => {
             selectedFile={state.selectedFile}
             previewUrl={state.previewUrl}
             specializations={state.specializations}
+            systemTagOptions={state.systemTagOptions}
+            isLoadingTags={state.isLoadingTags}
+            customTagInput={state.customTagInput}
+            setCustomTagInput={state.setCustomTagInput}
+            toggleSystemTag={state.toggleSystemTag}
+            addCustomTag={state.addCustomTag}
+            removeCustomTag={state.removeCustomTag}
+            handleCustomTagKeyDown={state.handleCustomTagKeyDown}
             uploading={state.uploading}
             createMutation={state.createMutation}
             onFileSelect={state.handleFileSelect}
