@@ -76,9 +76,25 @@ const DiscussionPostCard = ({
         </button>
       </div>
 
-      <div className="flex-1 p-4 sm:p-6 md:p-8">
+      <div className="flex-1 p-2 sm:p-6 md:p-8">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3">
+          <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 text-[9px] sm:text-[10px] font-black tracking-widest text-[var(--text-muted)]">
+            <span className="text-purple-500 font-black cursor-pointer truncate max-w-[120px] sm:max-w-none">
+              {(discussion.specialization_name || "general")
+                .toLowerCase()
+                .replace(/\s+/g, "")}
+            </span>
+            <span className="opacity-50">•</span>
+            <span className="text-[var(--text-main)]/80 truncate max-w-[100px] sm:max-w-none">
+              {discussion.author?.toLowerCase().replace(/\s+/g, "")}
+            </span>
+            <span className="opacity-50">•</span>
+            <span>{new Date(discussion.created_at).toLocaleDateString()}</span>
+          </div>
+        </div>
+
         <div className="flex justify-between items-start mb-6">
-          <h1 className="text-xl sm:text-2xl md:text-3xl font-black text-[var(--text-main)] tracking-tight">
+          <h1 className="text-lg sm:text-2xl md:text-3xl font-black text-[var(--text-main)] tracking-tight">
             {discussion.title}
           </h1>
           <ActionMenu

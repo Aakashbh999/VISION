@@ -55,6 +55,7 @@ const AuditActions = {
   ADMIN_SUSPEND_USER: "suspend",
   ADMIN_REACTIVATE_USER: "reactivate",
   ADMIN_DELETE_CONTENT: "delete",
+  ADMIN_HARD_DELETE_CONTENT: "hard_delete",
   ADMIN_CLOSE_REPORT: "close_report",
 };
 

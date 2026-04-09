@@ -5,12 +5,12 @@ const {
   getAuditLogs,
   getAuditLogsCount,
 } = require("../utils/auditService");
+const catchAsync = require("../utils/catchAsync");
 
 /* ===============================
    GET Pending Students
-================================ */
-exports.getPendingStudents = async (req, res) => {
-  try {
+ ================================ */
+exports.getPendingStudents = catchAsync(async (req, res) => {
     const result = await pool.query(`
       SELECT 
         p.user_id,
@@ -28,54 +28,84 @@ exports.getPendingStudents = async (req, res) => {
       ORDER BY p.created_at ASC
     `);
 
-    res.json(result.rows);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "Failed to fetch pending students" });
-  }
-};
+    res.json({
+      success: true,
+      data: result.rows,
+      pagination: {
+        total: result.rowCount,
+        page: 1,
+        limit: result.rowCount,
+        totalPages: 1
+      }
+    });
+});
 
 /* ===============================
    GET Students By Status
-================================ */
-exports.getStudentsByStatus = async (req, res) => {
-  try {
-    const { status } = req.query;
+ ================================ */
+exports.getStudentsByStatus = catchAsync(async (req, res) => {
+    const status = req.query.status;
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const offset = (page - 1) * limit;
 
-    let query = `
+    let whereClause = "";
+    const values = [];
+
+    if (status === "suspended") {
+      whereClause = "WHERE p.is_suspended = TRUE";
+    } else if (status) {
+      whereClause = "WHERE p.student_status = $1 AND p.is_suspended = FALSE";
+      values.push(status);
+    }
+
+    const query = `
       SELECT 
         p.user_id,
         p.full_name,
         a.email,
+        pr.program_name,
+        p.semester,
+        p.tu_registration_no,
         p.student_status,
+        p.is_suspended,
         p.created_at
       FROM portal.users p
       JOIN auth.users a ON p.auth_user_id = a.auth_user_id
+      LEFT JOIN portal.programs pr ON p.program_id = pr.program_id
+      ${whereClause}
+      ORDER BY p.created_at DESC
+      LIMIT $${values.length + 1} OFFSET $${values.length + 2}
     `;
 
-    const values = [];
+    const countQuery = `
+      SELECT COUNT(*) FROM portal.users p
+      ${whereClause}
+    `;
 
-    if (status) {
-      query += ` WHERE p.student_status = $1`;
-      values.push(status);
-    }
+    const [result, countResult] = await Promise.all([
+      pool.query(query, [...values, limit, offset]),
+      pool.query(countQuery, values),
+    ]);
 
-    query += ` ORDER BY p.created_at DESC`;
+    const total = parseInt(countResult.rows[0].count);
 
-    const result = await pool.query(query, values);
-
-    res.json(result.rows);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "Failed to fetch students" });
-  }
-};
+    res.json({
+      success: true,
+      data: result.rows,
+      pagination: {
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit),
+      },
+    });
+});
 
 /* ===============================
    APPROVE Student
-================================ */
-exports.approveStudent = async (req, res) => {
-  try {
+ ================================ */
+exports.approveStudent = catchAsync(async (req, res) => {
     const { user_id } = req.params;
     const adminId = req.user.portal_user_id;
 
@@ -91,7 +121,7 @@ exports.approveStudent = async (req, res) => {
     );
 
     if (result.rowCount === 0) {
-      return res.status(400).json({ error: "Already approved or not found" });
+      throw new Error("Already approved or not found");
     }
 
     await pool.query(
@@ -104,17 +134,12 @@ exports.approveStudent = async (req, res) => {
     );
 
     res.json({ message: "Student approved successfully" });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "Failed to approve student" });
-  }
-};
+});
 
 /* ===============================
    REJECT Student
-================================ */
-exports.rejectStudent = async (req, res) => {
-  try {
+ ================================ */
+exports.rejectStudent = catchAsync(async (req, res) => {
     const { user_id } = req.params;
     const adminId = req.user.portal_user_id;
 
@@ -130,7 +155,7 @@ exports.rejectStudent = async (req, res) => {
     );
 
     if (result.rowCount === 0) {
-      return res.status(400).json({ error: "Already rejected or not found" });
+      throw new Error("Already rejected or not found");
     }
 
     await pool.query(
@@ -143,37 +168,28 @@ exports.rejectStudent = async (req, res) => {
     );
 
     res.json({ message: "Student rejected successfully" });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "Failed to reject student" });
-  }
-};
+});
 
 /* ===============================
    STUDENT STATS
-================================ */
-exports.getStudentStats = async (req, res) => {
-  try {
+ ================================ */
+exports.getStudentStats = catchAsync(async (req, res) => {
     const result = await pool.query(`
       SELECT 
         COUNT(*) FILTER (WHERE student_status = 'pending_review') AS pending,
         COUNT(*) FILTER (WHERE student_status = 'approved') AS approved,
-        COUNT(*) FILTER (WHERE student_status = 'rejected') AS rejected
+        COUNT(*) FILTER (WHERE student_status = 'rejected') AS rejected,
+        COUNT(*) FILTER (WHERE is_suspended = TRUE) AS suspended
       FROM portal.users
     `);
 
     res.json(result.rows[0]);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "Failed to fetch stats" });
-  }
-};
+});
 
 /* ===============================
    SOFT DELETE DISCUSSION
-================================ */
-exports.deleteDiscussion = async (req, res) => {
-  try {
+ ================================ */
+exports.deleteDiscussion = catchAsync(async (req, res) => {
     const { id } = req.params;
     const adminId = req.user.portal_user_id;
 
@@ -189,9 +205,7 @@ exports.deleteDiscussion = async (req, res) => {
     );
 
     if (result.rowCount === 0) {
-      return res
-        .status(404)
-        .json({ error: "Discussion not found or already deleted" });
+      throw new Error("Discussion not found or already deleted");
     }
 
     // Log action
@@ -205,50 +219,49 @@ exports.deleteDiscussion = async (req, res) => {
     );
 
     res.json({ message: "Discussion deleted successfully" });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "Failed to delete discussion" });
-  }
-};
+});
 
 /* ===============================
   GET ALL REPORTS
-================================ */
-exports.getReports = async (req, res) => {
-  try {
+ ================================ */
+exports.getReports = catchAsync(async (req, res) => {
     const page = parseInt(req.query.page) || 1;
-    const limit = 10;
+    const limit = parseInt(req.query.limit) || 10;
     const offset = (page - 1) * limit;
 
-    const reports = await pool.query(
-      `
-      SELECT *
-      FROM portal.reports
-      ORDER BY created_at DESC
-      LIMIT $1 OFFSET $2
-      `,
-      [limit, offset],
-    );
+    const [reportsResult, totalResult] = await Promise.all([
+      pool.query(
+        `
+        SELECT r.*, u.full_name as reporter_name
+        FROM portal.reports r
+        LEFT JOIN portal.users u ON r.reporter_user_id = u.user_id
+        WHERE r.status = 'open'
+        ORDER BY r.created_at DESC
+        LIMIT $1 OFFSET $2
+        `,
+        [limit, offset],
+      ),
+      pool.query(`SELECT COUNT(*) FROM portal.reports WHERE status = 'open'`),
+    ]);
 
-    const total = await pool.query(`
-      SELECT COUNT(*) FROM portal.reports
-    `);
+    const total = parseInt(totalResult.rows[0].count);
 
     res.json({
-      data: reports.rows,
-      total: total.rows[0].count,
-      page,
+      success: true,
+      data: reportsResult.rows,
+      pagination: {
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit),
+      },
     });
-  } catch (err) {
-    res.status(500).json({ error: "Failed to fetch reports" });
-  }
-};
+});
 
 /* ===============================
   CLOSE REPORT
-================================ */
-exports.closeReport = async (req, res) => {
-  try {
+ ================================ */
+exports.closeReport = catchAsync(async (req, res) => {
     const { id } = req.params;
 
     await pool.query(
@@ -261,19 +274,22 @@ exports.closeReport = async (req, res) => {
     );
 
     res.json({ message: "Report closed" });
-  } catch (err) {
-    res.status(500).json({ error: "Failed to close report" });
-  }
-};
+});
 
 /* ===============================
   SUSPEND ROUTE
-================================ */
+ ================================ */
 
-exports.suspendUser = async (req, res) => {
-  try {
+exports.suspendUser = catchAsync(async (req, res) => {
     const { user_id } = req.params;
     const adminId = req.user.portal_user_id;
+
+    if (parseInt(user_id) === adminId) {
+      return res.status(403).json({
+        success: false,
+        message: "Security Error: You cannot suspend your own administrative account."
+      });
+    }
 
     const result = await pool.query(
       `
@@ -286,7 +302,7 @@ exports.suspendUser = async (req, res) => {
     );
 
     if (result.rowCount === 0) {
-      return res.status(404).json({ error: "User not found" });
+      throw new Error("User not found");
     }
 
     await pool.query(
@@ -299,16 +315,12 @@ exports.suspendUser = async (req, res) => {
     );
 
     res.json({ message: "User suspended successfully" });
-  } catch (err) {
-    res.status(500).json({ error: "Failed to suspend user" });
-  }
-};
+});
 
 /* ===============================
   REACTIVATE ROUTE
-================================ */
-exports.reactivateUser = async (req, res) => {
-  try {
+ ================================ */
+exports.reactivateUser = catchAsync(async (req, res) => {
     const { user_id } = req.params;
     const adminId = req.user.portal_user_id;
 
@@ -331,16 +343,12 @@ exports.reactivateUser = async (req, res) => {
     );
 
     res.json({ message: "User reactivated successfully" });
-  } catch (err) {
-    res.status(500).json({ error: "Failed to reactivate user" });
-  }
-};
+});
 
 /* ===============================
   Admin Dashboard Aggregation Endpoint
-================================ */
-exports.getAdminDashboard = async (req, res) => {
-  try {
+ ================================ */
+exports.getAdminDashboard = catchAsync(async (req, res) => {
     const stats = await pool.query(`
       SELECT 
         COUNT(*) FILTER (WHERE student_status = 'pending_review') AS pending,
@@ -365,34 +373,46 @@ exports.getAdminDashboard = async (req, res) => {
       reports_open: openReports.rows[0].count,
       deleted_discussions: deletedDiscussions.rows[0].count,
     });
-  } catch (err) {
-    res.status(500).json({ error: "Failed to load admin dashboard" });
-  }
-};
+});
 
 /* ===============================
   Audit log viewer (legacy moderation logs)
-================================ */
-exports.getModerationLogs = async (req, res) => {
-  try {
-    const logs = await pool.query(`
-      SELECT *
-      FROM portal.moderation_logs
-      ORDER BY created_at DESC
-      LIMIT 50
-    `);
+ ================================ */
+exports.getModerationLogs = catchAsync(async (req, res) => {
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 20;
+    const offset = (page - 1) * limit;
 
-    res.json(logs.rows);
-  } catch (err) {
-    res.status(500).json({ error: "Failed to fetch logs" });
-  }
-};
+    const [logsResult, countResult] = await Promise.all([
+      pool.query(
+        `SELECT ml.*, u.full_name as admin_name
+         FROM portal.moderation_logs ml
+         LEFT JOIN portal.users u ON ml.admin_user_id = u.user_id
+         ORDER BY ml.created_at DESC
+         LIMIT $1 OFFSET $2`,
+        [limit, offset]
+      ),
+      pool.query(`SELECT COUNT(*) FROM portal.moderation_logs`)
+    ]);
+
+    const total = parseInt(countResult.rows[0].count);
+
+    res.json({
+      success: true,
+      data: logsResult.rows,
+      pagination: {
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit),
+      },
+    });
+});
 
 /* ===============================
   Comprehensive Audit Logs
-================================ */
-exports.getAuditLogs = async (req, res) => {
-  try {
+ ================================ */
+exports.getAuditLogs = catchAsync(async (req, res) => {
     const { adminId, action, targetType, page = 1, limit = 50 } = req.query;
 
     const offset = (parseInt(page) - 1) * parseInt(limit);
@@ -418,17 +438,12 @@ exports.getAuditLogs = async (req, res) => {
       page: parseInt(page),
       totalPages: Math.ceil(total / parseInt(limit)),
     });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "Failed to fetch audit logs" });
-  }
-};
+});
 
 /* ===============================
   Get audit log actions summary
-================================ */
-exports.getAuditLogsSummary = async (req, res) => {
-  try {
+ ================================ */
+exports.getAuditLogsSummary = catchAsync(async (req, res) => {
     const { days = 7 } = req.query;
 
     // Get summary from existing moderation_logs table
@@ -461,17 +476,12 @@ exports.getAuditLogsSummary = async (req, res) => {
       breakdown: result.rows,
       summary: actionCounts.rows[0],
     });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "Failed to fetch audit summary" });
-  }
-};
+});
 
 /* ===============================
   Get user activity (for user profile/admin view)
-================================ */
-exports.getUserActivity = async (req, res) => {
-  try {
+ ================================ */
+exports.getUserActivity = catchAsync(async (req, res) => {
     const { userId } = req.params;
     const { limit = 20 } = req.query;
 
@@ -492,18 +502,13 @@ exports.getUserActivity = async (req, res) => {
     );
 
     res.json(result.rows);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "Failed to fetch user activity" });
-  }
-};
+});
 
 /* ===============================
   Get active sessions for admin view
   NOTE: Requires device_sessions table to be added
-================================ */
-exports.getActiveSessions = async (req, res) => {
-  try {
+ ================================ */
+exports.getActiveSessions = catchAsync(async (req, res) => {
     // Check if device_sessions table exists
     const tableExists = await pool.query(
       `SELECT EXISTS (
@@ -553,18 +558,13 @@ exports.getActiveSessions = async (req, res) => {
     `);
 
     res.json(result.rows);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "Failed to fetch active sessions" });
-  }
-};
+});
 
 /* ===============================
   Force logout user (admin action)
   NOTE: Full implementation requires refresh_tokens table
-================================ */
-exports.forceLogoutUser = async (req, res) => {
-  try {
+ ================================ */
+exports.forceLogoutUser = catchAsync(async (req, res) => {
     const { userId } = req.params;
     const adminId = req.user.portal_user_id;
 
@@ -596,8 +596,306 @@ exports.forceLogoutUser = async (req, res) => {
     );
 
     res.json({ message: "User logged out from all devices" });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "Failed to force logout user" });
-  }
-};
+});
+
+/* ===============================
+  PERMANENT DELETE CONTENT
+ ================================ */
+exports.hardDeleteContent = catchAsync(async (req, res) => {
+    const { type, id } = req.body;
+    const adminId = req.user.portal_user_id;
+
+    if (!type || !id) {
+        return res.status(400).json({ message: "Type and ID are required" });
+    }
+
+    const client = await pool.connect();
+    try {
+        await client.query("BEGIN");
+
+        let tableName;
+        let idColumn;
+        let cloudinaryIdColumn;
+
+        switch (type) {
+            case "discussion":
+                tableName = "portal.discussions";
+                idColumn = "discussion_id";
+                cloudinaryIdColumn = "image_public_id";
+                break;
+            case "comment":
+                tableName = "portal.discussion_comments";
+                idColumn = "comment_id";
+                break;
+            case "resource":
+                tableName = "portal.resources";
+                idColumn = "resource_id";
+                cloudinaryIdColumn = "cloudinary_public_id";
+                break;
+            case "group":
+                tableName = "portal.study_groups";
+                idColumn = "group_id";
+                cloudinaryIdColumn = "group_image_public_id"; // Also handles banner in cleanup
+                break;
+            default:
+                throw new Error("Unsupported content type for permanent deletion");
+        }
+
+        // 1. Get image info for Cloudinary cleanup if applicable
+        let publicIds = [];
+        if (cloudinaryIdColumn) {
+            const imgRes = await client.query(
+                `SELECT ${cloudinaryIdColumn} ${type === 'group' ? ', banner_image_public_id' : ''} FROM ${tableName} WHERE ${idColumn} = $1`,
+                [id]
+            );
+            if (imgRes.rowCount > 0) {
+                if (imgRes.rows[0][cloudinaryIdColumn]) publicIds.push(imgRes.rows[0][cloudinaryIdColumn]);
+                if (type === 'group' && imgRes.rows[0].banner_image_public_id) {
+                    publicIds.push(imgRes.rows[0].banner_image_public_id);
+                }
+            }
+        }
+
+        // 2. Perform the Hard Delete
+        const deleteRes = await client.query(
+            `DELETE FROM ${tableName} WHERE ${idColumn} = $1 RETURNING ${idColumn}`,
+            [id]
+        );
+
+        if (deleteRes.rowCount === 0) {
+            throw new Error(`${type} not found`);
+        }
+
+        // 3. Clean up Cloudinary
+        for (const pid of publicIds) {
+            try {
+                const cloudinary = require("../config/cloudinary");
+                await cloudinary.uploader.destroy(pid);
+            } catch (err) {
+                console.error(`Cloudinary cleanup failed for ${pid}:`, err);
+            }
+        }
+
+        // 4. Log admin action
+        await logAdminEvent(req, AuditActions.ADMIN_HARD_DELETE_CONTENT, type, id, {
+            permanent: true,
+        });
+
+        await client.query("COMMIT");
+        res.json({ message: `${type} permanently deleted successfully` });
+    } catch (err) {
+        await client.query("ROLLBACK");
+        console.error("Hard delete error:", err);
+        res.status(500).json({ message: err.message || "Failed to permanently delete content" });
+    } finally {
+        client.release();
+    }
+});
+
+/* ===============================
+  PERMANENT DELETE USER
+ ================================ */
+exports.hardDeleteUser = catchAsync(async (req, res) => {
+    const { user_id } = req.params;
+    const adminId = req.user.portal_user_id;
+
+    if (parseInt(user_id) === adminId) {
+      return res.status(403).json({
+        success: false,
+        message: "Security Error: You cannot delete your own administrative account."
+      });
+    }
+
+    const client = await pool.connect();
+    try {
+        await client.query("BEGIN");
+
+        // 1. Get Auth User ID first
+        const userRes = await client.query(
+            `SELECT auth_user_id FROM portal.users WHERE user_id = $1`,
+            [user_id]
+        );
+
+        if (userRes.rowCount === 0) {
+            throw new Error("User not found");
+        }
+
+        const authUserId = userRes.rows[0].auth_user_id;
+
+        // 2. Delete from portal.users (cascades to moderation_logs, user_stats, etc. if configured)
+        // Note: Some tables might need manual cleanup if CASCADE isn't on everywhere
+        await client.query(`DELETE FROM portal.users WHERE user_id = $1`, [user_id]);
+
+        // 3. Delete from auth.users (This is the "Hard" delete)
+        await client.query(`DELETE FROM auth.users WHERE auth_user_id = $1`, [authUserId]);
+
+        // 4. Log action (Note: target_id is the portal user_id we just deleted)
+        await logAdminEvent(req, AuditActions.ADMIN_HARD_DELETE_CONTENT, "user", user_id, {
+            permanent: true,
+            auth_user_id: authUserId
+        });
+
+        await client.query("COMMIT");
+        res.json({ message: "User account and all data permanently deleted" });
+    } catch (err) {
+        await client.query("ROLLBACK");
+        console.error("Hard delete user error:", err);
+        res.status(500).json({ message: err.message || "Failed to permanently delete user" });
+    } finally {
+        client.release();
+    }
+});
+
+/* ===============================
+  EXAMINE REPORTED CONTENT
+ ================================ */
+exports.examineReportContent = catchAsync(async (req, res) => {
+    const { report_id } = req.params;
+
+    const reportRes = await pool.query(
+        `SELECT * FROM portal.reports WHERE report_id = $1`,
+        [report_id]
+    );
+
+    if (reportRes.rowCount === 0) {
+        return res.status(404).json({ message: "Report not found" });
+    }
+
+    const report = reportRes.rows[0];
+    let content = null;
+
+    try {
+        switch (report.target_type) {
+            case "discussion": {
+                const result = await pool.query(
+                    `SELECT discussion_id, title, content, image_url, created_at FROM portal.discussions WHERE discussion_id = $1`,
+                    [report.target_id]
+                );
+                content = result.rows[0];
+                break;
+            }
+            case "comment": {
+                const result = await pool.query(
+                    `SELECT c.comment_id, c.content, c.created_at, d.title as discussion_title 
+                     FROM portal.discussion_comments c
+                     JOIN portal.discussions d ON c.discussion_id = d.discussion_id
+                     WHERE c.comment_id = $1`,
+                    [report.target_id]
+                );
+                content = result.rows[0];
+                break;
+            }
+            case "resource": {
+                const result = await pool.query(
+                    `SELECT resource_id, title, description as content, file_url as image_url, created_at FROM portal.resources WHERE resource_id = $1`,
+                    [report.target_id]
+                );
+                content = result.rows[0];
+                break;
+            }
+        }
+    } catch (err) {
+        console.error("Examine content error:", err);
+    }
+
+    res.json({
+        report,
+        content: content || { message: "Content no longer available or unsupported type" }
+    });
+});
+
+/* ===============================
+  RESOLVE REPORT WITH ACTION
+ ================================ */
+exports.resolveReportWithAction = catchAsync(async (req, res) => {
+    const { report_id } = req.params;
+    const { action } = req.body; // 'dismiss', 'soft_delete', 'hard_delete'
+    const adminId = req.user.portal_user_id;
+
+    const client = await pool.connect();
+    try {
+        await client.query("BEGIN");
+
+        // 1. Get report info
+        const reportRes = await client.query(
+            `SELECT * FROM portal.reports WHERE report_id = $1`,
+            [report_id]
+        );
+
+        if (reportRes.rowCount === 0) {
+            throw new Error("Report not found");
+        }
+
+        const report = reportRes.rows[0];
+
+        // 2. Perform Action on Targeted Content
+        if (action === "soft_delete") {
+            let tableName, idColumn;
+            switch (report.target_type) {
+                case "discussion": tableName = "portal.discussions"; idColumn = "discussion_id"; break;
+                case "comment": tableName = "portal.discussion_comments"; idColumn = "comment_id"; break;
+                case "resource": tableName = "portal.resources"; idColumn = "resource_id"; break;
+                case "group": tableName = "portal.study_groups"; idColumn = "group_id"; break;
+            }
+            
+            if (tableName) {
+                await client.query(
+                    `UPDATE ${tableName} SET deleted_at = NOW() WHERE ${idColumn} = $1`,
+                    [report.target_id]
+                );
+                await logAdminEvent(req, AuditActions.ADMIN_DELETE_CONTENT, report.target_type, report.target_id);
+            }
+        } else if (action === "hard_delete") {
+            // UNIFIED HARD DELETE LOGIC
+            let tableName, idColumn, cloudinaryIdColumn;
+            switch (report.target_type) {
+                case "discussion": tableName = "portal.discussions"; idColumn = "discussion_id"; cloudinaryIdColumn = "image_public_id"; break;
+                case "comment": tableName = "portal.discussion_comments"; idColumn = "comment_id"; break;
+                case "resource": tableName = "portal.resources"; idColumn = "resource_id"; cloudinaryIdColumn = "cloudinary_public_id"; break;
+                case "group": tableName = "portal.study_groups"; idColumn = "group_id"; cloudinaryIdColumn = "group_image_public_id"; break;
+            }
+
+            if (tableName) {
+                // Image Cleanup
+                if (cloudinaryIdColumn) {
+                    const imgRes = await client.query(
+                        `SELECT ${cloudinaryIdColumn} ${report.target_type === 'group' ? ', banner_image_public_id' : ''} FROM ${tableName} WHERE ${idColumn} = $1`,
+                        [report.target_id]
+                    );
+                    if (imgRes.rowCount > 0) {
+                        const cloudinary = require("../config/cloudinary");
+                        const row = imgRes.rows[0];
+                        if (row[cloudinaryIdColumn]) await cloudinary.uploader.destroy(row[cloudinaryIdColumn]).catch(e => console.error("Cloudinary err:", e));
+                        if (report.target_type === 'group' && row.banner_image_public_id) {
+                            await cloudinary.uploader.destroy(row.banner_image_public_id).catch(e => console.error("Cloudinary banner err:", e));
+                        }
+                    }
+                }
+
+                await client.query(
+                    `DELETE FROM ${tableName} WHERE ${idColumn} = $1`,
+                    [report.target_id]
+                );
+                await logAdminEvent(req, AuditActions.ADMIN_HARD_DELETE_CONTENT, report.target_type, report.target_id);
+            }
+        }
+
+        // 3. Close the report
+        const status = action === "dismiss" ? "dismissed" : "resolved";
+        await client.query(
+            `UPDATE portal.reports SET status = $1 WHERE report_id = $2`,
+            [status, report_id]
+        );
+
+        await logAdminEvent(req, AuditActions.ADMIN_CLOSE_REPORT, "report", report_id, { action });
+
+        await client.query("COMMIT");
+        res.json({ message: `Report ${status} successfully with action: ${action}` });
+    } catch (err) {
+        await client.query("ROLLBACK");
+        console.error("Resolve report error:", err);
+        res.status(500).json({ message: err.message || "Failed to resolve report" });
+    } finally {
+        client.release();
+    }
+});

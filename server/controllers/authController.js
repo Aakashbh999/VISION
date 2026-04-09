@@ -22,8 +22,28 @@ const {
   logAuthEvent,
 } = require("../utils/auditService");
 const { calculateSemesterFromBatch } = require("../utils/academicUtils");
+const catchAsync = require("../utils/catchAsync");
 
-exports.register = async (req, res) => {
+const resolveApiBaseUrl = (req) => {
+  const configuredBaseUrl = (process.env.BASE_URL || "").trim();
+  if (configuredBaseUrl) {
+    return configuredBaseUrl.replace(/\/+$/, "");
+  }
+
+  const forwardedProto = req.get("x-forwarded-proto");
+  const protocol = forwardedProto
+    ? forwardedProto.split(",")[0].trim()
+    : req.protocol;
+  const host = req.get("x-forwarded-host") || req.get("host");
+
+  if (host) {
+    return `${protocol}://${host}`.replace(/\/+$/, "");
+  }
+
+  return `http://localhost:${process.env.PORT || 5000}`;
+};
+
+exports.register = catchAsync(async (req, res) => {
   const {
     email,
     password,
@@ -50,8 +70,7 @@ exports.register = async (req, res) => {
     );
 
     if (existing.rows.length > 0) {
-      await client.query("ROLLBACK");
-      return res.status(400).json({ error: "Email already registered" });
+      throw new Error("Email already registered");
     }
 
     // Validate strong password policy (at least 8 chars, 1 upper, 1 lower, 1 number)
@@ -62,11 +81,7 @@ exports.register = async (req, res) => {
         !/[a-z]/.test(password) ||
         !/[0-9]/.test(password))
     ) {
-      await client.query("ROLLBACK");
-      return res.status(400).json({
-        error:
-          "Password must be at least 8 characters and include uppercase, lowercase, and number.",
-      });
+      throw new Error("Password must be at least 8 characters and include uppercase, lowercase, and number.");
     }
 
     // Hash password
@@ -157,7 +172,8 @@ exports.register = async (req, res) => {
     await client.query("COMMIT");
 
     // 5. Post-commit: Notification / Verification Email
-    const verificationLink = `${process.env.BASE_URL}/api/auth/verify-email?token=${emailToken}`;
+    const apiBaseUrl = resolveApiBaseUrl(req);
+    const verificationLink = `${apiBaseUrl}/api/auth/verify-email?token=${emailToken}`;
 
     try {
       const emailTimeout = new Promise((_, reject) =>
@@ -182,28 +198,24 @@ exports.register = async (req, res) => {
     });
   } catch (err) {
     await client.query("ROLLBACK");
-    console.error("Atomic registration failure:", err);
-
+    
     // Specific handling for DB unique constraint violations
     if (err.code === "23505") {
       if (err.detail.includes("tu_registration_no")) {
-        return res
-          .status(400)
-          .json({ error: "TU Registration Number already in use." });
-      }
-      if (err.detail.includes("email")) {
-        return res.status(400).json({ error: "Email already registered." });
+        err.message = "TU Registration Number already in use.";
+        err.statusCode = 400;
+      } else if (err.detail.includes("email")) {
+        err.message = "Email already registered.";
+        err.statusCode = 400;
       }
     }
-
-    res.status(500).json({ error: "Registration failed. Please try again." });
+    throw err;
   } finally {
     client.release();
   }
-};
+});
 
-exports.login = async (req, res) => {
-  try {
+exports.login = catchAsync(async (req, res) => {
     const { email, password } = req.body;
 
     // Single query to fetch all needed fields
@@ -222,7 +234,7 @@ exports.login = async (req, res) => {
         { email, reason: "user_not_found" },
         AuditStatus.FAILURE,
       );
-      return res.status(400).json({ error: "Invalid credentials" });
+      throw new Error("Invalid credentials");
     }
 
     const user = result.rows[0];
@@ -236,10 +248,10 @@ exports.login = async (req, res) => {
         { email, authUserId: user.auth_user_id, reason: "invalid_password" },
         AuditStatus.FAILURE,
       );
-      return res.status(400).json({ error: "Invalid credentials" });
+      throw new Error("Invalid credentials");
     }
 
-    // 🚫 Block suspended user
+    // \ud83d\udeab Block suspended user
     const portalUser = await pool.query(
       `SELECT is_suspended, full_name FROM portal.users WHERE auth_user_id = $1`,
       [user.auth_user_id],
@@ -252,10 +264,10 @@ exports.login = async (req, res) => {
         { authUserId: user.auth_user_id, reason: "account_suspended" },
         AuditStatus.FAILURE,
       );
-      return res.status(403).json({ error: "Your account is suspended." });
+      throw new Error("Your account is suspended.");
     }
 
-    // ✅ Create tokens with refresh token rotation
+    // \u2705 Create tokens with refresh token rotation
     const tokens = await createTokens(user, req);
 
     // Log successful login
@@ -275,18 +287,13 @@ exports.login = async (req, res) => {
       expiresIn: tokens.expiresIn,
       role: user.role,
     });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "Login failed" });
-  }
-};
+});
 
-exports.verifyEmail = async (req, res) => {
-  try {
+exports.verifyEmail = catchAsync(async (req, res) => {
     const { token } = req.query;
 
     if (!token) {
-      return res.status(400).json({ error: "Token missing" });
+      throw new Error("Token missing");
     }
 
     // Check token exists in DB
@@ -297,14 +304,14 @@ exports.verifyEmail = async (req, res) => {
     );
 
     if (tokenCheck.rows.length === 0) {
-      return res.status(400).json({ error: "Invalid or expired token" });
+      throw new Error("Invalid or expired token");
     }
 
     const tokenData = tokenCheck.rows[0];
 
     // Check expiration
     if (new Date(tokenData.expires_at) < new Date()) {
-      return res.status(400).json({ error: "Token expired" });
+      throw new Error("Token expired");
     }
 
     // Verify JWT
@@ -318,7 +325,7 @@ exports.verifyEmail = async (req, res) => {
       [decoded.auth_user_id],
     );
 
-    // ✅ Sync portal.users.is_verified
+    // \u2705 Sync portal.users.is_verified
     await pool.query(
       `UPDATE portal.users
        SET is_verified = true
@@ -361,15 +368,10 @@ exports.verifyEmail = async (req, res) => {
       }
     }
 
-    res.json({ message: "Email successfully verified 🎉" });
-  } catch (err) {
-    console.error(err);
-    res.status(400).json({ error: "Verification failed" });
-  }
-};
+    res.json({ message: "Email successfully verified" });
+});
 
-exports.resendVerificationEmail = async (req, res) => {
-  try {
+exports.resendVerificationEmail = catchAsync(async (req, res) => {
     const { auth_user_id } = req.user;
 
     // Get user info
@@ -382,14 +384,14 @@ exports.resendVerificationEmail = async (req, res) => {
     );
 
     if (!userResult.rows.length) {
-      return res.status(404).json({ error: "User not found" });
+      throw new Error("User not found");
     }
 
     const { email, email_status, full_name } = userResult.rows[0];
 
     // Check if already verified
     if (email_status === "verified") {
-      return res.status(400).json({ error: "Email is already verified" });
+      throw new Error("Email is already verified");
     }
 
     // Delete any existing tokens for this user
@@ -412,7 +414,8 @@ exports.resendVerificationEmail = async (req, res) => {
     );
 
     // Send verification email with timeout
-    const verificationLink = `${process.env.BASE_URL}/api/auth/verify-email?token=${emailToken}`;
+    const apiBaseUrl = resolveApiBaseUrl(req);
+    const verificationLink = `${apiBaseUrl}/api/auth/verify-email?token=${emailToken}`;
 
     // Wrap with timeout promise to catch hanging Gmail SMTP
     const emailTimeout = new Promise((_, reject) =>
@@ -429,15 +432,9 @@ exports.resendVerificationEmail = async (req, res) => {
     ]);
 
     res.json({ message: "Verification email sent successfully" });
-  } catch (err) {
-    console.error("[AUTH] Resend verification error:", err.message);
-    console.error("[AUTH] Stack:", err.stack);
-    res.status(500).json({ error: "Failed to resend verification email" });
-  }
-};
+});
 
-exports.forgotPassword = async (req, res) => {
-  try {
+exports.forgotPassword = catchAsync(async (req, res) => {
     const { email } = req.body;
 
     const userResult = await pool.query(
@@ -506,14 +503,9 @@ exports.forgotPassword = async (req, res) => {
       message:
         "If an account with that email exists, a reset link has been sent.",
     });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "Something went wrong." });
-  }
-};
+});
 
-exports.resetPassword = async (req, res) => {
-  try {
+exports.resetPassword = catchAsync(async (req, res) => {
     const { token, newPassword } = req.body;
 
     // Validate strong password policy
@@ -523,10 +515,7 @@ exports.resetPassword = async (req, res) => {
       !/[a-z]/.test(newPassword) ||
       !/[0-9]/.test(newPassword)
     ) {
-      return res.status(400).json({
-        error:
-          "Password must be at least 8 characters and include uppercase, lowercase, and number.",
-      });
+      throw new Error("Password must be at least 8 characters and include uppercase, lowercase, and number.");
     }
 
     // Hash the incoming token and compare with stored hash
@@ -540,7 +529,7 @@ exports.resetPassword = async (req, res) => {
     );
 
     if (!tokenResult.rows.length) {
-      return res.status(400).json({ error: "Invalid or expired token." });
+      throw new Error("Invalid or expired token.");
     }
 
     const { auth_user_id } = tokenResult.rows[0];
@@ -562,56 +551,45 @@ exports.resetPassword = async (req, res) => {
     );
 
     res.json({ message: "Password successfully reset." });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "Reset failed." });
-  }
-};
+});
 
-exports.refreshToken = async (req, res) => {
-  try {
+exports.refreshToken = catchAsync(async (req, res) => {
     const { refreshToken } = req.body;
 
     if (!refreshToken) {
-      return res.status(400).json({ error: "Refresh token required" });
+      throw new Error("Refresh token required");
     }
 
-    const tokens = await rotateRefreshToken(refreshToken, req);
+    try {
+      const tokens = await rotateRefreshToken(refreshToken, req);
 
-    // Log token refresh
-    await logAuthEvent(req, AuditActions.TOKEN_REFRESH, {
-      authUserId: tokens.authUserId,
-    });
-
-    res.json({
-      accessToken: tokens.accessToken,
-      refreshToken: tokens.refreshToken,
-      expiresIn: tokens.expiresIn,
-      role: tokens.role,
-    });
-  } catch (err) {
-    console.error("Token refresh error:", err.message);
-
-    if (err.message.includes("reuse detected")) {
-      return res.status(401).json({
-        error: "Security alert: Token reuse detected. Please log in again.",
-        code: "TOKEN_REUSE",
+      // Log token refresh
+      await logAuthEvent(req, AuditActions.TOKEN_REFRESH, {
+        authUserId: tokens.authUserId,
       });
-    }
 
-    if (err.message.includes("expired")) {
-      return res.status(401).json({
-        error: "Refresh token expired. Please log in again.",
-        code: "TOKEN_EXPIRED",
+      res.json({
+        accessToken: tokens.accessToken,
+        refreshToken: tokens.refreshToken,
+        expiresIn: tokens.expiresIn,
+        role: tokens.role,
       });
+    } catch (err) {
+      if (err.message.includes("reuse detected")) {
+        err.statusCode = 401;
+        err.message = "Security alert: Token reuse detected. Please log in again.";
+      } else if (err.message.includes("expired")) {
+        err.statusCode = 401;
+        err.message = "Refresh token expired. Please log in again.";
+      } else {
+        err.statusCode = 401;
+        err.message = "Invalid refresh token";
+      }
+      throw err;
     }
+});
 
-    return res.status(401).json({ error: "Invalid refresh token" });
-  }
-};
-
-exports.logout = async (req, res) => {
-  try {
+exports.logout = catchAsync(async (req, res) => {
     const { refreshToken } = req.body;
 
     if (refreshToken) {
@@ -622,14 +600,9 @@ exports.logout = async (req, res) => {
     await logAuthEvent(req, AuditActions.LOGOUT);
 
     res.json({ message: "Logged out successfully" });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "Logout failed" });
-  }
-};
+});
 
-exports.logoutAllDevices = async (req, res) => {
-  try {
+exports.logoutAllDevices = catchAsync(async (req, res) => {
     const authUserId = req.user.auth_user_id;
 
     await revokeAllUserTokens(authUserId);
@@ -638,42 +611,26 @@ exports.logoutAllDevices = async (req, res) => {
     await logAuthEvent(req, AuditActions.ALL_SESSIONS_REVOKED);
 
     res.json({ message: "Logged out from all devices successfully" });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "Failed to logout from all devices" });
-  }
-};
+});
 
-exports.getSessions = async (req, res) => {
-  try {
+exports.getSessions = catchAsync(async (req, res) => {
     const authUserId = req.user.auth_user_id;
-
     const sessions = await getUserSessions(authUserId);
-
     res.json(sessions);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "Failed to fetch sessions" });
-  }
-};
+});
 
-exports.revokeSessionById = async (req, res) => {
-  try {
+exports.revokeSessionById = catchAsync(async (req, res) => {
     const authUserId = req.user.auth_user_id;
     const { id } = req.params;
 
     const revoked = await revokeSession(authUserId, id);
 
     if (!revoked) {
-      return res.status(404).json({ error: "Session not found" });
+      throw new Error("Session not found");
     }
 
     // Log session revocation
     await logAuthEvent(req, AuditActions.SESSION_REVOKED, { sessionId: id });
 
     res.json({ message: "Session revoked successfully" });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "Failed to revoke session" });
-  }
-};
+});

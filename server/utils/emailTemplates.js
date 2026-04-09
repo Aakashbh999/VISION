@@ -324,7 +324,6 @@ const welcomeTemplate = ({ userName, loginLink }) => {
                 <table role="presentation" cellpadding="0" cellspacing="0" width="100%">
                   <tr>
                     <td width="40" style="vertical-align: top;">
-                      <span style="color: ${brandColors.primary}; font-size: 20px;">📚</span>
                     </td>
                     <td>
                       <p style="margin: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-size: 15px; font-weight: 600; color: ${brandColors.dark};">Explore Roadmaps</p>
@@ -339,7 +338,6 @@ const welcomeTemplate = ({ userName, loginLink }) => {
                 <table role="presentation" cellpadding="0" cellspacing="0" width="100%">
                   <tr>
                     <td width="40" style="vertical-align: top;">
-                      <span style="color: ${brandColors.primary}; font-size: 20px;">💬</span>
                     </td>
                     <td>
                       <p style="margin: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-size: 15px; font-weight: 600; color: ${brandColors.dark};">Join Discussions</p>
@@ -354,7 +352,6 @@ const welcomeTemplate = ({ userName, loginLink }) => {
                 <table role="presentation" cellpadding="0" cellspacing="0" width="100%">
                   <tr>
                     <td width="40" style="vertical-align: top;">
-                      <span style="color: ${brandColors.primary}; font-size: 20px;">🎯</span>
                     </td>
                     <td>
                       <p style="margin: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-size: 15px; font-weight: 600; color: ${brandColors.dark};">Get Recommendations</p>

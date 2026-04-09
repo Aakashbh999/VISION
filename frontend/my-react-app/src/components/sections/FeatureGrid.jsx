@@ -1,4 +1,5 @@
 import Card from "../ui/Card";
+import { Search, BookOpen, Briefcase, Users } from "lucide-react";
 
 const FeatureGrid = () => {
   const features = [
@@ -6,7 +7,7 @@ const FeatureGrid = () => {
       title: "Explore Fields",
       description:
         "Learn about different IT fields, required skills, and future scope.",
-      icon: "🔍",
+      icon: <Search className="w-6 h-6 sm:w-7 sm:h-7" />,
       color: "blue",
       link: "/it-fields",
       linkText: "Start exploring",
@@ -15,7 +16,7 @@ const FeatureGrid = () => {
       title: "Compare Degrees",
       description:
         "Compare CSIT, BCA, and BIT to choose the right academic path.",
-      icon: "📚",
+      icon: <BookOpen className="w-6 h-6 sm:w-7 sm:h-7" />,
       color: "green",
       link: "/academic-guide",
       linkText: "Compare degrees",
@@ -24,7 +25,7 @@ const FeatureGrid = () => {
       title: "Career Roles & Demand",
       description:
         "Understand job roles, demand, and industry expectations in Nepal.",
-      icon: "💼",
+      icon: <Briefcase className="w-6 h-6 sm:w-7 sm:h-7" />,
       color: "orange",
       link: "/it-jobs",
       linkText: "Explore jobs",
@@ -33,7 +34,7 @@ const FeatureGrid = () => {
       title: "Community & IT Clubs",
       description:
         "Discover clubs and communities to grow beyond the classroom.",
-      icon: "👥",
+      icon: <Users className="w-6 h-6 sm:w-7 sm:h-7" />,
       color: "purple",
       link: "/it-clubs",
       linkText: "Join community",

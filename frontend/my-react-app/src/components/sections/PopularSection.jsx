@@ -1,10 +1,12 @@
+import { Globe, BarChart3, Users } from "lucide-react";
+
 const PopularSection = () => {
   const popularItems = [
     {
       title: "Web Development",
       description:
         "Frontend, Backend, Full Stack paths with local opportunities.",
-      icon: "🌐",
+      icon: <Globe className="w-5 h-5 sm:w-6 sm:h-6 text-blue-600 dark:text-blue-400" />,
       color: "blue",
       badge: "High Demand",
       bgClass: "bg-blue-50 dark:bg-blue-950/30",
@@ -19,7 +21,7 @@ const PopularSection = () => {
     {
       title: "Data Science",
       description: "AI, ML, Analytics - The future of tech careers in Nepal.",
-      icon: "📊",
+      icon: <BarChart3 className="w-5 h-5 sm:w-6 sm:h-6 text-green-600 dark:text-green-400" />,
       color: "green",
       badge: "Growing Field",
       bgClass: "bg-green-50 dark:bg-green-950/30",
@@ -34,7 +36,7 @@ const PopularSection = () => {
     {
       title: "XYZ IT Club",
       description: "Connect, learn, and grow with fellow IT enthusiasts.",
-      icon: "👥",
+      icon: <Users className="w-5 h-5 sm:w-6 sm:h-6 text-orange-600 dark:text-orange-400" />,
       color: "orange",
       badge: "Active Community",
       bgClass: "bg-orange-50 dark:bg-orange-950/30",
@@ -71,7 +73,9 @@ const PopularSection = () => {
               <div
                 className={`w-8 h-8 sm:w-10 sm:h-10 rounded-lg ${item.iconBg} flex items-center justify-center group-hover:scale-110 transition-transform duration-300`}
               >
-                <span className="text-lg sm:text-xl">{item.icon}</span>
+                <div className="flex items-center justify-center">
+                  {item.icon}
+                </div>
               </div>
               <span
                 className={`px-2 sm:px-3 py-1 rounded-full ${item.badgeBg} ${item.badgeText} text-xs font-medium ${item.badgeHoverBg} group-hover:text-white transition-colors duration-300`}

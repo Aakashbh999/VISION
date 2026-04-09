@@ -2,6 +2,7 @@ import { Link } from "react-router-dom";
 import { MessageSquare, Search } from "lucide-react";
 import LoadingSpinner from "../../../components/ui/LoadingSpinner";
 import DiscussionCard from "./DiscussionCard";
+import ForYouBadge from "./ForYouBadge";
 
 /**
  * Props:
@@ -43,7 +44,7 @@ const DiscussionsList = ({
   if (error) {
     return (
       <div className="bg-rose-50 border border-rose-100 p-12 rounded-xl text-center font-bold text-rose-600">
-        Failed to load discussions. Please try again.
+        Failed to load discussions. Try again.
       </div>
     );
   }

@@ -1,9 +1,9 @@
 const pool = require("../config/db");
 const XPService = require("../services/xpService");
 const { buildPresenceSelect } = require("../utils/presence");
+const catchAsync = require("../utils/catchAsync");
 
-exports.getMe = async (req, res) => {
-  try {
+exports.getMe = catchAsync(async (req, res) => {
     const { auth_user_id } = req.user;
 
     const result = await pool.query(
@@ -32,7 +32,7 @@ exports.getMe = async (req, res) => {
     );
 
     if (!result.rows.length) {
-      return res.status(404).json({ error: "User not found" });
+      throw new Error("User not found");
     }
 
     const userData = result.rows[0];
@@ -50,14 +50,9 @@ exports.getMe = async (req, res) => {
       ...userData,
       badges: badgesRes.rows,
     });
-  } catch (err) {
-    console.error("Error in /me:", err);
-    res.status(500).json({ error: "Failed to fetch profile" });
-  }
-};
+});
 
-exports.updatePresence = async (req, res) => {
-  try {
+exports.updatePresence = catchAsync(async (req, res) => {
     const userId = req.user.portal_user_id;
 
     const result = await pool.query(
@@ -72,14 +67,9 @@ exports.updatePresence = async (req, res) => {
       last_seen_at: result.rows[0]?.last_seen_at || new Date(),
       is_online: true,
     });
-  } catch (err) {
-    console.error("Error in updatePresence:", err);
-    return res.status(500).json({ error: "Failed to update presence" });
-  }
-};
+});
 
-exports.getUserStats = async (req, res) => {
-  try {
+exports.getUserStats = catchAsync(async (req, res) => {
     const userId = req.user.portal_user_id;
     const stats = await XPService.getUserStats(userId);
 
@@ -95,8 +85,4 @@ exports.getUserStats = async (req, res) => {
     }
 
     res.json(stats);
-  } catch (err) {
-    console.error("Error in getUserStats:", err);
-    res.status(500).json({ error: "Failed to fetch user stats" });
-  }
-};
+});

@@ -22,10 +22,9 @@ export const useGroupDetailState = () => {
 
   const [newPost, setNewPost] = useState("");
   const [activeSection, setActiveSection] = useState("general");
-  const [messageSearch, setMessageSearch] = useState("");
-  const [showSearch, setShowSearch] = useState(false);
   const [showAdminPanel, setShowAdminPanel] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
 
   const {
     data: group,
@@ -158,18 +157,8 @@ export const useGroupDetailState = () => {
       return items.slice().reverse();
     }
 
-    if (messageSearch) {
-      items = items.filter(
-        (message) =>
-          message.content.toLowerCase().includes(messageSearch.toLowerCase()) ||
-          message.full_name
-            ?.toLowerCase()
-            .includes(messageSearch.toLowerCase()),
-      );
-    }
-
     return items;
-  }, [postsData, messageSearch, activeSection]);
+  }, [postsData, activeSection]);
 
   const scrollToBottom = useCallback((behavior = "smooth") => {
     messagesEndRef.current?.scrollIntoView({ behavior });
@@ -235,7 +224,9 @@ export const useGroupDetailState = () => {
   const handleSectionChange = (sectionId) => {
     setActiveSection(sectionId);
     isInitialLoad.current = true;
-    setIsSidebarOpen(false);
+    if (window.innerWidth < 1024) {
+      setIsSidebarOpen(false);
+    }
   };
 
   return {
@@ -256,12 +247,10 @@ export const useGroupDetailState = () => {
     newPost,
     setNewPost,
     activeSection,
-    messageSearch,
-    setMessageSearch,
-    showSearch,
-    setShowSearch,
     showAdminPanel,
     setShowAdminPanel,
+    isSidebarCollapsed,
+    setIsSidebarCollapsed,
     isSidebarOpen,
     setIsSidebarOpen,
     messagesEndRef,

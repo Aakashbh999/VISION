@@ -146,10 +146,10 @@ const sendMail = async (mailOptions) => {
     }
 
     console.log(
-      `[EMAIL] ✓ ${health.provider.toUpperCase()} email service initialized.`,
+      `[EMAIL] Email service initialized.`,
     );
   } catch (err) {
-    console.error("[EMAIL] ✗ Email configuration error on startup:");
+    console.error("[EMAIL] Email configuration error on startup:");
     console.error("[EMAIL] Error:", err.message);
     console.error("[EMAIL] Check EMAIL_PROVIDER and related env vars");
   }
@@ -186,11 +186,11 @@ exports.sendVerificationEmail = async ({ to, userName, verificationLink }) => {
       html,
     });
     console.log(
-      `[EMAIL] ✓ Verification email sent successfully to ${to}. Message ID: ${result.messageId}`,
+      `[EMAIL] Verification email sent successfully to ${to}. Message ID: ${result.messageId}`,
     );
     return result;
   } catch (err) {
-    console.error(`[EMAIL] ✗ Failed to send verification email to ${to}:`);
+    console.error(`[EMAIL] Failed to send verification email to ${to}:`);
     console.error(`[EMAIL] Error Code: ${err.code}`);
     console.error(`[EMAIL] Error Message: ${err.message}`);
     console.error(`[EMAIL] Full Error:`, err);
@@ -236,7 +236,7 @@ exports.sendWelcomeEmail = async ({ to, userName }) => {
   await sendMail({
     from: process.env.EMAIL_FROM,
     to,
-    subject: "Welcome to VISION! 🎉",
+    subject: "Welcome to VISION!",
     html,
   });
 };

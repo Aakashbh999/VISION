@@ -10,7 +10,9 @@ export const SEARCH_CATEGORIES = {
   ROADMAPS: "Roadmaps",
   RESOURCES: "Resources",
   GROUPS: "Groups",
+  CLUBS: "Clubs",
   DISCUSSIONS: "Discussions",
+  USERS: "Users",
 };
 
 // Icon mapping for result types
@@ -18,6 +20,8 @@ const CATEGORY_ICONS = {
   roadmap: "map",
   resource: "file",
   group: "users",
+  club: "users",
+  user: "user",
 };
 
 const resolveEntityId = (entity, keys = [], fallback = "") => {
@@ -44,7 +48,7 @@ const transformResults = (apiResponse) => {
         id: `roadmap-${roadmapId}`,
         title: r.title,
         category: SEARCH_CATEGORIES.ROADMAPS,
-        path: r.path || `/portal/roadmaps/${roadmapId}`,
+        path: r.path || `/roadmaps/${roadmapId}`,
         description: r.description || "",
         icon: CATEGORY_ICONS.roadmap,
         score: r.score,
@@ -66,7 +70,7 @@ const transformResults = (apiResponse) => {
         id: `resource-${resourceId}`,
         title: r.title,
         category: SEARCH_CATEGORIES.RESOURCES,
-        path: r.path || `/portal/resources?id=${resourceId}`,
+        path: r.path || `/resources?id=${resourceId}`,
         description: r.description || r.resource_type || "",
         icon: CATEGORY_ICONS.resource,
         score: r.score,
@@ -101,6 +105,31 @@ const transformResults = (apiResponse) => {
     });
   }
 
+  // Process clubs
+  if (apiResponse.clubs?.length) {
+    apiResponse.clubs.forEach((c, idx) => {
+      const clubId = resolveEntityId(
+        c,
+        ["id", "club_id", "slug"],
+        `idx-${idx}`,
+      );
+      const subtitle = [c.specialty, c.institution, c.location]
+        .filter(Boolean)
+        .join(" • ");
+
+      results.push({
+        id: `club-${clubId}`,
+        title: c.club_name || c.title || "Club",
+        category: SEARCH_CATEGORIES.CLUBS,
+        path: c.path || `/clubs/${c.slug || c.id}`,
+        description: subtitle || c.description_full || "IT Club",
+        icon: CATEGORY_ICONS.club,
+        score: c.score,
+        reason: c.reason,
+      });
+    });
+  }
+
   // Process discussions
   if (apiResponse.discussions?.length) {
     apiResponse.discussions.forEach((d, idx) => {
@@ -118,6 +147,26 @@ const transformResults = (apiResponse) => {
         author: d.author || "",
         icon: "message-square",
         score: d.score,
+      });
+    });
+  }
+
+  // Process users
+  if (apiResponse.users?.length) {
+    apiResponse.users.forEach((u, idx) => {
+      const userId = resolveEntityId(u, ["id", "user_id"], `idx-${idx}`);
+      const subtitle = [u.campus, u.university].filter(Boolean).join(", ");
+
+      results.push({
+        id: `user-${userId}`,
+        title: u.full_name,
+        category: SEARCH_CATEGORIES.USERS,
+        path: u.path || `/profile/${userId}`,
+        description: subtitle || (u.role === "admin" ? "Admin" : "User"),
+        icon: CATEGORY_ICONS.user,
+        score: u.score,
+        role: u.role,
+        profilePicture: u.profile_picture,
       });
     });
   }

@@ -28,6 +28,7 @@ import {
   Loader2,
   Trash2,
   PencilLine,
+  LogOut,
 } from "lucide-react";
 import { motion as Motion } from "framer-motion";
 
@@ -107,7 +108,7 @@ export default function GroupProfilePage() {
 
   const handleSaveChanges = () => {
     if (!draftGroup.name.trim()) {
-      showToast.error("Group name is required.");
+      showToast.error("Group name required.");
       return;
     }
     if (countWords(draftGroup.description) > MAX_GROUP_DESCRIPTION_WORDS) {
@@ -159,16 +160,23 @@ export default function GroupProfilePage() {
       group?.privacy_type === "request"
         ? groupService.requestToJoin(id)
         : groupService.joinGroup(id),
-    onSuccess: () => {
-      showToast.success(
-        group?.privacy_type === "request"
-          ? "Join request submitted!"
-          : "Joined group!",
-      );
+    onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ["group", id] });
     },
     onError: (err) =>
       showToast.error(err.response?.data?.error || "Action failed"),
+  });
+
+  const leaveGroupMut = useMutation({
+    mutationFn: () => groupService.leaveGroup(id),
+    onSuccess: () => {
+      showToast.success("Left the circle");
+      queryClient.invalidateQueries({ queryKey: ["group", id] });
+      queryClient.invalidateQueries({ queryKey: ["groups"] });
+      navigate("/groups");
+    },
+    onError: (err) =>
+      showToast.error(err.response?.data?.error || "Failed to leave circle"),
   });
 
   // ── File handlers ───────────────────────────
@@ -223,7 +231,7 @@ export default function GroupProfilePage() {
   const useFixedMembersViewport = (members || []).length > 5;
 
   return (
-    <div className="px-0 sm:px-6 lg:px-8 py-6 sm:py-8 space-y-8 max-w-5xl mx-auto">
+    <div className="px-2 sm:px-6 lg:px-8 py-5 sm:py-8 space-y-6 sm:space-y-8 max-w-5xl mx-auto">
       {/* Back navigation */}
       <div className="flex items-center gap-3">
         <button
@@ -279,8 +287,8 @@ export default function GroupProfilePage() {
         </div>
 
         {/* Info row */}
-        <div className="px-6 pb-6 lg:px-10 pt-2 sm:pt-4">
-          <div className="flex flex-col sm:flex-row sm:items-end gap-6 -mt-10 sm:-mt-14">
+        <div className="px-4 sm:px-6 pb-5 sm:pb-6 lg:px-10 pt-2 sm:pt-4">
+          <div className="flex flex-col sm:flex-row sm:items-end gap-4 sm:gap-6 -mt-10 sm:-mt-14">
             {/* Avatar */}
             <div className="relative group/av">
               <div className="w-32 h-32 sm:w-40 sm:h-40 rounded-sm sm:rounded-2xl border-4 border-[var(--bg-card)] shadow-xl flex items-center justify-center bg-slate-900 overflow-hidden">
@@ -338,7 +346,7 @@ export default function GroupProfilePage() {
                   />
                 </div>
               ) : (
-                <h1 className="text-2xl sm:text-3xl font-black text-[var(--text-main)] flex items-center gap-3">
+                <h1 className="text-xl sm:text-3xl font-black text-[var(--text-main)] flex items-center gap-3 leading-tight">
                   {group.name}
                 </h1>
               )}
@@ -374,12 +382,12 @@ export default function GroupProfilePage() {
             </div>
 
             {/* Action buttons */}
-            <div className="pb-2 sm:pb-4 flex gap-3 flex-wrap">
+            <div className="pb-2 sm:pb-4 flex gap-2 sm:gap-3 flex-wrap">
               {!group.is_member &&
                 (group.has_pending_request ? (
                   <button
                     disabled
-                    className="px-5 py-2 rounded-xl font-bold bg-[var(--bg-active)] text-[var(--text-muted)] cursor-not-allowed"
+                    className="px-4 sm:px-5 py-2 rounded-xl font-bold bg-[var(--bg-active)] text-[var(--text-muted)] cursor-not-allowed"
                   >
                     Request Pending
                   </button>
@@ -387,7 +395,7 @@ export default function GroupProfilePage() {
                   <button
                     onClick={() => joinGroupMut.mutate()}
                     disabled={joinGroupMut.isPending}
-                    className="flex items-center gap-2 px-5 py-2 rounded-xl font-bold bg-purple-600 text-white hover:bg-purple-700 transition-colors shadow-md shadow-purple-500/20 disabled:opacity-60"
+                    className="flex items-center gap-2 px-4 sm:px-5 py-2 rounded-xl font-bold bg-purple-600 text-white hover:bg-purple-700 transition-colors shadow-md shadow-purple-500/20 disabled:opacity-60"
                   >
                     {joinGroupMut.isPending ? (
                       <Loader2 className="w-4 h-4 animate-spin" />
@@ -401,16 +409,34 @@ export default function GroupProfilePage() {
                 ))}
               <Link
                 to={`/groups/${id}`}
-                className="flex items-center gap-2 px-5 py-2 rounded-xl font-bold bg-[var(--bg-active)] text-[var(--text-main)] hover:bg-[var(--border-main)] transition-colors"
+                className="flex items-center gap-2 px-4 sm:px-5 py-2 rounded-xl font-bold bg-[var(--bg-active)] text-[var(--text-main)] hover:bg-[var(--border-main)] transition-colors"
               >
                 <MessageSquare className="w-4 h-4" /> Open Workspace
               </Link>
+
+              {group.is_member && !isOwner && (
+                <button
+                  onClick={() => {
+                    if (
+                      window.confirm(
+                        "Are you sure you want to leave this circle?",
+                      )
+                    ) {
+                      leaveGroupMut.mutate();
+                    }
+                  }}
+                  disabled={leaveGroupMut.isPending}
+                  className="flex items-center gap-2 px-4 sm:px-5 py-2 rounded-xl font-bold text-rose-600 bg-rose-50 hover:bg-rose-100 transition-colors border border-rose-100 disabled:opacity-50"
+                >
+                  <LogOut className="w-4 h-4" /> Leave Circle
+                </button>
+              )}
 
               {canEditDescription && !isEditMode && (
                 <button
                   type="button"
                   onClick={handleEditStart}
-                  className="flex items-center gap-2 px-5 py-2 bg-slate-900 text-white hover:bg-slate-800 rounded-xl font-bold transition-all"
+                  className="flex items-center gap-2 px-4 sm:px-5 py-2 bg-slate-900 text-white hover:bg-slate-800 rounded-xl font-bold transition-all"
                 >
                   <PencilLine className="w-4 h-4" /> Edit Profile
                 </button>
@@ -419,7 +445,7 @@ export default function GroupProfilePage() {
           </div>
 
           {/* Stats strip */}
-          <div className="mt-8 flex flex-wrap gap-6 text-sm border-t border-[var(--border-main)] pt-6">
+          <div className="mt-6 sm:mt-8 flex flex-wrap gap-4 sm:gap-6 text-sm border-t border-[var(--border-main)] pt-4 sm:pt-6">
             <div className="flex items-center gap-2 text-[var(--text-muted)]">
               <Users className="w-4 h-4 text-[var(--text-muted)]" />
               <span className="font-black text-[var(--text-main)]">
@@ -427,14 +453,14 @@ export default function GroupProfilePage() {
               </span>{" "}
               / {group.capacity} Members
             </div>
-            <div className="flex items-center gap-2 text-[var(--text-muted)] border-l pl-6 border-[var(--border-main)]">
+            <div className="flex items-center gap-2 text-[var(--text-muted)] border-l pl-4 sm:pl-6 border-[var(--border-main)]">
               <MessageSquare className="w-4 h-4 text-[var(--text-muted)]" />
               <span className="font-black text-[var(--text-main)]">
                 {group.post_count || 0}
               </span>{" "}
               Posts
             </div>
-            <div className="flex items-center gap-2 text-[var(--text-muted)] border-l pl-6 border-[var(--border-main)]">
+            <div className="flex items-center gap-2 text-[var(--text-muted)] border-l pl-4 sm:pl-6 border-[var(--border-main)]">
               <Calendar className="w-4 h-4 text-[var(--text-muted)]" />
               Founded{" "}
               <span className="font-black text-[var(--text-main)]">
@@ -445,7 +471,7 @@ export default function GroupProfilePage() {
               </span>
             </div>
             {group.last_activity && (
-              <div className="flex items-center gap-2 text-[var(--text-muted)] border-l pl-6 border-[var(--border-main)]">
+              <div className="flex items-center gap-2 text-[var(--text-muted)] border-l pl-4 sm:pl-6 border-[var(--border-main)]">
                 Last active{" "}
                 <span className="font-black text-[var(--text-main)]">
                   {new Date(group.last_activity).toLocaleDateString("en-US", {
@@ -460,11 +486,11 @@ export default function GroupProfilePage() {
       </div>
 
       {/* ── Two-column body ─────────────────── */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-8">
         {/* Left — Description + Creator */}
-        <div className="lg:col-span-2 space-y-8">
+        <div className="lg:col-span-2 space-y-6 sm:space-y-8">
           {/* Description */}
-          <div className="bg-[var(--bg-card)] rounded-sm sm:rounded-2xl border border-[var(--border-main)] border-x-0 sm:border-x shadow-sm p-8">
+          <div className="bg-[var(--bg-card)] rounded-sm sm:rounded-2xl border border-[var(--border-main)] border-x-0 sm:border-x shadow-sm p-5 sm:p-8">
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-base sm:text-lg font-bold text-[var(--text-main)] flex items-center gap-2">
                 <Info className="w-5 h-5 text-purple-600" /> About this Circle
@@ -506,8 +532,8 @@ export default function GroupProfilePage() {
           </div>
 
           {/* Creator card */}
-          <div className="bg-[var(--bg-card)] rounded-sm sm:rounded-2xl border border-[var(--border-main)] border-x-0 sm:border-x shadow-sm p-8">
-            <h3 className="text-base sm:text-lg font-bold text-[var(--text-main)] mb-6">
+          <div className="bg-[var(--bg-card)] rounded-sm sm:rounded-2xl border border-[var(--border-main)] border-x-0 sm:border-x shadow-sm p-5 sm:p-8">
+            <h3 className="text-base sm:text-lg font-bold text-[var(--text-main)] mb-4 sm:mb-6">
               Admin
             </h3>
             <Link
@@ -541,9 +567,9 @@ export default function GroupProfilePage() {
         </div>
 
         {/* Right — Members preview + Edit settings (owner) */}
-        <div className="space-y-8">
+        <div className="space-y-6 sm:space-y-8">
           {/* Moderator roles + members preview */}
-          <div className="bg-[var(--bg-card)] rounded-sm sm:rounded-2xl border border-[var(--border-main)] border-x-0 sm:border-x shadow-sm p-6">
+          <div className="bg-[var(--bg-card)] rounded-sm sm:rounded-2xl border border-[var(--border-main)] border-x-0 sm:border-x shadow-sm p-4 sm:p-6">
             <h3 className="text-sm font-black text-[var(--text-main)] uppercase tracking-wider mb-5 flex items-center gap-2">
               <Users className="w-4 h-4 text-purple-600" /> Members
             </h3>
@@ -647,7 +673,7 @@ export default function GroupProfilePage() {
               animate={{ opacity: 1, y: 0 }}
               className="bg-gradient-to-br from-purple-600 to-blue-700 rounded-2xl shadow-xl p-1 relative overflow-hidden"
             >
-              <div className="bg-white/10 backdrop-blur-md rounded-xl p-6 border border-white/20">
+              <div className="bg-white/10 backdrop-blur-md rounded-xl p-4 sm:p-6 border border-white/20">
                 <h3 className="text-sm font-black text-purple-100 uppercase tracking-wider mb-4">
                   Admin Controls
                 </h3>
@@ -694,7 +720,7 @@ export default function GroupProfilePage() {
 
           {/* Moderator info panel */}
           {isCoAdmin && !isOwner && (
-            <div className="bg-purple-50 border border-purple-100 rounded-2xl p-6">
+            <div className="bg-purple-50 border border-purple-100 rounded-2xl p-4 sm:p-6">
               <h3 className="text-sm font-black text-purple-700 uppercase tracking-wider mb-2">
                 Moderators
               </h3>
@@ -743,7 +769,7 @@ export default function GroupProfilePage() {
 
       {canEditDescription && isEditMode && (
         <div className="fixed bottom-0 left-0 right-0 z-50 border-t border-[var(--border-main)] bg-[var(--bg-card)]/95 backdrop-blur-xl shadow-2xl pb-16 sm:pb-0">
-          <div className="max-w-5xl mx-auto px-0 sm:px-6 lg:px-8 py-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <div className="max-w-5xl mx-auto px-2 sm:px-6 lg:px-8 py-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
             <div>
               <p className="text-sm font-bold text-[var(--text-main)]">
                 Group edit mode

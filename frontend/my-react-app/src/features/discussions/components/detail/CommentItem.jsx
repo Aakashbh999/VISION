@@ -28,6 +28,7 @@ const CommentItem = ({
   setReplyContent,
   handleReplySubmit,
   addCommentMutation,
+  commentVoteMutation,
 }) => {
   const [isExpanded, setIsExpanded] = useState(false);
   const [visibleCount, setVisibleCount] = useState(1);
@@ -78,11 +79,16 @@ const CommentItem = ({
                 onClick={() =>
                   handleCommentVote(comment.comment_id, 1, comment.user_vote)
                 }
-                className={`p-1 rounded-md transition-all ${comment.user_vote === 1 ? "text-purple-600 bg-purple-50" : "text-[var(--text-muted)] hover:text-purple-500"}`}
+                disabled={commentVoteMutation?.isPending}
+                className={`p-1 rounded-md transition-all ${comment.user_vote === 1 ? "text-purple-600 bg-purple-50" : "text-[var(--text-muted)] hover:text-purple-500"} disabled:opacity-50 disabled:cursor-not-allowed`}
               >
-                <ArrowBigUp
-                  className={`w-5 h-5 ${comment.user_vote === 1 ? "fill-purple-600" : ""}`}
-                />
+                {commentVoteMutation?.isPending ? (
+                  <ButtonLoader size={16} />
+                ) : (
+                  <ArrowBigUp
+                    className={`w-5 h-5 ${comment.user_vote === 1 ? "fill-purple-600" : ""}`}
+                  />
+                )}
               </button>
               <span
                 className={`text-xs font-black px-1 min-w-[1.2rem] text-center ${comment.user_vote === 1 ? "text-purple-600" : comment.user_vote === -1 ? "text-red-600" : "text-[var(--text-muted)]"}`}
@@ -93,11 +99,16 @@ const CommentItem = ({
                 onClick={() =>
                   handleCommentVote(comment.comment_id, -1, comment.user_vote)
                 }
-                className={`p-1 rounded-md transition-all ${comment.user_vote === -1 ? "text-red-600 bg-red-50" : "text-[var(--text-muted)] hover:text-red-500"}`}
+                disabled={commentVoteMutation?.isPending}
+                className={`p-1 rounded-md transition-all ${comment.user_vote === -1 ? "text-red-600 bg-red-50" : "text-[var(--text-muted)] hover:text-red-500"} disabled:opacity-50 disabled:cursor-not-allowed`}
               >
-                <ArrowBigDown
-                  className={`w-5 h-5 ${comment.user_vote === -1 ? "fill-red-600" : ""}`}
-                />
+                {commentVoteMutation?.isPending ? (
+                  <ButtonLoader size={16} />
+                ) : (
+                  <ArrowBigDown
+                    className={`w-5 h-5 ${comment.user_vote === -1 ? "fill-red-600" : ""}`}
+                  />
+                )}
               </button>
             </div>
 
@@ -224,6 +235,7 @@ const CommentItem = ({
                           setReplyContent={setReplyContent}
                           handleReplySubmit={handleReplySubmit}
                           addCommentMutation={addCommentMutation}
+                          commentVoteMutation={commentVoteMutation}
                         />
                       ))}
                   </div>

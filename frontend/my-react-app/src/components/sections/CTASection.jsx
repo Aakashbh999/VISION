@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import Button from "../ui/Button";
 import GradientText from "../ui/GradientText";
+import { GraduationCap, Users, Globe } from "lucide-react";
 
 const CTASection = () => {
   const [showModal, setShowModal] = useState(false);
@@ -39,7 +40,7 @@ const CTASection = () => {
             <p className="text-(--text-muted) mb-6 sm:mb-8 text-base sm:text-lg leading-relaxed  ">
               VISION helps Nepalese IT students discover structured career
               roadmaps, join meaningful discussions, and connect with
-              like‑minded peers. Don’t just choose blindly — build your future
+              like‑minded peers. Don’t choose blindly — build your future
               with clarity.
             </p>
 
@@ -52,15 +53,15 @@ const CTASection = () => {
                 size="lg"
                 className="flex items-center justify-center gap-2 shadow-lg"
               >
-                🎓 Discover Career Paths
+                <GraduationCap className="w-5 h-5 sm:w-6 sm:h-6" /> Discover Career Paths
               </Button>
               <Button
                 onClick={() => setShowModal(true)}
                 variant="secondary"
                 size="lg"
-                className="bg-white/80 dark:bg-slate-900/60 backdrop-blur-sm"
+                className="bg-white/80 dark:bg-slate-900/60 backdrop-blur-sm flex items-center justify-center gap-2"
               >
-                👥 Join the Community
+                <Users className="w-5 h-5 sm:w-6 sm:h-6" /> Join the Community
               </Button>
             </div>
           </div>
@@ -85,9 +86,9 @@ const CTASection = () => {
             <div className="flex justify-between items-center mb-6">
               <h3
                 id="cta-modal-title"
-                className="text-xl sm:text-2xl font-bold text-(--text-main)"
+                className="text-xl sm:text-2xl font-bold text-(--text-main) flex items-center gap-2"
               >
-                🌐 Join the VISION Community
+                <Globe className="w-6 h-6 sm:w-7 sm:h-7 text-purple-600 dark:text-purple-400" /> Join the VISION Community
               </h3>
               <button
                 onClick={() => setShowModal(false)}

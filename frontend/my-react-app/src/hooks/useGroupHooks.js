@@ -3,6 +3,7 @@ import {
   useMutation,
   useInfiniteQuery,
   useQueryClient,
+  keepPreviousData,
 } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import {
@@ -28,9 +29,16 @@ export const useGroup = (id) => {
 
 export const useGroups = (filters = {}) => {
   return useQuery({
-    queryKey: ["groups", filters],
+    queryKey: [
+      "groups",
+      filters.search || "",
+      filters.sort || "latest",
+      filters.degree || "",
+    ],
     queryFn: () => getGroups(filters),
-    staleTime: 2 * 60 * 1000,
+    staleTime: 0,
+    refetchOnMount: "always",
+    placeholderData: keepPreviousData,
   });
 };
 
@@ -75,9 +83,10 @@ export const useJoinGroup = (groupId) => {
   return useMutation({
     mutationFn: () => joinGroup(groupId),
     onSuccess: () => {
-      queryClient.invalidateQueries(["groups"]);
-      queryClient.invalidateQueries(["group", groupId]);
-      queryClient.invalidateQueries(["groupMembers", groupId]);
+      queryClient.invalidateQueries({ queryKey: ["groups"] });
+      queryClient.invalidateQueries({ queryKey: ["group", groupId] });
+      queryClient.invalidateQueries({ queryKey: ["groupMembers", groupId] });
+      queryClient.invalidateQueries({ queryKey: ["feed"] });
     },
   });
 };

@@ -179,5 +179,37 @@ router.patch(
   resourceController.rejectResource,
 );
 
+/* ===============================
+   PERMANENT DELETION (Admin Only)
+================================ */
+
+router.delete(
+  "/admin/content",
+  verifyJWT,
+  verifyAdmin,
+  adminController.hardDeleteContent,
+);
+
+router.delete(
+  "/admin/users/:user_id",
+  verifyJWT,
+  verifyAdmin,
+  adminController.hardDeleteUser,
+);
+
+router.post(
+  "/admin/reports/:report_id/resolve",
+  verifyJWT,
+  verifyAdmin,
+  adminController.resolveReportWithAction,
+);
+
+router.get(
+  "/admin/reports/:report_id/examine",
+  verifyJWT,
+  verifyAdmin,
+  adminController.examineReportContent,
+);
+
 module.exports = router;
 

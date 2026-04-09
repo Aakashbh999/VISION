@@ -3,6 +3,7 @@ import { useRoadmap } from "../../hooks/useRoadmap";
 import { useCompleteStep } from "../../hooks/useCompleteStep";
 import { useStepResources } from "../../hooks/useStepResources";
 import LoadingSpinner from "../../components/ui/LoadingSpinner";
+import ButtonLoader from "../../components/ui/ButtonLoader";
 import { CheckCircle, Circle, ExternalLink, ChevronLeft } from "lucide-react";
 import { useState } from "react";
 import { Link } from "react-router-dom";
@@ -28,7 +29,7 @@ const RoadmapDetail = () => {
   };
 
   return (
-    <div className="space-y-8 px-0 sm:px-6 lg:px-8 py-6 sm:py-8 lg:py-10">
+    <div className="space-y-8 px-2 sm:px-6 lg:px-8 py-5 sm:py-8 lg:py-10">
       {/* Back button and title */}
       <div>
         <Link
@@ -107,9 +108,17 @@ const RoadmapDetail = () => {
                 {!selectedStep.is_completed && (
                   <button
                     onClick={() => handleComplete(selectedStep.step_id)}
-                    className="px-4 py-2 bg-green-600 text-white rounded-sm sm:rounded-lg text-sm hover:bg-green-700 transition-colors"
+                    disabled={completeStepMutation.isPending}
+                    className="px-4 py-2 bg-green-600 text-white rounded-sm sm:rounded-lg text-sm hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
                   >
-                    Mark Complete
+                    {completeStepMutation.isPending ? (
+                      <>
+                        <ButtonLoader size={14} />
+                        Completing...
+                      </>
+                    ) : (
+                      "Mark Complete"
+                    )}
                   </button>
                 )}
               </div>

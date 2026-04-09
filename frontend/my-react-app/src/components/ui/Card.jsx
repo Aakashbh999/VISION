@@ -7,6 +7,7 @@ const Card = ({ title, description, icon, color = "blue", link, linkText }) => {
       border: "hover:border-blue-200",
       bg: "bg-gradient-to-br from-blue-100 to-purple-100",
       text: "text-blue-600",
+      darkText: "dark:text-blue-400",
       hoverText: "text-blue-800",
     },
     green: {
@@ -14,6 +15,7 @@ const Card = ({ title, description, icon, color = "blue", link, linkText }) => {
       border: "hover:border-green-200",
       bg: "bg-gradient-to-br from-green-100 to-blue-100",
       text: "text-green-600",
+      darkText: "dark:text-green-400",
       hoverText: "text-green-800",
     },
     orange: {
@@ -21,6 +23,7 @@ const Card = ({ title, description, icon, color = "blue", link, linkText }) => {
       border: "hover:border-orange-200",
       bg: "bg-gradient-to-br from-orange-100 to-red-100",
       text: "text-orange-600",
+      darkText: "dark:text-orange-400",
       hoverText: "text-orange-800",
     },
     purple: {
@@ -28,6 +31,7 @@ const Card = ({ title, description, icon, color = "blue", link, linkText }) => {
       border: "hover:border-purple-200",
       bg: "bg-gradient-to-br from-purple-100 to-pink-100",
       text: "text-purple-600",
+      darkText: "dark:text-purple-400",
       hoverText: "text-purple-800",
     },
   };
@@ -46,9 +50,9 @@ const Card = ({ title, description, icon, color = "blue", link, linkText }) => {
         className={`relative h-full flex flex-col bg-bg-card dark:bg-bg-card p-5 sm:p-6 lg:p-7 rounded-sm sm:rounded-2xl border border-border-main border-x-0 sm:border-x dark:border-border-main hover:shadow-xl hover:-translate-y-2 transform transition-all duration-500 ${variant.border} hover:bg-bg-active dark:hover:bg-bg-active`}
       >
         <div
-          className={`w-10 h-10 sm:w-12 sm:h-12 rounded-xl ${variant.bg} shrink-0 flex items-center justify-center mb-4 sm:mb-5 group-hover:scale-110 transition-transform duration-300 dark:bg-blue-500/10 dark:border dark:border-blue-500/20`}
+          className={`w-10 h-10 sm:w-12 sm:h-12 rounded-xl ${variant.bg} shrink-0 flex items-center justify-center mb-4 sm:mb-5 group-hover:scale-110 transition-transform duration-300 dark:bg-bg-active dark:border dark:border-border-main`}
         >
-          <span className="text-xl sm:text-2xl text-text-main dark:text-text-main">
+          <span className={`text-xl sm:text-2xl ${variant.text} ${variant.darkText}`}>
             {icon}
           </span>
         </div>

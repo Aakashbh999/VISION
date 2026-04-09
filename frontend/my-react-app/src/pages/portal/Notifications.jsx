@@ -52,7 +52,7 @@ const Notifications = () => {
   const read = notifications?.filter((n) => n.is_read) || [];
 
   return (
-    <div className="space-y-6 px-0 sm:px-6 lg:px-8 py-6 sm:py-8 lg:py-10">
+    <div className="space-y-6 px-2 sm:px-6 lg:px-8 py-5 sm:py-8 lg:py-10">
       <div className="flex items-center justify-between">
         <h1 className="text-xl sm:text-2xl font-bold text-[var(--text-main)]">
           Notifications

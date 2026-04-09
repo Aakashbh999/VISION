@@ -34,6 +34,7 @@ const DiscussionDetailContainer = () => {
     showBackToTop,
     addCommentMutation,
     voteMutation,
+    commentVoteMutation,
     toggleSaveMutation,
     handleVote,
     handleCommentVote,
@@ -114,6 +115,7 @@ const DiscussionDetailContainer = () => {
         setReplyContent={setReplyContent}
         handleReplySubmit={handleReplySubmit}
         addCommentMutation={addCommentMutation}
+        commentVoteMutation={commentVoteMutation}
         commentTree={commentTree}
       />
 

@@ -42,6 +42,11 @@ api.interceptors.response.use(
       response.data.success === true &&
       "data" in response.data
     ) {
+      // If there is pagination metadata, don't unwrap so the component gets the full object
+      if ("pagination" in response.data) {
+        return { ...response, data: response.data };
+      }
+      // Simple unwrap for standard responses
       return { ...response, data: response.data.data };
     }
     return response;

@@ -1,5 +1,6 @@
 const pool = require("../config/db");
 const XPService = require("../services/xpService");
+const { feed } = require("../utils/activityService");
 const { successResponse, errorResponse } = require("../utils/response");
 const {
   VXP_EXPAND_COST,
@@ -14,12 +15,12 @@ const {
   normalizePermissions,
 } = require("../utils/groupPermissions");
 const { buildPresenceSelect } = require("../utils/presence");
+const catchAsync = require("../utils/catchAsync");
 
 /* ===============================
    GET GROUP MEMBERS
-================================ */
-exports.getGroupMembers = async (req, res) => {
-  try {
+ ================================ */
+exports.getGroupMembers = catchAsync(async (req, res) => {
     const { id } = req.params;
     const { limit } = req.query;
 
@@ -51,17 +52,12 @@ exports.getGroupMembers = async (req, res) => {
         permissions: normalizePermissions(member.role, member.permissions),
       })),
     );
-  } catch (err) {
-    console.error(err);
-    return errorResponse(res, "Failed to fetch members");
-  }
-};
+});
 
 /* ===============================
    JOIN GROUP (privacy-aware)
-================================ */
-exports.joinGroup = async (req, res) => {
-  try {
+ ================================ */
+exports.joinGroup = catchAsync(async (req, res) => {
     const { id } = req.params;
     const { invite } = req.query;
     const userId = req.user.portal_user_id;
@@ -97,22 +93,32 @@ exports.joinGroup = async (req, res) => {
 
     // Public or valid private invite — direct join
     await pool.query(
-      `INSERT INTO portal.group_members (group_id, user_id, role) VALUES ($1, $2, 'member') ON CONFLICT DO NOTHING`,
+      `INSERT INTO portal.group_members (group_id, user_id, role, status) VALUES ($1, $2, 'member', 'approved') ON CONFLICT DO NOTHING`,
       [id, userId],
     );
 
+    try {
+      await feed({
+        actorId: userId,
+        actionType: "group_joined",
+        referenceType: "group",
+        referenceId: Number(id),
+        metadata: { group_id: Number(id) },
+      });
+    } catch (feedErr) {
+      console.error(
+        "Group join feed event failed (non-fatal):",
+        feedErr.message,
+      );
+    }
+
     return successResponse(res, { joined: true }, "Joined group successfully");
-  } catch (err) {
-    console.error(err);
-    return errorResponse(res, "Join failed");
-  }
-};
+});
 
 /* ===============================
    REQUEST TO JOIN (for request-type groups)
-================================ */
-exports.requestToJoin = async (req, res) => {
-  try {
+ ================================ */
+exports.requestToJoin = catchAsync(async (req, res) => {
     const { id } = req.params;
     const userId = req.user.portal_user_id;
 
@@ -137,17 +143,12 @@ exports.requestToJoin = async (req, res) => {
     );
 
     return successResponse(res, { requested: true }, "Join request submitted");
-  } catch (err) {
-    console.error(err);
-    return errorResponse(res, "Failed to submit join request");
-  }
-};
+});
 
 /* ===============================
    GET JOIN REQUESTS (admin/co-admin only)
-================================ */
-exports.getJoinRequests = async (req, res) => {
-  try {
+ ================================ */
+exports.getJoinRequests = catchAsync(async (req, res) => {
     const { id } = req.params;
     const userId = req.user.portal_user_id;
 
@@ -166,17 +167,12 @@ exports.getJoinRequests = async (req, res) => {
     );
 
     return successResponse(res, requests.rows);
-  } catch (err) {
-    console.error(err);
-    return errorResponse(res, "Failed to fetch join requests");
-  }
-};
+});
 
 /* ===============================
    APPROVE JOIN REQUEST
-================================ */
-exports.approveRequest = async (req, res) => {
-  try {
+ ================================ */
+exports.approveRequest = catchAsync(async (req, res) => {
     const { id, requestId } = req.params;
     const userId = req.user.portal_user_id;
 
@@ -207,7 +203,7 @@ exports.approveRequest = async (req, res) => {
       await client.query("BEGIN");
 
       await client.query(
-        `INSERT INTO portal.group_members (group_id, user_id, role) VALUES ($1, $2, 'member') ON CONFLICT DO NOTHING`,
+        `INSERT INTO portal.group_members (group_id, user_id, role, status) VALUES ($1, $2, 'member', 'approved') ON CONFLICT DO NOTHING`,
         [id, request.rows[0].user_id],
       );
       await client.query(
@@ -223,18 +219,31 @@ exports.approveRequest = async (req, res) => {
       client.release();
     }
 
+    try {
+      await feed({
+        actorId: request.rows[0].user_id,
+        actionType: "group_join_approved",
+        referenceType: "group",
+        referenceId: Number(id),
+        metadata: {
+          group_id: Number(id),
+          approved_by: userId,
+        },
+      });
+    } catch (feedErr) {
+      console.error(
+        "Group approval feed event failed (non-fatal):",
+        feedErr.message,
+      );
+    }
+
     return successResponse(res, null, "Join request approved");
-  } catch (err) {
-    console.error(err);
-    return errorResponse(res, "Failed to approve request");
-  }
-};
+});
 
 /* ===============================
    DECLINE JOIN REQUEST
-================================ */
-exports.declineRequest = async (req, res) => {
-  try {
+ ================================ */
+exports.declineRequest = catchAsync(async (req, res) => {
     const { id, requestId } = req.params;
     const userId = req.user.portal_user_id;
 
@@ -249,17 +258,12 @@ exports.declineRequest = async (req, res) => {
     );
 
     return successResponse(res, null, "Join request declined");
-  } catch (err) {
-    console.error(err);
-    return errorResponse(res, "Failed to decline request");
-  }
-};
+});
 
 /* ===============================
    APPOINT CO-ADMIN (owner only)
-================================ */
-exports.appointCoAdmin = async (req, res) => {
-  try {
+ ================================ */
+exports.appointCoAdmin = catchAsync(async (req, res) => {
     const { id, memberId } = req.params;
     const userId = req.user.portal_user_id;
 
@@ -297,17 +301,12 @@ exports.appointCoAdmin = async (req, res) => {
     );
 
     return successResponse(res, null, "Co-Admin appointed successfully");
-  } catch (err) {
-    console.error(err);
-    return errorResponse(res, "Failed to appoint co-admin");
-  }
-};
+});
 
 /* ===============================
    UPDATE CO-ADMIN PERMISSIONS (owner only)
-================================ */
-exports.updateCoAdminPermissions = async (req, res) => {
-  try {
+ ================================ */
+exports.updateCoAdminPermissions = catchAsync(async (req, res) => {
     const { id, memberId } = req.params;
     const userId = req.user.portal_user_id;
     const ownerCheck = await pool.query(
@@ -362,17 +361,12 @@ exports.updateCoAdminPermissions = async (req, res) => {
       },
       "Permissions updated successfully",
     );
-  } catch (err) {
-    console.error(err);
-    return errorResponse(res, "Failed to update permissions");
-  }
-};
+});
 
 /* ===============================
    REMOVE CO-ADMIN (owner only)
-================================ */
-exports.removeCoAdmin = async (req, res) => {
-  try {
+ ================================ */
+exports.removeCoAdmin = catchAsync(async (req, res) => {
     const { id, memberId } = req.params;
     const userId = req.user.portal_user_id;
 
@@ -393,17 +387,12 @@ exports.removeCoAdmin = async (req, res) => {
     );
 
     return successResponse(res, null, "Co-Admin role removed");
-  } catch (err) {
-    console.error(err);
-    return errorResponse(res, "Failed to remove co-admin");
-  }
-};
+});
 
 /* ===============================
    EXPAND CAPACITY (+2 slots via VXP)
-================================ */
-exports.expandCapacity = async (req, res) => {
-  try {
+ ================================ */
+exports.expandCapacity = catchAsync(async (req, res) => {
     const { id } = req.params;
     const userId = req.user.portal_user_id;
 
@@ -463,17 +452,12 @@ exports.expandCapacity = async (req, res) => {
     } finally {
       client.release();
     }
-  } catch (err) {
-    console.error(err);
-    return errorResponse(res, "Failed to expand capacity");
-  }
-};
+});
 
 /* ===============================
    LEAVE GROUP
-================================ */
-exports.leaveGroup = async (req, res) => {
-  try {
+ ================================ */
+exports.leaveGroup = catchAsync(async (req, res) => {
     const { id } = req.params;
     const userId = req.user.portal_user_id;
 
@@ -494,8 +478,4 @@ exports.leaveGroup = async (req, res) => {
       [id, userId],
     );
     return successResponse(res, { joined: false }, "Left group successfully");
-  } catch (err) {
-    console.error(err);
-    return errorResponse(res, "Leave failed");
-  }
-};
+});

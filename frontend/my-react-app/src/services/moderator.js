@@ -3,7 +3,7 @@ import api from "./api";
 // Get pending resources for moderation
 export const getPendingResources = async (page = 1, limit = 10) => {
   const response = await api.get(
-    `/api/admin/resources/pending?page=${page}&limit=${limit}`,
+    `/admin/resources/pending?page=${page}&limit=${limit}`,
   );
   return response.data;
 };

@@ -26,12 +26,10 @@ const GroupDetail = () => {
     newPost,
     setNewPost,
     activeSection,
-    messageSearch,
-    setMessageSearch,
-    showSearch,
-    setShowSearch,
     showAdminPanel,
     setShowAdminPanel,
+    isSidebarCollapsed,
+    setIsSidebarCollapsed,
     isSidebarOpen,
     setIsSidebarOpen,
     messagesEndRef,
@@ -64,9 +62,15 @@ const GroupDetail = () => {
   }
 
   return (
-    <div className="h-[calc(100vh-64px)] flex flex-col -m-4 md:-m-6 lg:-m-8 bg-[var(--bg-main)]/50 overflow-hidden">
+    <div
+      className="h-[calc(100vh-64px)] flex flex-col -m-4 md:-m-6 lg:-m-8 overflow-hidden"
+      style={{ backgroundColor: "var(--bg-main)" }}
+    >
       <div className="flex-1 flex overflow-hidden">
-        <div className="flex-1 flex flex-col min-w-0 bg-[var(--bg-card)] relative">
+        <div
+          className="flex-1 flex flex-col min-w-0 relative"
+          style={{ backgroundColor: "var(--bg-card)" }}
+        >
           <GroupDetailHeader
             id={id}
             group={group}
@@ -75,11 +79,9 @@ const GroupDetail = () => {
             isAdmin={isAdmin}
             showAdminPanel={showAdminPanel}
             setShowAdminPanel={setShowAdminPanel}
+            isSidebarCollapsed={isSidebarCollapsed}
+            setIsSidebarCollapsed={setIsSidebarCollapsed}
             setIsSidebarOpen={setIsSidebarOpen}
-            showSearch={showSearch}
-            setShowSearch={setShowSearch}
-            messageSearch={messageSearch}
-            setMessageSearch={setMessageSearch}
             handleJoinAction={handleJoinAction}
             isJoining={joinGroupMut.isPending || requestJoinMut.isPending}
           />
@@ -111,6 +113,8 @@ const GroupDetail = () => {
           isAdmin={isAdmin}
           canManageUsers={canManageUsers}
           showAdminPanel={showAdminPanel}
+          isSidebarCollapsed={isSidebarCollapsed}
+          setIsSidebarCollapsed={setIsSidebarCollapsed}
           isSidebarOpen={isSidebarOpen}
           setIsSidebarOpen={setIsSidebarOpen}
           activeSection={activeSection}

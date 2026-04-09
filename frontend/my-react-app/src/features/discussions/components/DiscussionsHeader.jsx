@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import { BookmarkCheck, Filter } from "lucide-react";
 import UniversalSearch from "../../../components/ui/UniversalSearch";
+import ForYouBadge from "./ForYouBadge";
 
 /**
  * Props:
@@ -70,15 +71,27 @@ const DiscussionsHeader = ({
               </option>
             ))}
           </select>
-          <select
-            value={filters.sort}
-            onChange={(event) => onUpdateFilter("sort", event.target.value)}
-            className="text-xs font-bold text-[var(--text-muted)] bg-transparent cursor-pointer focus:outline-none"
-          >
-            <option value="latest">New</option>
-            <option value="popular">Top</option>
-            <option value="trending">Hot</option>
-          </select>
+          <div className="flex bg-[var(--bg-active)] rounded-lg p-0.5 border border-[var(--border-main)] sm:ml-auto">
+            {["latest", "popular", "recommended"].map((s) => (
+              <button
+                key={s}
+                onClick={() => onUpdateFilter("sort", s)}
+                className={`px-3 py-1 text-xs font-bold rounded-md transition-colors ${
+                  (!filters.sort && s === "latest") || filters.sort === s
+                    ? "bg-[var(--bg-card)] text-purple-600 shadow-sm"
+                    : "text-[var(--text-muted)] hover:text-[var(--text-main)]"
+                }`}
+              >
+                {s === "latest" ? (
+                  "New"
+                ) : s === "popular" ? (
+                  "Top"
+                ) : (
+                  <ForYouBadge className="scale-75 -mx-2" />
+                )}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
     </div>

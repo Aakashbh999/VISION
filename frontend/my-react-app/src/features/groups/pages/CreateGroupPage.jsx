@@ -126,7 +126,7 @@ const CreateGroupPage = () => {
   const prevStep = () => setStep(1);
 
   return (
-    <div className="max-w-xl mx-auto space-y-8 pb-10 px-0 sm:px-6 lg:px-8 py-6 sm:py-8">
+    <div className="max-w-xl mx-auto space-y-6 sm:space-y-8 pb-10 px-3 sm:px-6 lg:px-8 py-5 sm:py-8">
       <Link
         to="/groups"
         className="inline-flex items-center gap-2 text-sm font-black text-[var(--text-muted)] hover:text-purple-600 uppercase tracking-widest transition-colors group"
@@ -135,7 +135,7 @@ const CreateGroupPage = () => {
         Return to Labyrinth
       </Link>
 
-      <div className="relative bg-[var(--bg-card)]/70 backdrop-blur-2xl rounded-[2.5rem] border border-[var(--border-main)]/60 p-6 sm:p-10 shadow-2xl shadow-purple-500/5 overflow-hidden">
+      <div className="relative bg-[var(--bg-card)]/70 backdrop-blur-2xl rounded-[2.5rem] border border-[var(--border-main)]/60 p-4 sm:p-8 lg:p-10 shadow-2xl shadow-purple-500/5 overflow-hidden">
         {/* Progress Bar */}
         <div className="absolute top-0 left-0 w-full h-1.5 bg-[var(--bg-active)] flex">
           <motion.div
@@ -145,7 +145,7 @@ const CreateGroupPage = () => {
           />
         </div>
 
-        <div className="space-y-8">
+        <div className="space-y-6 sm:space-y-8">
           <header className="space-y-2">
             <div className="flex items-center justify-between">
               <span className="text-[10px] font-black text-purple-600 uppercase tracking-[0.3em]">
@@ -181,7 +181,7 @@ const CreateGroupPage = () => {
                 initial={{ x: 20, opacity: 0 }}
                 animate={{ x: 0, opacity: 1 }}
                 exit={{ x: -20, opacity: 0 }}
-                className="space-y-6"
+                className="space-y-5 sm:space-y-6"
               >
                 <div className="space-y-2">
                   <label className="text-[10px] font-black text-[var(--text-muted)] uppercase tracking-widest ml-1">
@@ -193,7 +193,7 @@ const CreateGroupPage = () => {
                     required
                     value={formData.name}
                     onChange={handleChange}
-                    className="w-full px-6 py-4 bg-[var(--bg-active)] border border-[var(--border-main)] rounded-2xl focus:ring-4 focus:ring-purple-500/10 focus:border-purple-500 outline-none transition-all font-bold text-[var(--text-main)] placeholder:text-[var(--text-muted)]"
+                    className="w-full px-5 sm:px-6 py-3.5 sm:py-4 bg-[var(--bg-active)] border border-[var(--border-main)] rounded-2xl focus:ring-4 focus:ring-purple-500/10 focus:border-purple-500 outline-none transition-all font-bold text-[var(--text-main)] placeholder:text-[var(--text-muted)]"
                     placeholder="e.g., QUANTUM_ALGORITHMS_2026"
                   />
                 </div>
@@ -207,7 +207,7 @@ const CreateGroupPage = () => {
                     rows="4"
                     value={formData.description}
                     onChange={handleChange}
-                    className="w-full px-6 py-4 bg-[var(--bg-active)] border border-[var(--border-main)] rounded-2xl focus:ring-4 focus:ring-purple-500/10 focus:border-purple-500 outline-none resize-none transition-all font-medium text-[var(--text-main)] placeholder:text-[var(--text-muted)]"
+                    className="w-full px-5 sm:px-6 py-3.5 sm:py-4 bg-[var(--bg-active)] border border-[var(--border-main)] rounded-2xl focus:ring-4 focus:ring-purple-500/10 focus:border-purple-500 outline-none resize-none transition-all font-medium text-[var(--text-main)] placeholder:text-[var(--text-muted)]"
                     placeholder="What is the mission of this node?"
                   />
                   <p
@@ -229,7 +229,7 @@ const CreateGroupPage = () => {
                   type="button"
                   onClick={nextStep}
                   disabled={!formData.name.trim()}
-                  className="w-full py-4 bg-slate-900 text-white font-black rounded-2xl flex items-center justify-center gap-2 hover:bg-slate-800 transition-all disabled:opacity-50 disabled:cursor-not-allowed group"
+                  className="w-full py-3.5 sm:py-4 bg-slate-900 text-white font-black rounded-2xl flex items-center justify-center gap-2 hover:bg-slate-800 transition-all disabled:opacity-50 disabled:cursor-not-allowed group"
                 >
                   Configure Identity
                   <ChevronRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
@@ -241,7 +241,7 @@ const CreateGroupPage = () => {
                 initial={{ x: 20, opacity: 0 }}
                 animate={{ x: 0, opacity: 1 }}
                 exit={{ x: -20, opacity: 0 }}
-                className="space-y-8"
+                className="space-y-6 sm:space-y-8"
               >
                 <div className="grid grid-cols-3 gap-4">
                   {ICONS.map((item) => {
@@ -254,7 +254,7 @@ const CreateGroupPage = () => {
                         onClick={() =>
                           setFormData({ ...formData, icon: item.id })
                         }
-                        className={`group p-6 rounded-sm sm:rounded-3xl border-2 transition-all flex flex-col items-center gap-3 ${
+                        className={`group p-4 sm:p-6 rounded-sm sm:rounded-3xl border-2 transition-all flex flex-col items-center gap-2 sm:gap-3 ${
                           isActive
                             ? "bg-purple-50 border-purple-500 shadow-lg shadow-purple-500/10"
                             : "bg-[var(--bg-active)] border-[var(--border-main)] hover:border-[var(--border-main)]"
@@ -273,7 +273,7 @@ const CreateGroupPage = () => {
                   })}
                 </div>
 
-                <div className="space-y-4 pt-4 border-t border-[var(--border-main)]">
+                <div className="space-y-3 sm:space-y-4 pt-3 sm:pt-4 border-t border-[var(--border-main)]">
                   <label className="text-[10px] font-black text-[var(--text-muted)] uppercase tracking-widest ml-1">
                     Security Policy
                   </label>
@@ -317,14 +317,14 @@ const CreateGroupPage = () => {
                   <button
                     type="button"
                     onClick={prevStep}
-                    className="flex-1 py-4 bg-[var(--bg-active)] text-[var(--text-main)] font-black rounded-2xl hover:bg-[var(--border-main)] transition-all"
+                    className="flex-1 py-3.5 sm:py-4 bg-[var(--bg-active)] text-[var(--text-main)] font-black rounded-2xl hover:bg-[var(--border-main)] transition-all"
                   >
                     Back
                   </button>
                   <button
                     onClick={handleSubmit}
                     disabled={mutation.isLoading}
-                    className="flex-[2] relative overflow-hidden group py-4 bg-purple-600 text-white font-black rounded-2xl shadow-xl shadow-purple-500/30 hover:shadow-purple-500/50 transition-all active:scale-[0.98]"
+                    className="flex-[2] relative overflow-hidden group py-3.5 sm:py-4 bg-purple-600 text-white font-black rounded-2xl shadow-xl shadow-purple-500/30 hover:shadow-purple-500/50 transition-all active:scale-[0.98]"
                   >
                     <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
                     <div className="flex items-center justify-center gap-2">

@@ -42,7 +42,7 @@ export const useUpdateBio = () => {
         if (!oldData) return oldData;
         return { ...oldData, bio: data.bio };
       });
-      showToast.success("Bio updated successfully.");
+      showToast.success("Bio updated.");
     },
     onError: (err) => {
       showToast.error(err.response?.data?.error || "Failed to update bio.");
@@ -60,7 +60,7 @@ export const useUpdateProfile = () => {
         if (!oldData) return oldData;
         return { ...oldData, ...data };
       });
-      showToast.success("Profile updated successfully.");
+      showToast.success("Profile updated.");
     },
     onError: (err) => {
       showToast.error(err.response?.data?.error || "Failed to update profile.");
@@ -165,6 +165,8 @@ export const useFollowUser = () => {
         queryKey: ["profile", String(variables.userId)],
       });
       queryClient.invalidateQueries({ queryKey: ["profile", "me"] });
+      queryClient.invalidateQueries({ queryKey: ["social"] });
+      queryClient.invalidateQueries({ queryKey: ["feed"] });
     },
   });
 };

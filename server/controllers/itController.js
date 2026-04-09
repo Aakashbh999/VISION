@@ -1,8 +1,9 @@
 const pool = require("../config/db");
+const catchAsync = require("../utils/catchAsync");
 
 /* ============================================
    Pagination Helper
-============================================ */
+ ============================================ */
 const parsePagination = (req) => {
   let page = parseInt(req.query.page);
   let limit = parseInt(req.query.limit);
@@ -18,7 +19,7 @@ const parsePagination = (req) => {
 /* ============================================
    Explicit Column Definitions
    (Never allow SELECT *)
-============================================ */
+ ============================================ */
 const COLUMNS = {
   it_fields:
     "id, slug, field_name, short_description, description_full, tech_stack_hint, demand_level, icon_name",
@@ -35,9 +36,8 @@ const COLUMNS = {
 
 /* ============================================
    Reusable Paginated Fetch Helper
-============================================ */
+ ============================================ */
 const fetchPaginatedData = async (req, res, tableName, orderColumn = "id") => {
-  try {
     // Validate table name
     if (!COLUMNS[tableName]) {
       return res.status(400).json({ error: "Invalid table requested" });
@@ -74,19 +74,12 @@ const fetchPaginatedData = async (req, res, tableName, orderColumn = "id") => {
         totalPages: Math.ceil(total / limit),
       },
     });
-  } catch (error) {
-    console.error(`Error fetching ${tableName}:`, error);
-    return res
-      .status(500)
-      .json({ error: `Failed to fetch ${tableName.replace(/_/g, " ")}` });
-  }
 };
 
 /* ============================================
    Reusable Slug-Based Fetch Helper
-============================================ */
+ ============================================ */
 const fetchBySlug = async (req, res, tableName, labelName) => {
-  try {
     if (!COLUMNS[tableName]) {
       return res.status(400).json({ error: "Invalid table requested" });
     }
@@ -108,54 +101,50 @@ const fetchBySlug = async (req, res, tableName, labelName) => {
     }
 
     return res.json(result.rows[0]);
-  } catch (error) {
-    console.error(`Error fetching ${tableName} by slug:`, error);
-    return res.status(500).json({ error: `Failed to fetch ${labelName}` });
-  }
 };
 
 /* ============================================
    IT FIELDS
-============================================ */
+ ============================================ */
 
 // GET /api/it-fields?page=1&limit=9
-exports.getItFields = (req, res) => fetchPaginatedData(req, res, "it_fields");
+exports.getItFields = catchAsync(async (req, res) => fetchPaginatedData(req, res, "it_fields"));
 
 // GET /api/it-fields/:slug
-exports.getItFieldBySlug = (req, res) =>
-  fetchBySlug(req, res, "it_fields", "IT Field");
+exports.getItFieldBySlug = catchAsync(async (req, res) =>
+  fetchBySlug(req, res, "it_fields", "IT Field"));
 
 /* ============================================
    ACADEMIC DEGREES
-============================================ */
+ ============================================ */
 
 // GET /api/academic-degrees?page=1&limit=9
-exports.getDegrees = (req, res) =>
-  fetchPaginatedData(req, res, "academic_degrees");
+exports.getDegrees = catchAsync(async (req, res) =>
+  fetchPaginatedData(req, res, "academic_degrees"));
 
 // GET /api/academic-degrees/:slug
-exports.getDegreeBySlug = (req, res) =>
-  fetchBySlug(req, res, "academic_degrees", "Academic Degree");
+exports.getDegreeBySlug = catchAsync(async (req, res) =>
+  fetchBySlug(req, res, "academic_degrees", "Academic Degree"));
 
 /* ============================================
    JOB MARKET
-============================================ */
+ ============================================ */
 
 // GET /api/job-market?page=1&limit=9
-exports.getJobMarket = (req, res) =>
-  fetchPaginatedData(req, res, "job_market_insights");
+exports.getJobMarket = catchAsync(async (req, res) =>
+  fetchPaginatedData(req, res, "job_market_insights"));
 
 // GET /api/job-market/:slug
-exports.getJobMarketBySlug = (req, res) =>
-  fetchBySlug(req, res, "job_market_insights", "Job Market Insight");
+exports.getJobMarketBySlug = catchAsync(async (req, res) =>
+  fetchBySlug(req, res, "job_market_insights", "Job Market Insight"));
 
 /* ============================================
    IT CLUBS
-============================================ */
+ ============================================ */
 
 // GET /api/it-clubs?page=1&limit=9
-exports.getItClubs = (req, res) => fetchPaginatedData(req, res, "it_clubs");
+exports.getItClubs = catchAsync(async (req, res) => fetchPaginatedData(req, res, "it_clubs"));
 
 // GET /api/it-clubs/:slug
-exports.getItClubBySlug = (req, res) =>
-  fetchBySlug(req, res, "it_clubs", "IT Club");
+exports.getItClubBySlug = catchAsync(async (req, res) =>
+  fetchBySlug(req, res, "it_clubs", "IT Club"));

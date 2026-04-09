@@ -39,7 +39,7 @@ const DiscussionsContainer = () => {
   const discussions = data?.discussions || [];
 
   return (
-    <div className="max-w-[824px] lg:max-w-[980px] xl:max-w-[1120px] mx-auto space-y-4 px-0 sm:px-6 lg:px-8 py-6 sm:py-8 lg:py-10">
+    <div className="max-w-[824px] lg:max-w-[980px] xl:max-w-[1120px] mx-auto space-y-4 px-0 sm:px-6 lg:px-8 py-5 sm:py-8 lg:py-10">
       <ImageLightbox
         isOpen={lightbox.isOpen}
         image={lightbox.image}
@@ -57,7 +57,7 @@ const DiscussionsContainer = () => {
         onUpdateFilter={updateFilter}
       />
 
-      <div className="space-y-4 min-h-[400px] px-2 sm:px-0">
+      <div className="space-y-4 min-h-[400px] px-0 sm:px-0">
         <DiscussionsList
           isLoading={isLoading}
           error={error}

@@ -1,4 +1,4 @@
-import { useState, useEffect, createElement } from "react";
+import { useState, useEffect, useMemo, createElement } from "react";
 import { useGroups } from "../../../hooks/useGroupHooks";
 import { Link, useSearchParams, useNavigate } from "react-router-dom";
 import LoadingSpinner from "../../../components/ui/LoadingSpinner";
@@ -22,6 +22,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import api from "../../../services/api";
 import { toast } from "react-toastify";
 import UniversalSearch from "../../../components/ui/UniversalSearch";
+import ForYouBadge from "../../discussions/components/ForYouBadge";
 
 const Groups = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -32,6 +33,7 @@ const Groups = () => {
     degree: searchParams.get("degree") || "",
   });
   const [degrees, setDegrees] = useState([]);
+  const [displayGroups, setDisplayGroups] = useState([]);
   const navigate = useNavigate();
   const { data: stats } = useUserStats();
 
@@ -58,16 +60,32 @@ const Groups = () => {
     setSearchParams(params);
   }, [filters, setSearchParams]);
 
-  const { data, isLoading, error } = useGroups(filters);
+  const { data, isLoading, isFetching, error } = useGroups({
+    search: filters.search,
+    sort: filters.sort,
+    degree: filters.degree,
+  });
 
-  const groupsList = Array.isArray(data) ? data : data?.groups || [];
+  const groupsList = useMemo(
+    () => (Array.isArray(data) ? data : data?.groups || []),
+    [data],
+  );
+
+  useEffect(() => {
+    if (!isFetching) {
+      setDisplayGroups(groupsList);
+    }
+  }, [groupsList, isFetching]);
+
+  const effectiveGroups =
+    isFetching && displayGroups.length > 0 ? displayGroups : groupsList;
 
   const containerVariants = {
     hidden: { opacity: 0 },
     visible: {
       opacity: 1,
       transition: {
-        staggerChildren: 0.1,
+        staggerChildren: 0,
       },
     },
   };
@@ -86,13 +104,13 @@ const Groups = () => {
   };
 
   return (
-    <div className="max-w-6xl mx-auto space-y-8 pb-20 px-4">
+    <div className="max-w-6xl mx-auto space-y-6 sm:space-y-8 pb-16 sm:pb-20 px-2 sm:px-4">
       {/* Premium Header Section */}
-      <div className="relative overflow-hidden bg-[var(--bg-card)]/40 backdrop-blur-xl border border-[var(--border-main)]/40 rounded-3xl p-8 shadow-2xl shadow-purple-500/5">
+      <div className="relative overflow-hidden bg-[var(--bg-card)]/40 backdrop-blur-xl border border-[var(--border-main)]/40 rounded-3xl p-5 sm:p-8 shadow-2xl shadow-purple-500/5">
         <div className="absolute top-0 right-0 -mr-20 -mt-20 w-64 h-64 bg-purple-500/10 rounded-full blur-3xl pointer-events-none" />
         <div className="absolute bottom-0 left-0 -ml-20 -mb-20 w-64 h-64 bg-blue-500/10 rounded-full blur-3xl pointer-events-none" />
 
-        <div className="relative flex flex-col lg:flex-row lg:items-center justify-between gap-8">
+        <div className="relative flex flex-col lg:flex-row lg:items-center justify-between gap-6 sm:gap-8">
           <div className="space-y-2">
             <motion.h1
               initial={{ x: -20, opacity: 0 }}
@@ -109,9 +127,9 @@ const Groups = () => {
             </p>
           </div>
 
-          <div className="flex flex-wrap items-center gap-4">
+          <div className="flex flex-wrap items-center gap-3 sm:gap-4">
             <div
-              className={`flex items-center gap-2 px-4 py-2.5 rounded-2xl border text-sm font-black transition-all ${
+              className={`flex items-center gap-2 px-3 sm:px-4 py-2 rounded-2xl border text-xs sm:text-sm font-black transition-all ${
                 canCreateGroup
                   ? "bg-emerald-50 border-emerald-100 text-emerald-700 shadow-sm shadow-emerald-500/10"
                   : "bg-amber-50 border-amber-100 text-amber-700"
@@ -137,7 +155,7 @@ const Groups = () => {
                   );
                 }
               }}
-              className={`group px-8 py-3.5 font-black rounded-2xl transition-all flex items-center justify-center gap-2 shadow-xl shrink-0 ${
+              className={`group px-6 sm:px-8 py-3 sm:py-3.5 font-black rounded-2xl transition-all flex items-center justify-center gap-2 shadow-xl shrink-0 ${
                 canCreateGroup
                   ? "bg-purple-600 text-white hover:bg-purple-700 shadow-purple-500/40 relative overflow-hidden"
                   : "bg-[var(--bg-active)] text-[var(--text-muted)] cursor-not-allowed border border-[var(--border-main)]"
@@ -157,7 +175,7 @@ const Groups = () => {
         </div>
 
         {/* Dynamic Filters Bar */}
-        <div className="mt-10 flex flex-col md:flex-row gap-4 p-2 bg-[var(--bg-active)]/50 rounded-[2rem] border border-[var(--border-main)]/50 backdrop-blur-sm">
+        <div className="mt-6 sm:mt-10 flex flex-col md:flex-row gap-3 sm:gap-4 p-1.5 sm:p-2 bg-[var(--bg-active)]/50 rounded-[2rem] border border-[var(--border-main)]/50 backdrop-blur-sm">
           <div className="flex-1">
             <UniversalSearch
               placeholder="Search by topic, group name, or mentor..."
@@ -173,12 +191,13 @@ const Groups = () => {
           <div className="flex flex-wrap gap-2 items-center">
             <select
               value={filters.degree}
+              disabled={isFetching}
               onChange={(e) => {
                 const val = e.target.value;
                 setSort(val === "" ? sort : sort);
                 setFilters((prev) => ({ ...prev, degree: val }));
               }}
-              className="min-w-0 flex-1 sm:flex-none bg-[var(--bg-card)] border border-[var(--border-main)] rounded-2xl px-4 py-2 text-sm font-black text-[var(--text-main)] focus:outline-none focus:ring-4 focus:ring-purple-500/10 appearance-none cursor-pointer hover:border-purple-300 transition-all"
+              className="min-w-0 flex-1 sm:flex-none bg-[var(--bg-card)] border border-[var(--border-main)] rounded-2xl px-4 py-2 text-sm font-black text-[var(--text-main)] focus:outline-none focus:ring-4 focus:ring-purple-500/10 appearance-none cursor-pointer hover:border-purple-300 transition-all disabled:opacity-60 disabled:cursor-wait"
             >
               <option value="">All Branches</option>
               {degrees.map((deg) => (
@@ -190,21 +209,23 @@ const Groups = () => {
 
             <div className="flex flex-wrap gap-1 bg-[var(--bg-card)]/80 p-1 rounded-2xl border border-[var(--border-main)] shadow-sm">
               {[
-                { value: "latest", label: "Recent", icon: Sparkles },
-                { value: "active", label: "Hot", icon: TrendingUp },
+                { value: "latest", label: "Recent", icon: Clock },
+                { value: "joined", label: "Joined", icon: Check },
                 { value: "popular", label: "Massive", icon: Users },
+                { value: "recommended", label: "For You", icon: Sparkles },
               ].map(({ value, label, icon: SectionIcon }) => (
                 <button
                   key={value}
+                  disabled={isFetching}
                   onClick={() => {
                     setSort(value);
                     setFilters((prev) => ({ ...prev, sort: value }));
                   }}
-                  className={`flex items-center gap-2 px-5 py-2 text-xs font-black rounded-xl transition-all ${
+                  className={`flex items-center gap-2 px-3 sm:px-5 py-2 text-xs font-black rounded-xl transition-all ${
                     sort === value
                       ? "bg-purple-600 text-white shadow-lg shadow-purple-500/30"
                       : "text-[var(--text-muted)] hover:text-[var(--text-main)] hover:bg-[var(--bg-active)]"
-                  }`}
+                  } disabled:opacity-60 disabled:cursor-wait`}
                 >
                   {createElement(SectionIcon, { className: "w-3.5 h-3.5" })}{" "}
                   {label}
@@ -217,6 +238,12 @@ const Groups = () => {
 
       {/* Modern Grid Layout */}
       <div className="min-h-[400px]">
+        {isFetching && !isLoading && (
+          <div className="mb-4 flex items-center justify-center gap-2 text-xs font-black uppercase tracking-widest text-[var(--text-muted)]">
+            <LoadingSpinner />
+            Updating circles...
+          </div>
+        )}
         {isLoading ? (
           <div className="flex flex-col items-center justify-center py-24">
             <LoadingSpinner />
@@ -226,9 +253,9 @@ const Groups = () => {
           </div>
         ) : error ? (
           <div className="bg-rose-50 border border-rose-100 text-rose-600 p-12 rounded-[2.5rem] text-center font-bold">
-            Failed to load circles. Please try again.
+            Failed to load circles. Try again.
           </div>
-        ) : groupsList.length === 0 ? (
+        ) : effectiveGroups.length === 0 ? (
           <motion.div
             variants={containerVariants}
             initial="hidden"
@@ -295,7 +322,9 @@ const Groups = () => {
                   <p className="text-[var(--text-muted)] max-w-xs mx-auto">
                     {filters.search
                       ? "Try adjusting your filters or search terms."
-                      : "The labyrinth is empty. Be the first to start a circle."}
+                      : sort === "joined"
+                        ? "You haven't engaged in any group yet."
+                        : "The labyrinth is empty. Be the first to start a circle."}
                   </p>
                 </div>
               )}
@@ -304,11 +333,11 @@ const Groups = () => {
         ) : (
           <motion.div
             variants={containerVariants}
-            initial="hidden"
+            initial={false}
             animate="visible"
             className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 place-items-center"
           >
-            {groupsList.map((group) => {
+            {effectiveGroups.map((group) => {
               const groupId = group.group_id ?? group.id;
 
               return (
@@ -316,11 +345,11 @@ const Groups = () => {
                   key={groupId}
                   variants={itemVariants}
                   whileHover={{ y: -8 }}
-                  className="group w-full max-w-sm"
+                  className="group w-full max-w-none sm:max-w-sm"
                 >
                   <Link
                     to={`/groups/${groupId}`}
-                    className="relative block h-full bg-[var(--bg-card)]/70 backdrop-blur-xl border border-[var(--border-main)]/60 border-x-0 sm:border-x rounded-[2.5rem] overflow-hidden hover:shadow-[0_20px_40px_-12px_rgba(0,0,0,0.1)] transition-all duration-500 flex flex-col group shadow-sm"
+                    className="relative block h-full bg-[var(--bg-card)]/70 backdrop-blur-xl border border-[var(--border-main)]/60 border-x-0 sm:border-x rounded-none sm:rounded-[2.5rem] overflow-hidden hover:shadow-[0_20px_40px_-12px_rgba(0,0,0,0.1)] transition-all duration-500 flex flex-col group shadow-sm"
                   >
                     <div className="h-28 relative overflow-hidden bg-gradient-to-br from-slate-200 to-slate-300 dark:from-slate-700 dark:to-slate-800">
                       {group.banner_image && (
@@ -331,7 +360,7 @@ const Groups = () => {
                         />
                       )}
                       <div className="absolute top-4 right-4 z-10 flex flex-col gap-2 items-end">
-                        {group.is_member && (
+                        {(group.is_member || sort === "joined") && (
                           <span className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-500/90 backdrop-blur-md text-white text-[10px] font-black uppercase tracking-widest rounded-full shadow-lg border border-white/20">
                             <Check className="w-3 h-3" /> Engaged
                           </span>
@@ -349,8 +378,8 @@ const Groups = () => {
                       </div>
                     </div>
 
-                    <div className="px-6 pb-6 -mt-10 relative flex-1 flex flex-col">
-                      <div className="w-20 h-20 rounded-full bg-[var(--bg-card)] p-1 shadow-lg mb-4 group-hover:rotate-6 transition-transform">
+                    <div className="px-2 sm:px-6 pb-4 sm:pb-6 -mt-10 relative flex-1 flex flex-col">
+                      <div className="w-20 h-20 rounded-full bg-[var(--bg-card)] p-1 shadow-lg mb-4 transition-transform">
                         <div className="w-full h-full rounded-full bg-[var(--bg-active)] border-2 border-[var(--border-main)] flex items-center justify-center text-[var(--text-main)] font-black text-xl sm:text-2xl overflow-hidden shadow-inner">
                           {group.group_image ? (
                             <img
@@ -365,10 +394,10 @@ const Groups = () => {
                       </div>
 
                       <div className="space-y-1 mb-4">
-                        <h2 className="text-lg sm:text-xl font-black text-[var(--text-main)] group-hover:text-[var(--text-main)]/80 transition-colors leading-snug">
+                        <h2 className="text-base sm:text-xl font-black text-[var(--text-main)] leading-snug">
                           {group.name}
                         </h2>
-                        <p className="text-sm text-[var(--text-muted)] line-clamp-2 font-medium leading-relaxed">
+                        <p className="text-xs sm:text-sm text-[var(--text-muted)] line-clamp-2 font-medium leading-relaxed">
                           {group.description ||
                             "Synthesizing collective knowledge through structured collaboration."}
                         </p>

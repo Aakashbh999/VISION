@@ -295,7 +295,7 @@ const CareerPaths = () => {
   const colors = colorClasses[path.color] || colorClasses.purple;
 
   return (
-    <div className="space-y-10 px-0 sm:px-6 lg:px-8 py-6 sm:py-8 lg:py-10">
+    <div className="space-y-10 px-3 sm:px-6 lg:px-8 py-5 sm:py-8 lg:py-10">
       {/* Header */}
       <div className="text-center max-w-3xl mx-auto">
         <h1 className="text-3xl sm:text-4xl font-bold text-[var(--text-main)] mb-4">

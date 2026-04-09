@@ -19,13 +19,6 @@ const AcademicBackgroundCard = ({
           </div>
           Academic Background
         </h3>
-        {isOwner &&
-          !draftProfile.semester_is_manual &&
-          draftProfile.batch_year && (
-            <span className="px-3 py-1 bg-emerald-50 text-emerald-600 rounded-full text-[10px] font-black uppercase tracking-widest border border-emerald-100">
-              Auto Semester
-            </span>
-          )}
       </div>
 
       {isOwner && isEditMode ? (
@@ -35,13 +28,12 @@ const AcademicBackgroundCard = ({
               Degree Program
             </label>
             <select
-              value={draftProfile.program_id}
-              onChange={(event) =>
-                handleDraftChange("program_id", event.target.value)
-              }
-              className="w-full px-4 py-3 rounded-sm sm:rounded-2xl border-2 border-[var(--border-main)] bg-[var(--bg-active)] focus:bg-[var(--bg-card)] focus:ring-4 focus:ring-purple-500/10 focus:border-purple-500 transition-all appearance-none cursor-pointer text-[var(--text-main)]"
+              value={draftProfile.program_id || ""}
+              disabled
+              title="Degree program cannot be changed after registration"
+              className="w-full px-4 py-3 rounded-sm sm:rounded-2xl border-2 border-[var(--border-main)] bg-[var(--bg-active)] opacity-70 cursor-not-allowed transition-all appearance-none text-[var(--text-main)] disabled:opacity-70 disabled:cursor-not-allowed"
             >
-              <option value="">Select program</option>
+              <option value="">N/A</option>
               {programs?.map((program) => (
                 <option key={program.program_id} value={program.program_id}>
                   {program.program_name}
@@ -55,19 +47,12 @@ const AcademicBackgroundCard = ({
               Batch Year
             </label>
             <input
-              value={draftProfile.batch_year}
-              onChange={(event) =>
-                handleDraftChange(
-                  "batch_year",
-                  event.target.value.replace(/[^0-9]/g, "").slice(0, 4),
-                )
-              }
-              placeholder="e.g. 2079"
-              className="w-full px-4 py-3 rounded-sm sm:rounded-2xl border-2 border-[var(--border-main)] bg-[var(--bg-active)] focus:bg-[var(--bg-card)] focus:ring-4 focus:ring-purple-500/10 focus:border-purple-500 transition-all font-bold text-[var(--text-main)]"
+              value={draftProfile.batch_year || "N/A"}
+              readOnly
+              disabled
+              title="Batch year cannot be changed after registration"
+              className="w-full px-4 py-3 rounded-sm sm:rounded-2xl border-2 border-[var(--border-main)] bg-[var(--bg-active)] opacity-70 cursor-not-allowed transition-all font-bold text-[var(--text-main)]"
             />
-            <p className="text-[10px] text-[var(--text-muted)] font-bold uppercase tracking-wider">
-              Required for auto-semester calculation
-            </p>
           </div>
 
           <div className="space-y-4 sm:col-span-2">
@@ -119,14 +104,6 @@ const AcademicBackgroundCard = ({
               ))}
             </select>
 
-            {!draftProfile.semester_is_manual && draftProfile.batch_year && (
-              <div className="flex items-center gap-2 px-4 py-2 bg-emerald-50 rounded-xl border border-emerald-100">
-                <div className="w-3.5 h-3.5 rounded-full bg-emerald-600" />
-                <p className="text-xs text-emerald-700 font-bold">
-                  System predicted: Semester {autoSemester || "-"}
-                </p>
-              </div>
-            )}
           </div>
 
           <div className="bg-[var(--bg-active)] p-6 rounded-sm sm:rounded-2xl border border-[var(--border-main)] sm:col-span-2">
@@ -144,44 +121,35 @@ const AcademicBackgroundCard = ({
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div className="bg-[var(--bg-card)] p-5 rounded-sm sm:rounded-2xl border-2 border-[var(--border-main)] hover:border-purple-100 transition-all">
-            <p className="text-[10px] text-[var(--text-muted)] uppercase tracking-widest font-black mb-2">
+          <div className="bg-[var(--bg-active)] p-4 sm:p-5 rounded-sm sm:rounded-2xl border border-[var(--border-main)]">
+            <p className="text-sm font-medium text-[var(--text-muted)] mb-1">
               Degree Program
             </p>
-            <p className="text-base font-bold text-[var(--text-main)]">
+            <p className="text-lg font-bold text-[var(--text-main)]">
               {profile.program_name || "Self Taught / Other"}
             </p>
           </div>
-          <div className="bg-[var(--bg-card)] p-5 rounded-sm sm:rounded-2xl border-2 border-[var(--border-main)] hover:border-purple-100 transition-all">
-            <p className="text-[10px] text-[var(--text-muted)] uppercase tracking-widest font-black mb-2">
+          <div className="bg-[var(--bg-active)] p-4 sm:p-5 rounded-sm sm:rounded-2xl border border-[var(--border-main)]">
+            <p className="text-sm font-medium text-[var(--text-muted)] mb-1">
               Current Semester
             </p>
-            <div className="flex items-center justify-between">
-              <p className="text-base font-bold text-[var(--text-main)]">
-                {profile.semester
-                  ? `Semester ${profile.semester}`
-                  : "Not specified"}
-              </p>
-              {profile.batch_year && !profile.semester_is_manual && (
-                <span className="text-[10px] bg-emerald-50 text-emerald-600 px-2.5 py-1 rounded-lg font-black uppercase tracking-wider">
-                  Auto
-                </span>
-              )}
-            </div>
+            <p className="text-lg font-bold text-[var(--text-main)]">
+              {profile.semester ? profile.semester : "Not specified"}
+            </p>
           </div>
-          <div className="bg-[var(--bg-card)] p-5 rounded-sm sm:rounded-2xl border-2 border-[var(--border-main)] hover:border-purple-100 transition-all">
-            <p className="text-[10px] text-[var(--text-muted)] uppercase tracking-widest font-black mb-2">
+          <div className="bg-[var(--bg-active)] p-4 sm:p-5 rounded-sm sm:rounded-2xl border border-[var(--border-main)]">
+            <p className="text-sm font-medium text-[var(--text-muted)] mb-1">
               Batch Year
             </p>
-            <p className="text-base font-bold text-[var(--text-main)]">
+            <p className="text-lg font-bold text-[var(--text-main)]">
               {profile.batch_year || "N/A"}
             </p>
           </div>
-          <div className="bg-[var(--bg-card)] p-5 rounded-sm sm:rounded-2xl border-2 border-[var(--border-main)] hover:border-purple-100 transition-all">
-            <p className="text-[10px] text-[var(--text-muted)] uppercase tracking-widest font-black mb-2">
+          <div className="bg-[var(--bg-active)] p-4 sm:p-5 rounded-sm sm:rounded-2xl border border-[var(--border-main)]">
+            <p className="text-sm font-medium text-[var(--text-muted)] mb-1">
               Member Since
             </p>
-            <p className="text-base font-bold text-[var(--text-main)] flex items-center gap-2">
+            <p className="text-lg font-bold text-[var(--text-main)] flex items-center gap-2">
               <Calendar className="w-4 h-4 text-purple-600" />
               {new Date(profile.created_at).toLocaleDateString("en-US", {
                 month: "long",

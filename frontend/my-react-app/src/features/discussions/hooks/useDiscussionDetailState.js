@@ -68,7 +68,7 @@ export const useDiscussionDetailState = () => {
 
   const handleVote = (voteType) => {
     if (!isAuthenticated) {
-      toast.info("Please login to vote");
+      toast.info("Log in to vote");
       return;
     }
 
@@ -77,7 +77,7 @@ export const useDiscussionDetailState = () => {
 
   const handleCommentVote = (commentId, voteType) => {
     if (!isAuthenticated) {
-      toast.info("Please login to vote");
+      toast.info("Log in to vote");
       return;
     }
 
@@ -163,6 +163,7 @@ export const useDiscussionDetailState = () => {
     showBackToTop,
     addCommentMutation,
     voteMutation,
+    commentVoteMutation,
     toggleSaveMutation,
     handleVote,
     handleCommentVote,

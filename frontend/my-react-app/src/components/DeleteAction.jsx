@@ -15,7 +15,7 @@ const CONFIG = {
       "This discussion will be archived and recorded for moderation.",
     modalSurfaceClassName: "lg:max-w-2xl",
     mutationFn: (targetId, reason) => deleteDiscussion(targetId, reason),
-    successMessage: "Discussion deleted successfully.",
+    successMessage: "Discussion deleted.",
     invalidateKeys: ["discussions", "my-posts", "saved-discussions"],
   },
   comment: {
@@ -24,7 +24,7 @@ const CONFIG = {
     description:
       "This comment will be soft-deleted and recorded for moderation.",
     mutationFn: (targetId, reason) => softDeleteComment(targetId, reason),
-    successMessage: "Comment deleted successfully.",
+    successMessage: "Comment deleted.",
     invalidateKeys: ["discussion", "discussions"],
   },
   resource: {
@@ -33,7 +33,7 @@ const CONFIG = {
     description:
       "This resource will be soft-deleted and recorded for moderation.",
     mutationFn: (targetId, reason) => softDeleteResource(targetId, reason),
-    successMessage: "Resource deleted successfully.",
+    successMessage: "Resource deleted.",
     invalidateKeys: ["resources", "my-resources"],
   },
   group: {
@@ -41,7 +41,7 @@ const CONFIG = {
     title: "Delete Group?",
     description: "This group will be soft-deleted and recorded for moderation.",
     mutationFn: (targetId, reason) => softDeleteGroup(targetId, reason),
-    successMessage: "Group deleted successfully.",
+    successMessage: "Group deleted.",
     invalidateKeys: ["groups"],
   },
   group_post: {
@@ -50,7 +50,7 @@ const CONFIG = {
     description:
       "This group post will be soft-deleted and recorded for moderation.",
     mutationFn: (targetId, reason) => softDeleteGroupPost(targetId, reason),
-    successMessage: "Post deleted successfully.",
+    successMessage: "Post deleted.",
     invalidateKeys: ["groupPosts"],
   },
 };
@@ -87,13 +87,13 @@ export default function DeleteAction({
         );
       }
 
-      showToast.success(config?.successMessage || "Deleted successfully");
+      showToast.success(config?.successMessage || "Deleted");
       setIsOpen(false);
       onDeleted?.();
     },
     onError: (err) => {
       const errorMsg =
-        err.response?.data?.error || "Delete failed. Please try again.";
+        err.response?.data?.error || "Delete failed. Try again.";
       showToast.error(errorMsg);
     },
   });

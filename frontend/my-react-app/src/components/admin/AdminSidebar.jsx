@@ -1,6 +1,7 @@
 import { Link, useLocation } from "react-router-dom";
 import { LayoutDashboard, Users, Clock, FileText, LogOut } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
+import { motion } from "framer-motion";
 
 const AdminSidebar = () => {
   const location = useLocation();
@@ -36,30 +37,37 @@ const AdminSidebar = () => {
       href: "/admin/resources/pending",
     });
   }
+
   return (
     <aside className="hidden lg:block fixed left-0 top-16 h-[calc(100vh-4rem)] w-64 bg-[var(--bg-card)]/90 backdrop-blur-sm border-r border-[var(--border-main)] px-5 py-8 shadow-sm transition-colors duration-300">
-      <nav className="space-y-2 text-sm">
+      <nav className="space-y-2 text-sm relative">
         {navItems.map((item) => {
           const isActive = location.pathname === item.href;
           return (
             <Link
               key={item.id}
               to={item.href}
-              className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-300 group ${
+              className={`relative flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-300 group ${
                 isActive
-                  ? "bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-950/30 dark:to-purple-950/30 text-blue-700 dark:text-blue-300 font-semibold border border-blue-100 dark:border-blue-900/40"
-                  : "hover:bg-gradient-to-r hover:from-[var(--bg-active)] hover:to-blue-50/70 dark:hover:to-blue-950/20 text-[var(--text-muted)] hover:text-blue-600 dark:hover:text-blue-300 hover:font-medium hover:border hover:border-[var(--border-main)]"
+                  ? "text-blue-700 dark:text-blue-300 font-semibold"
+                  : "text-[var(--text-muted)] hover:bg-[var(--bg-active)] hover:text-blue-600 dark:hover:text-blue-300"
               }`}
             >
-              <div
-                className={`w-2 h-2 rounded-full transition-all duration-300 ${
-                  isActive
-                    ? "bg-blue-500 group-hover:scale-125"
-                    : "bg-slate-300 dark:bg-slate-600 group-hover:bg-blue-400 group-hover:scale-125"
-                }`}
-              ></div>
-              <item.icon className="w-5 h-5" />
-              <span>{item.label}</span>
+              {isActive && (
+                <motion.div
+                  layoutId="admin-sidebar-active-pill"
+                  className="absolute inset-0 bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-950/30 dark:to-purple-950/30 border border-blue-100 dark:border-blue-900/40 rounded-xl -z-10"
+                  transition={{
+                    type: "spring",
+                    stiffness: 350,
+                    damping: 30,
+                  }}
+                />
+              )}
+              <item.icon
+                className={`w-5 h-5 relative z-10 transition-colors ${isActive ? "text-blue-600 dark:text-blue-400" : "text-[var(--text-muted)] group-hover:text-blue-500"}`}
+              />
+              <span className="relative z-10">{item.label}</span>
             </Link>
           );
         })}

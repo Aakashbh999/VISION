@@ -19,7 +19,7 @@ export const useApproveResource = () => {
   return useMutation({
     mutationFn: (id) => approveResource(id),
     onSuccess: (data) => {
-      toast.success(data?.message || "Resource approved successfully.");
+      toast.success(data?.message || "Resource approved.");
       queryClient.invalidateQueries(["pending-resources"]);
       queryClient.invalidateQueries(["resources"]); // Invalidate public resources list
     },

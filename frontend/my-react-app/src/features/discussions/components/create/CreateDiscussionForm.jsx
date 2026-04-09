@@ -82,7 +82,7 @@ const CreateDiscussionForm = ({
               <option value="">Choose a community...</option>
               {specializations.map((specialization) => (
                 <option key={specialization.id} value={specialization.id}>
-                  v/{specialization.name}
+                  {specialization.name.toLowerCase().replace(/\s+/g, "")}
                 </option>
               ))}
             </select>

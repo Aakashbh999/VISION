@@ -17,7 +17,7 @@ const ITClubs = () => {
   const pagination = data?.pagination;
 
   return (
-    <div className="space-y-8 px-0 sm:px-6 lg:px-8 py-6 sm:py-8 lg:py-10">
+    <div className="space-y-8 px-3 sm:px-6 lg:px-8 py-5 sm:py-8 lg:py-10">
       <h1 className="text-2xl sm:text-3xl font-bold text-[var(--text-main)]">
         IT Clubs & Communities
       </h1>

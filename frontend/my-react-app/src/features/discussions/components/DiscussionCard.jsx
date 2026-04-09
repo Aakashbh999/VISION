@@ -36,7 +36,7 @@ const DiscussionCard = ({
 
   return (
     <div className="w-full flex bg-[var(--bg-card)] border-0 border-b sm:border-b-0 sm:border border-[var(--border-main)] rounded-none sm:rounded-xl hover:border-purple-500/50 hover:bg-[var(--bg-active)] transition-all overflow-hidden group sm:shadow-sm">
-      <div className="w-12 bg-[var(--bg-main)]/30 flex flex-col items-center py-4 gap-2 border-r-0 sm:border-r border-[var(--border-main)]/50">
+      <div className="w-10 sm:w-12 bg-[var(--bg-main)]/30 flex flex-col items-center py-3 sm:py-4 gap-2 border-r-0 sm:border-r border-[var(--border-main)]/50">
         <button
           onClick={(event) => handleLike(event, disc.discussion_id)}
           disabled={loadingLike === disc.discussion_id}
@@ -73,23 +73,27 @@ const DiscussionCard = ({
             loadingLike === disc.discussion_id ? "opacity-50 cursor-wait" : ""
           } ${downvotedPosts[disc.discussion_id] ? "text-red-500 bg-red-500/10" : "text-[var(--text-muted)] hover:text-red-500"}`}
         >
-          <ArrowBigDown
-            className={`w-6 h-6 transition-all ${downvotedPosts[disc.discussion_id] ? "fill-red-500" : ""}`}
-          />
+          {loadingLike === disc.discussion_id ? (
+            <ButtonLoader size={20} />
+          ) : (
+            <ArrowBigDown
+              className={`w-6 h-6 transition-all ${downvotedPosts[disc.discussion_id] ? "fill-red-500" : ""}`}
+            />
+          )}
         </button>
       </div>
 
-      <div className="flex-1 px-4 py-3 sm:p-4 flex flex-col">
+      <div className="flex-1 px-2 py-3 sm:px-4 sm:py-4 flex flex-col">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3">
-          <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 text-[10px] uppercase font-black tracking-widest text-[var(--text-muted)]">
-            <span className="text-purple-500 font-black hover:underline cursor-pointer truncate max-w-[120px] sm:max-w-none">
-              v/
-              {disc.specialization_name?.replace(/\s+/g, "").toLowerCase() ||
-                "general"}
+          <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 text-[9px] sm:text-[10px] font-black tracking-widest text-[var(--text-muted)]">
+            <span className="text-purple-500 font-black cursor-pointer truncate max-w-[120px] sm:max-w-none">
+              {(disc.specialization_name || "general")
+                .toLowerCase()
+                .replace(/\s+/g, "")}
             </span>
             <span className="opacity-50">•</span>
             <span className="text-[var(--text-main)]/80 truncate max-w-[100px] sm:max-w-none">
-              u/{disc.author}
+              {disc.author?.toLowerCase().replace(/\s+/g, "")}
             </span>
             <span className="opacity-50">•</span>
             <span>{new Date(disc.created_at).toLocaleDateString()}</span>
@@ -111,7 +115,7 @@ const DiscussionCard = ({
           to={`/discussions/${disc.discussion_id}`}
           className="block group/title"
         >
-          <h2 className="text-base sm:text-lg font-black text-[var(--text-main)] leading-tight mb-2 group-hover/title:text-purple-500 transition-colors">
+          <h2 className="text-base sm:text-lg font-black text-[var(--text-main)] leading-tight mb-2">
             {disc.title}
           </h2>
 

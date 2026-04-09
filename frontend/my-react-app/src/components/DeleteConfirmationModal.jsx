@@ -12,7 +12,7 @@ const REASONS_CONFIG = {
   post: [
     { id: "mistake", label: "Posted in the wrong category" },
     { id: "outdated", label: "Information is no longer relevant" },
-    { id: "resolved", label: "Question/Issue has been resolved" },
+    { id: "resolved", label: "Question/Issue is resolved" },
     { id: "spam", label: "Spam or low quality content" },
   ],
   comment: [
@@ -175,7 +175,7 @@ export default function DeleteConfirmationModal({
                 <textarea
                   value={customReason}
                   onChange={(e) => setCustomReason(e.target.value)}
-                  placeholder="Please specify your reason..."
+                  placeholder="Specify your reason..."
                   className="w-full p-4 bg-[var(--bg-active)] border border-[var(--border-main)] rounded-xl text-base font-medium focus:ring-2 focus:ring-purple-200 focus:border-purple-400 outline-none transition-all mt-2 resize-none text-[var(--text-main)]"
                   rows={3}
                   maxLength={450}

@@ -25,7 +25,7 @@ const MyPosts = () => {
   const pagination = data?.pagination || { page: 1, totalPages: 1 };
 
   return (
-    <div className="space-y-6 px-0 sm:px-6 lg:px-8 py-6 sm:py-8 lg:py-10">
+    <div className="space-y-6 px-2 sm:px-6 lg:px-8 py-5 sm:py-8 lg:py-10">
       {/* Header */}
       <div className="flex items-center gap-4">
         <Link

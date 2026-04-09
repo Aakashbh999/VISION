@@ -1,7 +1,7 @@
 const pool = require("../config/db");
+const catchAsync = require("../utils/catchAsync");
 
-exports.getDashboard = async (req, res) => {
-  try {
+exports.getDashboard = catchAsync(async (req, res) => {
     const authUserId = req.user.auth_user_id;
 
     // Get portal user + degree
@@ -12,13 +12,14 @@ exports.getDashboard = async (req, res) => {
       [authUserId],
     );
 
-    if (userRes.rows.length === 0)
-      return res.status(404).json({ error: "User not found" });
+    if (userRes.rows.length === 0) {
+      throw new Error("User not found");
+    }
 
     const { user_id, program_id, academic_degree_id } = userRes.rows[0];
 
     // =====================================================
-    // 1️⃣ ROADMAP PROGRESS
+    // 1\ufe0f\u20e3 ROADMAP PROGRESS
     // =====================================================
     const progressRes = await pool.query(
       `SELECT
@@ -37,7 +38,7 @@ exports.getDashboard = async (req, res) => {
     const progress = parseFloat(progressRes.rows[0].percent).toFixed(2);
 
     // =====================================================
-    // 2️⃣ NEXT STEP
+    // 2\ufe0f\u20e3 NEXT STEP
     // =====================================================
     const nextStepRes = await pool.query(
       `SELECT rs.step_id, rs.title, rs.step_order
@@ -54,7 +55,7 @@ exports.getDashboard = async (req, res) => {
     );
 
     // =====================================================
-    // 3️⃣ RECOMMENDATIONS
+    // 3\ufe0f\u20e3 RECOMMENDATIONS
     // =====================================================
     const recRes = await pool.query(
       `SELECT r.resource_id, r.title, r.url, rs.score
@@ -67,7 +68,7 @@ exports.getDashboard = async (req, res) => {
     );
 
     // =====================================================
-    // 4️⃣ DEGREE FEED – 60 / 30 / 10 rule
+    // 4\ufe0f\u20e3 DEGREE FEED \u2013 60 / 30 / 10 rule
     //    60% from user's degree, 30% degree-agnostic, 10% cross-degree
     //    Only shown when user has an academic_degree_id
     // =====================================================
@@ -81,7 +82,7 @@ exports.getDashboard = async (req, res) => {
       `;
 
       const [sameDegree, noDegree, crossDegree] = await Promise.all([
-        // 60% – same degree (fetch 6 for a 10-item feed)
+        // 60% \u2013 same degree (fetch 6 for a 10-item feed)
         pool.query(
           `SELECT ${baseFields}, 'degree' AS feed_category
            FROM portal.discussions d
@@ -90,7 +91,7 @@ exports.getDashboard = async (req, res) => {
            ORDER BY d.created_at DESC LIMIT 6`,
           [academic_degree_id],
         ),
-        // 30% – no degree (general)
+        // 30% \u2013 no degree (general)
         pool.query(
           `SELECT ${baseFields}, 'general' AS feed_category
            FROM portal.discussions d
@@ -98,7 +99,7 @@ exports.getDashboard = async (req, res) => {
            WHERE d.deleted_at IS NULL AND d.is_deleted = FALSE AND u.status = 'active' AND d.degree_id IS NULL
            ORDER BY d.like_count DESC, d.created_at DESC LIMIT 3`,
         ),
-        // 10% – cross-degree
+        // 10% \u2013 cross-degree
         pool.query(
           `SELECT ${baseFields}, 'cross' AS feed_category
            FROM portal.discussions d
@@ -118,7 +119,7 @@ exports.getDashboard = async (req, res) => {
     }
 
     // =====================================================
-    // 5️⃣ ACTIVE CLUBS
+    // 5\ufe0f\u20e3 ACTIVE CLUBS
     // =====================================================
     const clubsRes = await pool.query(
       `SELECT c.club_id, c.name, COUNT(cm.user_id) AS members
@@ -139,8 +140,4 @@ exports.getDashboard = async (req, res) => {
       degree_feed: degreeFeed,
       active_clubs: clubsRes.rows,
     });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "Dashboard failed" });
-  }
-};
+});

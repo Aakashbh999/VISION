@@ -107,15 +107,15 @@ export const useEditDiscussionState = () => {
     const nextErrors = {};
 
     if (!formData.title.trim()) {
-      nextErrors.title = "Title is required";
+      nextErrors.title = "Title required";
     }
 
     if (!formData.content.trim()) {
-      nextErrors.content = "Content is required";
+      nextErrors.content = "Content required";
     }
 
     if (!formData.specializationId) {
-      nextErrors.specializationId = "Please select a specialization";
+      nextErrors.specializationId = "Select a specialization";
     }
 
     setErrors(nextErrors);
