@@ -14,10 +14,8 @@ export const useClub = (slug) => {
 export const useClubs = (filters = {}) => {
   return useQuery({
     queryKey: ["clubs", filters],
-    queryFn: async () => {
-      const response = await getClubs(filters);
-      return response.clubs;
-    },
+    queryFn: () => getClubs(filters),
+    keepPreviousData: true,
     staleTime: 5 * 60 * 1000,
   });
 };

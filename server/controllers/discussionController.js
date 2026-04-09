@@ -3,6 +3,7 @@ const discussionService = require("../services/discussionService");
 const profanityService = require("../services/profanityService");
 const { feed } = require("../utils/activityService");
 const { successResponse, errorResponse } = require("../utils/response");
+const catchAsync = require("../utils/catchAsync");
 
 /**
  * Process raw tag input (mix of IDs and names) into an array of numeric tag IDs.
@@ -12,8 +13,12 @@ async function processTagInput(tags) {
   if (!tags || !Array.isArray(tags) || tags.length === 0) return [];
 
   const numericIds = tags.filter((t) => typeof t === "number");
-  const stringNames = tags.filter((t) => typeof t === "string" && isNaN(Number(t)));
-  const numericStrings = tags.filter((t) => typeof t === "string" && !isNaN(Number(t))).map(Number);
+  const stringNames = tags.filter(
+    (t) => typeof t === "string" && isNaN(Number(t)),
+  );
+  const numericStrings = tags
+    .filter((t) => typeof t === "string" && !isNaN(Number(t)))
+    .map(Number);
 
   let convertedIds = [];
   if (stringNames.length > 0) {
@@ -26,8 +31,7 @@ async function processTagInput(tags) {
 /* ===============================
     GET ALL DISCUSSIONS (with filters)
   ================================ */
-exports.getAllDiscussions = async (req, res) => {
-  try {
+exports.getAllDiscussions = catchAsync(async (req, res) => {
     const userId = req.user?.portal_user_id || null;
     const filters = {
       specialization: req.query.specialization,
@@ -62,53 +66,33 @@ exports.getAllDiscussions = async (req, res) => {
     }
 
     res.json(result);
-  } catch (err) {
-    console.error(err);
-    return errorResponse(res, "Failed to fetch discussions");
-  }
-};
+});
 
 /* ===============================
     GET TRENDING DISCUSSIONS
   ================================ */
-exports.getTrendingDiscussions = async (req, res) => {
-  try {
+exports.getTrendingDiscussions = catchAsync(async (req, res) => {
     const limit = parseInt(req.query.limit) || 10;
     const trending = await discussionService.getTrendingDiscussions(limit);
     res.json(trending);
-  } catch (err) {
-    console.error(err);
-    return errorResponse(res, "Failed to fetch trending discussions");
-  }
-};
+});
 
 /* ===============================
     GET USER'S DEFAULT FILTERS
   ================================ */
-exports.getUserDefaults = async (req, res) => {
-  try {
+exports.getUserDefaults = catchAsync(async (req, res) => {
     const userId = req.user.portal_user_id;
     const defaults = await discussionService.getUserFilterDefaults(userId);
     res.json(defaults || {});
-  } catch (err) {
-    console.error(err);
-    return errorResponse(res, "Failed to fetch user defaults");
-  }
-};
+});
 
 /* ===============================
     GET ALL TAGS
   ================================ */
-exports.getAllTags = async (req, res) => {
-  try {
+exports.getAllTags = catchAsync(async (req, res) => {
     const tags = await discussionService.getAllTags();
     res.json(tags || []);
-  } catch (err) {
-    console.error("Error fetching tags:", err.message);
-    // Return empty array instead of error - table may not exist yet
-    res.json([]);
-  }
-};
+});
 
 /* ===============================
     GET SPECIALIZATIONS (Static)
@@ -128,14 +112,9 @@ const SPECIALIZATIONS = [
   { id: 12, name: "Game Development", slug: "game-development" },
 ];
 
-exports.getSpecializations = (req, res) => {
-  try {
+exports.getSpecializations = catchAsync(async (req, res) => {
     res.json(SPECIALIZATIONS);
-  } catch (err) {
-    console.error("Error in getSpecializations:", err);
-    res.status(500).json({ error: "Failed to fetch specializations" });
-  }
-};
+});
 
 /* ===============================
     GET DEGREES (Static)
@@ -159,20 +138,14 @@ const DEGREES = [
   { id: 12, code: "MIT", name: "Master in Information Technology" },
 ];
 
-exports.getDegrees = (req, res) => {
-  try {
+exports.getDegrees = catchAsync(async (req, res) => {
     res.json(DEGREES);
-  } catch (err) {
-    console.error("Error in getDegrees:", err);
-    res.status(500).json({ error: "Failed to fetch degrees" });
-  }
-};
+});
 
 /* ===============================
     DISCUSSION DETAILS
   ================================ */
-exports.getDiscussionDetails = async (req, res) => {
-  try {
+exports.getDiscussionDetails = catchAsync(async (req, res) => {
     const { id } = req.params;
     const { sort } = req.query;
     const userId = req.user?.portal_user_id || null;
@@ -189,17 +162,12 @@ exports.getDiscussionDetails = async (req, res) => {
       discussion,
       comments,
     });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "Failed to fetch discussion" });
-  }
-};
+});
 
 /* ===============================
     CREATE DISCUSSION
   ================================ */
-exports.createDiscussion = async (req, res) => {
-  try {
+exports.createDiscussion = catchAsync(async (req, res) => {
     const userId = req.user.portal_user_id;
     let {
       title,
@@ -246,18 +214,29 @@ exports.createDiscussion = async (req, res) => {
       imageCaption,
     });
 
+    // Non-blocking feed event for discovery surfaces.
+    try {
+      await feed({
+        actorId: userId,
+        actionType: "discussion_created",
+        referenceType: "discussion",
+        referenceId: discussion.discussion_id,
+        metadata: { title: discussion.title },
+      });
+    } catch (feedErr) {
+      console.error(
+        "Discussion feed event failed (non-fatal):",
+        feedErr.message,
+      );
+    }
+
     res.status(201).json(discussion);
-  } catch (err) {
-    console.error("Create discussion error:", err.message);
-    return errorResponse(res, "Failed to create discussion");
-  }
-};
+});
 
 /* ===============================
     UPDATE DISCUSSION (24h limit)
   ================================ */
-exports.updateDiscussion = async (req, res) => {
-  try {
+exports.updateDiscussion = catchAsync(async (req, res) => {
     const { id } = req.params;
     const userId = req.user.portal_user_id;
     const isAdmin = req.user.role === "admin";
@@ -282,71 +261,35 @@ exports.updateDiscussion = async (req, res) => {
     );
 
     res.json(discussion);
-  } catch (err) {
-    console.error(err);
-    if (err.message === "Edit window expired (24 hours)") {
-      return errorResponse(res, err.message, 403);
-    }
-    if (err.message === "Not authorized to edit this discussion") {
-      return errorResponse(res, err.message, 403);
-    }
-    if (err.message === "Discussion not found") {
-      return errorResponse(res, err.message, 404);
-    }
-    return errorResponse(res, "Failed to update discussion");
-  }
-};
+});
 
 /* ===============================
     DELETE DISCUSSION (soft delete)
   ================================ */
-exports.deleteDiscussion = async (req, res) => {
-  try {
+exports.deleteDiscussion = catchAsync(async (req, res) => {
     const { id } = req.params;
     const userId = req.user.portal_user_id;
     const isAdmin = req.user.role === "admin";
 
     await discussionService.deleteDiscussion(id, userId, isAdmin);
     return successResponse(res, null, "Discussion deleted successfully");
-  } catch (err) {
-    console.error(err);
-    if (err.message === "Not authorized to delete this discussion") {
-      return errorResponse(res, err.message, 403);
-    }
-    if (err.message === "Discussion not found") {
-      return errorResponse(res, err.message, 404);
-    }
-    return errorResponse(res, "Failed to delete discussion");
-  }
-};
+});
 
 /* ===============================
     HARD DELETE DISCUSSION (permanent)
    =============================== */
-exports.hardDeleteDiscussion = async (req, res) => {
-  try {
+exports.hardDeleteDiscussion = catchAsync(async (req, res) => {
     const { id } = req.params;
     const userId = req.user.portal_user_id;
 
     await discussionService.hardDeleteDiscussion(id, userId);
     return successResponse(res, null, "Discussion permanently deleted");
-  } catch (err) {
-    console.error(err);
-    if (err.message === "Not authorized to hard delete this discussion") {
-      return errorResponse(res, err.message, 403);
-    }
-    if (err.message === "Discussion not found") {
-      return errorResponse(res, err.message, 404);
-    }
-    return errorResponse(res, "Failed to permanently delete discussion");
-  }
-};
+});
 
 /* ===============================
     ADD COMMENT
   ================================ */
-exports.addComment = async (req, res) => {
-  try {
+exports.addComment = catchAsync(async (req, res) => {
     const { id } = req.params;
     let { content, parentId, website } = req.body;
     const userId = req.user.portal_user_id;
@@ -388,41 +331,25 @@ exports.addComment = async (req, res) => {
     }
 
     res.status(201).json(comment);
-  } catch (err) {
-    console.error(err);
-    return errorResponse(res, "Failed to add comment");
-  }
-};
+});
 
 /* ===============================
     DELETE COMMENT
   ================================ */
-exports.deleteComment = async (req, res) => {
-  try {
+exports.deleteComment = catchAsync(async (req, res) => {
     const { commentId } = req.params;
     const userId = req.user.portal_user_id;
     const isAdmin = req.user.role === "admin";
 
     await discussionService.deleteComment(commentId, userId, isAdmin);
     return successResponse(res, null, "Comment deleted successfully");
-  } catch (err) {
-    console.error(err);
-    if (err.message === "Not authorized to delete this comment") {
-      return errorResponse(res, err.message, 403);
-    }
-    if (err.message === "Comment not found") {
-      return errorResponse(res, err.message, 404);
-    }
-    return errorResponse(res, "Failed to delete comment");
-  }
-};
+});
 
 /* ===============================
     SOFT DELETE COMMENT (user-initiated)
     — records deletion + reason for moderation
   ================================ */
-exports.softDeleteComment = async (req, res) => {
-  try {
+exports.softDeleteComment = catchAsync(async (req, res) => {
     const { commentId } = req.params;
     const userId = req.user.portal_user_id;
     const { reason } = req.body;
@@ -456,28 +383,31 @@ exports.softDeleteComment = async (req, res) => {
     if (result.rows.length > 0) {
       await pool.query(
         `UPDATE portal.discussions SET comment_count = GREATEST(0, comment_count - 1) WHERE discussion_id = $1`,
-        [result.rows[0].discussion_id]
+        [result.rows[0].discussion_id],
       );
     }
 
-    return successResponse(res, result.rows[0], "Comment deleted successfully (soft delete)");
-  } catch (err) {
-    console.error(err);
-    return errorResponse(res, "Failed to delete comment");
-  }
-};
+    return successResponse(
+      res,
+      result.rows[0],
+      "Comment deleted successfully (soft delete)",
+    );
+});
 
 /* ===============================
     TOGGLE LIKE
   ================================ */
-exports.toggleLike = async (req, res) => {
-  try {
+exports.toggleLike = catchAsync(async (req, res) => {
     const { id } = req.params;
     const userId = req.user?.portal_user_id;
 
     // Validate inputs
     if (!id || !userId) {
-      return errorResponse(res, "Invalid request - missing discussion ID or user", 400);
+      return errorResponse(
+        res,
+        "Invalid request - missing discussion ID or user",
+        400,
+      );
     }
 
     const result = await discussionService.toggleLike(id, userId);
@@ -502,36 +432,23 @@ exports.toggleLike = async (req, res) => {
     }
 
     res.json(result);
-  } catch (err) {
-    console.error("Toggle like error:", err.message);
-    return errorResponse(res, "Like failed");
-  }
-};
+});
 
 /* ===============================
     TOGGLE SAVE
   ================================ */
-exports.toggleSave = async (req, res) => {
-  try {
+exports.toggleSave = catchAsync(async (req, res) => {
     const { id } = req.params;
     const userId = req.user.portal_user_id;
 
     const result = await discussionService.toggleSave(id, userId);
     res.json(result);
-  } catch (err) {
-    console.error(err);
-    if (err.message && err.message.includes("Maximum")) {
-      return errorResponse(res, err.message, 400);
-    }
-    return errorResponse(res, "Save failed");
-  }
-};
+});
 
 /* ===============================
     GET SAVED DISCUSSIONS
   ================================ */
-exports.getSavedDiscussions = async (req, res) => {
-  try {
+exports.getSavedDiscussions = catchAsync(async (req, res) => {
     const userId = req.user.portal_user_id;
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 20;
@@ -542,34 +459,24 @@ exports.getSavedDiscussions = async (req, res) => {
       limit,
     );
     res.json(result);
-  } catch (err) {
-    console.error(err);
-    return errorResponse(res, "Failed to fetch saved discussions");
-  }
-};
+});
 
 /* ===============================
     GET MY POSTS
   ================================ */
-exports.getMyPosts = async (req, res) => {
-  try {
+exports.getMyPosts = catchAsync(async (req, res) => {
     const userId = req.user.portal_user_id;
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 20;
 
     const result = await discussionService.getMyPosts(userId, page, limit);
     res.json(result);
-  } catch (err) {
-    console.error(err);
-    return errorResponse(res, "Failed to fetch your posts");
-  }
-};
+});
 
 /* ===============================
     BOOST DISCUSSION
   ================================ */
-exports.boostDiscussion = async (req, res) => {
-  try {
+exports.boostDiscussion = catchAsync(async (req, res) => {
     const { id } = req.params;
     const userId = req.user.portal_user_id;
 
@@ -591,27 +498,17 @@ exports.boostDiscussion = async (req, res) => {
       metadata: { title: boostedDiscussion.title },
     });
 
-    return successResponse(res, boostedDiscussion, "Discussion boosted successfully!");
-  } catch (err) {
-    console.error("Boost error:", err);
-    if (
-      err.message === "Insufficient reputation points (50 points required to boost)" ||
-      err.message === "Discussion is already actively boosted"
-    ) {
-      return errorResponse(res, err.message, 400);
-    }
-    if (err.message === "Discussion not found") {
-      return errorResponse(res, err.message, 404);
-    }
-    return errorResponse(res, "Failed to boost discussion");
-  }
-};
+    return successResponse(
+      res,
+      boostedDiscussion,
+      "Discussion boosted successfully!",
+    );
+});
 
 /* ===============================
     UPLOAD IMAGE (Standalone)
    =============================== */
-exports.uploadImage = async (req, res) => {
-  try {
+exports.uploadImage = catchAsync(async (req, res) => {
     if (!req.file) {
       return errorResponse(res, "No image file provided", 400);
     }
@@ -620,8 +517,4 @@ exports.uploadImage = async (req, res) => {
       image_url: req.file.path,
       image_public_id: req.file.filename,
     });
-  } catch (err) {
-    console.error("Upload image error:", err);
-    return errorResponse(res, "Failed to upload image");
-  }
-};
+});

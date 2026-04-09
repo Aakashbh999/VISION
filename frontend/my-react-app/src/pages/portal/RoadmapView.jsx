@@ -189,7 +189,7 @@ const RoadmapView = () => {
 
   if (error)
     return (
-      <div className="p-20 text-center text-[var(--text-muted)]">
+      <div className="p-10 sm:p-20 text-center text-[var(--text-muted)]">
         Failed to load roadmap.
       </div>
     );
@@ -197,16 +197,16 @@ const RoadmapView = () => {
   return (
     <div className="min-h-screen bg-[var(--bg-main)] pb-24 transition-colors duration-300">
       {/* Header */}
-      <div className="max-w-7xl mx-auto px-6 pt-12 mb-16">
+      <div className="max-w-7xl mx-auto px-2 sm:px-6 pt-10 sm:pt-12 mb-12 sm:mb-16">
         <Link
           to="/roadmaps"
           className="inline-flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.3em] text-purple-700 mb-8 hover:translate-x-[-4px] transition-transform"
         >
           <ChevronLeft className="w-3 h-3" /> Back to Dashboard
         </Link>
-        <div className="flex flex-col md:flex-row md:items-end justify-between gap-8">
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 sm:gap-8">
           <div className="space-y-4 max-w-2xl">
-            <h1 className="text-4xl sm:text-6xl font-black text-[var(--text-main)] tracking-tighter leading-[0.9]">
+            <h1 className="text-3xl sm:text-6xl font-black text-[var(--text-main)] tracking-tighter leading-[0.9]">
               {isLoading ? "..." : data?.roadmap?.title}
             </h1>
             <p className="text-[var(--text-muted)] font-medium text-base sm:text-lg leading-relaxed max-w-xl">
@@ -216,7 +216,7 @@ const RoadmapView = () => {
             </p>
           </div>
           {!isLoading && (
-            <div className="flex items-center gap-6 bg-[var(--bg-card)] p-4 rounded-sm sm:rounded-2xl border border-[var(--border-main)] border-x-0 sm:border-x shadow-sm min-w-[240px]">
+            <div className="flex items-center gap-4 sm:gap-6 bg-[var(--bg-card)] p-4 rounded-sm sm:rounded-2xl border border-[var(--border-main)] border-x-0 sm:border-x shadow-sm min-w-[240px]">
               <div className="flex-1">
                 <div className="flex items-center justify-between mb-2">
                   <span className="text-[10px] font-black uppercase text-[var(--text-muted)]">
@@ -241,8 +241,8 @@ const RoadmapView = () => {
       </div>
 
       {/* Linear Track Area */}
-      <div className="max-w-7xl mx-auto px-6">
-        <div className="bg-[var(--bg-card)] rounded-sm sm:rounded-[2.5rem] border border-[var(--border-main)] border-x-0 sm:border-x shadow-2xl shadow-purple-900/5 p-8 sm:p-24 overflow-x-auto overflow-y-visible scrollbar-hide">
+      <div className="max-w-7xl mx-auto px-2 sm:px-6">
+        <div className="bg-[var(--bg-card)] rounded-sm sm:rounded-[2.5rem] border border-[var(--border-main)] border-x-0 sm:border-x shadow-2xl shadow-purple-900/5 p-5 sm:p-16 lg:p-24 overflow-x-auto overflow-y-visible scrollbar-hide">
           {isLoading ? (
             <div className="h-64 flex items-center justify-center">
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-700" />
@@ -251,8 +251,8 @@ const RoadmapView = () => {
             <div
               className={`relative flex ${
                 isMobile
-                  ? "flex-col min-h-[600px] justify-start items-center pt-10 px-4"
-                  : "flex-row min-w-max justify-center items-center py-20 px-10"
+                  ? "flex-col min-h-[600px] justify-start items-center pt-8 sm:pt-10 px-3 sm:px-4"
+                  : "flex-row min-w-max justify-center items-center py-14 sm:py-20 px-6 sm:px-10"
               }`}
             >
               {/* The Track (Pipe) */}

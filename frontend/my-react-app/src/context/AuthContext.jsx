@@ -6,11 +6,12 @@ import {
   useCallback,
 } from "react";
 import { getUserProfile, updatePresence } from "../services/auth";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 const AuthContext = createContext(null);
 
 export const AuthProvider = ({ children }) => {
+  const queryClient = useQueryClient();
   const [token, setToken] = useState(localStorage.getItem("token"));
   const [refreshToken, setRefreshToken] = useState(
     localStorage.getItem("refreshToken"),
@@ -33,9 +34,13 @@ export const AuthProvider = ({ children }) => {
   const logout = useCallback(() => {
     localStorage.removeItem("token");
     localStorage.removeItem("refreshToken");
+
+    // Clear cached profile immediately so UI reflects logged-out state without reload.
+    queryClient.removeQueries({ queryKey: ["me"] });
+
     setToken(null);
     setRefreshToken(null);
-  }, []);
+  }, [queryClient]);
 
   // Listen for logout events from api interceptor
   useEffect(() => {
@@ -105,26 +110,41 @@ export const AuthProvider = ({ children }) => {
     };
   }, [token, refreshToken]);
 
-  const login = (tokens) => {
+  const login = async (tokens) => {
+    let accessToken;
+
     // Support both old format (string) and new format (object with tokens)
     if (typeof tokens === "string") {
       localStorage.setItem("token", tokens);
+      accessToken = tokens;
       setToken(tokens);
     } else {
       localStorage.setItem("token", tokens.accessToken);
+      accessToken = tokens.accessToken;
       if (tokens.refreshToken) {
         localStorage.setItem("refreshToken", tokens.refreshToken);
         setRefreshToken(tokens.refreshToken);
       }
       setToken(tokens.accessToken);
     }
-    refetch();
+
+    try {
+      const profile = await queryClient.fetchQuery({
+        queryKey: ["me", accessToken],
+        queryFn: () => getUserProfile(accessToken),
+      });
+
+      return profile;
+    } catch (error) {
+      logout();
+      throw error;
+    }
   };
 
   const value = {
-    user: data || null,
+    user: token ? data || null : null,
     token,
-    isAuthenticated: !!data,
+    isAuthenticated: !!token && !!data,
     isLoading,
     login,
     logout,

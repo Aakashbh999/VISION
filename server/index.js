@@ -89,7 +89,7 @@ app.use("/api/auth/register", authLimiter);
 app.use("/api/auth/forgot-password", passwordResetLimiter);
 app.use("/api/auth/reset-password", passwordResetLimiter);
 
-// 🚀 Database Verification & Health Check (New Verification Logic)
+// Database Verification & Health Check (New Verification Logic)
 app.get("/api/health", async (req, res) => {
   try {
     // This query confirms the .env search_path is working and sees your tables
@@ -135,7 +135,7 @@ app.get("/api/health/email", (req, res) => {
     message: "Email service configuration is healthy",
   });
 });
-// 🚀 Use the Modular Routes
+// Use the Modular Routes
 // This means all routes in itRoutes will now start with /api
 app.use("/api", itRoutes);
 app.use("/api/auth", authRoutes);
@@ -169,18 +169,22 @@ app.get(
   verifyJWT,
   requireApprovedStudent,
   (req, res) => {
-    res.json({ message: "Welcome to VISION Portal 🚀" });
+    res.json({ message: "Welcome to VISION Portal" });
   },
 );
 
 // Root Test Route
 app.get("/", (req, res) => {
   res.send(
-    "🚀 VISION Server is structured, modular, and ready for the market!",
+    "VISION Server is structured, modular, and ready for the market!",
   );
 });
 
+// Global Error Handler
+const errorHandler = require("./middleware/errorHandler");
+app.use(errorHandler);
+
 // Start server (Render will set PORT automatically)
 app.listen(PORT, () => {
-  console.log(`🚀 VISION Server running on port ${PORT}`);
+  console.log(`VISION Server running on port ${PORT}`);
 });

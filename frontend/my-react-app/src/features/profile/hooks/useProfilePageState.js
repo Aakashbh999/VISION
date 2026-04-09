@@ -125,7 +125,7 @@ export const useProfilePageState = () => {
 
   const handleSaveChanges = async () => {
     if (!draftProfile.full_name.trim()) {
-      showToast.error("Full name is required.");
+      showToast.error("Full name required.");
       return;
     }
 
@@ -135,7 +135,7 @@ export const useProfilePageState = () => {
     }
 
     if (!draftProfile.semester) {
-      showToast.error("Semester is required.");
+      showToast.error("Semester required.");
       return;
     }
 

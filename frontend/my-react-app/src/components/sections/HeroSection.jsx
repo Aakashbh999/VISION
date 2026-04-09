@@ -22,9 +22,7 @@ const HeroSection = () => {
           <Button as={Link} to="/it-fields" variant="gradient" size="lg">
             Explore IT Fields →
           </Button>
-          <Button as={Link} to="/register" variant="secondary" size="md">
-            Register Now
-          </Button>
+          <Button as={Link} to="/register" variant="secondary" size="md">Register</Button>
         </div>
       </div>
 

@@ -1,41 +1,45 @@
 import { NavLink } from "react-router-dom";
+import { motion } from "framer-motion";
 
 const Sidebar = () => {
   const menuItems = [
-    { name: "Home", path: "/", icon: "" },
-    { name: "IT Specializations", path: "/it-fields", icon: "" },
-    { name: "Academic Guide", path: "/academic-guide", icon: "" },
-    { name: "Job Market", path: "/it-jobs", icon: "" },
-    { name: "Community", path: "/it-clubs", icon: "" },
+    { name: "Home", path: "/" },
+    { name: "IT Specializations", path: "/it-fields" },
+    { name: "Academic Guide", path: "/academic-guide" },
+    { name: "Job Market", path: "/it-jobs" },
+    { name: "Community", path: "/it-clubs" },
   ];
 
   return (
     <aside className="hidden lg:block fixed left-0 top-16 h-[calc(100vh-4rem)] w-64 bg-[var(--sidebar-bg)]/80 backdrop-blur-sm border-r border-[var(--border-main)] px-5 py-8 shadow-sm transition-colors duration-300">
-      <nav className="space-y-2 text-sm">
+      <nav className="space-y-2 text-sm relative">
         {menuItems.map((item) => (
           <NavLink
             key={item.name}
             to={item.path}
             end={item.path === "/"}
             className={({ isActive }) =>
-              `flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-300 group ${
+              `relative flex items-center px-4 py-3 rounded-xl transition-all duration-300 group ${
                 isActive
-                  ? "bg-[var(--sidebar-active-bg)] text-purple-600 dark:text-purple-400 font-semibold border border-purple-100 dark:border-purple-900/30"
-                  : "hover:bg-[var(--sidebar-hover-bg)] text-[var(--text-muted)] hover:text-purple-600 dark:hover:text-purple-400 hover:font-medium hover:border hover:border-[var(--border-main)]"
+                  ? "text-purple-600 dark:text-purple-400 font-semibold"
+                  : "text-[var(--text-muted)] hover:bg-[var(--sidebar-hover-bg)] hover:text-purple-600 dark:hover:text-purple-400"
               }`
             }
           >
             {({ isActive }) => (
               <>
-                <div
-                  className={`w-2 h-2 rounded-full transition-all duration-300 ${
-                    isActive
-                      ? "bg-purple-500 scale-125"
-                      : "bg-[var(--text-muted)] group-hover:bg-purple-400 group-hover:scale-125"
-                  }`}
-                ></div>
-                <span className="mr-2">{item.icon}</span>
-                {item.name}
+                {isActive && (
+                  <motion.div
+                    layoutId="sidebar-active-pill"
+                    className="absolute inset-0 bg-[var(--sidebar-active-bg)] border border-purple-100 dark:border-purple-900/30 rounded-xl -z-10"
+                    transition={{
+                      type: "spring",
+                      stiffness: 350,
+                      damping: 30,
+                    }}
+                  />
+                )}
+                <span className="relative z-10">{item.name}</span>
               </>
             )}
           </NavLink>
@@ -43,7 +47,7 @@ const Sidebar = () => {
       </nav>
 
       <div className="absolute bottom-8 left-5 right-5">
-        <div className="p-4 rounded-xl bg-[var(--sidebar-active-bg)] border border-purple-100 dark:border-purple-900/30 hover:shadow-md transition-shadow duration-300">
+        <div className="p-4 rounded-xl bg-[var(--sidebar-active-bg)] border border-purple-100 dark:border-purple-900/30 transition-shadow duration-300">
           <p className="text-xs text-[var(--text-muted)]">Need guidance?</p>
           <a
             href="#"

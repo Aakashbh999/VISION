@@ -6,6 +6,8 @@ import {
   Navigate,
 } from "react-router-dom";
 import { useState, lazy, Suspense } from "react";
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 import { useAuth } from "./context/AuthContext";
 import PublicRoute from "./components/PublicRoute";
 import Navbar from "./components/layout/Navbar";
@@ -42,6 +44,7 @@ import CareerPaths from "./pages/CareerPaths";
 import Resources from "./pages/portal/Resources";
 import MyResources from "./pages/portal/MyResources";
 import ManageContent from "./pages/portal/ManageContent";
+import Feed from "./pages/portal/Feed";
 import PendingAccessMessage from "./components/portal/PendingAccessMessage";
 // Admin pages
 import AdminDashboard from "./pages/admin/Dashboard";
@@ -49,6 +52,7 @@ import AdminPending from "./pages/admin/PendingStudents";
 import AdminStudents from "./pages/admin/StudentsList";
 import AdminReports from "./pages/admin/Reports";
 import AdminPendingResources from "./pages/admin/PendingResources";
+import AdminLogs from "./pages/admin/AdminLogs";
 import ModeratorRoute from "./components/ModeratorRoute";
 
 // Lazy-loaded heavy pages (reduces initial bundle size significantly)
@@ -83,6 +87,7 @@ const adminRoutes = [
   { path: "/admin/pending", element: <AdminPending /> },
   { path: "/admin/students", element: <AdminStudents /> },
   { path: "/admin/reports", element: <AdminReports /> },
+  { path: "/admin/logs", element: <AdminLogs /> },
   { path: "/admin", element: <AdminDashboard /> },
 ];
 
@@ -108,6 +113,7 @@ const portalContentRoutes = [
   { path: "/clubs/:slug", element: <ClubDetail /> },
   { path: "/resources", element: <Resources /> },
   { path: "/resources/my", element: <MyResources /> },
+  { path: "/feed", element: <Feed /> },
   { path: "/manage", element: <ManageContent /> },
   { path: "/profile/:userId", element: <Profile /> },
 ];
@@ -161,7 +167,7 @@ function PublicLayout() {
         {isAdminRoute && <AdminSidebar />}
         {!isAdminRoute && <Sidebar />}
 
-        <main className="w-full px-0 sm:px-6 lg:px-8 py-6 sm:py-8 lg:py-10 lg:ml-64">
+        <main className="w-full px-3 sm:px-6 lg:px-8 py-5 sm:py-8 lg:py-10 lg:ml-64">
           <Routes>
             {/* Public routes */}
             {publicRoutes.map(({ path, element }) => (
@@ -282,6 +288,18 @@ function App() {
   return (
     <Router>
       <AppContent />
+      <ToastContainer
+        position="top-right"
+        autoClose={3000}
+        hideProgressBar={false}
+        newestOnTop
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+        theme="colored"
+      />
     </Router>
   );
 }

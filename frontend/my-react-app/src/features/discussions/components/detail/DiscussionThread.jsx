@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import CommentItem from "./CommentItem";
+import ButtonLoader from "../../../../components/ui/ButtonLoader";
 
 const DiscussionThread = ({
   comments,
@@ -17,6 +18,7 @@ const DiscussionThread = ({
   setReplyContent,
   handleReplySubmit,
   addCommentMutation,
+  commentVoteMutation,
   commentTree,
 }) => {
   return (
@@ -32,9 +34,17 @@ const DiscussionThread = ({
           <div className="flex justify-end mt-2">
             <button
               type="submit"
-              className="bg-purple-600 text-white px-8 py-3 rounded-xl font-black text-xs uppercase hover:bg-purple-700"
+              disabled={addCommentMutation.isPending}
+              className="bg-purple-600 text-white px-8 py-3 rounded-xl font-black text-xs uppercase hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
             >
-              Post Comment
+              {addCommentMutation.isPending ? (
+                <>
+                  <ButtonLoader size={14} />
+                  Posting...
+                </>
+              ) : (
+                "Post Comment"
+              )}
             </button>
           </div>
         </form>
@@ -65,6 +75,7 @@ const DiscussionThread = ({
             setReplyContent={setReplyContent}
             handleReplySubmit={handleReplySubmit}
             addCommentMutation={addCommentMutation}
+            commentVoteMutation={commentVoteMutation}
           />
         ))}
       </div>

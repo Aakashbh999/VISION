@@ -66,14 +66,18 @@ const profileService = {
   },
 
   // Get followers
-  getFollowers: async (userId) => {
-    const response = await api.get(`/profile/${userId}/followers`);
+  getFollowers: async (userId = "me", page = 1, limit = 12) => {
+    const response = await api.get(`/profile/${userId}/followers`, {
+      params: { page, limit },
+    });
     return response.data;
   },
 
   // Get following
-  getFollowing: async (userId) => {
-    const response = await api.get(`/profile/${userId}/following`);
+  getFollowing: async (userId = "me", page = 1, limit = 12) => {
+    const response = await api.get(`/profile/${userId}/following`, {
+      params: { page, limit },
+    });
     return response.data;
   },
 };

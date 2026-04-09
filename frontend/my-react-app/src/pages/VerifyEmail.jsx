@@ -1,13 +1,51 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Mail, RefreshCw, CheckCircle, AlertCircle } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import api from "../services/api";
 
 const VerifyEmail = () => {
-  const { user, logout } = useAuth();
+  const { user, refetchUser } = useAuth();
+  const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
+
+  useEffect(() => {
+    if (!user) return;
+
+    if (user.role === "admin") {
+      navigate("/admin/dashboard", { replace: true });
+      return;
+    }
+
+    if (user.email_status === "verified") {
+      if (user.student_status === "approved") {
+        navigate("/dashboard", { replace: true });
+      } else {
+        navigate("/pending-approval", { replace: true });
+      }
+    }
+  }, [user, navigate]);
+
+  useEffect(() => {
+    refetchUser();
+
+    const intervalId = window.setInterval(() => {
+      refetchUser();
+    }, 15000);
+
+    const handleFocus = () => {
+      refetchUser();
+    };
+
+    window.addEventListener("focus", handleFocus);
+
+    return () => {
+      window.clearInterval(intervalId);
+      window.removeEventListener("focus", handleFocus);
+    };
+  }, [refetchUser]);
 
   const handleResend = async () => {
     setLoading(true);
@@ -35,12 +73,14 @@ const VerifyEmail = () => {
         <h1 className="text-2xl font-bold text-[var(--text-main)] mb-2">
           Verify Your Email
         </h1>
-        <p className="text-[var(--text-muted)] mb-2">We've sent a verification link to:</p>
+        <p className="text-[var(--text-muted)] mb-2">
+          We've sent a verification link to:
+        </p>
         <p className="font-medium text-[var(--text-main)] mb-4">
           {user?.email || "your email address"}
         </p>
         <p className="text-[var(--text-muted)] mb-6">
-          Please check your inbox and click the link to verify your account.
+          Check your inbox and click the link to verify your account.
           You'll have full access to VISION once verified.
         </p>
 
@@ -81,14 +121,14 @@ const VerifyEmail = () => {
         </p>
 
         <button
-          onClick={logout}
+          onClick={() => navigate("/login", { replace: true })}
           className="mt-4 text-sm text-[var(--text-muted)] hover:text-purple-600 transition-colors"
         >
-          Sign out and use a different account
+          Back to Login
         </button>
       </div>
     </div>
   );
 };
 
-export default VerifyEmail; 
+export default VerifyEmail;

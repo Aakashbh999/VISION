@@ -1,18 +1,18 @@
 const pool = require("../config/db");
-const { notify } = require("../utils/activityService");
+const { notify, feed } = require("../utils/activityService");
 const { successResponse, errorResponse } = require("../utils/response");
+const catchAsync = require("../utils/catchAsync");
 
 /* ===============================
    UPLOAD RESOURCE (User Contribution)
    Status defaults to 'pending' – awaits moderator approval
    Supports both file uploads (via Cloudinary) and external links
-================================ */
+ ================================ */
 /**
  * POST /api/resources
  * Body (multipart/form-data): title, description, resource_type, program_id, semester, degree_id, url (for links), file (for uploads)
  */
-exports.uploadResource = async (req, res) => {
-  try {
+exports.uploadResource = catchAsync(async (req, res) => {
     const userId = req.user.portal_user_id;
     const {
       title,
@@ -27,7 +27,8 @@ exports.uploadResource = async (req, res) => {
     const { extractHashtagsAndSemester } = require("../utils/hashtagUtils");
 
     // Extract hashtags and semester from description
-    const { hashtags: extractedHashtags, semester: extractedSemester } = extractHashtagsAndSemester(description);
+    const { hashtags: extractedHashtags, semester: extractedSemester } =
+      extractHashtagsAndSemester(description);
 
     // Parse explicit tags from frontend (sent as JSON string via FormData)
     let explicitTags = [];
@@ -40,10 +41,20 @@ exports.uploadResource = async (req, res) => {
     }
 
     // Merge explicit + extracted hashtags, deduplicate, normalize
-    const mergedHashtags = [...new Set([
-      ...explicitTags.map((t) => String(t).toLowerCase().replace(/^#+/, "").replace(/[^a-z0-9_]/g, "").slice(0, 30)).filter(Boolean),
-      ...(extractedHashtags || []).map((t) => t.toLowerCase()),
-    ])].slice(0, 20);
+    const mergedHashtags = [
+      ...new Set([
+        ...explicitTags
+          .map((t) =>
+            String(t)
+              .toLowerCase()
+              .replace(/^#+/, "")
+              .replace(/[^a-z0-9_]/g, "")
+              .slice(0, 30),
+          )
+          .filter(Boolean),
+        ...(extractedHashtags || []).map((t) => t.toLowerCase()),
+      ]),
+    ].slice(0, 20);
 
     // Use extracted values if not provided explicitly
     const finalSemester = semester || extractedSemester;
@@ -59,7 +70,11 @@ exports.uploadResource = async (req, res) => {
 
     if (resource_type === "link") {
       if (!url) {
-        return errorResponse(res, "URL is required for link-type resources", 400);
+        return errorResponse(
+          res,
+          "URL is required for link-type resources",
+          400,
+        );
       }
       fileUrl = url;
     } else {
@@ -96,27 +111,22 @@ exports.uploadResource = async (req, res) => {
       ],
     );
 
-    return res.status(201).json({
+    res.status(201).json({
       success: true,
       message: "Resource submitted for review",
       data: result.rows[0],
     });
-  } catch (err) {
-    console.error("uploadResource error:", err);
-    return errorResponse(res, "Failed to upload resource");
-  }
-};
+});
 
 /* ===============================
    GET ALL APPROVED RESOURCES (Public)
    Filters: program_id, semester, degree_id, resource_type, search
    Pagination: page, limit
-================================ */
+ ================================ */
 /**
  * GET /api/resources
  */
-exports.getResources = async (req, res) => {
-  try {
+exports.getResources = catchAsync(async (req, res) => {
     const {
       program_id,
       semester,
@@ -125,6 +135,7 @@ exports.getResources = async (req, res) => {
       search,
       program_tag,
       hashtags,
+      sort,
       page = 1,
       limit = 20,
     } = req.query;
@@ -151,9 +162,13 @@ exports.getResources = async (req, res) => {
     if (resource_type) {
       if (resource_type === "pdf") {
         // Broad check for PDFs: literal .pdf, or cloudinary raw upload, or default notes/book type where it's assumed to be PDF
-        conditions.push(`(r.file_url ILIKE '%.pdf%' OR r.file_url ILIKE '%/raw/upload/%' OR (r.resource_type IN ('notes', 'book', 'project') AND r.file_url IS NOT NULL))`);
+        conditions.push(
+          `(r.file_url ILIKE '%.pdf%' OR r.file_url ILIKE '%/raw/upload/%' OR (r.resource_type IN ('notes', 'book', 'project') AND r.file_url IS NOT NULL))`,
+        );
       } else if (resource_type === "image") {
-        conditions.push(`(r.file_url ILIKE '%.jpg%' OR r.file_url ILIKE '%.jpeg%' OR r.file_url ILIKE '%.png%' OR r.file_url ILIKE '%.gif%' OR r.file_url ILIKE '%.webp%')`);
+        conditions.push(
+          `(r.file_url ILIKE '%.jpg%' OR r.file_url ILIKE '%.jpeg%' OR r.file_url ILIKE '%.png%' OR r.file_url ILIKE '%.gif%' OR r.file_url ILIKE '%.webp%')`,
+        );
       } else {
         params.push(resource_type);
         conditions.push(`r.resource_type = $${params.length}`);
@@ -185,36 +200,54 @@ exports.getResources = async (req, res) => {
     );
     const total = parseInt(countResult.rows[0].count);
 
+    // Incorporate recommended scoring
+    let selectAdditions = "";
+    let joinAdditions = "";
+    if (sort === "recommended" && req.user?.portal_user_id) {
+      params.push(req.user.portal_user_id);
+      selectAdditions = `, COALESCE(rs.score, 0) AS relevance_score`;
+      joinAdditions = `LEFT JOIN portal.resource_scores rs ON rs.resource_id = r.resource_id AND rs.user_id = $${params.length}`;
+    }
+
     // Fetch paginated results with degree name
     params.push(limitNum, offset);
+    
+    const orderByClause = (sort === "recommended" && req.user?.portal_user_id)
+        ? "relevance_score DESC, r.created_at DESC"
+        : search
+        ? `similarity(r.title, $${params.indexOf(search) + 1}) DESC`
+        : "r.created_at DESC";
+
     const result = await pool.query(
       `SELECT
          r.*,
          ad.full_name AS degree_name,
-         p.program_name
+         p.program_name${selectAdditions}
        FROM portal.resources r
        LEFT JOIN portal.academic_degrees ad ON ad.id = r.degree_id
        LEFT JOIN portal.programs p ON p.program_id = r.program_id
+       ${joinAdditions}
        ${whereClause}
-       ORDER BY ${
-         search
-           ? `similarity(r.title, $${params.indexOf(search) + 1}) DESC`
-           : "r.created_at DESC"
-       }
+       ORDER BY ${orderByClause}
        LIMIT $${params.length - 1} OFFSET $${params.length}`,
       params,
     );
 
     // If searching and no results found, return recommendations
     if (search && result.rows.length === 0) {
-      const { userSemester, userProgramId, userDegreeId, portal_user_id: userId } = req.user;
+      const {
+        userSemester,
+        userProgramId,
+        userDegreeId,
+        portal_user_id: userId,
+      } = req.user;
       const recommendationService = require("../services/recommendationService");
       const recommendations = await recommendationService.getRecommendations(
         userId,
         userSemester,
         userProgramId,
         userDegreeId,
-        10
+        10,
       );
       return res.json({
         data: [],
@@ -238,20 +271,15 @@ exports.getResources = async (req, res) => {
         totalPages: Math.ceil(total / limitNum),
       },
     });
-  } catch (err) {
-    console.error("getResources error:", err);
-    return errorResponse(res, "Failed to fetch resources");
-  }
-};
+});
 
 /* ===============================
    GET MY RESOURCES (All Statuses)
-================================ */
+ ================================ */
 /**
  * GET /api/resources/my
  */
-exports.getMyResources = async (req, res) => {
-  try {
+exports.getMyResources = catchAsync(async (req, res) => {
     const userId = req.user.portal_user_id;
 
     const result = await pool.query(
@@ -268,20 +296,15 @@ exports.getMyResources = async (req, res) => {
     );
 
     return res.json(result.rows);
-  } catch (err) {
-    console.error("getMyResources error:", err);
-    return errorResponse(res, "Failed to fetch your resources");
-  }
-};
+});
 
 /* ===============================
    GET PENDING RESOURCES (Mod/Admin)
-================================ */
+ ================================ */
 /**
  * GET /api/admin/resources/pending
  */
-exports.getPendingResources = async (req, res) => {
-  try {
+exports.getPendingResources = catchAsync(async (req, res) => {
     const { page = 1, limit = 10 } = req.query;
     const pageNum = Math.max(1, parseInt(page));
     const limitNum = Math.min(50, Math.max(1, parseInt(limit)));
@@ -322,20 +345,16 @@ exports.getPendingResources = async (req, res) => {
       },
       totalPages: Math.ceil(total / limitNum), // For backward compatibility
     });
-  } catch (err) {
-    console.error("getPendingResources error:", err);
-    return errorResponse(res, "Failed to fetch pending resources");
-  }
-};
+});
 
 /* ===============================
    APPROVE RESOURCE (Mod/Admin)
    Awards 10 reputation points to uploader + notification
-================================ */
+ ================================ */
 /**
  * PATCH /api/admin/resources/:id/approve
  */
-exports.approveResource = async (req, res) => {
+exports.approveResource = catchAsync(async (req, res) => {
   const client = await pool.connect();
   try {
     const { id } = req.params;
@@ -383,7 +402,7 @@ exports.approveResource = async (req, res) => {
         userId: uploaderId,
         actorId: modId,
         type: "resource_approved",
-        title: "Resource Approved 🎉",
+        title: "Resource Approved",
         message: `Your resource "${title}" was approved. You earned 10 reputation points!`,
         relatedType: "resource",
         relatedId: parseInt(id),
@@ -392,26 +411,40 @@ exports.approveResource = async (req, res) => {
       console.error("Notification failed (non-fatal):", notifErr.message);
     }
 
+    try {
+      await feed({
+        actorId: uploaderId,
+        actionType: "resource_uploaded",
+        referenceType: "resource",
+        referenceId: parseInt(id, 10),
+        metadata: {
+          title,
+          approved_by: modId,
+        },
+      });
+    } catch (feedErr) {
+      console.error("Resource feed event failed (non-fatal):", feedErr.message);
+    }
+
     return res.json({
       message: "Resource approved and uploader awarded 10 reputation points",
     });
   } catch (err) {
     await client.query("ROLLBACK");
-    console.error("approveResource error:", err);
-    return errorResponse(res, "Failed to approve resource");
+    throw err;
   } finally {
     client.release();
   }
-};
+});
 
 /* ===============================
    REJECT RESOURCE (Mod/Admin)
-================================ */
+ ================================ */
 /**
  * PATCH /api/admin/resources/:id/reject
  * Body: reason (optional)
  */
-exports.rejectResource = async (req, res) => {
+exports.rejectResource = catchAsync(async (req, res) => {
   const client = await pool.connect();
   try {
     const { id } = req.params;
@@ -464,23 +497,21 @@ exports.rejectResource = async (req, res) => {
     return res.json({ message: "Resource rejected" });
   } catch (err) {
     await client.query("ROLLBACK");
-    console.error("rejectResource error:", err);
-    return errorResponse(res, "Failed to reject resource");
+    throw err;
   } finally {
     client.release();
   }
-};
+});
 
 /* ===============================
    SOFT DELETE RESOURCE (user-initiated)
    — records deletion + reason for moderation
-================================ */
+ ================================ */
 /**
  * POST /api/resources/:id/soft-delete
  * Body: reason (optional)
  */
-exports.softDeleteResource = async (req, res) => {
-  try {
+exports.softDeleteResource = catchAsync(async (req, res) => {
     const { id } = req.params;
     const userId = req.user.portal_user_id;
     const { reason } = req.body;
@@ -498,7 +529,11 @@ exports.softDeleteResource = async (req, res) => {
 
     // Only creator can soft delete
     if (resource.rows[0].created_by !== userId) {
-      return errorResponse(res, "Only the creator can delete this resource", 403);
+      return errorResponse(
+        res,
+        "Only the creator can delete this resource",
+        403,
+      );
     }
 
     // Soft delete: mark with deletion timestamp, user, and reason
@@ -510,9 +545,9 @@ exports.softDeleteResource = async (req, res) => {
       [userId, reason || "No reason provided", id],
     );
 
-    return successResponse(res, result.rows[0], "Resource deleted successfully (soft delete)");
-  } catch (err) {
-    console.error(err);
-    return errorResponse(res, "Failed to delete resource");
-  }
-};
+    return successResponse(
+      res,
+      result.rows[0],
+      "Resource deleted successfully (soft delete)",
+    );
+});

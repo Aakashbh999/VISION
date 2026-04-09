@@ -37,7 +37,7 @@ export const useCreateDiscussionState = () => {
     mutationFn: createDiscussion,
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["discussions"] });
-      toast.success("Post published successfully!");
+      toast.success("Post published!");
       navigate(`/discussions/${data.discussion_id}`);
     },
     onError: (error) => {
@@ -85,7 +85,7 @@ export const useCreateDiscussionState = () => {
       return;
     }
 
-    toast.error("Please drop an image file");
+    toast.error("Drop an image file");
   };
 
   const handleSubmit = async (event) => {
@@ -101,12 +101,12 @@ export const useCreateDiscussionState = () => {
     }
 
     if (!formData.specializationId) {
-      toast.warn("Please select a community");
+      toast.warn("Select a community");
       return;
     }
 
     if (activeTab === "image" && !selectedFile) {
-      toast.warn("Please upload an image");
+      toast.warn("Upload an image");
       return;
     }
 
@@ -131,7 +131,7 @@ export const useCreateDiscussionState = () => {
       });
     } catch (error) {
       console.error(error);
-      toast.error("Upload failed. Please try again.");
+      toast.error("Upload failed. Try again.");
     } finally {
       setUploading(false);
     }

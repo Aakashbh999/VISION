@@ -82,12 +82,17 @@ const buildFilterConditions = (filters, startParamIndex = 1) => {
  * @param {string} sort - Sort option
  * @returns {string} - ORDER BY clause
  */
-const buildSortClause = (sort, search = null) => {
+const buildSortClause = (sort, search = null, hasUserId = false) => {
   const boostPriority = `CASE WHEN d.is_boosted = TRUE AND d.boosted_until > NOW() THEN 0 ELSE 1 END ASC`;
 
   // If searching and no specific sort is requested, prioritize by similarity score
   if (search && (!sort || sort === "latest")) {
     return `ORDER BY ${boostPriority}, similarity(d.title, $1) DESC, d.created_at DESC`;
+  }
+
+  if (sort === "recommended" && hasUserId) {
+    // Dynamic relevance score based on tags, degree, and engagement
+    return `ORDER BY ${boostPriority}, relevance_score DESC, d.created_at DESC`;
   }
 
   switch (sort) {
@@ -113,7 +118,7 @@ exports.getDiscussions = async (filters = {}, currentUserId = null) => {
     params,
     paramIndex: filterParamIndex,
   } = buildFilterConditions(filters);
-  const sortClause = buildSortClause(filters.sort, filters.search);
+  const sortClause = buildSortClause(filters.sort, filters.search, !!currentUserId);
 
   // Pagination
   const page = parseInt(filters.page) || 1;
@@ -138,7 +143,21 @@ exports.getDiscussions = async (filters = {}, currentUserId = null) => {
         COALESCE((
           SELECT vote_type FROM portal.discussion_likes dl
           WHERE dl.discussion_id = d.discussion_id AND dl.user_id = $${paramIndex}
-        ), 0) AS user_vote
+        ), 0) AS user_vote,
+        (
+          (CASE WHEN d.degree_id = (SELECT academic_degree_id FROM portal.users WHERE user_id = $${paramIndex}) THEN 40 ELSE 0 END) +
+          (CASE WHEN d.program_id = (SELECT program_id FROM portal.users WHERE user_id = $${paramIndex}) THEN 30 ELSE 0 END) +
+          COALESCE((SELECT COUNT(*) * 10 FROM portal.discussion_tags dt JOIN portal.user_interests ui ON ui.tag_id = dt.tag_id WHERE dt.discussion_id = d.discussion_id AND ui.user_id = $${paramIndex}), 0) +
+          (d.like_count * 2 + COALESCE((
+            SELECT count(*)::int 
+            FROM portal.discussion_comments c 
+            JOIN portal.users cu ON cu.user_id = c.user_id 
+            WHERE c.discussion_id = d.discussion_id 
+              AND c.deleted_at IS NULL 
+              AND c.is_deleted = FALSE 
+              AND cu.status = 'active'
+          ), 0) * 3)
+        ) AS relevance_score
       `;
     params.push(parseInt(currentUserId));
     paramIndex++;

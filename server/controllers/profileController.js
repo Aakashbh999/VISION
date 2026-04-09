@@ -1,5 +1,6 @@
 const pool = require("../config/db");
 const cloudinary = require("../config/cloudinary");
+const { feed } = require("../utils/activityService");
 const { successResponse, errorResponse } = require("../utils/response");
 const {
   handleImageUploadWithCooldown,
@@ -21,6 +22,18 @@ const {
   VXP_BYPASS_COST,
   MAX_BIO_WORDS,
 } = require("../utils/constants");
+const catchAsync = require("../utils/catchAsync");
+
+const parsePagination = (req) => {
+  let page = parseInt(req.query.page, 10);
+  let limit = parseInt(req.query.limit, 10);
+
+  page = page > 0 ? page : 1;
+  limit = limit > 0 && limit <= 50 ? limit : 12;
+
+  const offset = (page - 1) * limit;
+  return { page, limit, offset };
+};
 
 function normalizeAcademicProfile(profile) {
   if (!profile) return profile;
@@ -43,8 +56,7 @@ function normalizeAcademicProfile(profile) {
 /**
  * GET /api/profile/:userId  — Public profile view
  */
-exports.getPublicProfile = async (req, res) => {
-  try {
+exports.getPublicProfile = catchAsync(async (req, res) => {
     const { userId } = req.params;
     const viewerId = req.user?.portal_user_id;
 
@@ -110,17 +122,12 @@ exports.getPublicProfile = async (req, res) => {
       ...normalizeAcademicProfile(result.rows[0]),
       badges: badgesRes.rows,
     });
-  } catch (err) {
-    console.error("getPublicProfile error:", err);
-    return errorResponse(res, "Failed to fetch profile");
-  }
-};
+});
 
 /**
  * GET /api/profile/me  — Own full profile (private fields included)
  */
-exports.getOwnProfile = async (req, res) => {
-  try {
+exports.getOwnProfile = catchAsync(async (req, res) => {
     const userId = req.user.portal_user_id;
 
     const result = await pool.query(
@@ -192,17 +199,12 @@ exports.getOwnProfile = async (req, res) => {
     );
 
     return successResponse(res, { ...profile, badges: badgesRes.rows });
-  } catch (err) {
-    console.error("getOwnProfile error:", err);
-    return errorResponse(res, "Failed to fetch own profile");
-  }
-};
+});
 
 /**
  * PATCH /api/profile/me  — Update editable profile fields in one request
  */
-exports.updateProfile = async (req, res) => {
-  try {
+exports.updateProfile = catchAsync(async (req, res) => {
     const userId = req.user.portal_user_id;
     const {
       full_name,
@@ -347,17 +349,12 @@ exports.updateProfile = async (req, res) => {
       normalizeAcademicProfile(updateResult.rows[0]),
       "Profile updated successfully",
     );
-  } catch (err) {
-    console.error("updateProfile error:", err);
-    return errorResponse(res, "Failed to update profile");
-  }
-};
+});
 
 /**
  * PATCH /api/profile/bio  — Update bio
  */
-exports.updateBio = async (req, res) => {
-  try {
+exports.updateBio = catchAsync(async (req, res) => {
     const userId = req.user.portal_user_id;
     const { bio } = req.body;
 
@@ -382,17 +379,12 @@ exports.updateBio = async (req, res) => {
       { bio: bio.trim() },
       "Bio updated successfully",
     );
-  } catch (err) {
-    console.error("updateBio error:", err);
-    return errorResponse(res, "Failed to update bio");
-  }
-};
+});
 
 /**
  * POST /api/profile/image  — Update profile picture (with cooldown + VXP bypass)
  */
-exports.updateProfileImage = async (req, res) => {
-  try {
+exports.updateProfileImage = catchAsync(async (req, res) => {
     const userId = req.user.portal_user_id;
     const { use_skip, spend_vxp } = req.body;
 
@@ -449,17 +441,12 @@ exports.updateProfileImage = async (req, res) => {
       successMessage: "Profile picture updated successfully",
       returnKey: "profile_image",
     });
-  } catch (err) {
-    console.error("updateProfileImage error:", err);
-    return errorResponse(res, "Failed to update profile picture");
-  }
-};
+});
 
 /**
  * POST /api/profile/banner  — Update banner image (with cooldown + VXP bypass)
  */
-exports.updateProfileBanner = async (req, res) => {
-  try {
+exports.updateProfileBanner = catchAsync(async (req, res) => {
     const userId = req.user.portal_user_id;
     const { use_skip, spend_vxp } = req.body;
 
@@ -515,17 +502,12 @@ exports.updateProfileBanner = async (req, res) => {
       successMessage: "Banner updated successfully",
       returnKey: "banner_image",
     });
-  } catch (err) {
-    console.error("updateProfileBanner error:", err);
-    return errorResponse(res, "Failed to update banner");
-  }
-};
+});
 
 /**
  * Shared helper to remove either profile image or banner
  */
 async function handleImageRemoval(req, res, type) {
-  try {
     const userId = req.user.portal_user_id;
     const isProfile = type === "profile";
 
@@ -550,14 +532,7 @@ async function handleImageRemoval(req, res, type) {
 
     const publicId = current.rows[0][publicIdCol];
     if (publicId) {
-      try {
-        await cloudinary.uploader.destroy(publicId, { resource_type: "image" });
-      } catch (cloudErr) {
-        console.error(
-          `handleImageRemoval cloudinary destroy error for ${type}:`,
-          cloudErr,
-        );
-      }
+      await cloudinary.uploader.destroy(publicId, { resource_type: "image" });
     }
 
     await pool.query(
@@ -566,10 +541,6 @@ async function handleImageRemoval(req, res, type) {
     );
 
     return successResponse(res, { [returnKey]: null }, successMsg);
-  } catch (err) {
-    console.error(`handleImageRemoval error for ${type}:`, err);
-    return errorResponse(res, `Failed to remove ${type} image`);
-  }
 }
 
 /**
@@ -589,8 +560,7 @@ exports.removeProfileBanner = async (req, res) => {
 /**
  * POST /api/profile/:userId/follow
  */
-exports.followUser = async (req, res) => {
-  try {
+exports.followUser = catchAsync(async (req, res) => {
     const followerId = req.user.portal_user_id;
     const followingId = parseInt(req.params.userId);
 
@@ -598,23 +568,32 @@ exports.followUser = async (req, res) => {
       return errorResponse(res, "You cannot follow yourself", 400);
     }
 
-    await pool.query(
+    const result = await pool.query(
       `INSERT INTO portal.user_followers (follower_id, following_id) VALUES ($1, $2) ON CONFLICT DO NOTHING`,
       [followerId, followingId],
     );
 
+    if (result.rowCount > 0) {
+      try {
+        await feed({
+          actorId: followerId,
+          actionType: "user_followed",
+          referenceType: "user",
+          referenceId: followingId,
+          metadata: { followed_user_id: followingId },
+        });
+      } catch (feedErr) {
+        console.error("Follow feed event failed (non-fatal):", feedErr.message);
+      }
+    }
+
     return successResponse(res, { is_following: true }, "Now following user");
-  } catch (err) {
-    console.error("followUser error:", err);
-    return errorResponse(res, "Failed to follow user");
-  }
-};
+});
 
 /**
  * DELETE /api/profile/:userId/follow
  */
-exports.unfollowUser = async (req, res) => {
-  try {
+exports.unfollowUser = catchAsync(async (req, res) => {
     const followerId = req.user.portal_user_id;
     const followingId = parseInt(req.params.userId);
 
@@ -624,54 +603,115 @@ exports.unfollowUser = async (req, res) => {
     );
 
     return successResponse(res, { is_following: false }, "Unfollowed user");
-  } catch (err) {
-    console.error("unfollowUser error:", err);
-    return errorResponse(res, "Failed to unfollow user");
-  }
-};
+});
 
 /**
  * GET /api/profile/:userId/followers
  */
-exports.getFollowers = async (req, res) => {
-  try {
+exports.getFollowers = catchAsync(async (req, res) => {
+    const viewerId = req.user?.portal_user_id || null;
+    const { page, limit, offset } = parsePagination(req);
     const { userId } = req.params;
+    const targetUserId = userId === "me" ? viewerId : parseInt(userId, 10);
 
-    const result = await pool.query(
-      `SELECT u.user_id, u.full_name, u.profile_image, uf.followed_at
-       FROM portal.user_followers uf
-       JOIN portal.users u ON u.user_id = uf.follower_id
-       WHERE uf.following_id = $1 AND u.status = 'active'
-       ORDER BY uf.followed_at DESC`,
-      [userId],
-    );
+    if (!targetUserId) {
+      return errorResponse(res, "Invalid user id", 400);
+    }
 
-    return successResponse(res, result.rows);
-  } catch (err) {
-    console.error("getFollowers error:", err);
-    return errorResponse(res, "Failed to fetch followers");
-  }
-};
+    const [dataResult, countResult] = await Promise.all([
+      pool.query(
+        `SELECT
+            u.user_id,
+            u.full_name,
+            u.profile_image,
+            uf.followed_at,
+            EXISTS(
+              SELECT 1 FROM portal.user_followers
+              WHERE follower_id = $2 AND following_id = u.user_id
+            ) AS is_following,
+            EXISTS(
+              SELECT 1 FROM portal.user_followers
+              WHERE follower_id = u.user_id AND following_id = $2
+            ) AS is_mutual
+         FROM portal.user_followers uf
+         JOIN portal.users u ON u.user_id = uf.follower_id
+         WHERE uf.following_id = $1 AND u.status = 'active'
+         ORDER BY uf.followed_at DESC
+         LIMIT $3 OFFSET $4`,
+        [targetUserId, viewerId, limit, offset],
+      ),
+      pool.query(
+        `SELECT COUNT(*)
+         FROM portal.user_followers uf
+         JOIN portal.users u ON u.user_id = uf.follower_id
+         WHERE uf.following_id = $1 AND u.status = 'active'`,
+        [targetUserId],
+      ),
+    ]);
+
+    const total = parseInt(countResult.rows[0].count, 10);
+
+    return successResponse(res, {
+      data: dataResult.rows,
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit),
+      },
+    });
+});
 
 /**
  * GET /api/profile/:userId/following
  */
-exports.getFollowing = async (req, res) => {
-  try {
+exports.getFollowing = catchAsync(async (req, res) => {
+    const viewerId = req.user?.portal_user_id || null;
+    const { page, limit, offset } = parsePagination(req);
     const { userId } = req.params;
+    const targetUserId = userId === "me" ? viewerId : parseInt(userId, 10);
 
-    const result = await pool.query(
-      `SELECT u.user_id, u.full_name, u.profile_image, uf.followed_at
-       FROM portal.user_followers uf
-       JOIN portal.users u ON u.user_id = uf.following_id
-       WHERE uf.follower_id = $1 AND u.status = 'active'
-       ORDER BY uf.followed_at DESC`,
-      [userId],
-    );
+    if (!targetUserId) {
+      return errorResponse(res, "Invalid user id", 400);
+    }
 
-    return successResponse(res, result.rows);
-  } catch (err) {
-    console.error("getFollowing error:", err);
-    return errorResponse(res, "Failed to fetch following");
-  }
-};
+    const [dataResult, countResult] = await Promise.all([
+      pool.query(
+        `SELECT
+            u.user_id,
+            u.full_name,
+            u.profile_image,
+            uf.followed_at,
+            TRUE AS is_following,
+            EXISTS(
+              SELECT 1 FROM portal.user_followers
+              WHERE follower_id = u.user_id AND following_id = $2
+            ) AS is_mutual
+         FROM portal.user_followers uf
+         JOIN portal.users u ON u.user_id = uf.following_id
+         WHERE uf.follower_id = $1 AND u.status = 'active'
+         ORDER BY uf.followed_at DESC
+         LIMIT $3 OFFSET $4`,
+        [targetUserId, viewerId, limit, offset],
+      ),
+      pool.query(
+        `SELECT COUNT(*)
+         FROM portal.user_followers uf
+         JOIN portal.users u ON u.user_id = uf.following_id
+         WHERE uf.follower_id = $1 AND u.status = 'active'`,
+        [targetUserId],
+      ),
+    ]);
+
+    const total = parseInt(countResult.rows[0].count, 10);
+
+    return successResponse(res, {
+      data: dataResult.rows,
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit),
+      },
+    });
+});

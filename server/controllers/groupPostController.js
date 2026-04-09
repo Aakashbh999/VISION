@@ -1,15 +1,16 @@
 const pool = require("../config/db");
+const { feed } = require("../utils/activityService");
 const { successResponse, errorResponse } = require("../utils/response");
 const {
   getMembership,
   hasGroupPermission,
 } = require("../utils/groupPermissions");
+const catchAsync = require("../utils/catchAsync");
 
 /* ===============================
    GET GROUP POSTS (with pagination)
-================================ */
-exports.getPosts = async (req, res) => {
-  try {
+ ================================ */
+exports.getPosts = catchAsync(async (req, res) => {
     const { id } = req.params;
     const { limit = 30, before, section = "general" } = req.query;
     const messageLimit = Math.min(parseInt(limit) || 30, 100);
@@ -45,17 +46,12 @@ exports.getPosts = async (req, res) => {
           ? finalMessages[finalMessages.length - 1].post_id
           : null,
     });
-  } catch (err) {
-    console.error(err);
-    return errorResponse(res, "Failed to fetch posts");
-  }
-};
+});
 
 /* ===============================
    CREATE POST
-================================ */
-exports.createPost = async (req, res) => {
-  try {
+ ================================ */
+exports.createPost = catchAsync(async (req, res) => {
     const { id } = req.params;
     const { content, section = "general" } = req.body;
     const userId = req.user.portal_user_id;
@@ -88,19 +84,37 @@ exports.createPost = async (req, res) => {
       [id, userId, content, section],
     );
 
+    try {
+      await feed({
+        actorId: userId,
+        actionType:
+          section === "notice_board" ? "group_notice_posted" : "group_posted",
+        referenceType: "group_post",
+        referenceId: result.rows[0].post_id,
+        metadata: {
+          group_id: Number(id),
+          section,
+          title:
+            section === "notice_board"
+              ? "New notice published"
+              : "New group post",
+        },
+      });
+    } catch (feedErr) {
+      console.error(
+        "Group post feed event failed (non-fatal):",
+        feedErr.message,
+      );
+    }
+
     return successResponse(res, result.rows[0], "Post created successfully");
-  } catch (err) {
-    console.error(err);
-    return errorResponse(res, "Failed to create post");
-  }
-};
+});
 
 /* ===============================
    SOFT DELETE POST (user-initiated)
-   — records deletion + reason for moderation
-================================ */
-exports.softDeletePost = async (req, res) => {
-  try {
+   \u2014 records deletion + reason for moderation
+ ================================ */
+exports.softDeletePost = catchAsync(async (req, res) => {
     const { postId } = req.params;
     const userId = req.user.portal_user_id;
     const { reason } = req.body;
@@ -138,8 +152,4 @@ exports.softDeletePost = async (req, res) => {
       result.rows[0],
       "Post deleted successfully (soft delete)",
     );
-  } catch (err) {
-    console.error(err);
-    return errorResponse(res, "Failed to delete post");
-  }
-};
+});

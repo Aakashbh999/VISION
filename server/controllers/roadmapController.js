@@ -1,11 +1,11 @@
 const pool = require("../config/db");
 const XPService = require("../services/xpService");
+const catchAsync = require("../utils/catchAsync");
 
 /* =====================================================
    GET ALL ROADMAPS
-===================================================== */
-exports.getAllRoadmaps = async (req, res) => {
-  try {
+ ===================================================== */
+exports.getAllRoadmaps = catchAsync(async (req, res) => {
     const { search } = req.query;
     let query = `
       SELECT roadmap_id, title, description, difficulty_level
@@ -42,17 +42,12 @@ exports.getAllRoadmaps = async (req, res) => {
     }
 
     res.json(result.rows);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "Failed to fetch roadmaps" });
-  }
-};
+});
 
 /* =====================================================
    GET ROADMAP DETAILS + STEP STATUS
-===================================================== */
-exports.getRoadmapDetails = async (req, res) => {
-  try {
+ ===================================================== */
+exports.getRoadmapDetails = catchAsync(async (req, res) => {
     const { id } = req.params;
     const portalUserId = req.user.portal_user_id;
 
@@ -62,8 +57,9 @@ exports.getRoadmapDetails = async (req, res) => {
       [id],
     );
 
-    if (!roadmap.rows.length)
-      return res.status(404).json({ error: "Roadmap not found" });
+    if (!roadmap.rows.length) {
+      throw new Error("Roadmap not found");
+    }
 
     // steps + completion
     const steps = await pool.query(
@@ -106,17 +102,12 @@ exports.getRoadmapDetails = async (req, res) => {
       progress_percent: progress.rows[0].progress_percent,
       steps: steps.rows,
     });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "Failed to fetch roadmap details" });
-  }
-};
+});
 
 /* =====================================================
    GET STEP RESOURCES
-===================================================== */
-exports.getStepResources = async (req, res) => {
-  try {
+ ===================================================== */
+exports.getStepResources = catchAsync(async (req, res) => {
     const { stepId } = req.params;
 
     const resources = await pool.query(
@@ -141,104 +132,96 @@ exports.getStepResources = async (req, res) => {
     );
 
     res.json(resources.rows);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "Failed to fetch step resources" });
-  }
-};
+});
 
 /* =====================================================
    COMPLETE STEP (SAFE + TRANSACTIONAL)
-===================================================== */
-exports.completeStep = async (req, res) => {
-  const client = await pool.connect();
+ ===================================================== */
+exports.completeStep = catchAsync(async (req, res) => {
+    const client = await pool.connect();
+    try {
+      await client.query("BEGIN");
 
-  try {
-    await client.query("BEGIN");
+      const { stepId } = req.params;
+      const portalUserId = req.user.portal_user_id;
 
-    const { stepId } = req.params;
-    const portalUserId = req.user.portal_user_id;
+      // Validate step exists
+      const stepCheck = await client.query(
+        `SELECT step_id FROM portal.roadmap_steps WHERE step_id = $1`,
+        [stepId],
+      );
 
-    // Validate step exists
-    const stepCheck = await client.query(
-      `SELECT step_id FROM portal.roadmap_steps WHERE step_id = $1`,
-      [stepId],
-    );
+      if (!stepCheck.rows.length) {
+        throw new Error("Step not found");
+      }
 
-    if (!stepCheck.rows.length) {
+      // Check previous completion
+      const existing = await client.query(
+        `
+        SELECT is_completed
+        FROM portal.user_roadmap_progress
+        WHERE user_id = $1 AND step_id = $2
+      `,
+        [portalUserId, stepId],
+      );
+
+      const alreadyCompleted =
+        existing.rows.length && existing.rows[0].is_completed;
+
+      // UPSERT progress
+      await client.query(
+        `
+        INSERT INTO portal.user_roadmap_progress
+          (user_id, step_id, is_completed, completed_at)
+        VALUES ($1, $2, TRUE, NOW())
+        ON CONFLICT (user_id, step_id)
+        DO UPDATE SET
+          is_completed = TRUE,
+          completed_at = NOW()
+      `,
+        [portalUserId, stepId],
+      );
+
+      // Only create events on FIRST completion
+      if (!alreadyCompleted) {
+        await client.query(
+          `
+          INSERT INTO portal.notifications
+            (user_id, message, related_type, related_id)
+          VALUES
+            ($1, 'You completed a roadmap step \ud83c\udf89', 'roadmap_step', $2)
+        `,
+          [portalUserId, stepId],
+        );
+
+        await client.query(
+          `
+          INSERT INTO portal.activity_feed
+            (actor_user_id, action_type, reference_type, reference_id)
+          VALUES
+            ($1, 'completed_step', 'roadmap_step', $2)
+        `,
+          [portalUserId, stepId],
+        );
+
+        // Grant XP
+        await XPService.updateUserXP(portalUserId, 50, 'Roadmap Step Completion', client);
+      }
+
+      await client.query("COMMIT");
+      res.json({ message: "Step marked as completed" });
+    } catch (err) {
       await client.query("ROLLBACK");
-      return res.status(404).json({ error: "Step not found" });
+      throw err;
+    } finally {
+      client.release();
     }
-
-    // Check previous completion
-    const existing = await client.query(
-      `
-      SELECT is_completed
-      FROM portal.user_roadmap_progress
-      WHERE user_id = $1 AND step_id = $2
-    `,
-      [portalUserId, stepId],
-    );
-
-    const alreadyCompleted =
-      existing.rows.length && existing.rows[0].is_completed;
-
-    // UPSERT progress
-    await client.query(
-      `
-      INSERT INTO portal.user_roadmap_progress
-        (user_id, step_id, is_completed, completed_at)
-      VALUES ($1, $2, TRUE, NOW())
-      ON CONFLICT (user_id, step_id)
-      DO UPDATE SET
-        is_completed = TRUE,
-        completed_at = NOW()
-    `,
-      [portalUserId, stepId],
-    );
-
-    // Only create events on FIRST completion
-    if (!alreadyCompleted) {
-      await client.query(
-        `
-        INSERT INTO portal.notifications
-          (user_id, message, related_type, related_id)
-        VALUES
-          ($1, 'You completed a roadmap step 🎉', 'roadmap_step', $2)
-      `,
-        [portalUserId, stepId],
-      );
-
-      await client.query(
-        `
-        INSERT INTO portal.activity_feed
-          (actor_user_id, action_type, reference_type, reference_id)
-        VALUES
-          ($1, 'completed_step', 'roadmap_step', $2)
-      `,
-        [portalUserId, stepId],
-      );
-
-      // Grant XP
-      await XPService.updateUserXP(portalUserId, 50, 'Roadmap Step Completion', client);
-    }
-
-    await client.query("COMMIT");
-    res.json({ message: "Step marked as completed" });
-  } catch (err) {
-    await client.query("ROLLBACK");
-    console.error(err);
-    res.status(500).json({ error: "Failed to update progress" });
-  } finally {
-    client.release();
-  }
-};
+});
 
 /* =====================================================
    GET ROADMAP PROGRESS ONLY
-===================================================== */
-exports.getRoadmapProgress = async (req, res) => {
-  try {
+ ===================================================== */
+exports.getRoadmapProgress = catchAsync(async (req, res) => {
     const roadmapId = req.params.id;
     const portalUserId = req.user.portal_user_id;
 
@@ -262,18 +245,13 @@ exports.getRoadmapProgress = async (req, res) => {
       roadmap_id: roadmapId,
       progress_percent: progressRes.rows[0].progress_percent,
     });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "Failed to calculate progress" });
-  }
-};
+});
 
 /* =====================================================
    GET ROADMAP PATH (Subway Map Data)
    Returns steps with nested approved resources and scores
-===================================================== */
-exports.getRoadmapPath = async (req, res) => {
-  try {
+ ===================================================== */
+exports.getRoadmapPath = catchAsync(async (req, res) => {
     const { id } = req.params;
     const portalUserId = req.user.portal_user_id;
 
@@ -284,7 +262,7 @@ exports.getRoadmapPath = async (req, res) => {
     );
 
     if (!roadmap.rows.length) {
-      return res.status(404).json({ error: "Roadmap not found" });
+      throw new Error("Roadmap not found");
     }
 
     // Single query for steps + materials + avg_score
@@ -333,8 +311,4 @@ exports.getRoadmapPath = async (req, res) => {
       roadmap: roadmap.rows[0],
       steps: result.rows,
     });
-  } catch (err) {
-    console.error("getRoadmapPath error:", err);
-    res.status(500).json({ error: "Failed to fetch roadmap path" });
-  }
-};
+});

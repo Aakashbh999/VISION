@@ -19,7 +19,7 @@ import { useSidebar } from "../../hooks/useSidebar";
 import { useUnreadCount } from "../../hooks/useUnreadCount";
 import { useClickOutside } from "../../hooks/useClickOutside";
 import XpWidget from "../portal/XpWidget";
-import visionLogo from "../../assets/vision-logo.png";
+import Logo from "../ui/Logo/Logo";
 import ThemeToggle from "./ThemeToggle";
 
 // Breadcrumb mapping
@@ -126,7 +126,7 @@ const TopNavBar = () => {
 
         {/* Logo – height manually controlled by you */}
         <Link to="/dashboard" className="shrink-0">
-          <img src={visionLogo} alt="VISION" className="h-32 w-auto" />
+          <Logo className="h-10 hover:opacity-80 transition-opacity" />
         </Link>
 
         {/* Breadcrumb (hidden on mobile) */}

@@ -11,6 +11,9 @@ const {
 } = require("../middleware/authMiddleware");
 const upload = require("../middleware/uploadMiddleware");
 
+// Get managed groups (owner/co-admin)
+router.get("/managed", verifyJWT, crudController.getManagedGroups);
+
 // List all groups
 router.get("/", optionalJWT, crudController.getGroups);
 

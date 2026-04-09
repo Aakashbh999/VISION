@@ -8,16 +8,13 @@ import {
   Users2,
   Globe,
   FolderOpen,
-  User,
   ChevronDown,
   Library,
   X,
   Search,
-  Zap,
 } from "lucide-react";
 import { useSidebar } from "../../hooks/useSidebar";
 import { useSearchModal } from "../ui/SearchModal";
-import { useUserStats } from "../../hooks/useUserStats";
 
 // Navigation items with nested sub-menus support
 const navItems = [
@@ -56,12 +53,6 @@ const navItems = [
     label: "Clubs",
     icon: Globe,
     href: "/clubs",
-  },
-  {
-    id: "profile",
-    label: "Profile",
-    icon: User,
-    href: "/profile",
   },
   {
     id: "manage",
@@ -124,24 +115,23 @@ const NavItem = ({ item, isCollapsed, depth = 0 }) => {
           )}
         </>
       )}
-      {/* Tooltip for collapsed state */}
-      {isCollapsed && (
-        <div className="absolute left-full ml-2 px-2 py-1 bg-[var(--bg-card)] text-[var(--text-main)] text-xs rounded opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all whitespace-nowrap z-50 shadow-lg border border-[var(--border-main)]">
-          {item.label}
-        </div>
-      )}
     </>
   );
 
   return (
     <div>
       {item.href && !hasChildren ? (
-        <Link to={item.href} className={linkClasses}>
+        <Link
+          to={item.href}
+          className={linkClasses}
+          title={isCollapsed ? item.label : undefined}
+        >
           {content}
         </Link>
       ) : (
         <button
           onClick={handleClick}
+          title={isCollapsed ? item.label : undefined}
           className={`${linkClasses} w-full text-left`}
         >
           {content}
@@ -180,8 +170,6 @@ const NavItem = ({ item, isCollapsed, depth = 0 }) => {
 const PortalSidebarNew = () => {
   const { isCollapsed, isMobileOpen, closeMobile, isMobile } = useSidebar();
   const { open: openSearch } = useSearchModal();
-  const { data: stats } = useUserStats();
-  const streak = stats?.learning_streak ?? stats?.streak ?? null;
 
   const sidebarContent = (
     <div className="flex flex-col h-full">
@@ -220,7 +208,7 @@ const PortalSidebarNew = () => {
       )}
 
       {/* Navigation */}
-      <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto sidebar-scrollbar">
+      <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto overflow-x-hidden sidebar-scrollbar">
         {navItems.map((item) => (
           <NavItem
             key={item.id}
@@ -229,28 +217,6 @@ const PortalSidebarNew = () => {
           />
         ))}
       </nav>
-
-      {/* Sidebar Footer */}
-      {(!isCollapsed || isMobile) && (
-        <div className="p-3 border-t border-[var(--border-main)]">
-          <div className="p-3 rounded-lg bg-[var(--sidebar-active-bg)] border border-[var(--border-main)]">
-            <p className="text-xs text-[var(--text-muted)] font-medium">
-              Learning Streak
-            </p>
-            <p className="text-sm font-semibold text-purple-600 flex items-center gap-1">
-              {streak !== null && streak > 0 ? (
-                <>
-                  <span>🔥</span> {streak} day{streak !== 1 ? "s" : ""}
-                </>
-              ) : (
-                <>
-                  <Zap className="w-3.5 h-3.5" /> Start your streak today!
-                </>
-              )}
-            </p>
-          </div>
-        </div>
-      )}
     </div>
   );
 

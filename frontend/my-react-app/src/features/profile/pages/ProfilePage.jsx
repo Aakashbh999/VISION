@@ -62,7 +62,7 @@ const ProfilePage = () => {
   }
 
   return (
-    <div className="px-0 sm:px-6 lg:px-8 py-6 sm:py-8 space-y-8 max-w-5xl mx-auto pb-28">
+    <div className="px-2 sm:px-6 lg:px-8 py-5 sm:py-8 space-y-12 max-w-5xl mx-auto pb-28">
       <ProfileHeaderCard
         profile={profile}
         isOwner={isOwner}
@@ -92,8 +92,8 @@ const ProfilePage = () => {
         handleBannerDone={handleBannerDone}
       />
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <div className="lg:col-span-2 space-y-8">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
+        <div className="lg:col-span-2 space-y-12">
           <AboutMeCard
             profile={profile}
             isOwner={isOwner}

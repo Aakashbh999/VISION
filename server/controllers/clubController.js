@@ -1,10 +1,10 @@
 const pool = require("../config/db");
+const catchAsync = require("../utils/catchAsync");
 
 /* ===============================
    GET CLUB DIRECTORY
-================================ */
-exports.getClubs = async (req, res) => {
-  try {
+ ================================ */
+exports.getClubs = catchAsync(async (req, res) => {
     const { search, specialty, institution } = req.query;
 
     let query = `
@@ -54,6 +54,7 @@ exports.getClubs = async (req, res) => {
     // If searching and no results found, return recommendations
     if (search && result.rows.length === 0) {
       const { userSemester, userProgramId, userDegreeId, portal_user_id: userId } = req.user;
+      const recommendationService = require("../services/recommendationService");
       const recommendations = await recommendationService.getRecommendations(
         userId,
         userSemester,
@@ -69,17 +70,12 @@ exports.getClubs = async (req, res) => {
     }
 
     res.json(result.rows);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "Failed to fetch clubs" });
-  }
-};
+});
 
 /* ===============================
    CLUB DETAILS (Directory Profile)
-================================ */
-exports.getClubDetails = async (req, res) => {
-  try {
+ ================================ */
+exports.getClubDetails = catchAsync(async (req, res) => {
     const { id } = req.params;
 
     const query = `
@@ -107,21 +103,16 @@ exports.getClubDetails = async (req, res) => {
     const result = await pool.query(query, [id]);
 
     if (!result.rows.length) {
-      return res.status(404).json({ error: "Club not found" });
+      throw new Error("Club not found");
     }
 
     res.json(result.rows[0]);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "Failed to fetch club" });
-  }
-};
+});
 
 /* ===============================
    GET SPECIALTIES (for filtering)
-================================ */
-exports.getSpecialties = async (req, res) => {
-  try {
+ ================================ */
+exports.getSpecialties = catchAsync(async (req, res) => {
     const result = await pool.query(`
       SELECT DISTINCT specialty 
       FROM portal.it_clubs 
@@ -129,8 +120,4 @@ exports.getSpecialties = async (req, res) => {
       ORDER BY specialty
     `);
     res.json(result.rows.map((r) => r.specialty));
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "Failed to fetch specialties" });
-  }
-};
+});

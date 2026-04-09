@@ -1,13 +1,13 @@
 const pool = require("../config/db");
+const catchAsync = require("../utils/catchAsync");
 
 // Get user notifications
-exports.getNotifications = async (req, res) => {
-  try {
+exports.getNotifications = catchAsync(async (req, res) => {
     // Directly use portal_user_id from the authenticated user object
     const portalUserId = req.user.portal_user_id;
 
     if (!portalUserId) {
-      return res.status(404).json({ error: "User not found" });
+      throw new Error("User not found");
     }
 
     const notifications = await pool.query(
@@ -45,22 +45,17 @@ exports.getNotifications = async (req, res) => {
     );
 
     res.json(notifications.rows);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "Failed to fetch notifications" });
-  }
-};
+});
 
 // Mark notification as read
-exports.markRead = async (req, res) => {
-  const { id } = req.params;
+exports.markRead = catchAsync(async (req, res) => {
+    const { id } = req.params;
 
-  try {
     // Directly use portal_user_id from the authenticated user object
     const portalUserId = req.user.portal_user_id;
 
     if (!portalUserId) {
-      return res.status(404).json({ error: "User not found" });
+      throw new Error("User not found");
     }
 
     await pool.query(
@@ -71,20 +66,15 @@ exports.markRead = async (req, res) => {
     );
 
     res.json({ message: "Notification marked as read" });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "Failed to update notification" });
-  }
-};
+});
 
 // Delete a specific notification
-exports.deleteNotification = async (req, res) => {
-  const { id } = req.params;
+exports.deleteNotification = catchAsync(async (req, res) => {
+    const { id } = req.params;
 
-  try {
     const portalUserId = req.user.portal_user_id;
     if (!portalUserId) {
-      return res.status(404).json({ error: "User not found" });
+      throw new Error("User not found");
     }
 
     await pool.query(
@@ -94,18 +84,13 @@ exports.deleteNotification = async (req, res) => {
     );
 
     res.json({ message: "Notification deleted successfully" });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "Failed to delete notification" });
-  }
-};
+});
 
 // Clear all notifications for the user
-exports.clearAll = async (req, res) => {
-  try {
+exports.clearAll = catchAsync(async (req, res) => {
     const portalUserId = req.user.portal_user_id;
     if (!portalUserId) {
-      return res.status(404).json({ error: "User not found" });
+      throw new Error("User not found");
     }
 
     await pool.query(
@@ -115,8 +100,4 @@ exports.clearAll = async (req, res) => {
     );
 
     res.json({ message: "All notifications cleared" });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "Failed to clear notifications" });
-  }
-};
+});

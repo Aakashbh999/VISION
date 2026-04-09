@@ -4,25 +4,30 @@ import { Link } from "react-router-dom";
 import LoadingSpinner from "../../components/ui/LoadingSpinner";
 import ButtonLoader from "../../components/ui/ButtonLoader";
 import { MessageCircle, ThumbsUp, ChevronLeft, Bookmark } from "lucide-react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { toggleSave } from "../../services/discussion";
+import { toast } from "react-toastify";
 
 const SavedDiscussions = () => {
   const [page, setPage] = useState(1);
-  const [loadingUnsave, setLoadingUnsave] = useState(null);
-  const { data, isLoading, error, refetch } = useSavedDiscussions(page, 20);
+  const { data, isLoading, error } = useSavedDiscussions(page, 20);
+  const queryClient = useQueryClient();
 
-  const handleUnsave = async (discussionId, e) => {
+  const unsaveMutation = useMutation({
+    mutationFn: (discussionId) => toggleSave(discussionId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["saved-discussions"] });
+      toast.success("Removed from saved");
+    },
+    onError: () => {
+      toast.error("Failed to remove from saved");
+    },
+  });
+
+  const handleUnsave = (discussionId, e) => {
     e.preventDefault();
     e.stopPropagation();
-    setLoadingUnsave(discussionId);
-    try {
-      const { toggleSave } = await import("../../services/discussion");
-      await toggleSave(discussionId);
-      refetch();
-    } catch (error) {
-      console.error("Failed to unsave:", error);
-    } finally {
-      setLoadingUnsave(null);
-    }
+    unsaveMutation.mutate(discussionId);
   };
 
   if (isLoading) return <LoadingSpinner />;
@@ -35,7 +40,7 @@ const SavedDiscussions = () => {
   const pagination = data?.pagination || { page: 1, totalPages: 1 };
 
   return (
-    <div className="space-y-6 px-0 sm:px-6 lg:px-8 py-6 sm:py-8 lg:py-10">
+    <div className="space-y-6 px-2 sm:px-6 lg:px-8 py-5 sm:py-8 lg:py-10">
       {/* Header */}
       <div className="flex items-center gap-4">
         <Link
@@ -107,15 +112,11 @@ const SavedDiscussions = () => {
                   </div>
                   <button
                     onClick={(e) => handleUnsave(disc.discussion_id, e)}
-                    disabled={loadingUnsave === disc.discussion_id}
-                    className={`p-1.5 text-yellow-500 hover:text-gray-500 rounded transition-all ${
-                      loadingUnsave === disc.discussion_id
-                        ? "opacity-50 cursor-wait"
-                        : ""
-                    }`}
+                    disabled={unsaveMutation.isPending}
+                    className="p-1.5 text-yellow-500 hover:text-gray-500 rounded transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                     title="Remove from saved"
                   >
-                    {loadingUnsave === disc.discussion_id ? (
+                    {unsaveMutation.isPending ? (
                       <ButtonLoader size={20} />
                     ) : (
                       <Bookmark className="w-5 h-5 fill-yellow-500" />

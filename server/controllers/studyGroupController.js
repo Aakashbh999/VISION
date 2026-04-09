@@ -1,17 +1,17 @@
 const pool = require("../config/db");
+const catchAsync = require("../utils/catchAsync");
 
 /* =====================================================
    CREATE STUDY GROUP
    ===================================================== */
-exports.createGroup = async (req, res) => {
-  try {
+exports.createGroup = catchAsync(async (req, res) => {
     const { name, description, max_members = 8 } = req.body;
 
     // Directly use portal_user_id from the authenticated user object
     const portalUserId = req.user.portal_user_id;
 
     if (!portalUserId) {
-      return res.status(404).json({ error: "User not found" });
+      throw new Error("User not found");
     }
 
     // create group
@@ -32,24 +32,19 @@ exports.createGroup = async (req, res) => {
     );
 
     res.json({ message: "Study group created", group });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "Failed to create group" });
-  }
-};
+});
 
 /* =====================================================
    JOIN GROUP
    ===================================================== */
-exports.joinGroup = async (req, res) => {
-  try {
+exports.joinGroup = catchAsync(async (req, res) => {
     const { groupId } = req.params;
 
     // Directly use portal_user_id from the authenticated user object
     const portalUserId = req.user.portal_user_id;
 
     if (!portalUserId) {
-      return res.status(404).json({ error: "User not found" });
+      throw new Error("User not found");
     }
 
     // check capacity
@@ -60,11 +55,13 @@ exports.joinGroup = async (req, res) => {
       [groupId],
     );
 
-    if (capacity.rows.length === 0)
-      return res.status(404).json({ error: "Group not found" });
+    if (capacity.rows.length === 0) {
+      throw new Error("Group not found");
+    }
 
-    if (capacity.rows[0].total >= capacity.rows[0].max_members)
-      return res.status(400).json({ error: "Group is full" });
+    if (capacity.rows[0].total >= capacity.rows[0].max_members) {
+      throw new Error("Group is full");
+    }
 
     await pool.query(
       `INSERT INTO portal.group_members (group_id, user_id, role)
@@ -74,24 +71,19 @@ exports.joinGroup = async (req, res) => {
     );
 
     res.json({ message: "Joined group" });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "Failed to join group" });
-  }
-};
+});
 
 /* =====================================================
    LEAVE GROUP
    ===================================================== */
-exports.leaveGroup = async (req, res) => {
-  try {
+exports.leaveGroup = catchAsync(async (req, res) => {
     const { groupId } = req.params;
 
     // Directly use portal_user_id from the authenticated user object
     const portalUserId = req.user.portal_user_id;
 
     if (!portalUserId) {
-      return res.status(404).json({ error: "User not found" });
+      throw new Error("User not found");
     }
 
     await pool.query(
@@ -100,17 +92,12 @@ exports.leaveGroup = async (req, res) => {
     );
 
     res.json({ message: "Left group" });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "Failed to leave group" });
-  }
-};
+});
 
 /* =====================================================
    LIST GROUP MEMBERS
    ===================================================== */
-exports.getMembers = async (req, res) => {
-  try {
+exports.getMembers = catchAsync(async (req, res) => {
     const { groupId } = req.params;
 
     const members = await pool.query(
@@ -122,17 +109,12 @@ exports.getMembers = async (req, res) => {
     );
 
     res.json(members.rows);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "Failed to fetch members" });
-  }
-};
+});
 
 /* =====================================================
    SEND MESSAGE
    ===================================================== */
-exports.createPost = async (req, res) => {
-  try {
+exports.createPost = catchAsync(async (req, res) => {
     const { groupId } = req.params;
     const { content } = req.body;
 
@@ -140,7 +122,7 @@ exports.createPost = async (req, res) => {
     const portalUserId = req.user.portal_user_id;
 
     if (!portalUserId) {
-      return res.status(404).json({ error: "User not found" });
+      throw new Error("User not found");
     }
 
     const post = await pool.query(
@@ -151,17 +133,12 @@ exports.createPost = async (req, res) => {
     );
 
     res.json(post.rows[0]);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "Failed to send message" });
-  }
-};
+});
 
 /* =====================================================
    GET MESSAGES
    ===================================================== */
-exports.getPosts = async (req, res) => {
-  try {
+exports.getPosts = catchAsync(async (req, res) => {
     const { groupId } = req.params;
 
     const posts = await pool.query(
@@ -174,8 +151,4 @@ exports.getPosts = async (req, res) => {
     );
 
     res.json(posts.rows);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "Failed to fetch messages" });
-  }
-};
+});

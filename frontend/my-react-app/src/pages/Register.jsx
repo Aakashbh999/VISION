@@ -84,7 +84,7 @@ const Register = () => {
 
   const validateStep1 = () => {
     if (!formData.email || !formData.password || !formData.full_name) {
-      setError("Please fill in all required fields.");
+      setError("Fill in all required fields.");
       return false;
     }
     if (formData.password.length < 8) {
@@ -137,12 +137,12 @@ const Register = () => {
         localStorage.setItem("refreshToken", tokenData.refreshToken);
       }
 
-      toast.success("Welcome to VISION 🚀");
+      toast.success("Welcome to VISION");
       navigate("/dashboard");
     } catch (err) {
       setError(
         err.response?.data?.error ||
-          "Registration failed. Please check your data.",
+          "Registration failed. Check your data.",
       );
       toast.error(err.response?.data?.error || "Registration failed.");
     } finally {
@@ -262,9 +262,7 @@ const Register = () => {
               <Link
                 to="/login"
                 className="text-purple-600 font-black hover:underline"
-              >
-                Login Instead
-              </Link>
+              >Log in</Link>
             </p>
           </form>
         ) : (
@@ -418,7 +416,7 @@ const Register = () => {
                         {studentIdFile.name}
                       </span>
                       <span className="text-[10px] text-green-600 dark:text-green-400">
-                        Click to change file
+                        Change file
                       </span>
                     </>
                   ) : (

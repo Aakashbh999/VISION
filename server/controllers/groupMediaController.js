@@ -8,12 +8,12 @@ const {
   VXP_BYPASS_COST,
 } = require("../utils/constants");
 const { getMembership, hasGroupPermission } = require("../utils/groupPermissions");
+const catchAsync = require("../utils/catchAsync");
 
 /* ===============================
    UPDATE GROUP IMAGE (with cooldown/VXP)
-================================ */
-exports.updateGroupImage = async (req, res) => {
-  try {
+ ================================ */
+exports.updateGroupImage = catchAsync(async (req, res) => {
     const { id } = req.params;
     const userId = req.user.portal_user_id;
     const { use_skip, spend_vxp } = req.body;
@@ -72,17 +72,12 @@ exports.updateGroupImage = async (req, res) => {
       successMessage: "Group image updated",
       returnKey: "group_image",
     });
-  } catch (err) {
-    console.error(err);
-    return errorResponse(res, "Failed to update group image");
-  }
-};
+});
 
 /* ===============================
    UPDATE GROUP BANNER
-================================ */
-exports.updateGroupBanner = async (req, res) => {
-  try {
+ ================================ */
+exports.updateGroupBanner = catchAsync(async (req, res) => {
     const { id } = req.params;
     const userId = req.user.portal_user_id;
     const { use_skip, spend_vxp } = req.body;
@@ -138,8 +133,4 @@ exports.updateGroupBanner = async (req, res) => {
       successMessage: "Banner updated",
       returnKey: "banner_image",
     });
-  } catch (err) {
-    console.error(err);
-    return errorResponse(res, "Failed to update banner");
-  }
-};
+});

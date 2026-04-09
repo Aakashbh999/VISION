@@ -83,7 +83,7 @@ const AboutMeCard = ({
             <textarea
               value={draftProfile.bio}
               onChange={(event) => handleDraftChange("bio", event.target.value)}
-              className="w-full text-base text-[var(--text-main)] bg-white border-2 border-purple-50 rounded-2xl p-5 focus:ring-4 focus:ring-purple-500/10 focus:border-purple-500 transition-all min-h-40 placeholder:text-[var(--text-muted)]"
+              className="w-full text-base text-[var(--text-main)] bg-[var(--bg-active)] border-2 border-[var(--border-main)] focus:bg-[var(--bg-card)] rounded-2xl p-5 focus:ring-4 focus:ring-purple-500/10 focus:border-purple-500 transition-all min-h-40 placeholder:text-[var(--text-muted)]"
               placeholder="Tell the community about yourself..."
             />
             <div className="flex justify-between items-center text-xs font-bold uppercase tracking-wider">
@@ -132,7 +132,7 @@ const AboutMeCard = ({
                       handleDraftChange(social.key, event.target.value)
                     }
                     placeholder="https://..."
-                    className="w-full px-4 py-2.5 text-sm rounded-sm sm:rounded-xl border-2 border-slate-50 bg-slate-50/50 focus:bg-white focus:ring-4 focus:ring-purple-500/10 focus:border-purple-500 transition-all text-[var(--text-main)]"
+                    className="w-full px-4 py-2.5 text-sm rounded-sm sm:rounded-xl border-2 border-[var(--border-main)] bg-[var(--bg-active)] focus:bg-[var(--bg-card)] focus:ring-4 focus:ring-purple-500/10 focus:border-purple-500 transition-all text-[var(--text-main)]"
                   />
                 </div>
               );

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { login as apiLogin } from "../services/auth";
@@ -11,21 +11,7 @@ const Login = () => {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
-  const { user, login } = useAuth();
-
-  useEffect(() => {
-    if (user) {
-      if (user.role === "admin") {
-        navigate("/admin/dashboard", { replace: true });
-      } else if (user.email_status !== "verified") {
-        navigate("/verify-email", { replace: true });
-      } else if (user.student_status !== "approved") {
-        navigate("/pending-approval", { replace: true });
-      } else {
-        navigate("/dashboard", { replace: true });
-      }
-    }
-  }, [user, navigate]);
+  const { login } = useAuth();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -34,7 +20,17 @@ const Login = () => {
 
     try {
       const token = await apiLogin(email, password);
-      login(token);
+      const currentUser = await login(token);
+
+      if (currentUser?.role === "admin") {
+        navigate("/admin/dashboard", { replace: true });
+      } else if (currentUser?.email_status !== "verified") {
+        navigate("/verify-email", { replace: true });
+      } else if (currentUser?.student_status !== "approved") {
+        navigate("/pending-approval", { replace: true });
+      } else {
+        navigate("/dashboard", { replace: true });
+      }
     } catch (err) {
       setError(err.response?.data?.error || "Invalid email or password");
     } finally {
@@ -55,9 +51,7 @@ const Login = () => {
             <p className="text-[10px] font-black uppercase tracking-[0.35em] text-[var(--text-muted)]">
               Secure access
             </p>
-            <h2 className="mt-3 text-2xl font-black tracking-tight text-[var(--text-main)]">
-              Sign in
-            </h2>
+            <h2 className="mt-3 text-2xl font-black tracking-tight text-[var(--text-main)]">Log In</h2>
             <p className="mt-2 text-sm leading-6 text-[var(--text-muted)]">
               Use your registered email to continue.
             </p>
@@ -121,9 +115,7 @@ const Login = () => {
               isLoading={loading}
               disabled={loading}
             >
-              <LogIn className="h-5 w-5" />
-              Sign In
-            </Button>
+              <LogIn className="h-5 w-5" />Log In</Button>
           </form>
 
           <p className="mt-6 text-center text-sm text-[var(--text-muted)]">
@@ -131,9 +123,7 @@ const Login = () => {
             <Link
               to="/register"
               className="font-medium text-purple-600 hover:text-purple-800 dark:text-purple-300 dark:hover:text-purple-200"
-            >
-              Register here
-            </Link>
+            >Register</Link>
           </p>
         </div>
       </div>

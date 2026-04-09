@@ -8,6 +8,8 @@ import {
   Map,
   FileText,
   Users,
+  Building2,
+  User,
   MessageSquare,
   Lock,
   ArrowUp,
@@ -24,15 +26,26 @@ const categoryIcons = {
   [SEARCH_CATEGORIES.ROADMAPS]: Map,
   [SEARCH_CATEGORIES.RESOURCES]: FileText,
   [SEARCH_CATEGORIES.GROUPS]: Users,
+  [SEARCH_CATEGORIES.CLUBS]: Building2,
   [SEARCH_CATEGORIES.DISCUSSIONS]: MessageSquare,
+  [SEARCH_CATEGORIES.USERS]: User,
 };
 
 const categoryOrder = [
   SEARCH_CATEGORIES.ROADMAPS,
   SEARCH_CATEGORIES.RESOURCES,
   SEARCH_CATEGORIES.GROUPS,
+  SEARCH_CATEGORIES.CLUBS,
   SEARCH_CATEGORIES.DISCUSSIONS,
+  SEARCH_CATEGORIES.USERS,
 ];
+
+const getUserInitials = (name = "") => {
+  const parts = name.trim().split(/\s+/).filter(Boolean);
+  if (parts.length === 0) return "U";
+  if (parts.length === 1) return parts[0].slice(0, 1).toUpperCase();
+  return `${parts[0].slice(0, 1)}${parts[1].slice(0, 1)}`.toUpperCase();
+};
 
 const SearchModal = ({ isOpen, onClose }) => {
   const [query, setQuery] = useState("");
@@ -40,6 +53,7 @@ const SearchModal = ({ isOpen, onClose }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [isRecommendation, setIsRecommendation] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(0);
+  const [failedAvatarIds, setFailedAvatarIds] = useState(() => new Set());
   const inputRef = useRef(null);
   const resultsRef = useRef(null);
   const navigate = useNavigate();
@@ -95,6 +109,7 @@ const SearchModal = ({ isOpen, onClose }) => {
       setResults([]);
       setIsRecommendation(false);
       setSelectedIndex(0);
+      setFailedAvatarIds(new Set());
     }
   }, [isOpen]);
 
@@ -104,7 +119,10 @@ const SearchModal = ({ isOpen, onClose }) => {
         `[data-index="${selectedIndex}"]`,
       );
       if (selectedElement) {
-        selectedElement.scrollIntoView({ block: "nearest", behavior: "smooth" });
+        selectedElement.scrollIntoView({
+          block: "nearest",
+          behavior: "smooth",
+        });
       }
     }
   }, [selectedIndex, flatResults.length]);
@@ -202,7 +220,10 @@ const SearchModal = ({ isOpen, onClose }) => {
             </kbd>
           </div>
 
-          <div ref={resultsRef} className="max-h-[50vh] overflow-y-auto overscroll-contain">
+          <div
+            ref={resultsRef}
+            className="max-h-[50vh] overflow-y-auto overscroll-contain"
+          >
             {isLoading ? (
               <div className="flex items-center justify-center py-12">
                 <div className="animate-spin rounded-full h-6 w-6 border-2 border-purple-200 border-t-purple-600" />
@@ -220,7 +241,8 @@ const SearchModal = ({ isOpen, onClose }) => {
                 <Command className="w-10 h-10 mb-3 text-[var(--border-main)]" />
                 <p className="text-sm">Start typing to search</p>
                 <p className="text-xs text-[var(--text-muted)] mt-1">
-                  Search across roadmaps, resources, and groups
+                  Search across roadmaps, resources, groups, clubs, discussions,
+                  and users
                 </p>
               </div>
             ) : (
@@ -236,7 +258,8 @@ const SearchModal = ({ isOpen, onClose }) => {
 
                 {categoryOrder.map((category) => {
                   const categoryResults = groupedResults[category];
-                  if (!categoryResults || categoryResults.length === 0) return null;
+                  if (!categoryResults || categoryResults.length === 0)
+                    return null;
 
                   const CategoryIcon = categoryIcons[category] || FileText;
                   const startIndex = cumulativeIndex;
@@ -256,6 +279,12 @@ const SearchModal = ({ isOpen, onClose }) => {
                       {categoryResults.map((result, idx) => {
                         const flatIndex = startIndex + idx;
                         const isSelected = selectedIndex === flatIndex;
+                        const userAvatarSrc =
+                          result.profilePicture || result.profile_picture || "";
+                        const showUserAvatar =
+                          result.category === SEARCH_CATEGORIES.USERS &&
+                          !!userAvatarSrc &&
+                          !failedAvatarIds.has(result.id);
 
                         if (idx === categoryResults.length - 1) {
                           cumulativeIndex = flatIndex + 1;
@@ -263,25 +292,49 @@ const SearchModal = ({ isOpen, onClose }) => {
 
                         return (
                           <button
+                            type="button"
                             key={result.id}
                             data-index={flatIndex}
                             onClick={() => handleSelect(result)}
                             onMouseEnter={() => setSelectedIndex(flatIndex)}
-                            className={`w-full px-4 py-2.5 flex items-start gap-3 text-left transition-colors ${
+                            className={`w-full px-4 py-2.5 flex items-start gap-3 text-left cursor-pointer transition-colors ${
                               isSelected
                                 ? "bg-[var(--bg-active)] border-l-2 border-purple-500"
                                 : "border-l-2 border-transparent hover:bg-[var(--bg-active)]"
                             }`}
                           >
-                            <div
-                              className={`mt-0.5 p-1.5 rounded-lg ${
-                                isSelected
-                                  ? "bg-purple-100 text-purple-600"
-                                  : "bg-[var(--bg-active)] text-[var(--text-muted)]"
-                              }`}
-                            >
-                              <CategoryIcon className="w-4 h-4" />
-                            </div>
+                            {result.category === SEARCH_CATEGORIES.USERS ? (
+                              <div className="mt-0.5 shrink-0">
+                                {showUserAvatar ? (
+                                  <img
+                                    src={userAvatarSrc}
+                                    alt={result.title}
+                                    className="w-8 h-8 rounded-full object-cover border border-[var(--border-main)]"
+                                    onError={() => {
+                                      setFailedAvatarIds((prev) => {
+                                        const next = new Set(prev);
+                                        next.add(result.id);
+                                        return next;
+                                      });
+                                    }}
+                                  />
+                                ) : (
+                                  <div className="w-8 h-8 rounded-full bg-purple-100 text-purple-700 flex items-center justify-center text-[11px] font-semibold border border-purple-200">
+                                    {getUserInitials(result.title)}
+                                  </div>
+                                )}
+                              </div>
+                            ) : (
+                              <div
+                                className={`mt-0.5 p-1.5 rounded-lg ${
+                                  isSelected
+                                    ? "bg-purple-100 text-purple-600"
+                                    : "bg-[var(--bg-active)] text-[var(--text-muted)]"
+                                }`}
+                              >
+                                <CategoryIcon className="w-4 h-4" />
+                              </div>
+                            )}
                             <div className="flex-1 min-w-0">
                               <div className="flex items-center gap-2">
                                 <p
@@ -294,12 +347,14 @@ const SearchModal = ({ isOpen, onClose }) => {
                                   {result.title}
                                 </p>
                                 <div className="flex items-center gap-1.5 shrink-0">
-                                  {result.category === SEARCH_CATEGORIES.GROUPS && result.privacy_type === 'private' && (
-                                    <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 text-[10px] font-medium text-rose-600 bg-rose-100 rounded">
-                                      <Lock className="w-2.5 h-2.5" />
-                                      Private
-                                    </span>
-                                  )}
+                                  {result.category ===
+                                    SEARCH_CATEGORIES.GROUPS &&
+                                    result.privacy_type === "private" && (
+                                      <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 text-[10px] font-medium text-rose-600 bg-rose-100 rounded">
+                                        <Lock className="w-2.5 h-2.5" />
+                                        Private
+                                      </span>
+                                    )}
                                   {result.isTrending && (
                                     <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 text-[10px] font-medium text-orange-600 bg-orange-100 rounded">
                                       <TrendingUp className="w-3 h-3" />
@@ -319,9 +374,18 @@ const SearchModal = ({ isOpen, onClose }) => {
                                   )}
                                 </div>
                               </div>
-                              {result.category === SEARCH_CATEGORIES.DISCUSSIONS && result.author ? (
+                              {result.category ===
+                                SEARCH_CATEGORIES.DISCUSSIONS &&
+                              result.author ? (
                                 <p className="text-xs text-[var(--text-muted)] truncate mt-0.5">
                                   by {result.author}
+                                </p>
+                              ) : result.category === SEARCH_CATEGORIES.USERS &&
+                                result.role ? (
+                                <p className="text-xs text-[var(--text-muted)] truncate mt-0.5">
+                                  {result.role === "admin"
+                                    ? "Admin"
+                                    : result.description}
                                 </p>
                               ) : result.description ? (
                                 <p className="text-xs text-[var(--text-muted)] truncate mt-0.5">

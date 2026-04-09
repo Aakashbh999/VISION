@@ -45,7 +45,7 @@ export const useDiscussionActions = ({ user, queryClient }) => {
     event.stopPropagation();
 
     if (!user) {
-      toast.info("Please login to vote on discussions");
+      toast.info("Log in to vote on discussions");
       return;
     }
 
@@ -58,7 +58,7 @@ export const useDiscussionActions = ({ user, queryClient }) => {
     event.stopPropagation();
 
     if (!user) {
-      toast.info("Please login to vote on discussions");
+      toast.info("Log in to vote on discussions");
       return;
     }
 
@@ -81,7 +81,7 @@ export const useDiscussionActions = ({ user, queryClient }) => {
     event.stopPropagation();
 
     if (!user) {
-      toast.info("Please login to save discussions");
+      toast.info("Log in to save discussions");
       return;
     }
 

@@ -264,7 +264,7 @@ const ClubDetailPage = () => {
       initial={{ opacity: 0, y: 15 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: 15 }}
-      className="max-w-5xl mx-auto space-y-6 pb-20 px-0 sm:px-6 lg:px-8 mt-6"
+      className="max-w-5xl mx-auto space-y-6 pb-20 px-2 sm:px-6 lg:px-8 mt-6"
     >
       {/* Top Nav */}
       <div className="flex items-center justify-between">

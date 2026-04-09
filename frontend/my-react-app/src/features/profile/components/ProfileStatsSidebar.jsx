@@ -2,7 +2,7 @@ import { Award, Star } from "lucide-react";
 
 const ProfileStatsSidebar = ({ profile, isOwner }) => {
   return (
-    <div className="space-y-8">
+    <div className="space-y-12">
       <div className="bg-gradient-to-br from-slate-900 via-purple-900 to-indigo-950 rounded-3xl shadow-2xl p-1.5 text-white relative overflow-hidden group">
         <div className="absolute top-0 right-0 w-48 h-48 bg-purple-500/20 rounded-full blur-3xl -mr-20 -mt-20 group-hover:bg-purple-500/30 transition-all duration-700"></div>
         <div className="absolute bottom-0 left-0 w-48 h-48 bg-blue-500/10 rounded-full blur-3xl -ml-20 -mb-20"></div>
@@ -75,7 +75,7 @@ const ProfileStatsSidebar = ({ profile, isOwner }) => {
         </div>
       </div>
 
-      <div className="bg-[var(--bg-card)] rounded-sm sm:rounded-3xl border border-[var(--border-main)] border-x-0 sm:border-x shadow-sm p-8 transition-all hover:shadow-md">
+      <div className="bg-gradient-to-br from-[var(--bg-card)] to-amber-50/40 dark:to-amber-900/10 rounded-sm sm:rounded-3xl border border-[var(--border-main)] border-x-0 sm:border-x shadow-sm p-8 transition-all hover:shadow-md">
         <h3 className="text-sm font-black text-[var(--text-main)] uppercase tracking-[0.2em] mb-8 flex items-center gap-3">
           <div className="w-8 h-8 rounded-lg bg-amber-50 flex items-center justify-center text-amber-500">
             <Award className="w-4 h-4" />
@@ -99,12 +99,12 @@ const ProfileStatsSidebar = ({ profile, isOwner }) => {
             ))}
           </div>
         ) : (
-          <div className="text-center py-10 bg-[var(--bg-active)] rounded-sm sm:rounded-[2rem] border-2 border-dashed border-[var(--border-main)]">
-            <div className="w-16 h-16 bg-[var(--bg-card)] rounded-full flex items-center justify-center mx-auto mb-4 shadow-sm">
-              <Award className="w-8 h-8 text-[var(--text-muted)]" />
+          <div className="text-center py-10 bg-white/50 dark:bg-black/20 rounded-sm sm:rounded-[2rem] border-2 border-dashed border-amber-200/50 dark:border-amber-900/50">
+            <div className="w-16 h-16 bg-[var(--bg-card)] rounded-full flex items-center justify-center mx-auto mb-4 shadow-sm border border-[var(--border-main)]">
+              <Award className="w-8 h-8 text-amber-400/60" />
             </div>
-            <p className="text-sm font-bold text-[var(--text-muted)]">
-              Unlock your first badge today!
+            <p className="text-sm font-bold text-[var(--text-muted)] px-4">
+              Start earning badges to showcase your progress.
             </p>
           </div>
         )}

@@ -27,7 +27,8 @@ const Dashboard = () => {
     error: dashError,
   } = useDashboard();
   const { data: notifications, isLoading: notifLoading } = useNotifications(5);
-  const { data: feed, isLoading: feedLoading } = useFeed(5);
+  const { data: feedPayload, isLoading: feedLoading } = useFeed(5);
+  const feed = feedPayload?.data || [];
 
   const dashboardStats = [
     {
@@ -42,15 +43,15 @@ const Dashboard = () => {
   ];
 
   return (
-    <div className="px-0 sm:px-6 lg:px-8 py-6 sm:py-8 space-y-8">
+    <div className="px-2 sm:px-6 lg:px-8 py-5 sm:py-8 space-y-6 sm:space-y-8">
       {!dashLoading && !dashError && (
-        <div className="rounded-sm sm:rounded-[2rem] border border-[var(--border-main)] border-x-0 sm:border-x bg-gradient-to-br from-[var(--bg-card)] to-[var(--bg-active)] p-4 sm:p-8 shadow-lg shadow-purple-500/5">
-          <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
+        <div className="rounded-sm sm:rounded-[2rem] border border-[var(--border-main)] border-x-0 sm:border-x bg-gradient-to-br from-[var(--bg-card)] to-[var(--bg-active)] p-4 sm:p-6 lg:p-8 shadow-lg shadow-purple-500/5">
+          <div className="flex flex-col gap-4 sm:gap-6 lg:flex-row lg:items-end lg:justify-between">
             <div className="max-w-2xl space-y-3">
               <p className="text-[10px] font-black uppercase tracking-[0.35em] text-[var(--text-muted)]">
                 Portal overview
               </p>
-              <h1 className="text-2xl sm:text-3xl lg:text-4xl font-black tracking-tight text-[var(--text-main)]">
+              <h1 className="text-xl sm:text-3xl lg:text-4xl font-black tracking-tight leading-tight text-[var(--text-main)]">
                 Your Learning Dashboard
               </h1>
               <p className="max-w-xl text-sm leading-6 text-[var(--text-muted)] sm:text-base">
@@ -80,17 +81,17 @@ const Dashboard = () => {
 
       {/* Top row: progress, next step, quick actions + VXP milestone */}
       {dashLoading ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4 sm:gap-6">
           {[1, 2, 3, 4].map((i) => (
             <CardSkeleton key={i} />
           ))}
         </div>
       ) : dashError ? (
         <div className="p-4 sm:p-6 bg-red-50 dark:bg-red-950/30 border border-red-100 dark:border-red-800 border-x-0 sm:border-x text-red-600 dark:text-red-300 rounded-sm sm:rounded-2xl text-sm font-medium">
-          Failed to load dashboard data. Please refresh.
+          Failed to load dashboard data. Refresh.
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4 sm:gap-6">
           <ProgressCard percent={dashboard.progress_percent} />
           <NextStepCard step={dashboard.next_step} />
           <QuickActionsCard />
@@ -99,7 +100,7 @@ const Dashboard = () => {
       )}
 
       {/* Two-column row: notifications & activity feed — independent loading */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
         {notifLoading ? (
           <CardSkeleton className="h-40" />
         ) : (

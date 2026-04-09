@@ -4,7 +4,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import { useUnreadCount } from "../../hooks/useUnreadCount";
 import { useClickOutside } from "../../hooks/useClickOutside";
-import visionLogo from "../../assets/vision-logo.png";
+import Logo from "../ui/Logo/Logo";
 import ThemeToggle from "./ThemeToggle";
 
 const Navbar = ({ onMobileMenuToggle, variant, user }) => {
@@ -30,7 +30,30 @@ const Navbar = ({ onMobileMenuToggle, variant, user }) => {
     navigate("/");
   };
 
+  const handleLogoutWithConfirm = () => {
+    const shouldLogout = window.confirm("Are you sure you want to logout?");
+    if (shouldLogout) {
+      handleLogout();
+    }
+  };
+
   const homeLink = authUser?.student_status === "approved" ? "/dashboard" : "/";
+  const accountStatusLabel =
+    authUser?.role === "admin"
+      ? null
+      : authUser?.email_status !== "verified"
+        ? "Email not verified"
+        : authUser?.student_status !== "approved"
+          ? "Approval pending"
+          : null;
+  const accountStatusRoute =
+    authUser?.role === "admin"
+      ? null
+      : authUser?.email_status !== "verified"
+        ? "/verify-email"
+        : authUser?.student_status !== "approved"
+          ? "/pending-approval"
+          : null;
 
   const publicLinks = [
     { label: "IT Specializations", href: "/it-fields" },
@@ -51,11 +74,7 @@ const Navbar = ({ onMobileMenuToggle, variant, user }) => {
           <Menu className="w-6 h-6 text-[var(--text-main)]" />
         </button>
         <Link to={homeLink} className="relative">
-          <img
-            src={visionLogo}
-            alt="VISION Logo"
-            className="h-[7.8rem] w-auto sm:h-[8rem] md:h-[9rem] transition-all duration-300"
-          />
+          <Logo className="h-10 hover:opacity-80 transition-opacity" />
         </Link>
       </div>
 
@@ -183,18 +202,39 @@ const Navbar = ({ onMobileMenuToggle, variant, user }) => {
         ) : (
           // Public variant: login and register buttons
           <div className="flex items-center gap-2">
-            <Link
-              to="/login"
-              className="text-[var(--text-main)] hover:text-purple-600 font-medium transition-all duration-300 hover:scale-105 px-3 py-1.5 rounded-lg hover:bg-[var(--bg-active)]"
-            >
-              Login
-            </Link>
-            <Link
-              to="/register"
-              className="hidden lg:block px-5 py-2.5 rounded-lg bg-gradient-to-r from-purple-600 to-purple-800 text-white font-medium hover:shadow-lg hover:shadow-purple-500/30 transition-all duration-300 transform hover:-translate-y-0.5"
-            >
-              Register
-            </Link>
+            {isLoggedIn ? (
+              <>
+                {accountStatusLabel && (
+                  <Link
+                    to={accountStatusRoute || "/"}
+                    className="hidden sm:inline-flex px-3 py-1 rounded-full text-xs font-semibold bg-amber-100 text-amber-700 border border-amber-200 hover:bg-amber-200 transition-colors"
+                  >
+                    {accountStatusLabel}
+                  </Link>
+                )}
+                <button
+                  onClick={handleLogoutWithConfirm}
+                  className="px-4 py-2 rounded-lg border border-[var(--border-main)] text-[var(--text-main)] hover:bg-[var(--bg-active)] transition-colors"
+                >
+                  Sign out
+                </button>
+              </>
+            ) : (
+              <>
+                <Link
+                  to="/login"
+                  className="text-[var(--text-main)] hover:text-purple-600 font-medium transition-all duration-300 hover:scale-105 px-3 py-1.5 rounded-lg hover:bg-[var(--bg-active)]"
+                >
+                  Login
+                </Link>
+                <Link
+                  to="/register"
+                  className="hidden lg:block px-5 py-2.5 rounded-lg bg-gradient-to-r from-purple-600 to-purple-800 text-white font-medium hover:shadow-lg hover:shadow-purple-500/30 transition-all duration-300 transform hover:-translate-y-0.5"
+                >
+                  Register
+                </Link>
+              </>
+            )}
           </div>
         )}
       </div>

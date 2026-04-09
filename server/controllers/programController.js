@@ -1,8 +1,8 @@
 const pool = require("../config/db");
+const catchAsync = require("../utils/catchAsync");
 
 // GET /api/programs
-exports.getPrograms = async (req, res) => {
-  try {
+exports.getPrograms = catchAsync(async (req, res) => {
     const result = await pool.query(
       `SELECT program_id, program_name
        FROM portal.programs
@@ -10,8 +10,4 @@ exports.getPrograms = async (req, res) => {
     );
 
     res.json(result.rows);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "Failed to fetch programs" });
-  }
-};
+});

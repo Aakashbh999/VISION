@@ -1,36 +1,33 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { ArrowLeft, Clock, Search, ExternalLink, Filter } from "lucide-react";
-import { useMyResources } from "../../hooks/useMyResources";
+import {
+  useMyResources,
+  useSoftDeleteResource,
+} from "../../hooks/useMyResources";
 import ResourceCard from "../../components/resources/ResourceCard";
 import LoadingSpinner from "../../components/ui/LoadingSpinner";
-import { softDeleteResource } from "../../services/resource";
-import { toast } from "react-toastify";
-import { useQueryClient } from "@tanstack/react-query";
 
 const MyResources = () => {
   const { data: resources = [], isLoading, error } = useMyResources();
   const [statusFilter, setStatusFilter] = useState("all");
-  const queryClient = useQueryClient();
+  const softDeleteMutation = useSoftDeleteResource();
 
   if (isLoading) return <LoadingSpinner />;
   if (error) {
     return (
       <div className="text-center py-10 bg-red-50 text-red-600 rounded-xl">
-        Failed to load your resources. Please try again.
+        Failed to load your resources. Try again.
       </div>
     );
   }
 
-  const handleDelete = async (id) => {
+  const handleDelete = (id) => {
     if (window.confirm("Are you sure you want to delete this resource?")) {
-      try {
-        await softDeleteResource(id, "User deleted their own resource");
-        toast.success("Resource deleted successfully");
-        queryClient.invalidateQueries(["my-resources"]);
-      } catch {
-        toast.error("Failed to delete resource");
-      }
+      softDeleteMutation.mutate({
+        resourceId: id,
+        reason: "User deleted their own resource",
+      });
     }
   };
 
@@ -40,7 +37,7 @@ const MyResources = () => {
   });
 
   return (
-    <div className="max-w-7xl mx-auto pb-10 px-0 sm:px-6 lg:px-8">
+    <div className="max-w-7xl mx-auto pb-10 px-2 sm:px-6 lg:px-8">
       <Link
         to="/resources"
         className="inline-flex items-center gap-2 text-sm text-[var(--text-muted)] hover:text-purple-600 mb-6 transition-colors font-medium border border-[var(--border-main)] bg-[var(--bg-card)] px-4 py-2 rounded-xl shadow-sm"
@@ -50,10 +47,10 @@ const MyResources = () => {
 
       <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4 mb-8">
         <div>
-          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-black text-[var(--text-main)] mb-2 tracking-tight">
+          <h1 className="text-xl sm:text-3xl lg:text-4xl font-black text-[var(--text-main)] mb-1 sm:mb-2 tracking-tight leading-tight">
             My Uploads
           </h1>
-          <p className="text-[var(--text-muted)] font-medium">
+          <p className="text-[var(--text-muted)] text-sm sm:text-base leading-relaxed font-medium">
             Manage the resources you've shared with the community.
           </p>
         </div>

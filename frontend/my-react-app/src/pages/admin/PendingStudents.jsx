@@ -5,10 +5,14 @@ import {
   rejectStudent,
 } from "../../services/admin";
 import LoadingSpinner from "../../components/ui/LoadingSpinner";
-import { Check, X } from "lucide-react";
+import { Check, X, UserPlus, Clock, Inbox, ShieldCheck } from "lucide-react";
+import { showToast } from "../../utils/toast";
+import { useState } from "react";
+import AdminConfirmModal from "../../components/ui/AdminConfirmModal";
 
 const PendingStudents = () => {
   const queryClient = useQueryClient();
+  const [modalConfig, setModalConfig] = useState({ isOpen: false });
   const { data, isLoading, error } = useQuery({
     queryKey: ["pendingStudents"],
     queryFn: getPendingStudents,
@@ -16,86 +20,131 @@ const PendingStudents = () => {
 
   const approveMutation = useMutation({
     mutationFn: approveStudent,
-    onSuccess: () => queryClient.invalidateQueries(["pendingStudents"]),
+    onSuccess: () => {
+      queryClient.invalidateQueries(["pendingStudents"]);
+      showToast.success("Student approved");
+    },
+    onError: (err) => showToast.error("Failed to approve student"),
   });
 
   const rejectMutation = useMutation({
     mutationFn: rejectStudent,
-    onSuccess: () => queryClient.invalidateQueries(["pendingStudents"]),
+    onSuccess: () => {
+      queryClient.invalidateQueries(["pendingStudents"]);
+      showToast.success("Student registration rejected");
+    },
+    onError: (err) => showToast.error("Failed to reject student"),
   });
+
+  const handleApprove = (userId, name) => {
+    setModalConfig({
+      isOpen: true,
+      title: "Approve Student",
+      message: `Are you sure you want to approve ${name}? This will grant them full access to the student portal.`,
+      type: "info",
+      confirmText: "Approve Registration",
+      onConfirm: () => {
+        approveMutation.mutate(userId);
+        setModalConfig({ isOpen: false });
+      }
+    });
+  };
+
+  const handleReject = (userId, name) => {
+    setModalConfig({
+      isOpen: true,
+      title: "Reject Registration",
+      message: `Are you sure you want to reject the application from ${name}? They will be notified of the decision.`,
+      type: "danger",
+      confirmText: "Reject Student",
+      onConfirm: () => {
+        rejectMutation.mutate(userId);
+        setModalConfig({ isOpen: false });
+      }
+    });
+  };
 
   if (isLoading) return <LoadingSpinner />;
   if (error)
     return (
-      <div className="p-8 text-red-500">Failed to load pending students</div>
+      <div className="p-8 text-red-500 font-medium">Failed to load pending students</div>
     );
 
-  const students = data || [];
+  const students = data?.data || [];
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-bold text-gray-900">Pending Approvals</h1>
+      <div className="flex justify-between items-center text-left">
+        <h1 className="text-2xl font-bold text-text-main">Pending Registrations</h1>
+        <div className="flex items-center gap-2 text-xs font-semibold text-blue-600 bg-blue-50/10 px-3 py-1.5 rounded-full border border-blue-500/20">
+          <Clock className="w-4 h-4" /> Review Queue
+        </div>
+      </div>
 
       {students.length === 0 ? (
-        <p className="text-gray-500">No pending students.</p>
+        <div className="bg-bg-card rounded-2xl border border-dashed border-border-main p-16 text-center">
+          <Inbox className="w-12 h-12 text-text-muted/30 mx-auto mb-4" />
+          <h3 className="text-lg font-bold text-text-main">Zero Pending Students</h3>
+          <p className="text-text-muted max-w-sm mx-auto">You've cleared the registration queue! New student applications will appear here for review.</p>
+        </div>
       ) : (
-        <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
+        <div className="bg-bg-card rounded-2xl border border-border-main overflow-hidden shadow-sm">
+          <table className="min-w-full divide-y divide-border-main">
+            <thead className="bg-bg-active/50">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Name
+                <th className="px-6 py-4 text-left text-xs font-bold text-text-muted uppercase tracking-wider">
+                  Student Info
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Email
+                <th className="px-6 py-4 text-left text-xs font-bold text-text-muted uppercase tracking-wider">
+                  Academic Details
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Program
+                <th className="px-6 py-4 text-left text-xs font-bold text-text-muted uppercase tracking-wider">
+                  Registration
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Semester
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  TU Reg No.
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-4 text-right text-xs font-bold text-text-muted uppercase tracking-wider">
                   Actions
                 </th>
               </tr>
             </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
+            <tbody className="bg-bg-card divide-y divide-border-main">
               {students.map((student) => (
-                <tr key={student.user_id}>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                    {student.full_name}
+                <tr key={student.user_id} className="hover:bg-bg-active/30 transition-colors">
+                  <td className="px-6 py-4">
+                    <div className="flex flex-col">
+                      <span className="text-sm font-bold text-text-main">{student.full_name}</span>
+                      <span className="text-xs text-text-muted">{student.email}</span>
+                    </div>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {student.email}
+                  <td className="px-6 py-4">
+                    <div className="flex flex-col">
+                      <span className="text-sm font-medium text-text-main">{student.program_name}</span>
+                      <span className="text-xs text-text-muted">Semester: {student.semester}</span>
+                    </div>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {student.program_name}
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <code className="text-xs font-mono bg-bg-active px-2 py-1 rounded text-text-muted border border-border-main">
+                      {student.tu_registration_no}
+                    </code>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {student.semester}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {student.tu_registration_no}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
-                    <button
-                      onClick={() => approveMutation.mutate(student.user_id)}
-                      disabled={approveMutation.isLoading}
-                      className="text-green-600 hover:text-green-900"
-                    >
-                      <Check className="w-5 h-5" />
-                    </button>
-                    <button
-                      onClick={() => rejectMutation.mutate(student.user_id)}
-                      disabled={rejectMutation.isLoading}
-                      className="text-red-600 hover:text-red-900"
-                    >
-                      <X className="w-5 h-5" />
-                    </button>
+                  <td className="px-6 py-4 text-right">
+                    <div className="flex justify-end gap-2">
+                      <button
+                        onClick={() => handleApprove(student.user_id, student.full_name)}
+                        disabled={approveMutation.isPending}
+                        className="p-2 text-green-600 hover:bg-green-500/10 rounded-xl transition-all border border-transparent hover:border-green-500/20"
+                        title="Approve Student"
+                      >
+                        <Check className="w-5 h-5" />
+                      </button>
+                      <button
+                        onClick={() => handleReject(student.user_id, student.full_name)}
+                        disabled={rejectMutation.isPending}
+                        className="p-2 text-red-500 hover:bg-red-500/10 rounded-xl transition-all border border-transparent hover:border-red-500/20"
+                        title="Reject Student"
+                      >
+                        <X className="w-5 h-5" />
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}
@@ -103,6 +152,11 @@ const PendingStudents = () => {
           </table>
         </div>
       )}
+      <AdminConfirmModal
+        {...modalConfig}
+        onCancel={() => setModalConfig({ isOpen: false })}
+        isLoading={approveMutation.isPending || rejectMutation.isPending}
+      />
     </div>
   );
 };

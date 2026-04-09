@@ -1,6 +1,12 @@
 import api from "./api";
 
-// Dashboard stats
+// Dashboard stats (Aggregated)
+export const getAdminDashboardStats = async () => {
+  const response = await api.get("/admin/dashboard");
+  return response.data;
+};
+
+// Legacy/Basic student stats
 export const getAdminStats = async () => {
   const response = await api.get("/admin/stats");
   return response.data;
@@ -60,5 +66,32 @@ export const closeReport = async (reportId) => {
 export const getModerationLogs = async (page = 1, limit = 20) => {
   const params = new URLSearchParams({ page, limit }).toString();
   const response = await api.get(`/admin/logs?${params}`);
+  return response.data;
+};
+
+// Permanently delete content
+export const permanentlyDeleteContent = async (type, id) => {
+  const response = await api.delete("/admin/content", {
+    data: { type, id },
+  });
+  return response.data;
+};
+
+// Permanently delete user
+export const permanentlyDeleteUser = async (userId) => {
+  const response = await api.delete(`/admin/users/${userId}`);
+  return response.data;
+};
+
+// Resolve report with specific action
+export const resolveReportAction = async (reportId, action) => {
+  const response = await api.post(`/admin/reports/${reportId}/resolve`, {
+    action,
+  });
+  return response.data;
+};
+
+export const examineReport = async (reportId) => {
+  const response = await api.get(`/admin/reports/${reportId}/examine`);
   return response.data;
 };

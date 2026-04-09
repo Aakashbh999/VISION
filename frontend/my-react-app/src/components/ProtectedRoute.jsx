@@ -8,6 +8,11 @@ const ProtectedRoute = ({ children }) => {
   if (isLoading) return <LoadingSpinner />;
   if (!isAuthenticated) return <Navigate to="/login" replace />;
 
+  // Admin accounts are not subject to student verification/approval gates.
+  if (user?.role === "admin") {
+    return <Navigate to="/admin/dashboard" replace />;
+  }
+
   // Check student status
   if (user?.email_status !== "verified") {
     return <Navigate to="/verify-email" replace />;

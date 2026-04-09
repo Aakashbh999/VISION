@@ -15,6 +15,10 @@ import {
   Users,
   Youtube,
   Facebook,
+  MapPin,
+  Calendar,
+  GraduationCap,
+  Plus
 } from "lucide-react";
 import { RedditIcon } from "../utils/profileHelpers";
 
@@ -88,7 +92,7 @@ const ProfileHeaderCard = ({
   ];
 
   return (
-    <div className="bg-[var(--bg-card)] rounded-sm sm:rounded-3xl border border-[var(--border-main)] border-x-0 sm:border-x shadow-sm overflow-hidden relative">
+    <div className="bg-[var(--bg-card)] bg-gradient-to-br from-purple-50/50 to-transparent dark:from-purple-900/10 dark:to-transparent rounded-sm sm:rounded-3xl border border-[var(--border-main)] border-x-0 sm:border-x shadow-sm overflow-hidden relative">
       <div className="h-56 relative bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 overflow-hidden group/banner">
         {profile.banner_image && (
           <img
@@ -121,15 +125,17 @@ const ProfileHeaderCard = ({
         )}
       </div>
 
-      <div className="px-6 pb-8 lg:px-10 relative z-10">
-        <div className="flex flex-col md:flex-row md:items-end gap-6 -mt-12 sm:-mt-16 md:-mt-20 relative z-20">
-          <div className="relative group/avatar">
+      <div className="px-6 lg:px-8 pb-6 relative z-10">
+        <div className="flex flex-col md:flex-row gap-4 md:gap-6 relative z-20">
+          
+          {/* Avatar Area */}
+          <div className="relative shrink-0 -mt-16 sm:-mt-20 md:-mt-24 mx-auto md:mx-0 group/avatar">
             <div
               onClick={() => {
                 if (isOwner && isEditMode) return;
                 setViewingAvatar(true);
               }}
-              className={`w-32 h-32 sm:w-40 sm:h-40 rounded-full bg-white border-4 border-[var(--bg-card)] shadow-xl flex items-center justify-center bg-gradient-to-br from-purple-500 to-blue-500 overflow-hidden relative ${isOwner && !isEditMode ? "cursor-pointer" : ""}`}
+              className={`w-32 h-32 sm:w-[168px] sm:h-[168px] rounded-full bg-white border-4 border-[var(--bg-card)] shadow-xl flex items-center justify-center bg-gradient-to-br from-purple-500 to-blue-500 overflow-hidden relative ${isOwner && !isEditMode ? "cursor-pointer" : ""}`}
             >
               {profile.profile_image ? (
                 <img
@@ -138,15 +144,15 @@ const ProfileHeaderCard = ({
                   className="w-full h-full object-cover relative z-0"
                 />
               ) : (
-                <span className="text-5xl font-bold text-white">
+                <span className="text-5xl sm:text-7xl font-bold text-white">
                   {profile.full_name?.charAt(0)?.toUpperCase() || "U"}
                 </span>
               )}
 
               {profile.is_online && (
-                <span className="absolute bottom-1 right-1 flex h-7 w-7 z-10">
+                <span className="absolute bottom-2 sm:bottom-4 right-2 sm:right-4 flex h-4 w-4 sm:h-5 sm:w-5 z-10">
                   <span className="absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75 animate-ping" />
-                  <span className="relative inline-flex h-7 w-7 rounded-full bg-emerald-500 border-3 border-white shadow-lg" />
+                  <span className="relative inline-flex flex-1 h-full w-full rounded-full bg-emerald-500 border-2 border-white shadow-sm" />
                 </span>
               )}
 
@@ -168,7 +174,7 @@ const ProfileHeaderCard = ({
                 type="button"
                 onClick={() => removeAvatarMut.mutate()}
                 disabled={removeAvatarMut.isPending}
-                className="absolute -bottom-3 left-1/2 -translate-x-1/2 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-rose-600 text-white text-xs font-bold shadow-lg disabled:opacity-60"
+                className="absolute -bottom-3 left-1/2 -translate-x-1/2 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-rose-600 text-white text-xs font-bold shadow-lg disabled:opacity-60 z-30"
               >
                 <Trash2 className="w-3.5 h-3.5" />
                 {removeAvatarMut.isPending ? "Removing" : "Remove"}
@@ -176,122 +182,148 @@ const ProfileHeaderCard = ({
             )}
           </div>
 
-          <div className="flex-1 pb-2 sm:pb-4 min-w-0">
-            {isOwner && isEditMode ? (
-              <div className="space-y-3 max-w-xl">
-                <label className="block text-xs font-bold uppercase tracking-[0.24em] text-[var(--text-muted)]">
-                  Full Name
-                </label>
-                <input
-                  value={draftProfile.full_name}
-                  onChange={(event) =>
-                    handleDraftChange("full_name", event.target.value)
-                  }
-                  className="w-full px-5 py-3.5 rounded-2xl border-2 border-purple-100 bg-white/80 backdrop-blur-sm text-xl sm:text-2xl lg:text-3xl font-bold text-[var(--text-main)] focus:outline-none focus:ring-4 focus:ring-purple-500/10 focus:border-purple-500 transition-all shadow-sm"
-                  placeholder="Enter your full name"
-                />
-              </div>
-            ) : (
-              <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-[var(--text-main)] flex items-center gap-3">
-                {profile.full_name}
-                {profile.is_moderator && (
-                  <span className="flex items-center gap-1 px-2.5 py-1 bg-blue-50 text-blue-600 border border-blue-200 rounded-lg text-xs font-bold uppercase tracking-wider">
-                    Moderator
-                  </span>
-                )}
-              </h1>
-            )}
-
-            {profile.is_online && !isOwner && (
-              <p className="mt-2 text-xs font-bold uppercase tracking-[0.2em] text-emerald-600">
-                Active recently
-              </p>
-            )}
-
-            <p className="text-[var(--text-muted)] font-medium mt-2">
-              {isOwner && isEditMode
-                ? programName || "Select a degree program below"
-                : profile.program_name || profile.email || "VISION Member"}
-            </p>
-          </div>
-
-          <div className="pb-2 sm:pb-4 flex gap-3 flex-wrap">
-            {!isOwner &&
-              (profile.is_following ? (
-                <div className="relative" ref={followDropdownRef}>
-                  <button
-                    onClick={() => setFollowDropdownOpen((open) => !open)}
-                    disabled={followMut.isPending}
-                    className="flex items-center gap-1.5 px-5 py-2.5 rounded-xl font-bold bg-[var(--bg-active)] text-[var(--text-main)] hover:bg-[var(--border-main)] transition-all shadow-sm disabled:opacity-50"
-                  >
-                    <Check className="w-4 h-4 text-purple-600" />
-                    Following
-                    <ChevronDown
-                      className={`w-4 h-4 ml-0.5 transition-transform ${followDropdownOpen ? "rotate-180" : ""}`}
-                    />
-                  </button>
-                  {followDropdownOpen && (
-                    <div className="absolute right-0 mt-2 w-40 bg-[var(--bg-card)] rounded-xl shadow-lg border border-[var(--border-main)] py-1 z-50">
-                      <button
-                        onClick={() => {
-                          setFollowDropdownOpen(false);
-                          followMut.mutate({
-                            userId: profile.user_id,
-                            isFollowing: true,
-                          });
-                        }}
-                        disabled={followMut.isPending}
-                        className="w-full flex items-center gap-2 px-4 py-2.5 text-sm font-semibold text-red-600 hover:bg-red-50 transition-colors disabled:opacity-50"
-                      >
-                        <UserMinus className="w-4 h-4" />
-                        Unfollow
-                      </button>
-                    </div>
-                  )}
+          {/* Info and Buttons Area */}
+          <div className="flex-1 flex flex-col md:flex-row justify-between items-center md:items-end gap-5 mt-2 sm:mt-0 pb-4">
+            
+            {/* User Info Block */}
+            <div className="text-center md:text-left flex-1 min-w-0 w-full">
+              {isOwner && isEditMode ? (
+                <div className="space-y-3 max-w-xl mx-auto md:mx-0">
+                  <label className="block text-xs font-bold uppercase tracking-[0.24em] text-[var(--text-muted)]">
+                    Full Name
+                  </label>
+                  <input
+                    value={draftProfile.full_name}
+                    onChange={(event) =>
+                      handleDraftChange("full_name", event.target.value)
+                    }
+                    className="w-full px-5 py-3.5 rounded-2xl border-2 border-[var(--border-main)] bg-[var(--bg-active)] focus:bg-[var(--bg-card)] backdrop-blur-sm text-xl sm:text-2xl lg:text-3xl font-bold text-[var(--text-main)] focus:outline-none focus:ring-4 focus:ring-purple-500/10 focus:border-purple-500 transition-all shadow-sm"
+                    placeholder="Enter your full name"
+                  />
                 </div>
               ) : (
-                <button
-                  onClick={handleFollowToggle}
-                  disabled={followMut.isPending}
-                  className="px-6 py-2.5 rounded-xl font-bold bg-purple-600 text-white hover:bg-purple-700 hover:shadow-md transition-all shadow-sm disabled:opacity-50"
-                >
-                  {followMut.isPending ? "..." : "Follow"}
-                </button>
-              ))}
+                <h1 className="text-2xl sm:text-3xl lg:text-[32px] font-bold text-[var(--text-main)] flex flex-wrap justify-center md:justify-start items-center gap-3">
+                  {profile.full_name}
+                  {profile.is_moderator && (
+                    <span className="flex items-center gap-1 px-2.5 py-1 bg-blue-50 text-blue-600 border border-blue-200 rounded-lg text-xs font-bold uppercase tracking-wider">
+                      Moderator
+                    </span>
+                  )}
+                </h1>
+              )}
 
-            {isOwner && !isEditMode && (
-              <button
-                type="button"
-                onClick={handleEditStart}
-                className="inline-flex items-center gap-2 px-6 py-2.5 bg-slate-900 text-white hover:bg-slate-800 rounded-xl font-bold transition-all"
-              >
-                <PencilLine className="w-4 h-4" /> Edit Profile
-              </button>
-            )}
+              {!isEditMode && (
+                <p className="font-semibold text-[var(--text-main)] mt-1.5 text-[15px]">
+                  {profile.followers_count || 0} followers • {profile.following_count || 0} following
+                </p>
+              )}
+
+              {profile.is_online && !isOwner && (
+                <p className="mt-1.5 text-xs font-bold uppercase tracking-[0.2em] text-emerald-600">
+                  Active recently
+                </p>
+              )}
+
+              <div className="mt-2.5 flex flex-wrap justify-center md:justify-start gap-x-4 gap-y-2 text-[15px] text-[var(--text-muted)] font-medium">
+                {profile.program_name && (
+                  <span className="flex items-center gap-1.5">
+                    <GraduationCap className="w-4 h-4" /> {profile.program_name}
+                  </span>
+                )}
+                {profile.batch_year && (
+                  <span className="flex items-center gap-1.5">
+                    <Calendar className="w-4 h-4" /> Batch {profile.batch_year}
+                  </span>
+                )}
+                {(profile.campus || profile.university) && (
+                  <span className="flex items-center gap-1.5">
+                    <MapPin className="w-4 h-4" /> {profile.campus || profile.university}
+                  </span>
+                )}
+              </div>
+
+              <div className="mt-4 flex flex-wrap justify-center md:justify-start items-center gap-2">
+                {socialLinks.map((social) => {
+                  const url = profile[social.key];
+                  if (!url) return null;
+                  const Icon = social.icon;
+                  return (
+                    <a
+                      key={social.key}
+                      href={url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      title={social.label}
+                      className={`p-2 rounded-full bg-[var(--bg-active)] border border-[var(--border-main)] shadow-sm transition-all hover:scale-110 active:scale-95 ${social.color}`}
+                    >
+                      <Icon className="w-4 h-4" />
+                    </a>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* CTA Buttons */}
+            <div className="flex flex-col sm:flex-row justify-center md:justify-end items-center gap-3 shrink-0 w-full md:w-auto mt-4 md:mt-0">
+              {!isOwner &&
+                (profile.is_following ? (
+                  <div className="relative w-full sm:w-auto" ref={followDropdownRef}>
+                    <button
+                      onClick={() => setFollowDropdownOpen((open) => !open)}
+                      disabled={followMut.isPending}
+                      className="w-full sm:w-auto flex items-center justify-center gap-1.5 px-5 py-2.5 rounded-lg font-bold bg-[#e4e6eb] dark:bg-[#3a3b3c] text-slate-900 dark:text-gray-100 hover:bg-[#d8dadf] dark:hover:bg-[#4e4f50] transition-all text-[15px] disabled:opacity-50"
+                    >
+                      <Check className="w-4 h-4" />
+                      Following
+                      <ChevronDown
+                        className={`w-4 h-4 ml-0.5 transition-transform ${followDropdownOpen ? "rotate-180" : ""}`}
+                      />
+                    </button>
+                    {followDropdownOpen && (
+                      <div className="absolute right-0 mt-2 w-full sm:w-40 bg-[var(--bg-card)] rounded-xl shadow-lg border border-[var(--border-main)] py-1 z-50">
+                        <button
+                          onClick={() => {
+                            setFollowDropdownOpen(false);
+                            followMut.mutate({
+                              userId: profile.user_id,
+                              isFollowing: true,
+                            });
+                          }}
+                          disabled={followMut.isPending}
+                          className="w-full flex items-center gap-2 px-4 py-2.5 text-sm font-semibold text-red-600 hover:bg-red-50 transition-colors disabled:opacity-50"
+                        >
+                          <UserMinus className="w-4 h-4" />
+                          Unfollow
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <button
+                    onClick={handleFollowToggle}
+                    disabled={followMut.isPending}
+                    className="w-full sm:w-auto px-6 py-2.5 rounded-lg font-bold bg-blue-600 text-white hover:bg-blue-700 transition-all shadow-sm disabled:opacity-50 flex items-center justify-center gap-2 text-[15px]"
+                  >
+                    <Plus className="w-4 h-4" />
+                    {followMut.isPending ? "..." : "Follow"}
+                  </button>
+                ))}
+
+              {isOwner && !isEditMode && (
+                <button
+                  type="button"
+                  onClick={handleEditStart}
+                  className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-2.5 bg-[#e4e6eb] dark:bg-[#3a3b3c] text-slate-900 dark:text-gray-100 hover:bg-[#d8dadf] dark:hover:bg-[#4e4f50] rounded-lg font-bold transition-all text-[15px]"
+                >
+                  <PencilLine className="w-4 h-4" /> Edit profile
+                </button>
+              )}
+            </div>
           </div>
         </div>
 
-        <div className="mt-8 flex flex-wrap items-center gap-3">
-          {socialLinks.map((social) => {
-            const url = profile[social.key];
-            if (!url) return null;
-            const Icon = social.icon;
-            return (
-              <a
-                key={social.key}
-                href={url}
-                target="_blank"
-                rel="noopener noreferrer"
-                title={social.label}
-                className={`p-2.5 rounded-2xl border border-[var(--border-main)] shadow-xs transition-all hover:scale-110 active:scale-95 ${social.color}`}
-              >
-                <Icon className="w-5 h-5" />
-              </a>
-            );
-          })}
-        </div>
-
-        <div className="mt-8 py-6 border-t border-[var(--border-main)] grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6 text-sm">
+        {/* Divider / Grid space */}
+        <div className="mt-2 pt-6 border-t border-[var(--border-main)] grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6 text-sm">
           <div className="flex items-center gap-2.5 text-[var(--text-muted)] bg-[var(--bg-active)] p-3 rounded-2xl border border-[var(--border-main)]">
             <div className="w-8 h-8 rounded-lg bg-purple-50 flex items-center justify-center text-purple-600 shrink-0">
               <Users className="w-4 h-4" />

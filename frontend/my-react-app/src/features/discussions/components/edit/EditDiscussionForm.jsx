@@ -19,7 +19,7 @@ const EditDiscussionForm = ({
   getTagName,
 }) => {
   return (
-    <div className="max-w-3xl mx-auto space-y-6 px-0 sm:px-6 lg:px-8 py-6 sm:py-8 lg:py-10">
+    <div className="max-w-3xl mx-auto space-y-6 px-3 sm:px-6 lg:px-8 py-5 sm:py-8 lg:py-10">
       <div className="flex items-center gap-4">
         <Link
           to={`/discussions/${id}`}

@@ -1,11 +1,18 @@
 import api from "./api";
 
 // Get all groups with optional filters
-export const getGroups = async ({ search, sort } = {}) => {
+export const getGroups = async ({ search, sort, degree } = {}) => {
   const params = new URLSearchParams();
   if (search) params.set("search", search);
   if (sort) params.set("sort", sort);
+  if (degree) params.set("degree", degree);
   const response = await api.get(`/groups?${params.toString()}`);
+  return response.data;
+};
+
+// Get managed groups
+export const getManagedGroups = async () => {
+  const response = await api.get("/groups/managed");
   return response.data;
 };
 

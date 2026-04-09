@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { X, Upload, File as FileIcon, Link as LinkIcon } from "lucide-react";
+import { X, Upload, File as FileIcon, Link as LinkIcon, Lightbulb } from "lucide-react";
 import { useUploadResource } from "../../hooks/useUploadResource";
 import { usePrograms } from "../../hooks/usePrograms";
 import TagInput from "../ui/TagInput";
@@ -232,7 +232,7 @@ const ResourceUploadModal = ({ isOpen, onClose }) => {
 
           {/* Info Box */}
           <div className="bg-purple-50/50 border border-purple-100 rounded-xl p-4 text-sm text-purple-800 flex items-start gap-3">
-            <span className="text-xl">💡</span>
+            <Lightbulb className="w-5 h-5 text-purple-600 dark:text-purple-400 shrink-0 mt-0.5" />
             <p>
               Your resource will be reviewed by moderators before becoming
               public. Approved resources earn you{" "}

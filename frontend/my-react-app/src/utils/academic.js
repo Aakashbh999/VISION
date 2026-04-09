@@ -1,4 +1,4 @@
-const BATCH_START_BS_MONTH = 5;
+const BATCH_START_BS_MONTH = 8;
 
 const isOnOrAfter = (date, month, day) => {
   const currentMonth = date.getMonth() + 1;

@@ -71,7 +71,7 @@ export const useDeleteDiscussion = () => {
   return useMutation({
     mutationFn: (discussionId) => deleteDiscussion(discussionId),
     onSuccess: () => {
-      toast.success("Post archived successfully");
+      toast.success("Post archived");
       queryClient.invalidateQueries(["discussions"]);
       queryClient.invalidateQueries(["my-posts"]);
     },
@@ -107,7 +107,7 @@ export const useBoostDiscussion = () => {
   return useMutation({
     mutationFn: (discussionId) => boostDiscussion(discussionId),
     onSuccess: (data, discussionId) => {
-      toast.success(data?.message || "Discussion boosted successfully!");
+      toast.success(data?.message || "Discussion boosted!");
       queryClient.invalidateQueries(["discussion", discussionId]);
       queryClient.invalidateQueries(["discussions"]);
       queryClient.invalidateQueries(["trending-discussions"]);
