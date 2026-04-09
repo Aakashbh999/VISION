@@ -1,6 +1,15 @@
 import React, { useState, useMemo } from "react";
 import { Link, useSearchParams, useNavigate } from "react-router-dom";
-import { Search, Plus, Filter, X, Award, SlidersHorizontal } from "lucide-react";
+import { 
+  Search, 
+  Plus, 
+  Filter, 
+  X, 
+  Award, 
+  SlidersHorizontal, 
+  ChevronLeft 
+} from "lucide-react";
+// Forcing a fresh build by refactoring imports.
 
 // Hooks & Context
 import { useResources } from "../../hooks/useResources";
