@@ -8,12 +8,13 @@ import {
   Upload,
   AlertCircle,
   Trash2,
-  Tag,
-  X,
-  Plus
 } from "lucide-react";
 import ButtonLoader from "../../../../components/ui/ButtonLoader";
-import { SYSTEM_TAG_CAP, CUSTOM_TAG_CAP } from "../../hooks/useCreateDiscussionState";
+import TagSelectorSection from "../../../../components/ui/TagSelectorSection";
+import {
+  SYSTEM_TAG_CAP,
+  CUSTOM_TAG_CAP,
+} from "../../hooks/useCreateDiscussionState";
 
 const CreateDiscussionForm = ({
   fileInputRef,
@@ -126,116 +127,21 @@ const CreateDiscussionForm = ({
             />
           </div>
 
-          {/* ── System Tags ─────────────────────────────────── */}
-          <div>
-            <div className="flex items-center justify-between mb-2">
-              <label className="flex items-center gap-1.5 text-sm font-medium text-[var(--text-main)]">
-                <Tag className="w-3.5 h-3.5 text-purple-500" />
-                System Tags
-              </label>
-              <span
-                className={`text-xs font-medium px-2 py-0.5 rounded-full ${
-                  formData.system_tags.length >= SYSTEM_TAG_CAP
-                    ? "bg-purple-100 text-purple-700"
-                    : "text-[var(--text-muted)]"
-                }`}
-              >
-                {formData.system_tags.length}/{SYSTEM_TAG_CAP} selected
-              </span>
-            </div>
-            <div className="flex flex-wrap gap-2">
-              {isLoadingTags && (
-                <p className="text-xs text-[var(--text-muted)] italic">Loading tags…</p>
-              )}
-              {systemTagOptions.map((tag) => {
-                const isSelected = formData.system_tags.includes(tag.tag_id);
-                const isDisabled =
-                  !isSelected && formData.system_tags.length >= SYSTEM_TAG_CAP;
-                return (
-                  <button
-                    key={tag.tag_id}
-                    type="button"
-                    onClick={() => toggleSystemTag(tag.tag_id)}
-                    disabled={isDisabled}
-                    className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-all ${
-                      isSelected
-                        ? "bg-purple-600 text-white border-purple-600 shadow-sm"
-                        : isDisabled
-                        ? "bg-[var(--bg-active)] text-[var(--text-muted)] border-[var(--border-main)] opacity-40 cursor-not-allowed"
-                        : "bg-transparent text-[var(--text-main)] border-[var(--border-main)] hover:border-purple-400 hover:text-purple-600 cursor-pointer"
-                    }`}
-                  >
-                    {tag.name}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* ── Custom Tags ──────────────────────────────────── */}
-          <div>
-            <div className="flex items-center justify-between mb-2">
-              <label className="text-sm font-medium text-[var(--text-main)]">
-                Custom Tags{" "}
-                <span className="text-[var(--text-muted)] text-xs font-normal">
-                  (optional)
-                </span>
-              </label>
-              <span
-                className={`text-xs font-medium px-2 py-0.5 rounded-full ${
-                  formData.custom_tags.length >= CUSTOM_TAG_CAP
-                    ? "bg-indigo-100 text-indigo-700"
-                    : "text-[var(--text-muted)]"
-                }`}
-              >
-                {formData.custom_tags.length}/{CUSTOM_TAG_CAP} added
-              </span>
-            </div>
-
-            {/* Existing custom tags */}
-            {formData.custom_tags.length > 0 && (
-              <div className="flex flex-wrap gap-2 mb-2">
-                {formData.custom_tags.map((tag) => (
-                  <span
-                    key={tag}
-                    className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium bg-indigo-50 text-indigo-700 border border-indigo-200"
-                  >
-                    {tag}
-                    <button
-                      type="button"
-                      onClick={() => removeCustomTag(tag)}
-                      className="hover:text-indigo-900 ml-0.5 transition-colors"
-                    >
-                      <X className="w-3 h-3" />
-                    </button>
-                  </span>
-                ))}
-              </div>
-            )}
-
-            {/* Custom tag input — hidden once cap is reached */}
-            {formData.custom_tags.length < CUSTOM_TAG_CAP && (
-              <div className="flex gap-2">
-                <input
-                  type="text"
-                  value={customTagInput}
-                  onChange={(e) => setCustomTagInput(e.target.value)}
-                  onKeyDown={handleCustomTagKeyDown}
-                  placeholder="e.g. hackathon, feedback…"
-                  maxLength={50}
-                  className="flex-1 px-4 py-2 border border-[var(--border-main)] rounded-xl focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 outline-none transition-all bg-transparent text-[var(--text-main)] text-sm"
-                />
-                <button
-                  type="button"
-                  onClick={addCustomTag}
-                  disabled={!customTagInput.trim()}
-                  className="px-3 py-2 bg-purple-50 text-purple-600 border border-purple-200 rounded-xl hover:bg-purple-100 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
-                >
-                  <Plus className="w-4 h-4" />
-                </button>
-              </div>
-            )}
-          </div>
+          <TagSelectorSection
+            customTags={formData.custom_tags}
+            systemTags={formData.system_tags}
+            customTagInput={customTagInput}
+            setCustomTagInput={setCustomTagInput}
+            customTagCap={CUSTOM_TAG_CAP}
+            systemTagCap={SYSTEM_TAG_CAP}
+            systemTagOptions={systemTagOptions}
+            isLoadingTags={isLoadingTags}
+            customTagPlaceholder="Add custom tag (e.g. hackathon, feedback)"
+            onAddCustomTag={addCustomTag}
+            onRemoveCustomTag={removeCustomTag}
+            onToggleSystemTag={toggleSystemTag}
+            onCustomTagKeyDown={handleCustomTagKeyDown}
+          />
 
           <input
             type="text"

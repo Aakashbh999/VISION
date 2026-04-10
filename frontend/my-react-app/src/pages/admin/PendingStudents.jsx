@@ -21,7 +21,7 @@ const PendingStudents = () => {
   const approveMutation = useMutation({
     mutationFn: approveStudent,
     onSuccess: () => {
-      queryClient.invalidateQueries(["pendingStudents"]);
+      queryClient.invalidateQueries({ queryKey: ["pendingStudents"] });
       showToast.success("Student approved");
     },
     onError: (err) => showToast.error("Failed to approve student"),
@@ -30,7 +30,7 @@ const PendingStudents = () => {
   const rejectMutation = useMutation({
     mutationFn: rejectStudent,
     onSuccess: () => {
-      queryClient.invalidateQueries(["pendingStudents"]);
+      queryClient.invalidateQueries({ queryKey: ["pendingStudents"] });
       showToast.success("Student registration rejected");
     },
     onError: (err) => showToast.error("Failed to reject student"),
@@ -46,7 +46,7 @@ const PendingStudents = () => {
       onConfirm: () => {
         approveMutation.mutate(userId);
         setModalConfig({ isOpen: false });
-      }
+      },
     });
   };
 
@@ -60,14 +60,16 @@ const PendingStudents = () => {
       onConfirm: () => {
         rejectMutation.mutate(userId);
         setModalConfig({ isOpen: false });
-      }
+      },
     });
   };
 
   if (isLoading) return <LoadingSpinner />;
   if (error)
     return (
-      <div className="p-8 text-red-500 font-medium">Failed to load pending students</div>
+      <div className="p-8 text-red-500 font-medium">
+        Failed to load pending students
+      </div>
     );
 
   const students = data?.data || [];
@@ -75,7 +77,9 @@ const PendingStudents = () => {
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center text-left">
-        <h1 className="text-2xl font-bold text-text-main">Pending Registrations</h1>
+        <h1 className="text-2xl font-bold text-text-main">
+          Pending Registrations
+        </h1>
         <div className="flex items-center gap-2 text-xs font-semibold text-blue-600 bg-blue-50/10 px-3 py-1.5 rounded-full border border-blue-500/20">
           <Clock className="w-4 h-4" /> Review Queue
         </div>
@@ -84,8 +88,13 @@ const PendingStudents = () => {
       {students.length === 0 ? (
         <div className="bg-bg-card rounded-2xl border border-dashed border-border-main p-16 text-center">
           <Inbox className="w-12 h-12 text-text-muted/30 mx-auto mb-4" />
-          <h3 className="text-lg font-bold text-text-main">Zero Pending Students</h3>
-          <p className="text-text-muted max-w-sm mx-auto">You've cleared the registration queue! New student applications will appear here for review.</p>
+          <h3 className="text-lg font-bold text-text-main">
+            Zero Pending Students
+          </h3>
+          <p className="text-text-muted max-w-sm mx-auto">
+            You've cleared the registration queue! New student applications will
+            appear here for review.
+          </p>
         </div>
       ) : (
         <div className="bg-bg-card rounded-2xl border border-border-main overflow-hidden shadow-sm">
@@ -108,17 +117,28 @@ const PendingStudents = () => {
             </thead>
             <tbody className="bg-bg-card divide-y divide-border-main">
               {students.map((student) => (
-                <tr key={student.user_id} className="hover:bg-bg-active/30 transition-colors">
+                <tr
+                  key={student.user_id}
+                  className="hover:bg-bg-active/30 transition-colors"
+                >
                   <td className="px-6 py-4">
                     <div className="flex flex-col">
-                      <span className="text-sm font-bold text-text-main">{student.full_name}</span>
-                      <span className="text-xs text-text-muted">{student.email}</span>
+                      <span className="text-sm font-bold text-text-main">
+                        {student.full_name}
+                      </span>
+                      <span className="text-xs text-text-muted">
+                        {student.email}
+                      </span>
                     </div>
                   </td>
                   <td className="px-6 py-4">
                     <div className="flex flex-col">
-                      <span className="text-sm font-medium text-text-main">{student.program_name}</span>
-                      <span className="text-xs text-text-muted">Semester: {student.semester}</span>
+                      <span className="text-sm font-medium text-text-main">
+                        {student.program_name}
+                      </span>
+                      <span className="text-xs text-text-muted">
+                        Semester: {student.semester}
+                      </span>
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
@@ -129,7 +149,9 @@ const PendingStudents = () => {
                   <td className="px-6 py-4 text-right">
                     <div className="flex justify-end gap-2">
                       <button
-                        onClick={() => handleApprove(student.user_id, student.full_name)}
+                        onClick={() =>
+                          handleApprove(student.user_id, student.full_name)
+                        }
                         disabled={approveMutation.isPending}
                         className="p-2 text-green-600 hover:bg-green-500/10 rounded-xl transition-all border border-transparent hover:border-green-500/20"
                         title="Approve Student"
@@ -137,7 +159,9 @@ const PendingStudents = () => {
                         <Check className="w-5 h-5" />
                       </button>
                       <button
-                        onClick={() => handleReject(student.user_id, student.full_name)}
+                        onClick={() =>
+                          handleReject(student.user_id, student.full_name)
+                        }
                         disabled={rejectMutation.isPending}
                         className="p-2 text-red-500 hover:bg-red-500/10 rounded-xl transition-all border border-transparent hover:border-red-500/20"
                         title="Reject Student"

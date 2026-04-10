@@ -1,13 +1,13 @@
 import React, { useState, useMemo } from "react";
 import { Link, useSearchParams, useNavigate } from "react-router-dom";
-import { 
-  Search, 
-  Plus, 
-  Filter, 
-  X, 
-  Award, 
-  SlidersHorizontal, 
-  ChevronLeft 
+import {
+  Search,
+  Plus,
+  Filter,
+  X,
+  Award,
+  SlidersHorizontal,
+  ChevronLeft,
 } from "lucide-react";
 // Forcing a fresh build by refactoring imports.
 
@@ -188,7 +188,6 @@ const ResourcesContent = () => {
             <option value="notes">Lecture Notes</option>
             <option value="book">Textbooks</option>
             <option value="project">Student Projects</option>
-            <option value="link">External Links</option>
             <option value="pdf">PDF Documents</option>
             <option value="image">Images</option>
           </select>
@@ -304,12 +303,15 @@ const ResourcesContent = () => {
 
 const Resources = () => {
   const [searchParams] = useSearchParams();
-  
+
   // Initialize filters from URL search params on mount to avoid double-fetching
   const initialFilters = useMemo(() => {
     return {
       search: searchParams.get("search") || "",
-      resource_type: searchParams.get("resource_type") || "",
+      resource_type:
+        searchParams.get("resource_type") === "link"
+          ? ""
+          : searchParams.get("resource_type") || "",
       program_id: searchParams.get("program_id") || "",
       semester: searchParams.get("semester") || "",
       degree_id: searchParams.get("degree_id") || "",

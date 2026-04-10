@@ -8,8 +8,8 @@ export const useMarkAllRead = () => {
     mutationFn: markAllNotificationsRead,
     onSuccess: (data) => {
       toastSuccess(data.message);
-      queryClient.invalidateQueries(["notifications"]);
-      queryClient.invalidateQueries(["unreadCount"]);
+      queryClient.invalidateQueries({ queryKey: ["notifications"] });
+      queryClient.invalidateQueries({ queryKey: ["unreadCount"] });
     },
   });
 };

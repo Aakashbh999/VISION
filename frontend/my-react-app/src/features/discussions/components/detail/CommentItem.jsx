@@ -91,7 +91,7 @@ const CommentItem = ({
                 )}
               </button>
               <span
-                className={`text-xs font-black px-1 min-w-[1.2rem] text-center ${comment.user_vote === 1 ? "text-purple-600" : comment.user_vote === -1 ? "text-red-600" : "text-[var(--text-muted)]"}`}
+                className={`text-xs font-black px-1 min-w-[1.2rem] text-center ${comment.user_vote === 1 ? "text-purple-600" : "text-[var(--text-muted)]"}`}
               >
                 {comment.likes_count || 0}
               </span>

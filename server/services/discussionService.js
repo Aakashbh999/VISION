@@ -56,7 +56,7 @@ const buildFilterConditions = (filters, startParamIndex = 1) => {
   if (filters.search) {
     // Use trigram similarity operator (%) for fuzzy matching + ILIKE for prefix/exact matching
     conditions.push(
-      `(d.title % $${paramIndex} OR d.content % $${paramIndex} OR d.title ILIKE $${paramIndex + 1} OR d.content ILIKE $${paramIndex + 1})`
+      `(d.title % $${paramIndex} OR d.content % $${paramIndex} OR d.title ILIKE $${paramIndex + 1} OR d.content ILIKE $${paramIndex + 1})`,
     );
     params.push(filters.search);
     params.push(`%${filters.search}%`);
@@ -80,14 +80,22 @@ const buildFilterConditions = (filters, startParamIndex = 1) => {
  * Build ORDER BY clause based on sort parameter
  * Defaults to prioritizing active boosts
  * @param {string} sort - Sort option
+ * @param {string} search - Search query
+ * @param {boolean} hasUserId - Whether a user is logged in
+ * @param {number} searchParamIndex - The index of the primary search parameter
  * @returns {string} - ORDER BY clause
  */
-const buildSortClause = (sort, search = null, hasUserId = false) => {
+const buildSortClause = (
+  sort,
+  search = null,
+  hasUserId = false,
+  searchParamIndex = 1,
+) => {
   const boostPriority = `CASE WHEN d.is_boosted = TRUE AND d.boosted_until > NOW() THEN 0 ELSE 1 END ASC`;
 
   // If searching and no specific sort is requested, prioritize by similarity score
   if (search && (!sort || sort === "latest")) {
-    return `ORDER BY ${boostPriority}, similarity(d.title, $1) DESC, d.created_at DESC`;
+    return `ORDER BY ${boostPriority}, similarity(d.title, $${searchParamIndex}) DESC, d.created_at DESC`;
   }
 
   if (sort === "recommended" && hasUserId) {
@@ -118,7 +126,29 @@ exports.getDiscussions = async (filters = {}, currentUserId = null) => {
     params,
     paramIndex: filterParamIndex,
   } = buildFilterConditions(filters);
-  const sortClause = buildSortClause(filters.sort, filters.search, !!currentUserId);
+
+  // Find the search parameter index if search is present
+  // In buildFilterConditions, search params are added last (before userId)
+  // We need the index of the RAW search term, which is filters.search
+  let searchParamIndex = 1;
+  if (filters.search) {
+    // It's the paramIndex *before* the search params were added
+    // Let's re-calculate it more reliably
+    let idx = 1;
+    if (filters.specialization) idx++;
+    if (filters.degree) idx++;
+    if (filters.jobRole) idx++;
+    if (filters.program) idx++;
+    if (filters.tag) idx++;
+    searchParamIndex = idx;
+  }
+
+  const sortClause = buildSortClause(
+    filters.sort,
+    filters.search,
+    !!currentUserId,
+    searchParamIndex,
+  );
 
   // Pagination
   const page = parseInt(filters.page) || 1;
@@ -539,6 +569,12 @@ exports.handleVote = async (discussionId, userId, voteType) => {
   try {
     await client.query("BEGIN");
 
+    const authorRes = await client.query(
+      "SELECT user_id FROM portal.discussions WHERE discussion_id = $1",
+      [discId],
+    );
+    const authorId = authorRes.rows[0]?.user_id;
+
     // 1. Get existing vote
     const existingRes = await client.query(
       `SELECT vote_type FROM portal.discussion_likes WHERE discussion_id = $1 AND user_id = $2`,
@@ -589,27 +625,21 @@ exports.handleVote = async (discussionId, userId, voteType) => {
     const diff = newVoteType - oldVoteType;
 
     // 4. XP Logic
-    const authorRes = await client.query(
-      "SELECT user_id FROM portal.discussions WHERE discussion_id = $1",
-      [discId],
-    );
-    const authorId = authorRes.rows[0]?.user_id;
-
     if (authorId && authorId !== uId) {
-      // Grant +10 XP for NEW upvote
+      // Grant +5 XP for NEW upvote
       if (newVoteType === 1 && oldVoteType !== 1) {
         await XPService.updateUserXP(
           authorId,
-          10,
+          5,
           "Received a Discussion Upvote",
           client,
         );
       }
-      // Deduct 10 XP if removing upvote (toggle off or switch to downvote)
+      // Deduct 5 XP if removing upvote (toggle off or switch to downvote)
       else if (oldVoteType === 1 && newVoteType !== 1) {
         await XPService.updateUserXP(
           authorId,
-          -10,
+          -5,
           "Discussion Upvote Removed",
           client,
         );
@@ -617,7 +647,11 @@ exports.handleVote = async (discussionId, userId, voteType) => {
     }
 
     await client.query("COMMIT");
-    return { voteType: newVoteType, scoreDiff: diff };
+    return {
+      voteType: newVoteType,
+      scoreDiff: diff,
+      authorId,
+    };
   } catch (error) {
     await client.query("ROLLBACK");
     throw error;
@@ -681,6 +715,16 @@ exports.handleCommentVote = async (commentId, userId, voteType) => {
   try {
     await client.query("BEGIN");
 
+    const authorRes = await client.query(
+      "SELECT user_id FROM portal.discussion_comments WHERE comment_id = $1",
+      [commId],
+    );
+    const authorId = authorRes.rows[0]?.user_id;
+
+    if (authorId && authorId === uId) {
+      throw new Error("Cannot vote on your own comment.");
+    }
+
     // 1. Get existing vote
     const existingRes = await client.query(
       `SELECT vote_type FROM portal.comment_likes WHERE comment_id = $1 AND user_id = $2`,
@@ -727,13 +771,6 @@ exports.handleCommentVote = async (commentId, userId, voteType) => {
     );
     const diff = newVoteType - oldVoteType;
 
-    // 4. XP Logic: Author gets +2 VXP
-    const authorRes = await client.query(
-      "SELECT user_id FROM portal.discussion_comments WHERE comment_id = $1",
-      [commId],
-    );
-    const authorId = authorRes.rows[0]?.user_id;
-
     if (authorId && authorId !== uId) {
       // Grant +2 XP for NEW upvote
       if (newVoteType === 1 && oldVoteType !== 1) {
@@ -756,7 +793,11 @@ exports.handleCommentVote = async (commentId, userId, voteType) => {
     }
 
     await client.query("COMMIT");
-    return { voteType: newVoteType, scoreDiff: diff };
+    return {
+      voteType: newVoteType,
+      scoreDiff: diff,
+      authorId,
+    };
   } catch (error) {
     await client.query("ROLLBACK");
     throw error;

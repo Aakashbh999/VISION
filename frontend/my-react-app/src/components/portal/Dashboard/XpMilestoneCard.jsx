@@ -44,13 +44,15 @@ const MILESTONES = [
   },
 ];
 
-const XpMilestoneCard = () => {
+const XpMilestoneCard = ({ compact = false }) => {
   const { data: stats, isLoading } = useUserStats();
   const [showModal, setShowModal] = useState(false);
 
   if (isLoading) {
     return (
-      <div className="bg-[var(--bg-card)] rounded-sm sm:rounded-2xl border border-[var(--border-main)] border-x-0 sm:border-x p-6 space-y-4">
+      <div
+        className={`bg-[var(--bg-card)] rounded-sm sm:rounded-2xl border border-[var(--border-main)] border-x-0 sm:border-x ${compact ? "p-5" : "p-6"} space-y-4`}
+      >
         <Skeleton variant="text" className="w-1/3 h-4" />
         <Skeleton variant="rectangular" className="h-2 rounded-full w-full" />
         <div className="grid grid-cols-2 gap-3">
@@ -89,7 +91,7 @@ const XpMilestoneCard = () => {
       {/* Summary Card for Dashboard Grid */}
       <button
         onClick={() => setShowModal(true)}
-        className="bg-[var(--bg-card)] rounded-sm sm:rounded-2xl border border-[var(--border-main)] border-x-0 sm:border-x p-6 hover:shadow-lg transition-all text-left flex flex-col justify-between group h-full cursor-pointer"
+        className={`bg-[var(--bg-card)] rounded-sm sm:rounded-2xl border border-[var(--border-main)] border-x-0 sm:border-x ${compact ? "p-5" : "p-6"} hover:shadow-lg transition-all text-left flex flex-col group cursor-pointer`}
       >
         <div className="flex items-center justify-between w-full">
           <div>
@@ -97,7 +99,9 @@ const XpMilestoneCard = () => {
               VXP Journey
             </h3>
             <div className="flex items-baseline gap-1.5">
-              <span className="text-xl sm:text-2xl font-black text-[var(--text-main)]">
+              <span
+                className={`${compact ? "text-2xl" : "text-xl sm:text-2xl"} font-black text-[var(--text-main)]`}
+              >
                 {total_xp.toLocaleString()}
               </span>
               <span className="text-sm font-bold text-purple-600 dark:text-purple-400">
@@ -106,19 +110,23 @@ const XpMilestoneCard = () => {
             </div>
           </div>
           <div className="relative shrink-0">
-            <div className="w-12 h-12 bg-purple-600 rotate-45 rounded-xl shadow-lg shadow-purple-500/20 group-hover:scale-110 transition-transform" />
+            <div
+              className={`${compact ? "w-11 h-11" : "w-12 h-12"} bg-purple-600 rotate-45 rounded-xl shadow-lg shadow-purple-500/20 group-hover:scale-110 transition-transform`}
+            />
             <div className="absolute inset-0 flex flex-col items-center justify-center text-white pointer-events-none">
               <span className="text-[8px] font-black uppercase leading-none opacity-60">
                 LVL
               </span>
-              <span className="text-sm font-black text-amber-300">
+              <span
+                className={`${compact ? "text-xs" : "text-sm"} font-black text-amber-300`}
+              >
                 {current_level}
               </span>
             </div>
           </div>
         </div>
 
-        <div className="mt-4 pt-4 border-t border-[var(--border-main)] flex items-center justify-between w-full">
+        <div className="mt-3 pt-3 border-t border-[var(--border-main)] flex items-center justify-between w-full">
           <span className="text-xs font-medium text-[var(--text-muted)]">
             {nextMilestone
               ? `Next: ${nextMilestone.label}`

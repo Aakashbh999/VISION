@@ -20,11 +20,13 @@ export const useApproveResource = () => {
     mutationFn: (id) => approveResource(id),
     onSuccess: (data) => {
       toast.success(data?.message || "Resource approved.");
-      queryClient.invalidateQueries(["pending-resources"]);
-      queryClient.invalidateQueries(["resources"]); // Invalidate public resources list
+      queryClient.invalidateQueries({ queryKey: ["pending-resources"] });
+      queryClient.invalidateQueries({ queryKey: ["resources"] }); // Invalidate public resources list
     },
     onError: (error) => {
-      toast.error(error.response?.data?.message || "Failed to approve resource.");
+      toast.error(
+        error.response?.data?.message || "Failed to approve resource.",
+      );
     },
   });
 };
@@ -36,10 +38,12 @@ export const useRejectResource = () => {
     mutationFn: ({ id, reason }) => rejectResource(id, reason),
     onSuccess: (data) => {
       toast.success(data?.message || "Resource rejected.");
-      queryClient.invalidateQueries(["pending-resources"]);
+      queryClient.invalidateQueries({ queryKey: ["pending-resources"] });
     },
     onError: (error) => {
-      toast.error(error.response?.data?.message || "Failed to reject resource.");
+      toast.error(
+        error.response?.data?.message || "Failed to reject resource.",
+      );
     },
   });
 };

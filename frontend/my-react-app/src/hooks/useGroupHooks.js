@@ -72,7 +72,7 @@ export const useCreateGroup = () => {
   return useMutation({
     mutationFn: createGroup,
     onSuccess: (data) => {
-      queryClient.invalidateQueries(["groups"]);
+      queryClient.invalidateQueries({ queryKey: ["groups"] });
       navigate(`/portal/groups/${data.group_id}`);
     },
   });
@@ -96,9 +96,9 @@ export const useLeaveGroup = (groupId) => {
   return useMutation({
     mutationFn: () => leaveGroup(groupId),
     onSuccess: () => {
-      queryClient.invalidateQueries(["group", groupId]);
-      queryClient.invalidateQueries(["groupMembers", groupId]);
-      queryClient.invalidateQueries(["groups"]);
+      queryClient.invalidateQueries({ queryKey: ["group", groupId] });
+      queryClient.invalidateQueries({ queryKey: ["groupMembers", groupId] });
+      queryClient.invalidateQueries({ queryKey: ["groups"] });
     },
   });
 };

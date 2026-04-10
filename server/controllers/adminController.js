@@ -196,7 +196,7 @@ exports.deleteDiscussion = catchAsync(async (req, res) => {
     const result = await pool.query(
       `
       UPDATE portal.discussions
-      SET deleted_at = NOW()
+      SET deleted_at = NOW(), is_deleted = TRUE
       WHERE discussion_id = $1
       AND deleted_at IS NULL
       RETURNING discussion_id
@@ -839,8 +839,9 @@ exports.resolveReportWithAction = catchAsync(async (req, res) => {
             }
             
             if (tableName) {
+                const extraSet = (type === "discussion" || type === "comment") ? ", is_deleted = TRUE" : "";
                 await client.query(
-                    `UPDATE ${tableName} SET deleted_at = NOW() WHERE ${idColumn} = $1`,
+                    `UPDATE ${tableName} SET deleted_at = NOW()${extraSet} WHERE ${idColumn} = $1`,
                     [report.target_id]
                 );
                 await logAdminEvent(req, AuditActions.ADMIN_DELETE_CONTENT, report.target_type, report.target_id);

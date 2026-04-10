@@ -25,7 +25,6 @@ const DiscussionsContainer = () => {
   const {
     loadingLike,
     loadingSave,
-    downvotedPosts,
     handleLike,
     handleDownvote,
     handleSave,
@@ -67,7 +66,6 @@ const DiscussionsContainer = () => {
           user={user}
           loadingLike={loadingLike}
           loadingSave={loadingSave}
-          downvotedPosts={downvotedPosts}
           onLike={handleLike}
           onDownvote={handleDownvote}
           onSave={handleSave}

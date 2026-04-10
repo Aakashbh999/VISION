@@ -75,6 +75,8 @@ export const useUpdateProfileImage = () => {
     mutationFn: profileService.updateProfileImage,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["profile", "me"] });
+      queryClient.invalidateQueries({ queryKey: ["userStats"] });
+      queryClient.invalidateQueries({ queryKey: ["me"] });
       showToast.success("Profile picture updated.");
     },
     onError: (err) => {
@@ -91,6 +93,8 @@ export const useUpdateProfileBanner = () => {
     mutationFn: profileService.updateProfileBanner,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["profile", "me"] });
+      queryClient.invalidateQueries({ queryKey: ["userStats"] });
+      queryClient.invalidateQueries({ queryKey: ["me"] });
       showToast.success("Banner updated.");
     },
     onError: (err) => {
@@ -105,6 +109,7 @@ export const useRemoveProfileImage = () => {
     mutationFn: profileService.removeProfileImage,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["profile", "me"] });
+      queryClient.invalidateQueries({ queryKey: ["me"] });
       showToast.success("Profile picture removed.");
     },
     onError: (err) => {
@@ -121,6 +126,7 @@ export const useRemoveProfileBanner = () => {
     mutationFn: profileService.removeProfileBanner,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["profile", "me"] });
+      queryClient.invalidateQueries({ queryKey: ["me"] });
       showToast.success("Banner removed.");
     },
     onError: (err) => {

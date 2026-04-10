@@ -15,24 +15,24 @@ const Notifications = () => {
   const markReadMutation = useMutation({
     mutationFn: markNotificationRead,
     onSuccess: () => {
-      queryClient.invalidateQueries(["notifications"]);
-      queryClient.invalidateQueries(["unreadCount"]);
+      queryClient.invalidateQueries({ queryKey: ["notifications"] });
+      queryClient.invalidateQueries({ queryKey: ["unreadCount"] });
     },
   });
 
   const deleteMutation = useMutation({
     mutationFn: deleteNotification,
     onSuccess: () => {
-      queryClient.invalidateQueries(["notifications"]);
-      queryClient.invalidateQueries(["unreadCount"]);
+      queryClient.invalidateQueries({ queryKey: ["notifications"] });
+      queryClient.invalidateQueries({ queryKey: ["unreadCount"] });
     },
   });
 
   const clearAllMutation = useMutation({
     mutationFn: clearNotifications,
     onSuccess: () => {
-      queryClient.invalidateQueries(["notifications"]);
-      queryClient.invalidateQueries(["unreadCount"]);
+      queryClient.invalidateQueries({ queryKey: ["notifications"] });
+      queryClient.invalidateQueries({ queryKey: ["unreadCount"] });
     },
   });
 

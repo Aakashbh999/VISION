@@ -294,7 +294,12 @@ exports.getResources = catchAsync(async (req, res) => {
   const offset = (pageNum - 1) * limitNum;
 
   const params = [];
-  const conditions = ["r.status = 'approved'", "r.deleted_at IS NULL"];
+  const conditions = [
+    "r.status = 'approved'",
+    "r.deleted_at IS NULL",
+    "r.resource_type <> 'link'",
+    "NOT EXISTS (SELECT 1 FROM portal.step_resource_map srm WHERE srm.resource_id = r.resource_id)",
+  ];
 
   if (program_id) {
     params.push(parseInt(program_id));
@@ -364,9 +369,12 @@ exports.getResources = catchAsync(async (req, res) => {
   const result = await pool.query(
     `SELECT
          r.*,
+         u.user_id AS uploader_id,
+         u.full_name AS uploader_name,
          ad.full_name AS degree_name,
          p.program_name${selectAdditions}
        FROM portal.resources r
+       LEFT JOIN portal.users u ON u.user_id = r.created_by
        LEFT JOIN portal.academic_degrees ad ON ad.id = r.degree_id
        LEFT JOIN portal.programs p ON p.program_id = r.program_id
        ${joinAdditions}
@@ -428,12 +436,22 @@ exports.getMyResources = catchAsync(async (req, res) => {
   const result = await pool.query(
     `SELECT
          r.*,
+         u.user_id AS uploader_id,
+         u.full_name AS uploader_name,
          ad.full_name AS degree_name,
          p.program_name
        FROM portal.resources r
+       LEFT JOIN portal.users u ON u.user_id = r.created_by
        LEFT JOIN portal.academic_degrees ad ON ad.id = r.degree_id
        LEFT JOIN portal.programs p ON p.program_id = r.program_id
-       WHERE r.created_by = $1 AND r.deleted_at IS NULL
+       WHERE r.created_by = $1
+         AND r.deleted_at IS NULL
+         AND r.resource_type <> 'link'
+         AND NOT EXISTS (
+           SELECT 1
+           FROM portal.step_resource_map srm
+           WHERE srm.resource_id = r.resource_id
+         )
        ORDER BY r.created_at DESC`,
     [userId],
   );
@@ -457,6 +475,7 @@ exports.getPendingResources = catchAsync(async (req, res) => {
     pool.query(
       `SELECT
            r.*,
+           u.user_id AS uploader_id,
            u.full_name AS uploader_name,
            a.email    AS uploader_email,
            ad.full_name AS degree_name,

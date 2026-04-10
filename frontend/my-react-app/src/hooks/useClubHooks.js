@@ -25,8 +25,8 @@ export const useJoinClub = (clubId) => {
   return useMutation({
     mutationFn: () => joinClub(clubId),
     onSuccess: () => {
-      queryClient.invalidateQueries(["club", clubId]);
-      queryClient.invalidateQueries(["clubs"]);
+      queryClient.invalidateQueries({ queryKey: ["club", clubId] });
+      queryClient.invalidateQueries({ queryKey: ["clubs"] });
     },
   });
 };
@@ -36,8 +36,8 @@ export const useLeaveClub = (clubId) => {
   return useMutation({
     mutationFn: () => leaveClub(clubId),
     onSuccess: () => {
-      queryClient.invalidateQueries(["club", clubId]);
-      queryClient.invalidateQueries(["clubs"]);
+      queryClient.invalidateQueries({ queryKey: ["club", clubId] });
+      queryClient.invalidateQueries({ queryKey: ["clubs"] });
     },
   });
 };

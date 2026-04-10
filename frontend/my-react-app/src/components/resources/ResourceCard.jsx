@@ -14,6 +14,7 @@ import {
   X,
   FileType,
 } from "lucide-react";
+import { Link } from "react-router-dom";
 import { formatDistanceToNow } from "date-fns";
 
 // Check if URL is an image (supported for preview on free tier)
@@ -146,6 +147,7 @@ const ResourceCard = ({
     file_url,
     url,
     uploader_name,
+    uploader_id,
     program_name,
     semester,
     status,
@@ -306,7 +308,7 @@ const ResourceCard = ({
           </div>
 
           {/* Title & Description */}
-          <h3 className="font-bold text-[var(--text-main)] text-lg mb-2 line-clamp-2 group-hover:text-purple-600 transition-colors">
+          <h3 className="font-bold text-[var(--text-main)] text-lg mb-2 line-clamp-2">
             {title}
           </h3>
           <p className="text-[var(--text-muted)] text-sm mb-4 line-clamp-3 flex-1">
@@ -335,10 +337,23 @@ const ResourceCard = ({
               )}
             </div>
             <div className="flex items-center justify-between text-xs text-[var(--text-muted)] mt-2">
-              <span className="flex items-center gap-1">
-                <User className="w-3 h-3" />
-                {uploader_name || "Unknown"}
-              </span>
+              {uploader_id ? (
+                <Link
+                  to={`/profile/${uploader_id}`}
+                  className="flex items-center gap-1 hover:text-purple-600 transition-colors"
+                  title="View profile"
+                >
+                  <User className="w-3 h-3" />
+                  <span className="font-medium">
+                    {uploader_name || "Unknown"}
+                  </span>
+                </Link>
+              ) : (
+                <span className="flex items-center gap-1">
+                  <User className="w-3 h-3" />
+                  {uploader_name || "Unknown"}
+                </span>
+              )}
               <span className="flex items-center gap-1">
                 <Clock className="w-3 h-3" />
                 {formatDistanceToNow(new Date(created_at), { addSuffix: true })}

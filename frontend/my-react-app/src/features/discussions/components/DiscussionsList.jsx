@@ -10,7 +10,7 @@ import ForYouBadge from "./ForYouBadge";
  * - filters: current filter values
  * - discussions: normalized discussions array
  * - user: authenticated user object
- * - loadingLike/loadingSave/downvotedPosts: mutation ui states
+ * - loadingLike/loadingSave: mutation ui states
  * - onLike/onDownvote/onSave/onShare: interaction callbacks
  * - onImageClick: open lightbox callback
  */
@@ -23,7 +23,6 @@ const DiscussionsList = ({
   user,
   loadingLike,
   loadingSave,
-  downvotedPosts,
   onLike,
   onDownvote,
   onSave,
@@ -108,7 +107,6 @@ const DiscussionsList = ({
           handleShare={onShare}
           loadingLike={loadingLike}
           loadingSave={loadingSave}
-          downvotedPosts={downvotedPosts}
           onImageClick={onImageClick}
         />
       ))}

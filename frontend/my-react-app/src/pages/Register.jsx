@@ -59,7 +59,9 @@ const Register = () => {
     const fetchTags = async () => {
       setIsLoadingTags(true);
       try {
-        const res = await api.get("/discussions/tags", { params: { type: "system" } });
+        const res = await api.get("/discussions/tags", {
+          params: { type: "system" },
+        });
         setSystemTagOptions(Array.isArray(res.data) ? res.data : []);
       } catch (err) {
         setSystemTagOptions([]);
@@ -123,7 +125,10 @@ const Register = () => {
     setFormData((prev) => {
       const already = prev.career_scope.includes(tagName);
       if (already) {
-        return { ...prev, career_scope: prev.career_scope.filter((t) => t !== tagName) };
+        return {
+          ...prev,
+          career_scope: prev.career_scope.filter((t) => t !== tagName),
+        };
       }
       if (prev.career_scope.length >= 5) return prev;
       return { ...prev, career_scope: [...prev.career_scope, tagName] };
@@ -140,7 +145,12 @@ const Register = () => {
   };
 
   const validateStep1 = () => {
-    if (!formData.email || !formData.password || !formData.confirmPassword || !formData.full_name) {
+    if (
+      !formData.email ||
+      !formData.password ||
+      !formData.confirmPassword ||
+      !formData.full_name
+    ) {
       setError("Fill in all required fields.");
       return false;
     }
@@ -148,7 +158,11 @@ const Register = () => {
       setError("Password must be at least 8 characters.");
       return false;
     }
-    if (!/[A-Z]/.test(formData.password) || !/[a-z]/.test(formData.password) || !/[0-9]/.test(formData.password)) {
+    if (
+      !/[A-Z]/.test(formData.password) ||
+      !/[a-z]/.test(formData.password) ||
+      !/[0-9]/.test(formData.password)
+    ) {
       setError("Password must include uppercase, lowercase, and a number.");
       return false;
     }
@@ -206,8 +220,7 @@ const Register = () => {
       navigate("/dashboard");
     } catch (err) {
       setError(
-        err.response?.data?.error ||
-          "Registration failed. Check your data.",
+        err.response?.data?.error || "Registration failed. Check your data.",
       );
       toast.error(err.response?.data?.error || "Registration failed.");
     } finally {
@@ -235,7 +248,7 @@ const Register = () => {
             </h1>
             <p className="text-[var(--text-muted)] mt-1 font-medium italic">
               {step === 1
-                ? "Join the community of TU IT students."
+                ? "Join the community of IT students."
                 : "Help us personalize your experience."}
             </p>
           </div>
@@ -345,7 +358,9 @@ const Register = () => {
               <Link
                 to="/login"
                 className="text-purple-600 font-black hover:underline"
-              >Log in</Link>
+              >
+                Log in
+              </Link>
             </p>
           </form>
         ) : (
@@ -488,9 +503,14 @@ const Register = () => {
               </div>
               <div className="flex flex-wrap gap-2 px-1">
                 {isLoadingTags && (
-                  <p className="text-xs text-[var(--text-muted)] italic">Loading tags…</p>
+                  <p className="text-xs text-[var(--text-muted)] italic">
+                    Loading tags…
+                  </p>
                 )}
-                {(showAllTags ? systemTagOptions : systemTagOptions.slice(0, 7)).map((tag) => {
+                {(showAllTags
+                  ? systemTagOptions
+                  : systemTagOptions.slice(0, 7)
+                ).map((tag) => {
                   const isSelected = formData.career_scope.includes(tag.name);
                   const isDisabled =
                     !isSelected && formData.career_scope.length >= 5;
@@ -504,8 +524,8 @@ const Register = () => {
                         isSelected
                           ? "bg-purple-600 text-white border-purple-600 shadow-sm"
                           : isDisabled
-                          ? "bg-[var(--bg-active)] text-[var(--text-muted)] border-[var(--border-main)] opacity-40 cursor-not-allowed"
-                          : "bg-[var(--bg-active)] text-[var(--text-main)] border-[var(--border-main)] hover:border-purple-400 hover:text-purple-600 cursor-pointer"
+                            ? "bg-[var(--bg-active)] text-[var(--text-muted)] border-[var(--border-main)] opacity-40 cursor-not-allowed"
+                            : "bg-[var(--bg-active)] text-[var(--text-main)] border-[var(--border-main)] hover:border-purple-400 hover:text-purple-600 cursor-pointer"
                       }`}
                     >
                       {tag.name}
@@ -518,7 +538,9 @@ const Register = () => {
                     onClick={() => setShowAllTags(!showAllTags)}
                     className="px-3 py-1.5 rounded-full text-[11px] font-medium border border-transparent text-purple-600 hover:bg-purple-50 transition-colors"
                   >
-                    {showAllTags ? "Show less" : `+${systemTagOptions.length - 7} more`}
+                    {showAllTags
+                      ? "Show less"
+                      : `+${systemTagOptions.length - 7} more`}
                   </button>
                 )}
               </div>
