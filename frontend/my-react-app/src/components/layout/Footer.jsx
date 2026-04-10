@@ -29,7 +29,7 @@ const Footer = ({ withSidebarOffset = false }) => {
         </div>
         <div className="text-center mt-4 sm:mt-6">
           <p className="text-xs text-[var(--text-muted)]">
-            © 2026 VISION. Made for +2 graduates in Nepal.
+            © 2026 VISION. Made for bachelor students in Nepal.
           </p>
         </div>
       </div>
