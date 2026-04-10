@@ -28,7 +28,6 @@ const DiscussionCard = ({
   handleShare,
   loadingLike,
   loadingSave,
-  downvotedPosts,
   onImageClick,
 }) => {
   const [isImageLoading, setIsImageLoading] = useState(true);
@@ -42,13 +41,13 @@ const DiscussionCard = ({
           disabled={loadingLike === disc.discussion_id}
           className={`hover:bg-purple-500/10 p-1.5 rounded-lg transition-all ${
             loadingLike === disc.discussion_id ? "opacity-50 cursor-wait" : ""
-          } ${disc.user_liked && !downvotedPosts[disc.discussion_id] ? "text-purple-500 bg-purple-500/10" : "text-[var(--text-muted)] hover:text-purple-500"}`}
+          } ${disc.user_vote === 1 ? "text-purple-500 bg-purple-500/10" : "text-[var(--text-muted)] hover:text-purple-500"}`}
         >
           {loadingLike === disc.discussion_id ? (
             <ButtonLoader size={20} />
           ) : (
             <ArrowBigUp
-              className={`w-6 h-6 transition-all ${disc.user_liked && !downvotedPosts[disc.discussion_id] ? "fill-purple-500" : ""}`}
+              className={`w-6 h-6 transition-all ${disc.user_vote === 1 ? "fill-purple-500" : ""}`}
             />
           )}
         </button>
@@ -66,18 +65,18 @@ const DiscussionCard = ({
         </span>
         <button
           onClick={(event) =>
-            handleDownvote(event, disc.discussion_id, disc.user_liked)
+            handleDownvote(event, disc.discussion_id, disc.user_vote)
           }
           disabled={loadingLike === disc.discussion_id}
           className={`hover:bg-red-500/10 p-1.5 rounded-lg transition-all ${
             loadingLike === disc.discussion_id ? "opacity-50 cursor-wait" : ""
-          } ${downvotedPosts[disc.discussion_id] ? "text-red-500 bg-red-500/10" : "text-[var(--text-muted)] hover:text-red-500"}`}
+          } ${disc.user_vote === -1 ? "text-red-500 bg-red-500/10" : "text-[var(--text-muted)] hover:text-red-500"}`}
         >
           {loadingLike === disc.discussion_id ? (
             <ButtonLoader size={20} />
           ) : (
             <ArrowBigDown
-              className={`w-6 h-6 transition-all ${downvotedPosts[disc.discussion_id] ? "fill-red-500" : ""}`}
+              className={`w-6 h-6 transition-all ${disc.user_vote === -1 ? "fill-red-500" : ""}`}
             />
           )}
         </button>

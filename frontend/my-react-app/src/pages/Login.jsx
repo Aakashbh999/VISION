@@ -48,10 +48,9 @@ const Login = () => {
       <div className="mx-auto max-w-md">
         <div className="w-full rounded-[2rem] border border-[var(--border-main)] bg-[var(--bg-card)] p-6 shadow-xl shadow-black/5 sm:p-8">
           <div className="mb-6">
-            <p className="text-[10px] font-black uppercase tracking-[0.35em] text-[var(--text-muted)]">
-              Secure access
-            </p>
-            <h2 className="mt-3 text-2xl font-black tracking-tight text-[var(--text-main)]">Log In</h2>
+            <h2 className="mt-3 text-2xl font-black tracking-tight text-[var(--text-main)]">
+              Log In
+            </h2>
             <p className="mt-2 text-sm leading-6 text-[var(--text-muted)]">
               Use your registered email to continue.
             </p>
@@ -115,7 +114,9 @@ const Login = () => {
               isLoading={loading}
               disabled={loading}
             >
-              <LogIn className="h-5 w-5" />Log In</Button>
+              <LogIn className="h-5 w-5" />
+              Log In
+            </Button>
           </form>
 
           <p className="mt-6 text-center text-sm text-[var(--text-muted)]">
@@ -123,7 +124,9 @@ const Login = () => {
             <Link
               to="/register"
               className="font-medium text-purple-600 hover:text-purple-800 dark:text-purple-300 dark:hover:text-purple-200"
-            >Register</Link>
+            >
+              Register
+            </Link>
           </p>
         </div>
       </div>

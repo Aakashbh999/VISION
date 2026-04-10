@@ -30,6 +30,63 @@ export const useDiscussion = (id, sort = "newest") => {
   });
 };
 
+const updateDiscussionVote = (discussion, nextVoteType) => {
+  if (!discussion) return discussion;
+
+  const previousVote = Number(discussion.user_vote || 0);
+  const currentCount = Number(discussion.like_count || 0);
+
+  let nextCount = currentCount;
+  if (previousVote === 1 && nextVoteType !== 1) {
+    nextCount -= 1;
+  } else if (previousVote !== 1 && nextVoteType === 1) {
+    nextCount += 1;
+  }
+
+  return {
+    ...discussion,
+    user_vote: nextVoteType,
+    like_count: Math.max(0, nextCount),
+  };
+};
+
+const updateCommentVoteTree = (comments, targetCommentId, nextVoteType) => {
+  if (!Array.isArray(comments)) return comments;
+
+  return comments.map((comment) => {
+    if (String(comment.comment_id) === String(targetCommentId)) {
+      const previousVote = Number(comment.user_vote || 0);
+      const currentCount = Number(comment.likes_count || 0);
+
+      let nextCount = currentCount;
+      if (previousVote === 1 && nextVoteType !== 1) {
+        nextCount -= 1;
+      } else if (previousVote !== 1 && nextVoteType === 1) {
+        nextCount += 1;
+      }
+
+      return {
+        ...comment,
+        user_vote: nextVoteType,
+        likes_count: Math.max(0, nextCount),
+      };
+    }
+
+    if (Array.isArray(comment.replies) && comment.replies.length > 0) {
+      return {
+        ...comment,
+        replies: updateCommentVoteTree(
+          comment.replies,
+          targetCommentId,
+          nextVoteType,
+        ),
+      };
+    }
+
+    return comment;
+  });
+};
+
 export const useDiscussions = (filters = {}) => {
   return useQuery({
     queryKey: ["discussions", filters],
@@ -59,9 +116,9 @@ export const useUpdateDiscussion = (discussionId) => {
   return useMutation({
     mutationFn: (data) => updateDiscussion(discussionId, data),
     onSuccess: () => {
-      queryClient.invalidateQueries(["discussion", discussionId]);
-      queryClient.invalidateQueries(["discussions"]);
-      queryClient.invalidateQueries(["my-posts"]);
+      queryClient.invalidateQueries({ queryKey: ["discussion", discussionId] });
+      queryClient.invalidateQueries({ queryKey: ["discussions"] });
+      queryClient.invalidateQueries({ queryKey: ["my-posts"] });
     },
   });
 };
@@ -72,8 +129,8 @@ export const useDeleteDiscussion = () => {
     mutationFn: (discussionId) => deleteDiscussion(discussionId),
     onSuccess: () => {
       toast.success("Post archived");
-      queryClient.invalidateQueries(["discussions"]);
-      queryClient.invalidateQueries(["my-posts"]);
+      queryClient.invalidateQueries({ queryKey: ["discussions"] });
+      queryClient.invalidateQueries({ queryKey: ["my-posts"] });
     },
     onError: (err) => {
       toast.error(err.response?.data?.error || "Failed to archive post");
@@ -86,8 +143,8 @@ export const useHardDeleteDiscussion = () => {
   return useMutation({
     mutationFn: (discussionId) => hardDeleteDiscussion(discussionId),
     onSuccess: () => {
-      queryClient.invalidateQueries(["discussions"]);
-      queryClient.invalidateQueries(["my-posts"]);
+      queryClient.invalidateQueries({ queryKey: ["discussions"] });
+      queryClient.invalidateQueries({ queryKey: ["my-posts"] });
     },
   });
 };
@@ -97,7 +154,7 @@ export const useDeleteComment = (discussionId) => {
   return useMutation({
     mutationFn: (commentId) => deleteComment(commentId),
     onSuccess: () => {
-      queryClient.invalidateQueries(["discussion", discussionId]);
+      queryClient.invalidateQueries({ queryKey: ["discussion", discussionId] });
     },
   });
 };
@@ -108,11 +165,12 @@ export const useBoostDiscussion = () => {
     mutationFn: (discussionId) => boostDiscussion(discussionId),
     onSuccess: (data, discussionId) => {
       toast.success(data?.message || "Discussion boosted!");
-      queryClient.invalidateQueries(["discussion", discussionId]);
-      queryClient.invalidateQueries(["discussions"]);
-      queryClient.invalidateQueries(["trending-discussions"]);
-      queryClient.invalidateQueries(["my-posts"]);
-      // also invalidate profile to update reputation points
+      queryClient.invalidateQueries({ queryKey: ["discussion", discussionId] });
+      queryClient.invalidateQueries({ queryKey: ["discussions"] });
+      queryClient.invalidateQueries({ queryKey: ["trending-discussions"] });
+      queryClient.invalidateQueries({ queryKey: ["my-posts"] });
+      queryClient.invalidateQueries({ queryKey: ["profile", "me"] });
+      queryClient.invalidateQueries({ queryKey: ["me"] });
     },
     onError: (error) => {
       toast.error(
@@ -152,8 +210,10 @@ export const useCreateDiscussion = () => {
   return useMutation({
     mutationFn: createDiscussion,
     onSuccess: (data) => {
-      queryClient.invalidateQueries(["discussions"]);
-      queryClient.invalidateQueries(["userStats"]);
+      queryClient.invalidateQueries({ queryKey: ["discussions"] });
+      queryClient.invalidateQueries({ queryKey: ["userStats"] });
+      queryClient.invalidateQueries({ queryKey: ["profile", "me"] });
+      queryClient.invalidateQueries({ queryKey: ["me"] });
       navigate(`/portal/discussions/${data.discussion_id}`);
     },
   });
@@ -165,7 +225,7 @@ export const useAddComment = (discussionId) => {
     mutationFn: ({ content, parentId, website }) =>
       addComment(discussionId, content, parentId, website),
     onSuccess: () => {
-      queryClient.invalidateQueries(["discussion", discussionId]);
+      queryClient.invalidateQueries({ queryKey: ["discussion", discussionId] });
     },
   });
 };
@@ -174,9 +234,55 @@ export const useVote = (discussionId) => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (voteType) => voteDiscussion(discussionId, voteType),
-    onSuccess: () => {
-      queryClient.invalidateQueries(["discussion", discussionId]);
-      queryClient.invalidateQueries(["discussions"]);
+    onSuccess: (response) => {
+      const nextVoteType = Number(response?.voteType ?? 0);
+
+      queryClient.setQueriesData(
+        { queryKey: ["discussion", discussionId] },
+        (currentData) => {
+          if (!currentData?.discussion) return currentData;
+
+          return {
+            ...currentData,
+            discussion: updateDiscussionVote(
+              currentData.discussion,
+              nextVoteType,
+            ),
+          };
+        },
+      );
+
+      queryClient.setQueriesData(
+        { queryKey: ["discussions"] },
+        (currentData) => {
+          if (Array.isArray(currentData)) {
+            return currentData.map((discussion) =>
+              String(discussion.discussion_id) === String(discussionId)
+                ? updateDiscussionVote(discussion, nextVoteType)
+                : discussion,
+            );
+          }
+
+          if (
+            currentData?.discussions &&
+            Array.isArray(currentData.discussions)
+          ) {
+            return {
+              ...currentData,
+              discussions: currentData.discussions.map((discussion) =>
+                String(discussion.discussion_id) === String(discussionId)
+                  ? updateDiscussionVote(discussion, nextVoteType)
+                  : discussion,
+              ),
+            };
+          }
+
+          return currentData;
+        },
+      );
+
+      // Avoid immediate refetch here; it can briefly re-apply stale server payloads
+      // and visually reset the counter right after an optimistic update.
     },
   });
 };
@@ -185,8 +291,26 @@ export const useCommentVote = (discussionId) => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: ({ commentId, voteType }) => voteComment(commentId, voteType),
-    onSuccess: () => {
-      queryClient.invalidateQueries(["discussion", discussionId]);
+    onSuccess: (response, variables) => {
+      const nextVoteType = Number(response?.voteType ?? 0);
+
+      queryClient.setQueriesData(
+        { queryKey: ["discussion", discussionId] },
+        (currentData) => {
+          if (!currentData?.comments) return currentData;
+
+          return {
+            ...currentData,
+            comments: updateCommentVoteTree(
+              currentData.comments,
+              variables.commentId,
+              nextVoteType,
+            ),
+          };
+        },
+      );
+
+      // Keep optimistic state and let normal query lifecycle refresh later.
     },
   });
 };
@@ -200,9 +324,9 @@ export const useToggleSave = (discussionId) => {
   return useMutation({
     mutationFn: () => toggleSave(discussionId),
     onSuccess: () => {
-      queryClient.invalidateQueries(["discussion", discussionId]);
-      queryClient.invalidateQueries(["discussions"]);
-      queryClient.invalidateQueries(["saved-discussions"]);
+      queryClient.invalidateQueries({ queryKey: ["discussion", discussionId] });
+      queryClient.invalidateQueries({ queryKey: ["discussions"] });
+      queryClient.invalidateQueries({ queryKey: ["saved-discussions"] });
     },
   });
 };

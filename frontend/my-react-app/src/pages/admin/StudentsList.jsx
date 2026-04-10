@@ -7,7 +7,13 @@ import {
   permanentlyDeleteUser,
 } from "../../services/admin";
 import LoadingSpinner from "../../components/ui/LoadingSpinner";
-import { AlertCircle, UserCheck, UserX, Trash2, ShieldAlert } from "lucide-react";
+import {
+  AlertCircle,
+  UserCheck,
+  UserX,
+  Trash2,
+  ShieldAlert,
+} from "lucide-react";
 import { showToast } from "../../utils/toast";
 import AdminConfirmModal from "../../components/ui/AdminConfirmModal";
 import { useAuth } from "../../context/AuthContext";
@@ -27,7 +33,7 @@ const StudentsList = () => {
   const suspendMutation = useMutation({
     mutationFn: suspendStudent,
     onSuccess: () => {
-      queryClient.invalidateQueries(["students", status, page]);
+      queryClient.invalidateQueries({ queryKey: ["students", status, page] });
       showToast.success("Student suspended");
     },
   });
@@ -35,7 +41,7 @@ const StudentsList = () => {
   const reactivateMutation = useMutation({
     mutationFn: reactivateStudent,
     onSuccess: () => {
-      queryClient.invalidateQueries(["students", status, page]);
+      queryClient.invalidateQueries({ queryKey: ["students", status, page] });
       showToast.success("Student reactivated");
     },
   });
@@ -43,7 +49,7 @@ const StudentsList = () => {
   const deleteMutation = useMutation({
     mutationFn: permanentlyDeleteUser,
     onSuccess: () => {
-      queryClient.invalidateQueries(["students", status, page]);
+      queryClient.invalidateQueries({ queryKey: ["students", status, page] });
       showToast.success("User permanently deleted");
     },
     onError: (err) => {
@@ -61,7 +67,7 @@ const StudentsList = () => {
       onConfirm: () => {
         deleteMutation.mutate(userId);
         setModalConfig({ isOpen: false });
-      }
+      },
     });
   };
 
@@ -75,7 +81,7 @@ const StudentsList = () => {
       onConfirm: () => {
         suspendMutation.mutate(userId);
         setModalConfig({ isOpen: false });
-      }
+      },
     });
   };
 
@@ -89,13 +95,17 @@ const StudentsList = () => {
       onConfirm: () => {
         reactivateMutation.mutate(userId);
         setModalConfig({ isOpen: false });
-      }
+      },
     });
   };
 
   if (isLoading) return <LoadingSpinner />;
   if (error)
-    return <div className="p-8 text-red-500 font-medium">Failed to load students</div>;
+    return (
+      <div className="p-8 text-red-500 font-medium">
+        Failed to load students
+      </div>
+    );
 
   const students = data?.data || [];
   const pagination = data?.pagination || { totalPages: 1 };
@@ -113,7 +123,10 @@ const StudentsList = () => {
         {["approved", "pending_review", "rejected", "suspended"].map((s) => (
           <button
             key={s}
-            onClick={() => { setStatus(s); setPage(1); }}
+            onClick={() => {
+              setStatus(s);
+              setPage(1);
+            }}
             className={`px-5 py-2 rounded-xl text-sm font-semibold whitespace-nowrap transition-all ${
               status === s
                 ? "bg-purple-600 text-white shadow-lg shadow-purple-500/20"
@@ -143,24 +156,35 @@ const StudentsList = () => {
           <tbody className="bg-bg-card divide-y divide-border-main">
             {students.length === 0 ? (
               <tr>
-                <td colSpan="3" className="px-6 py-12 text-center text-text-muted font-medium">
+                <td
+                  colSpan="3"
+                  className="px-6 py-12 text-center text-text-muted font-medium"
+                >
                   No students found in this category.
                 </td>
               </tr>
             ) : (
               students.map((student) => (
-                <tr key={student.user_id} className="hover:bg-bg-active/30 transition-colors">
+                <tr
+                  key={student.user_id}
+                  className="hover:bg-bg-active/30 transition-colors"
+                >
                   <td className="px-6 py-4">
                     <div className="flex flex-col gap-1">
-                      <span className="text-sm font-bold text-text-main">{student.full_name}</span>
-                      <span className="text-xs text-text-muted">{student.email}</span>
+                      <span className="text-sm font-bold text-text-main">
+                        {student.full_name}
+                      </span>
+                      <span className="text-xs text-text-muted">
+                        {student.email}
+                      </span>
                       {student.program_name && (
                         <div className="flex items-center gap-2 mt-1">
                           <span className="text-[10px] bg-bg-active px-1.5 py-0.5 rounded font-medium text-text-muted uppercase border border-border-main">
                             {student.program_name}
                           </span>
                           <span className="text-[10px] text-text-muted font-medium">
-                            SEM {student.semester} • {student.tu_registration_no}
+                            SEM {student.semester} •{" "}
+                            {student.tu_registration_no}
                           </span>
                         </div>
                       )}
@@ -180,7 +204,9 @@ const StudentsList = () => {
                                 : "bg-gray-100 text-gray-700"
                       }`}
                     >
-                      {student.is_suspended ? "Suspended" : student.student_status.replace("_", " ")}
+                      {student.is_suspended
+                        ? "Suspended"
+                        : student.student_status.replace("_", " ")}
                     </span>
                     {student.user_id === user?.user_id && (
                       <span className="ml-2 inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-blue-500/10 text-blue-500 border border-blue-500/20">
@@ -193,22 +219,31 @@ const StudentsList = () => {
                       <div className="flex justify-end gap-3">
                         {student.is_suspended ? (
                           <button
-                            onClick={() => handleReactivate(student.user_id, student.full_name)}
+                            onClick={() =>
+                              handleReactivate(
+                                student.user_id,
+                                student.full_name,
+                              )
+                            }
                             className="flex items-center gap-1.5 text-xs font-bold text-green-600 hover:text-green-800 transition-colors"
                           >
                             <UserCheck className="w-4 h-4" /> Reactivate
                           </button>
                         ) : (
                           <button
-                            onClick={() => handleSuspend(student.user_id, student.full_name)}
+                            onClick={() =>
+                              handleSuspend(student.user_id, student.full_name)
+                            }
                             className="flex items-center gap-1.5 text-xs font-bold text-orange-600 hover:text-orange-800 transition-colors"
                           >
                             <AlertCircle className="w-4 h-4" /> Suspend
                           </button>
                         )}
-                        
+
                         <button
-                          onClick={() => handleDelete(student.user_id, student.full_name)}
+                          onClick={() =>
+                            handleDelete(student.user_id, student.full_name)
+                          }
                           className="p-2 text-text-muted hover:text-red-600 hover:bg-red-500/10 rounded-lg transition-all"
                           title="Permanently Delete Account"
                         >
@@ -216,7 +251,9 @@ const StudentsList = () => {
                         </button>
                       </div>
                     ) : (
-                      <span className="text-xs font-bold text-text-muted italic">Self-Management Locked</span>
+                      <span className="text-xs font-bold text-text-muted italic">
+                        Self-Management Locked
+                      </span>
                     )}
                   </td>
                 </tr>
@@ -249,7 +286,11 @@ const StudentsList = () => {
       <AdminConfirmModal
         {...modalConfig}
         onCancel={() => setModalConfig({ isOpen: false })}
-        isLoading={suspendMutation.isPending || reactivateMutation.isPending || deleteMutation.isPending}
+        isLoading={
+          suspendMutation.isPending ||
+          reactivateMutation.isPending ||
+          deleteMutation.isPending
+        }
       />
     </div>
   );

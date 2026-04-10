@@ -6,8 +6,11 @@ export const useCompleteStep = (roadmapId) => {
   return useMutation({
     mutationFn: completeStep,
     onSuccess: () => {
-      queryClient.invalidateQueries(["roadmap", roadmapId]);
-      queryClient.invalidateQueries(["dashboard"]); // if dashboard shows progress
+      queryClient.invalidateQueries({ queryKey: ["roadmap", roadmapId] });
+      queryClient.invalidateQueries({ queryKey: ["dashboard"] }); // if dashboard shows progress
+      queryClient.invalidateQueries({ queryKey: ["userStats"] });
+      queryClient.invalidateQueries({ queryKey: ["profile", "me"] });
+      queryClient.invalidateQueries({ queryKey: ["me"] });
     },
   });
 };

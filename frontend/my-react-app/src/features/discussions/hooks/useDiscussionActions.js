@@ -2,22 +2,93 @@ import { useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { toast } from "react-toastify";
 import {
-  toggleLikeDiscussion,
+  voteOnDiscussion,
   toggleSaveDiscussion,
 } from "../services/discussionApi";
+
+const updateDiscussionVote = (discussion, nextVoteType) => {
+  if (!discussion) return discussion;
+
+  const previousVote = Number(discussion.user_vote || 0);
+  const currentCount = Number(discussion.like_count || discussion.likes || 0);
+
+  let nextCount = currentCount;
+  if (previousVote === 1 && nextVoteType !== 1) {
+    nextCount -= 1;
+  } else if (previousVote !== 1 && nextVoteType === 1) {
+    nextCount += 1;
+  }
+
+  return {
+    ...discussion,
+    user_vote: nextVoteType,
+    like_count: Math.max(0, nextCount),
+    likes: Math.max(0, nextCount),
+  };
+};
 
 export const useDiscussionActions = ({ user, queryClient }) => {
   const [loadingLike, setLoadingLike] = useState(null);
   const [loadingSave, setLoadingSave] = useState(null);
-  const [downvotedPosts, setDownvotedPosts] = useState({});
 
   const likeMutation = useMutation({
-    mutationFn: toggleLikeDiscussion,
-    onMutate: (discussionId) => {
+    mutationFn: ({ discussionId, voteType }) =>
+      voteOnDiscussion(discussionId, voteType),
+    onMutate: ({ discussionId }) => {
       setLoadingLike(discussionId);
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["discussions"] });
+    onSuccess: (response, variables) => {
+      const nextVoteType = Number(response?.voteType ?? 0);
+
+      queryClient.setQueriesData(
+        { queryKey: ["discussions"] },
+        (currentData) => {
+          if (Array.isArray(currentData)) {
+            return currentData.map((discussion) =>
+              String(discussion.discussion_id) ===
+              String(variables.discussionId)
+                ? updateDiscussionVote(discussion, nextVoteType)
+                : discussion,
+            );
+          }
+
+          if (
+            currentData?.discussions &&
+            Array.isArray(currentData.discussions)
+          ) {
+            return {
+              ...currentData,
+              discussions: currentData.discussions.map((discussion) =>
+                String(discussion.discussion_id) ===
+                String(variables.discussionId)
+                  ? updateDiscussionVote(discussion, nextVoteType)
+                  : discussion,
+              ),
+            };
+          }
+
+          if (currentData?.data && Array.isArray(currentData.data)) {
+            return {
+              ...currentData,
+              data: currentData.data.map((discussion) =>
+                String(discussion.discussion_id) ===
+                String(variables.discussionId)
+                  ? updateDiscussionVote(discussion, nextVoteType)
+                  : discussion,
+              ),
+            };
+          }
+
+          return currentData;
+        },
+      );
+
+      // Skip immediate refetch here to avoid stale payload snapping counts back.
+    },
+    onError: (error) => {
+      toast.error(
+        error?.response?.data?.error || "Failed to vote on discussion",
+      );
     },
     onSettled: () => {
       setLoadingLike(null);
@@ -49,11 +120,10 @@ export const useDiscussionActions = ({ user, queryClient }) => {
       return;
     }
 
-    setDownvotedPosts((prev) => ({ ...prev, [discussionId]: false }));
-    likeMutation.mutate(discussionId);
+    likeMutation.mutate({ discussionId, voteType: 1 });
   };
 
-  const handleDownvote = (event, discussionId, isCurrentlyLiked) => {
+  const handleDownvote = (event, discussionId, currentVote) => {
     event.preventDefault();
     event.stopPropagation();
 
@@ -62,18 +132,7 @@ export const useDiscussionActions = ({ user, queryClient }) => {
       return;
     }
 
-    const isCurrentlyDownvoted = downvotedPosts[discussionId];
-
-    if (isCurrentlyDownvoted) {
-      setDownvotedPosts((prev) => ({ ...prev, [discussionId]: false }));
-      return;
-    }
-
-    if (isCurrentlyLiked) {
-      likeMutation.mutate(discussionId);
-    }
-
-    setDownvotedPosts((prev) => ({ ...prev, [discussionId]: true }));
+    likeMutation.mutate({ discussionId, voteType: -1 });
   };
 
   const handleSave = (event, discussionId) => {
@@ -131,7 +190,6 @@ export const useDiscussionActions = ({ user, queryClient }) => {
   return {
     loadingLike,
     loadingSave,
-    downvotedPosts,
     handleLike,
     handleDownvote,
     handleSave,

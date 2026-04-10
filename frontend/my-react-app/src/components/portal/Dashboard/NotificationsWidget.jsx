@@ -13,21 +13,21 @@ const NotificationsWidget = ({ notifications }) => {
   const markReadMutation = useMutation({
     mutationFn: markNotificationRead,
     onSuccess: () => {
-      queryClient.invalidateQueries(["notifications"]);
+      queryClient.invalidateQueries({ queryKey: ["notifications"] });
     },
   });
 
   const deleteMutation = useMutation({
     mutationFn: deleteNotification,
     onSuccess: () => {
-      queryClient.invalidateQueries(["notifications"]);
+      queryClient.invalidateQueries({ queryKey: ["notifications"] });
     },
   });
 
   const clearAllMutation = useMutation({
     mutationFn: clearNotifications,
     onSuccess: () => {
-      queryClient.invalidateQueries(["notifications"]);
+      queryClient.invalidateQueries({ queryKey: ["notifications"] });
     },
   });
 

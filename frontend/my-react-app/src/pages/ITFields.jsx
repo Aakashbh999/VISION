@@ -61,7 +61,7 @@ const ITFields = () => {
             item={{
               name: field.field_name,
               shortDescription: field.short_description,
-              demand: field.demand,
+              demand: field.demand_level,
               slug: field.slug,
               icon: getIconForField(field.field_name),
               motivation: field.motivation, // if available
