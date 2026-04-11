@@ -1,6 +1,8 @@
 const discussionService = require("../services/discussionService");
 const pool = require("../config/db");
 const catchAsync = require("../utils/catchAsync");
+const createError = require("http-errors");
+const logger = require("../utils/logger");
 
 /**
  * Vote Controller
@@ -16,7 +18,7 @@ exports.handleVote = catchAsync(async (req, res) => {
   vote_type = Number(vote_type);
 
   if (![1, -1, 0].includes(vote_type)) {
-    throw new Error("Invalid vote type. Use 1, -1, or 0.");
+    throw createError(400, "Invalid vote type. Use 1, -1, or 0.");
   }
 
   const result = await discussionService.handleVote(id, userId, vote_type);
@@ -36,7 +38,7 @@ exports.handleVote = catchAsync(async (req, res) => {
         );
       }
     } catch (notifErr) {
-      console.error("Failed to send upvote notification:", notifErr.message);
+      logger.warn({ err: notifErr }, "Failed to send upvote notification");
     }
   }
 
@@ -52,7 +54,7 @@ exports.handleCommentVote = catchAsync(async (req, res) => {
   vote_type = Number(vote_type);
 
   if (![1, -1, 0].includes(vote_type)) {
-    throw new Error("Invalid vote type. Use 1, -1, or 0.");
+    throw createError(400, "Invalid vote type. Use 1, -1, or 0.");
   }
 
   const result = await discussionService.handleCommentVote(
@@ -83,9 +85,9 @@ exports.handleCommentVote = catchAsync(async (req, res) => {
         );
       }
     } catch (notifErr) {
-      console.error(
-        "Failed to send comment upvote notification:",
-        notifErr.message,
+      logger.warn(
+        { err: notifErr },
+        "Failed to send comment upvote notification",
       );
     }
   }

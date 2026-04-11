@@ -1,4 +1,5 @@
 import axios from "axios";
+import axiosRetry from "axios-retry";
 
 // Get the base URL directly from the environment variable
 const baseURL =
@@ -7,6 +8,15 @@ const baseURL =
 const api = axios.create({
   baseURL: baseURL,
   headers: { "Content-Type": "application/json" },
+});
+
+axiosRetry(api, {
+  retries: 3,
+  retryDelay: axiosRetry.exponentialDelay,
+  retryCondition: (error) => {
+    const status = error?.response?.status;
+    return !status || status === 429 || (status >= 500 && status < 600);
+  },
 });
 
 // Flag to prevent multiple refresh requests

@@ -12,6 +12,10 @@
 const pool = require("../config/db");
 const crypto = require("crypto");
 const jwt = require("jsonwebtoken");
+const createError = require("http-errors");
+const { UAParser } = require("ua-parser-js");
+const logger = require("./logger");
+const env = require("../config/env");
 
 // Token expiry times
 const ACCESS_TOKEN_EXPIRY = "15m"; // Short-lived access token
@@ -33,42 +37,10 @@ const parseUserAgent = (userAgent) => {
     return { deviceType: "unknown", browser: "Unknown", os: "Unknown" };
   }
 
-  let deviceType = "desktop";
-  let browser = "Unknown";
-  let os = "Unknown";
-
-  // Detect device type
-  if (/mobile/i.test(userAgent)) {
-    deviceType = "mobile";
-  } else if (/tablet|ipad/i.test(userAgent)) {
-    deviceType = "tablet";
-  }
-
-  // Detect browser
-  if (/chrome/i.test(userAgent) && !/edg/i.test(userAgent)) {
-    browser = "Chrome";
-  } else if (/firefox/i.test(userAgent)) {
-    browser = "Firefox";
-  } else if (/safari/i.test(userAgent) && !/chrome/i.test(userAgent)) {
-    browser = "Safari";
-  } else if (/edg/i.test(userAgent)) {
-    browser = "Edge";
-  } else if (/opera|opr/i.test(userAgent)) {
-    browser = "Opera";
-  }
-
-  // Detect OS
-  if (/windows/i.test(userAgent)) {
-    os = "Windows";
-  } else if (/macintosh|mac os/i.test(userAgent)) {
-    os = "macOS";
-  } else if (/linux/i.test(userAgent)) {
-    os = "Linux";
-  } else if (/android/i.test(userAgent)) {
-    os = "Android";
-  } else if (/iphone|ipad|ipod/i.test(userAgent)) {
-    os = "iOS";
-  }
+  const parsed = new UAParser(userAgent).getResult();
+  const deviceType = parsed.device.type || "desktop";
+  const browser = parsed.browser.name || "Unknown";
+  const os = parsed.os.name || "Unknown";
 
   return { deviceType, browser, os };
 };
@@ -104,7 +76,7 @@ const createTokens = async (user, req) => {
       role: user.role,
       type: "access",
     },
-    process.env.JWT_SECRET,
+    env.JWT_SECRET,
     { expiresIn: ACCESS_TOKEN_EXPIRY },
   );
 
@@ -135,7 +107,7 @@ const createTokens = async (user, req) => {
   } catch (err) {
     // If table doesn't exist yet, fall back to JWT-only (for migration compatibility)
     if (err.code === "42P01") {
-      console.warn("auth.refresh_tokens table not found, using JWT-only mode");
+      logger.warn("auth.refresh_tokens table not found, using JWT-only mode");
       const jwtRefreshToken = jwt.sign(
         {
           auth_user_id: user.auth_user_id,
@@ -143,7 +115,7 @@ const createTokens = async (user, req) => {
           type: "refresh",
           deviceId,
         },
-        process.env.JWT_SECRET,
+        env.JWT_SECRET,
         { expiresIn: REFRESH_TOKEN_EXPIRY },
       );
       return { accessToken, refreshToken: jwtRefreshToken, expiresIn: 15 * 60 };
@@ -194,21 +166,21 @@ const rotateRefreshToken = async (refreshToken, req) => {
          WHERE auth_user_id = $1`,
         [token.auth_user_id],
       );
-      throw new Error("Token reuse detected - all sessions revoked");
+      throw createError(401, "Token reuse detected - all sessions revoked");
     }
 
     // Check expiration
     if (new Date(token.expires_at) < new Date()) {
-      throw new Error("Refresh token expired");
+      throw createError(401, "Refresh token expired");
     }
 
     // Check user status
     if (token.is_suspended) {
-      throw new Error("Account suspended");
+      throw createError(403, "Account suspended");
     }
 
     if (token.email_status !== "verified") {
-      throw new Error("Email not verified");
+      throw createError(403, "Email not verified");
     }
 
     // ROTATE: Mark old token as revoked
@@ -242,10 +214,10 @@ const rotateRefreshToken = async (refreshToken, req) => {
  */
 const rotateRefreshTokenJWT = async (refreshToken, req) => {
   try {
-    const decoded = jwt.verify(refreshToken, process.env.JWT_SECRET);
+    const decoded = jwt.verify(refreshToken, env.JWT_SECRET);
 
     if (decoded.type !== "refresh") {
-      throw new Error("Invalid token type");
+      throw createError(401, "Invalid token type");
     }
 
     const userResult = await pool.query(
@@ -256,17 +228,18 @@ const rotateRefreshTokenJWT = async (refreshToken, req) => {
       [decoded.auth_user_id],
     );
 
-    if (!userResult.rows.length) throw new Error("User not found");
+    if (!userResult.rows.length) throw createError(404, "User not found");
 
     const user = userResult.rows[0];
-    if (user.is_suspended) throw new Error("Account suspended");
-    if (user.email_status !== "verified") throw new Error("Email not verified");
+    if (user.is_suspended) throw createError(403, "Account suspended");
+    if (user.email_status !== "verified")
+      throw createError(403, "Email not verified");
 
     const tokens = await createTokens(user, req);
     return { ...tokens, authUserId: user.auth_user_id, role: user.role };
   } catch (err) {
     if (err.name === "TokenExpiredError")
-      throw new Error("Refresh token expired");
+      throw createError(401, "Refresh token expired");
     throw err;
   }
 };
@@ -303,7 +276,7 @@ const getUserSessions = async (authUserId) => {
     if (err.code === "42P01") {
       return []; // Table doesn't exist yet
     }
-    console.error("getUserSessions error:", err.message);
+    logger.error({ err }, "getUserSessions error");
     return [];
   }
 };
@@ -323,7 +296,7 @@ const revokeSession = async (authUserId, sessionId) => {
 
     return result.rowCount > 0;
   } catch (err) {
-    console.error("revokeSession error:", err.message);
+    logger.error({ err }, "revokeSession error");
     return false;
   }
 };
@@ -341,10 +314,13 @@ const revokeAllUserTokens = async (authUserId) => {
       [authUserId],
     );
 
-    console.log(`Revoked ${result.rowCount} tokens for user ${authUserId}`);
+    logger.info(
+      { authUserId, count: result.rowCount },
+      "Revoked user refresh tokens",
+    );
     return result.rowCount;
   } catch (err) {
-    console.error("revokeAllUserTokens error:", err.message);
+    logger.error({ err }, "revokeAllUserTokens error");
     return 0;
   }
 };
@@ -366,7 +342,7 @@ const revokeRefreshToken = async (refreshToken) => {
 
     return result.rowCount > 0;
   } catch (err) {
-    console.error("revokeRefreshToken error:", err.message);
+    logger.error({ err }, "revokeRefreshToken error");
     return false;
   }
 };
@@ -382,10 +358,13 @@ const cleanupExpiredTokens = async () => {
        RETURNING id`,
     );
 
-    console.log(`Cleaned up ${result.rowCount} expired/revoked tokens`);
+    logger.info(
+      { count: result.rowCount },
+      "Cleaned up expired/revoked tokens",
+    );
     return result.rowCount;
   } catch (err) {
-    console.error("cleanupExpiredTokens error:", err.message);
+    logger.error({ err }, "cleanupExpiredTokens error");
     return 0;
   }
 };

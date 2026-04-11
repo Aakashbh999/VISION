@@ -1,6 +1,8 @@
 const jwt = require("jsonwebtoken");
 const pool = require("../config/db");
 const { resolveEffectiveSemester } = require("../utils/academicUtils");
+const env = require("../config/env");
+const logger = require("../utils/logger");
 
 exports.verifyJWT = async (req, res, next) => {
   try {
@@ -11,7 +13,7 @@ exports.verifyJWT = async (req, res, next) => {
     }
 
     const token = authHeader.split(" ")[1];
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const decoded = jwt.verify(token, env.JWT_SECRET);
 
     const userData = await pool.query(
       `SELECT 
@@ -78,7 +80,7 @@ exports.verifyJWT = async (req, res, next) => {
 
     next();
   } catch (err) {
-    console.error("JWT verification failed:", err);
+    logger.warn({ err }, "JWT verification failed");
     return res.status(401).json({ error: "Invalid token" });
   }
 };
@@ -110,7 +112,7 @@ exports.optionalJWT = async (req, res, next) => {
     }
 
     const token = authHeader.split(" ")[1];
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const decoded = jwt.verify(token, env.JWT_SECRET);
 
     const userData = await pool.query(
       `SELECT 

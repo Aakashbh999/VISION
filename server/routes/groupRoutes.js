@@ -10,6 +10,7 @@ const {
   requireApprovedStudent,
 } = require("../middleware/authMiddleware");
 const upload = require("../middleware/uploadMiddleware");
+const sanitizeInput = require("../middleware/sanitizeInput");
 
 // Get managed groups (owner/co-admin)
 router.get("/managed", verifyJWT, crudController.getManagedGroups);
@@ -23,11 +24,16 @@ router.post(
   "/:id/posts",
   verifyJWT,
   requireApprovedStudent,
+  sanitizeInput,
   postController.createPost,
 );
 
 // Soft delete post (user-initiated, records reason)
-router.post("/posts/:postId/soft-delete", verifyJWT, postController.softDeletePost);
+router.post(
+  "/posts/:postId/soft-delete",
+  verifyJWT,
+  postController.softDeletePost,
+);
 
 // Members
 router.get("/:id/members", verifyJWT, membershipController.getGroupMembers);
@@ -37,6 +43,7 @@ router.post(
   "/:id/join",
   verifyJWT,
   requireApprovedStudent,
+  sanitizeInput,
   membershipController.joinGroup,
 );
 router.delete(
@@ -49,19 +56,26 @@ router.post(
   "/:id/request-join",
   verifyJWT,
   requireApprovedStudent,
+  sanitizeInput,
   membershipController.requestToJoin,
 );
 
 // Join Requests management (admin/co-admin)
-router.get("/:id/join-requests", verifyJWT, membershipController.getJoinRequests);
+router.get(
+  "/:id/join-requests",
+  verifyJWT,
+  membershipController.getJoinRequests,
+);
 router.post(
   "/:id/join-requests/:requestId/approve",
   verifyJWT,
+  sanitizeInput,
   membershipController.approveRequest,
 );
 router.post(
   "/:id/join-requests/:requestId/decline",
   verifyJWT,
+  sanitizeInput,
   membershipController.declineRequest,
 );
 
@@ -69,44 +83,65 @@ router.post(
 router.post(
   "/:id/members/:memberId/appoint-co-admin",
   verifyJWT,
+  sanitizeInput,
   membershipController.appointCoAdmin,
 );
 router.delete(
   "/:id/members/:memberId/co-admin",
   verifyJWT,
+  sanitizeInput,
   membershipController.removeCoAdmin,
 );
 router.patch(
   "/:id/members/:memberId/permissions",
   verifyJWT,
+  sanitizeInput,
   membershipController.updateCoAdminPermissions,
 );
 
 // Capacity expansion via VXP
-router.post("/:id/expand-capacity", verifyJWT, membershipController.expandCapacity);
+router.post(
+  "/:id/expand-capacity",
+  verifyJWT,
+  sanitizeInput,
+  membershipController.expandCapacity,
+);
 
 // Image/Banner update
 router.post(
   "/:id/image",
   verifyJWT,
   upload.single("image"),
+  sanitizeInput,
   mediaController.updateGroupImage,
 );
 router.post(
   "/:id/banner",
   verifyJWT,
   upload.single("image"),
+  sanitizeInput,
   mediaController.updateGroupBanner,
 );
 
 // Create group
-router.post("/", verifyJWT, requireApprovedStudent, crudController.createGroup);
+router.post(
+  "/",
+  verifyJWT,
+  requireApprovedStudent,
+  sanitizeInput,
+  crudController.createGroup,
+);
 
 // Update group (owner only)
-router.patch("/:id", verifyJWT, crudController.updateGroup);
+router.patch("/:id", verifyJWT, sanitizeInput, crudController.updateGroup);
 
 // Soft delete (user-initiated, records reason)
-router.post("/:id/soft-delete", verifyJWT, crudController.softDeleteGroup);
+router.post(
+  "/:id/soft-delete",
+  verifyJWT,
+  sanitizeInput,
+  crudController.softDeleteGroup,
+);
 
 // Group details (generic — must be last)
 router.get("/:id", optionalJWT, crudController.getGroupDetails);

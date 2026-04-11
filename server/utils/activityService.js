@@ -1,4 +1,5 @@
 const pool = require("../config/db");
+const logger = require("./logger");
 
 /* ------------------------------
    Create Notification
@@ -21,7 +22,7 @@ exports.notify = async ({
       [userId, actorId, type, title, message, relatedType, relatedId],
     );
   } catch (err) {
-    console.error("[Notify] Failed to insert notification:", err.message);
+    logger.warn({ err }, "Failed to insert notification");
   }
 };
 
@@ -43,6 +44,6 @@ exports.feed = async ({
       [actorId, actionType, referenceType, referenceId, metadata],
     );
   } catch (err) {
-    console.error("[ActivityFeed] Failed to insert feed entry:", err.message);
+    logger.warn({ err }, "Failed to insert activity feed entry");
   }
 };

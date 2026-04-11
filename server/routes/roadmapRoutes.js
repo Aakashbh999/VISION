@@ -2,6 +2,7 @@ const express = require("express");
 const router = express.Router();
 const roadmapController = require("../controllers/roadmapController");
 const { verifyJWT } = require("../middleware/authMiddleware");
+const sanitizeInput = require("../middleware/sanitizeInput");
 
 // Protected (student must be logged in)
 router.get("/", verifyJWT, roadmapController.getAllRoadmaps);
@@ -15,6 +16,7 @@ router.get(
 router.post(
   "/steps/:stepId/complete",
   verifyJWT,
+  sanitizeInput,
   roadmapController.completeStep,
 );
 

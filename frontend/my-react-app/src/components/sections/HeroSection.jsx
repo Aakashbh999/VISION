@@ -7,10 +7,6 @@ const HeroSection = () => {
   return (
     <section className="grid lg:grid-cols-2 gap-8 lg:gap-12 items-center">
       <div className="order-2 lg:order-1">
-        <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-purple-100 text-purple-600 text-xs font-medium mb-6">
-          <div className="w-2 h-2 bg-purple-500 rounded-full animate-pulse"></div>
-          Made for +2 Graduates in Nepal
-        </div>
         <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-[var(--text-main)] mb-6 leading-tight">
           Confused about <GradientText>IT careers after +2?</GradientText>
         </h1>
@@ -22,7 +18,9 @@ const HeroSection = () => {
           <Button as={Link} to="/it-fields" variant="gradient" size="lg">
             Explore IT Fields →
           </Button>
-          <Button as={Link} to="/register" variant="secondary" size="md">Register</Button>
+          <Button as={Link} to="/register" variant="secondary" size="md">
+            Register
+          </Button>
         </div>
       </div>
 

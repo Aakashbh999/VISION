@@ -2,6 +2,7 @@ const pool = require("../config/db");
 const { notify, feed } = require("../utils/activityService");
 const { successResponse, errorResponse } = require("../utils/response");
 const catchAsync = require("../utils/catchAsync");
+const logger = require("../utils/logger");
 
 /**
  * Find an existing tag or create a new 'custom' type tag.
@@ -260,7 +261,7 @@ exports.uploadResource = catchAsync(async (req, res) => {
     if (error.code === "23514") {
       return errorResponse(res, "Resource data failed validation.", 400);
     }
-    console.error("Resource upload failed:", error);
+    logger.error({ err: error }, "Resource upload failed");
     return errorResponse(res, "Failed to upload resource", 500);
   } finally {
     client.release();
@@ -570,7 +571,7 @@ exports.approveResource = catchAsync(async (req, res) => {
         relatedId: parseInt(id),
       });
     } catch (notifErr) {
-      console.error("Notification failed (non-fatal):", notifErr.message);
+      logger.warn({ err: notifErr }, "Resource approval notification failed");
     }
 
     try {
@@ -585,7 +586,7 @@ exports.approveResource = catchAsync(async (req, res) => {
         },
       });
     } catch (feedErr) {
-      console.error("Resource feed event failed (non-fatal):", feedErr.message);
+      logger.warn({ err: feedErr }, "Resource feed event failed");
     }
 
     return res.json({
@@ -653,7 +654,7 @@ exports.rejectResource = catchAsync(async (req, res) => {
         relatedId: parseInt(id),
       });
     } catch (notifErr) {
-      console.error("Notification failed (non-fatal):", notifErr.message);
+      logger.warn({ err: notifErr }, "Resource rejection notification failed");
     }
 
     return res.json({ message: "Resource rejected" });

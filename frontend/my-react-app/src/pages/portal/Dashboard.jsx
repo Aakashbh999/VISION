@@ -171,7 +171,7 @@ const Dashboard = () => {
                     </div>
 
                     <Link
-                      to={`/roadmaps/step/${nextStep.step_id}`}
+                      to={`/roadmaps/${nextStep.roadmap_id}`}
                       className="mt-7 inline-flex items-center gap-2 rounded-2xl bg-gray-900 dark:bg-white text-white dark:text-slate-900 px-5 py-3 text-sm font-semibold hover:shadow-lg hover:shadow-slate-300/40 dark:hover:shadow-slate-100/20 transition-all active:scale-[0.98]"
                     >
                       Continue Learning

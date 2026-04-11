@@ -12,6 +12,7 @@
  */
 
 const pool = require("../config/db");
+const logger = require("./logger");
 
 // Audit action types
 const AuditActions = {
@@ -83,7 +84,7 @@ const logModerationAction = async ({
       [adminUserId, actionType, targetType, targetId],
     );
   } catch (err) {
-    console.error("Moderation log error:", err);
+    logger.error({ err }, "Moderation log error");
   }
 };
 
@@ -113,12 +114,11 @@ const logAuthEvent = async (
 ) => {
   const requestInfo = getRequestInfo(req);
 
-  // Log to console for debugging/monitoring
-  console.log(`[AUDIT] ${action}:`, {
+  logger.info({
+    action,
     authUserId: requestInfo.authUserId || details.authUserId,
     ip: requestInfo.ipAddress,
     status,
-    timestamp: new Date().toISOString(),
     ...details,
   });
 
@@ -138,12 +138,12 @@ const logContentEvent = async (
 ) => {
   const requestInfo = getRequestInfo(req);
 
-  console.log(`[AUDIT] ${action}:`, {
+  logger.info({
+    action,
     userId: requestInfo.portalUserId,
     resourceType,
     resourceId,
     ip: requestInfo.ipAddress,
-    timestamp: new Date().toISOString(),
     ...details,
   });
 };

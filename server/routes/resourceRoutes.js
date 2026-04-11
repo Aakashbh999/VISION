@@ -3,6 +3,7 @@ const router = express.Router();
 
 const resourceCtrl = require("../controllers/resourceController");
 const upload = require("../middleware/uploadMiddleware");
+const sanitizeInput = require("../middleware/sanitizeInput");
 const {
   verifyJWT,
   optionalJWT,
@@ -24,6 +25,7 @@ router.post(
   verifyJWT,
   requireApprovedStudent,
   upload.single("file"),
+  sanitizeInput,
   resourceCtrl.uploadResource,
 );
 
@@ -31,6 +33,7 @@ router.post(
 router.post(
   "/resources/:id/soft-delete",
   verifyJWT,
+  sanitizeInput,
   resourceCtrl.softDeleteResource,
 );
 

@@ -1,5 +1,8 @@
 const dns = require("node:dns");
 const nodemailer = require("nodemailer");
+const createError = require("http-errors");
+const env = require("../config/env");
+const logger = require("./logger");
 const {
   emailVerificationTemplate,
   passwordResetTemplate,
@@ -9,22 +12,21 @@ const {
 } = require("./emailTemplates");
 
 const RESEND_API_URL = "https://api.resend.com/emails";
-const EMAIL_PROVIDER = (process.env.EMAIL_PROVIDER || "").toLowerCase();
+const EMAIL_PROVIDER = (env.EMAIL_PROVIDER || "").toLowerCase();
 
 if (typeof dns.setDefaultResultOrder === "function") {
   dns.setDefaultResultOrder("ipv4first");
 }
 
-const isResendConfigured = () =>
-  Boolean(process.env.RESEND_API_KEY && process.env.EMAIL_FROM);
+const isResendConfigured = () => Boolean(env.RESEND_API_KEY && env.EMAIL_FROM);
 
 const isSmtpConfigured = () =>
   Boolean(
-    process.env.EMAIL_HOST &&
-    process.env.EMAIL_PORT &&
-    process.env.EMAIL_USER &&
-    process.env.EMAIL_PASS &&
-    process.env.EMAIL_FROM,
+    env.EMAIL_HOST &&
+    env.EMAIL_PORT &&
+    env.EMAIL_USER &&
+    env.EMAIL_PASS &&
+    env.EMAIL_FROM,
   );
 
 const resolveSmtpHostToIPv4 = async (host) => {
@@ -34,9 +36,7 @@ const resolveSmtpHostToIPv4 = async (host) => {
       return addresses[0];
     }
   } catch (err) {
-    console.warn(
-      `[EMAIL] IPv4 DNS resolution failed for ${host}: ${err.message}`,
-    );
+    logger.warn({ err, host }, "IPv4 DNS resolution failed for SMTP host");
   }
 
   return host;
@@ -48,11 +48,11 @@ const checkEmailHealth = () => {
   if (provider === "smtp") {
     const missing = [];
 
-    if (!process.env.EMAIL_HOST) missing.push("EMAIL_HOST");
-    if (!process.env.EMAIL_PORT) missing.push("EMAIL_PORT");
-    if (!process.env.EMAIL_USER) missing.push("EMAIL_USER");
-    if (!process.env.EMAIL_PASS) missing.push("EMAIL_PASS");
-    if (!process.env.EMAIL_FROM) missing.push("EMAIL_FROM");
+    if (!env.EMAIL_HOST) missing.push("EMAIL_HOST");
+    if (!env.EMAIL_PORT) missing.push("EMAIL_PORT");
+    if (!env.EMAIL_USER) missing.push("EMAIL_USER");
+    if (!env.EMAIL_PASS) missing.push("EMAIL_PASS");
+    if (!env.EMAIL_FROM) missing.push("EMAIL_FROM");
 
     return {
       ok: missing.length === 0,
@@ -63,8 +63,8 @@ const checkEmailHealth = () => {
 
   const missing = [];
 
-  if (!process.env.RESEND_API_KEY) missing.push("RESEND_API_KEY");
-  if (!process.env.EMAIL_FROM) missing.push("EMAIL_FROM");
+  if (!env.RESEND_API_KEY) missing.push("RESEND_API_KEY");
+  if (!env.EMAIL_FROM) missing.push("EMAIL_FROM");
 
   return {
     ok: missing.length === 0,
@@ -78,24 +78,24 @@ const sendMail = async (mailOptions) => {
 
   if (provider === "smtp") {
     if (!isSmtpConfigured()) {
-      throw new Error("Missing SMTP configuration");
+      throw createError(500, "Missing SMTP configuration");
     }
 
-    const smtpHost = await resolveSmtpHostToIPv4(process.env.EMAIL_HOST);
+    const smtpHost = await resolveSmtpHostToIPv4(env.EMAIL_HOST);
     const transporter = nodemailer.createTransport({
       host: smtpHost,
-      port: Number(process.env.EMAIL_PORT),
-      secure: Number(process.env.EMAIL_PORT) === 465,
+      port: Number(env.EMAIL_PORT),
+      secure: Number(env.EMAIL_PORT) === 465,
       family: 4,
       auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS,
+        user: env.EMAIL_USER,
+        pass: env.EMAIL_PASS,
       },
       connectionTimeout: 5000,
       socketTimeout: 10000,
       greetingTimeout: 10000,
       tls: {
-        servername: process.env.EMAIL_HOST,
+        servername: env.EMAIL_HOST,
         rejectUnauthorized: false,
       },
     });
@@ -104,8 +104,8 @@ const sendMail = async (mailOptions) => {
     return { messageId: info.messageId };
   }
 
-  if (!process.env.RESEND_API_KEY) {
-    throw new Error("Missing RESEND_API_KEY");
+  if (!env.RESEND_API_KEY) {
+    throw createError(500, "Missing RESEND_API_KEY");
   }
 
   const payload = {
@@ -118,7 +118,7 @@ const sendMail = async (mailOptions) => {
   const response = await fetch(RESEND_API_URL, {
     method: "POST",
     headers: {
-      Authorization: `Bearer ${process.env.RESEND_API_KEY}`,
+      Authorization: `Bearer ${env.RESEND_API_KEY}`,
       "Content-Type": "application/json",
     },
     body: JSON.stringify(payload),
@@ -142,16 +142,12 @@ const sendMail = async (mailOptions) => {
   try {
     const health = checkEmailHealth();
     if (!health.ok) {
-      throw new Error(`Missing ${health.missing.join(", ")}`);
+      throw createError(500, `Missing ${health.missing.join(", ")}`);
     }
 
-    console.log(
-      `[EMAIL] Email service initialized.`,
-    );
+    logger.info({ provider: health.provider }, "Email service initialized");
   } catch (err) {
-    console.error("[EMAIL] Email configuration error on startup:");
-    console.error("[EMAIL] Error:", err.message);
-    console.error("[EMAIL] Check EMAIL_PROVIDER and related env vars");
+    logger.error({ err }, "Email configuration error on startup");
   }
 })();
 
@@ -160,7 +156,7 @@ const sendMail = async (mailOptions) => {
  */
 exports.sendEmail = async ({ to, subject, html }) => {
   await sendMail({
-    from: process.env.EMAIL_FROM,
+    from: env.EMAIL_FROM,
     to,
     subject,
     html,
@@ -178,22 +174,17 @@ exports.sendVerificationEmail = async ({ to, userName, verificationLink }) => {
   });
 
   try {
-    console.log(`[EMAIL] Sending verification email to ${to}...`);
+    logger.info({ to }, "Sending verification email");
     const result = await sendMail({
-      from: process.env.EMAIL_FROM,
+      from: env.EMAIL_FROM,
       to,
       subject: "Verify Your Email - VISION",
       html,
     });
-    console.log(
-      `[EMAIL] Verification email sent successfully to ${to}. Message ID: ${result.messageId}`,
-    );
+    logger.info({ to, messageId: result.messageId }, "Verification email sent");
     return result;
   } catch (err) {
-    console.error(`[EMAIL] Failed to send verification email to ${to}:`);
-    console.error(`[EMAIL] Error Code: ${err.code}`);
-    console.error(`[EMAIL] Error Message: ${err.message}`);
-    console.error(`[EMAIL] Full Error:`, err);
+    logger.error({ err, to }, "Failed to send verification email");
     throw err;
   }
 };
@@ -217,7 +208,7 @@ exports.sendPasswordResetEmail = async ({
   });
 
   await sendMail({
-    from: process.env.EMAIL_FROM,
+    from: env.EMAIL_FROM,
     to,
     subject: "Reset Your Password - VISION",
     html,
@@ -230,11 +221,11 @@ exports.sendPasswordResetEmail = async ({
 exports.sendWelcomeEmail = async ({ to, userName }) => {
   const html = welcomeTemplate({
     userName,
-    loginLink: `${process.env.FRONTEND_URL}/login`,
+    loginLink: `${env.FRONTEND_URL || "http://localhost:5173"}/login`,
   });
 
   await sendMail({
-    from: process.env.EMAIL_FROM,
+    from: env.EMAIL_FROM,
     to,
     subject: "Welcome to VISION!",
     html,
@@ -261,7 +252,7 @@ exports.sendNewLoginAlert = async ({
   });
 
   await sendMail({
-    from: process.env.EMAIL_FROM,
+    from: env.EMAIL_FROM,
     to,
     subject: "New Login to Your VISION Account",
     html,
@@ -288,7 +279,7 @@ exports.sendSecurityAlert = async ({
   });
 
   await sendMail({
-    from: process.env.EMAIL_FROM,
+    from: env.EMAIL_FROM,
     to,
     subject: `Security Alert - ${alertType || "VISION"}`,
     html,

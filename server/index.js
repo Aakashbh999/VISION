@@ -3,7 +3,9 @@ const cors = require("cors");
 const helmet = require("helmet");
 const rateLimit = require("express-rate-limit");
 const path = require("path");
-require("dotenv").config();
+const env = require("./config/env");
+const logger = require("./utils/logger");
+const sanitizeInput = require("./middleware/sanitizeInput");
 const authRoutes = require("./routes/authRoutes");
 const itRoutes = require("./routes/itRoutes");
 const userRoutes = require("./routes/userRoutes");
@@ -29,7 +31,7 @@ const { checkEmailHealth } = require("./utils/emailService");
 const pool = require("./config/db");
 
 const app = express();
-const PORT = process.env.PORT || 5000;
+const PORT = env.PORT;
 
 // Render sits behind a proxy; trust it so rate-limiting and client IPs work correctly.
 app.set("trust proxy", 1);
@@ -38,8 +40,8 @@ app.set("trust proxy", 1);
 app.use(helmet()); // Security headers
 
 // CORS: restrict to whitelisted origins in production
-const allowedOrigins = process.env.CORS_ORIGINS
-  ? process.env.CORS_ORIGINS.split(",").map((o) => o.trim())
+const allowedOrigins = env.CORS_ORIGINS
+  ? env.CORS_ORIGINS.split(",").map((o) => o.trim())
   : [
       "http://localhost:5173",
       "http://localhost:5174",
@@ -64,6 +66,7 @@ app.use(
   }),
 );
 app.use(express.json());
+app.use(sanitizeInput);
 
 // Rate limiting for auth routes (prevents brute force attacks)
 const authLimiter = rateLimit({
@@ -160,9 +163,7 @@ app.use("/api/study-groups", studyGroupRoutes);
 
 // Root Test Route
 app.get("/", (req, res) => {
-  res.send(
-    "VISION Server is structured, modular, and ready for the market!",
-  );
+  res.send("VISION Server is structured, modular, and ready for the market!");
 });
 
 // Global Error Handler
@@ -171,5 +172,5 @@ app.use(errorHandler);
 
 // Start server (Render will set PORT automatically)
 app.listen(PORT, () => {
-  console.log(`VISION Server running on port ${PORT}`);
+  logger.info({ port: PORT }, "VISION Server running");
 });

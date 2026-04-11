@@ -3,11 +3,7 @@ const catchAsync = require("../utils/catchAsync");
 
 exports.getDashboard = catchAsync(async (req, res) => {
   // All user fields are already on req.user from authMiddleware — no extra DB lookup needed
-  const {
-    portal_user_id: user_id,
-    program_id,
-    academic_degree_id,
-  } = req.user;
+  const { portal_user_id: user_id, program_id, academic_degree_id } = req.user;
 
   const baseFields = `
     d.discussion_id, d.title, d.content, d.created_at,
@@ -18,7 +14,6 @@ exports.getDashboard = catchAsync(async (req, res) => {
   // Run all independent queries in parallel (single round-trip instead of 5 sequential)
   const [progressRes, nextStepRes, recRes, clubsRes, degreeFeedResults] =
     await Promise.all([
-
       // 1️⃣ ROADMAP PROGRESS
       pool.query(
         `SELECT
@@ -37,7 +32,7 @@ exports.getDashboard = catchAsync(async (req, res) => {
 
       // 2️⃣ NEXT INCOMPLETE STEP
       pool.query(
-        `SELECT rs.step_id, rs.title, rs.step_order
+        `SELECT rs.step_id, rs.title, rs.step_order, r.roadmap_id
          FROM portal.program_roadmaps pr
          JOIN portal.roadmaps r ON r.roadmap_id = pr.roadmap_id
          JOIN portal.roadmap_steps rs ON rs.roadmap_id = r.roadmap_id

@@ -5,6 +5,7 @@ const ctrl = require("../controllers/discussionController");
 const voteCtrl = require("../controllers/voteController");
 const upload = require("../middleware/uploadMiddleware");
 const rateLimit = require("express-rate-limit");
+const sanitizeInput = require("../middleware/sanitizeInput");
 
 // Anti-spam limiter: 5 creations per 1 minute
 const createLimiter = rateLimit({
@@ -31,27 +32,51 @@ router.get("/user/saved", verifyJWT, ctrl.getSavedDiscussions);
 router.get("/:id", optionalJWT, ctrl.getDiscussionDetails);
 
 // Protected routes
-router.post("/", verifyJWT, createLimiter, ctrl.createDiscussion);
-router.put("/:id", verifyJWT, ctrl.updateDiscussion);
+router.post(
+  "/",
+  verifyJWT,
+  createLimiter,
+  sanitizeInput,
+  ctrl.createDiscussion,
+);
+router.put("/:id", verifyJWT, sanitizeInput, ctrl.updateDiscussion);
 router.delete("/:id", verifyJWT, ctrl.deleteDiscussion);
 router.delete("/:id/hard", verifyJWT, ctrl.hardDeleteDiscussion);
-router.post("/:id/boost", verifyJWT, ctrl.boostDiscussion);
-router.post("/upload", verifyJWT, upload.single("file"), ctrl.uploadImage);
+router.post("/:id/boost", verifyJWT, sanitizeInput, ctrl.boostDiscussion);
+router.post(
+  "/upload",
+  verifyJWT,
+  upload.single("file"),
+  sanitizeInput,
+  ctrl.uploadImage,
+);
 
 // Comments (renamed from replies)
-router.post("/:id/comments", verifyJWT, createLimiter, ctrl.addComment);
+router.post(
+  "/:id/comments",
+  verifyJWT,
+  createLimiter,
+  sanitizeInput,
+  ctrl.addComment,
+);
 router.delete("/comments/:commentId", verifyJWT, ctrl.deleteComment);
 router.post(
   "/comments/:commentId/soft-delete",
   verifyJWT,
+  sanitizeInput,
   ctrl.softDeleteComment,
 );
 
 // Like and Save
-router.post("/:id/vote", verifyJWT, voteCtrl.handleVote);
-router.post("/:id/save", verifyJWT, ctrl.toggleSave);
+router.post("/:id/vote", verifyJWT, sanitizeInput, voteCtrl.handleVote);
+router.post("/:id/save", verifyJWT, sanitizeInput, ctrl.toggleSave);
 
 // Comment Likes
-router.post("/comments/:id/vote", verifyJWT, voteCtrl.handleCommentVote);
+router.post(
+  "/comments/:id/vote",
+  verifyJWT,
+  sanitizeInput,
+  voteCtrl.handleCommentVote,
+);
 
 module.exports = router;

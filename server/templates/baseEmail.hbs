@@ -1,0 +1,144 @@
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <title>VISION</title>
+    <!--[if mso]>
+  <noscript>
+    <xml>
+      <o:OfficeDocumentSettings>
+        <o:PixelsPerInch>96</o:PixelsPerInch>
+      </o:OfficeDocumentSettings>
+    </xml>
+  </noscript>
+  <![endif]-->
+    <style>
+      body, table, td, p, a, li, blockquote {
+        -webkit-text-size-adjust: 100%;
+        -ms-text-size-adjust: 100%;
+      }
+      table, td {
+        mso-table-lspace: 0pt;
+        mso-table-rspace: 0pt;
+      }
+      img {
+        -ms-interpolation-mode: bicubic;
+        border: 0;
+        height: auto;
+        line-height: 100%;
+        outline: none;
+        text-decoration: none;
+      }
+      body {
+        margin: 0 !important;
+        padding: 0 !important;
+        width: 100% !important;
+        background-color:{{lightColor}};
+          }
+          a {
+            color:{{primaryColor}};
+          }
+          @media screen and (max-width: 600px) {
+            .mobile-padding {
+              padding-left: 20px !important;
+              padding-right: 20px !important;
+            }
+            .mobile-full-width {
+              width: 100% !important;
+            }
+          }
+    </style>
+  </head>
+  <body style="margin: 0; padding: 0; background-color: {{lightColor}};">
+    <div style="display: none; max-height: 0; overflow: hidden;">
+      {{previewText}}
+      &nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;
+    </div>
+
+    <table
+      role="presentation"
+      cellpadding="0"
+      cellspacing="0"
+      width="100%"
+      style="background-color: {{lightColor}};"
+    >
+      <tr>
+        <td align="center" style="padding: 40px 0;">
+          <table
+            role="presentation"
+            cellpadding="0"
+            cellspacing="0"
+            width="600"
+            class="mobile-full-width"
+            style="max-width: 600px; background-color: {{whiteColor}}; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);"
+          >
+            <tr>
+              <td
+                style="background: linear-gradient(135deg, {{primaryColor}} 0%, {{secondaryColor}} 100%); padding: 30px 40px; border-radius: 12px 12px 0 0;"
+              >
+                <table
+                  role="presentation"
+                  cellpadding="0"
+                  cellspacing="0"
+                  width="100%"
+                >
+                  <tr>
+                    <td>
+                      <h1
+                        style="margin: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-size: 28px; font-weight: 700; color: {{whiteColor}}; letter-spacing: -0.5px;"
+                      >
+                        VISION
+                      </h1>
+                      <p
+                        style="margin: 5px 0 0 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-size: 14px; color: rgba(255,255,255,0.85);"
+                      >
+                        Your Academic Journey Starts Here
+                      </p>
+                    </td>
+                  </tr>
+                </table>
+              </td>
+            </tr>
+
+            <tr>
+              <td class="mobile-padding" style="padding: 40px;">
+                {{{content}}}
+              </td>
+            </tr>
+
+            <tr>
+              <td
+                style="background-color: {{lightColor}}; padding: 30px 40px; border-radius: 0 0 12px 12px; border-top: 1px solid #E5E7EB;"
+              >
+                <table
+                  role="presentation"
+                  cellpadding="0"
+                  cellspacing="0"
+                  width="100%"
+                >
+                  <tr>
+                    <td align="center">
+                      <p
+                        style="margin: 0 0 10px 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-size: 14px; color: #6B7280;"
+                      >
+                        This email was sent by VISION Academic Portal
+                      </p>
+                      <p
+                        style="margin: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-size: 12px; color: #9CA3AF;"
+                      >
+                        &copy;
+                        {{year}}
+                        VISION. All rights reserved.
+                      </p>
+                    </td>
+                  </tr>
+                </table>
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+  </body>
+</html>

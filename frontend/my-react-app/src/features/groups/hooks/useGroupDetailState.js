@@ -216,10 +216,23 @@ export const useGroupDetailState = () => {
   };
 
   useEffect(() => {
-    if (isMember) {
+    if (isMember && window.innerWidth >= 1024) {
       setIsSidebarOpen(true);
+    } else {
+      setIsSidebarOpen(false);
     }
   }, [id, isMember]);
+
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth < 1024) {
+        setIsSidebarOpen(false);
+      }
+    };
+
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
   const handleSectionChange = (sectionId) => {
     setActiveSection(sectionId);
