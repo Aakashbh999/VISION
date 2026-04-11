@@ -2,6 +2,8 @@ const multer = require("multer");
 const { CloudinaryStorage } = require("multer-storage-cloudinary");
 const cloudinary = require("../config/cloudinary");
 const path = require("path");
+const validator = require("validator");
+const createError = require("http-errors");
 
 // Helper to sanitize filename for Cloudinary public_id
 const sanitizeFilename = (filename) => {
@@ -96,11 +98,36 @@ const fileFilter = (req, file, cb) => {
     "application/x-rar-compressed",
   ];
 
-  if (allowedMimes.includes(file.mimetype)) {
+  const allowedExtensions = [
+    ".jpg",
+    ".jpeg",
+    ".png",
+    ".webp",
+    ".gif",
+    ".pdf",
+    ".doc",
+    ".docx",
+    ".txt",
+    ".ppt",
+    ".pptx",
+    ".xls",
+    ".xlsx",
+    ".zip",
+    ".rar",
+  ];
+
+  const extension = path.extname(file.originalname || "").toLowerCase();
+  const isMimeAllowed =
+    validator.isMimeType(file.mimetype || "") &&
+    allowedMimes.includes(file.mimetype);
+  const isExtensionAllowed = allowedExtensions.includes(extension);
+
+  if (isMimeAllowed && isExtensionAllowed) {
     cb(null, true);
   } else {
     cb(
-      new Error(
+      createError(
+        400,
         "Invalid file type. Allowed: images, PDF, DOC, DOCX, TXT, PPT, XLS, ZIP",
       ),
       false,

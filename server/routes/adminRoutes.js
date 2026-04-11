@@ -6,6 +6,7 @@ const resourceController = require("../controllers/resourceController");
 const { verifyJWT } = require("../middleware/authMiddleware");
 const { verifyAdmin } = require("../middleware/adminMiddleware");
 const { verifyModerator } = require("../middleware/moderatorMiddleware");
+const sanitizeInput = require("../middleware/sanitizeInput");
 
 /* ===============================
    STUDENT MANAGEMENT
@@ -36,6 +37,7 @@ router.patch(
   "/admin/approve/:user_id",
   verifyJWT,
   verifyAdmin,
+  sanitizeInput,
   adminController.approveStudent,
 );
 
@@ -43,6 +45,7 @@ router.patch(
   "/admin/reject/:user_id",
   verifyJWT,
   verifyAdmin,
+  sanitizeInput,
   adminController.rejectStudent,
 );
 
@@ -54,6 +57,7 @@ router.patch(
   "/admin/discussions/:id/delete",
   verifyJWT,
   verifyAdmin,
+  sanitizeInput,
   adminController.deleteDiscussion,
 );
 
@@ -72,6 +76,7 @@ router.patch(
   "/admin/reports/:id/close",
   verifyJWT,
   verifyAdmin,
+  sanitizeInput,
   adminController.closeReport,
 );
 
@@ -83,6 +88,7 @@ router.patch(
   "/admin/suspend/:user_id",
   verifyJWT,
   verifyAdmin,
+  sanitizeInput,
   adminController.suspendUser,
 );
 
@@ -90,6 +96,7 @@ router.patch(
   "/admin/reactivate/:user_id",
   verifyJWT,
   verifyAdmin,
+  sanitizeInput,
   adminController.reactivateUser,
 );
 
@@ -151,6 +158,7 @@ router.post(
   "/admin/users/:userId/force-logout",
   verifyJWT,
   verifyAdmin,
+  sanitizeInput,
   adminController.forceLogoutUser,
 );
 
@@ -169,6 +177,7 @@ router.patch(
   "/admin/resources/:id/approve",
   verifyJWT,
   verifyModerator,
+  sanitizeInput,
   resourceController.approveResource,
 );
 
@@ -176,6 +185,7 @@ router.patch(
   "/admin/resources/:id/reject",
   verifyJWT,
   verifyModerator,
+  sanitizeInput,
   resourceController.rejectResource,
 );
 
@@ -187,6 +197,7 @@ router.delete(
   "/admin/content",
   verifyJWT,
   verifyAdmin,
+  sanitizeInput,
   adminController.hardDeleteContent,
 );
 
@@ -194,6 +205,7 @@ router.delete(
   "/admin/users/:user_id",
   verifyJWT,
   verifyAdmin,
+  sanitizeInput,
   adminController.hardDeleteUser,
 );
 
@@ -201,6 +213,7 @@ router.post(
   "/admin/reports/:report_id/resolve",
   verifyJWT,
   verifyAdmin,
+  sanitizeInput,
   adminController.resolveReportWithAction,
 );
 
@@ -212,4 +225,3 @@ router.get(
 );
 
 module.exports = router;
-

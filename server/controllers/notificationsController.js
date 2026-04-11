@@ -1,16 +1,17 @@
 const pool = require("../config/db");
 const catchAsync = require("../utils/catchAsync");
+const createError = require("http-errors");
 
 // Get user notifications (paginated)
 exports.getNotifications = catchAsync(async (req, res) => {
-    const portalUserId = req.user.portal_user_id;
-    const page  = Math.max(1, parseInt(req.query.page,  10) || 1);
-    const limit = Math.min(50, Math.max(1, parseInt(req.query.limit, 10) || 20));
-    const offset = (page - 1) * limit;
-    const unreadOnly = req.query.unreadOnly === "true";
+  const portalUserId = req.user.portal_user_id;
+  const page = Math.max(1, parseInt(req.query.page, 10) || 1);
+  const limit = Math.min(50, Math.max(1, parseInt(req.query.limit, 10) || 20));
+  const offset = (page - 1) * limit;
+  const unreadOnly = req.query.unreadOnly === "true";
 
-    const notifications = await pool.query(
-      `WITH DedupedNotifications AS (
+  const notifications = await pool.query(
+    `WITH DedupedNotifications AS (
          SELECT
            n.notification_id,
            n.user_id,
@@ -55,73 +56,72 @@ exports.getNotifications = catchAsync(async (req, res) => {
          )
        ORDER BY n.created_at DESC
        LIMIT $2 OFFSET $3`,
-      [portalUserId, limit, offset, unreadOnly],
-    );
+    [portalUserId, limit, offset, unreadOnly],
+  );
 
-    const total = notifications.rows[0]?.total_count ?? 0;
-    res.json({
-      data: notifications.rows.map(({ total_count, rn, ...n }) => n),
-      pagination: {
-        page,
-        limit,
-        total: parseInt(total),
-        totalPages: Math.max(1, Math.ceil(total / limit)),
-      },
-    });
+  const total = notifications.rows[0]?.total_count ?? 0;
+  res.json({
+    data: notifications.rows.map(({ total_count, rn, ...n }) => n),
+    pagination: {
+      page,
+      limit,
+      total: parseInt(total),
+      totalPages: Math.max(1, Math.ceil(total / limit)),
+    },
+  });
 });
-
 
 // Mark notification as read
 exports.markRead = catchAsync(async (req, res) => {
-    const { id } = req.params;
+  const { id } = req.params;
 
-    // Directly use portal_user_id from the authenticated user object
-    const portalUserId = req.user.portal_user_id;
+  // Directly use portal_user_id from the authenticated user object
+  const portalUserId = req.user.portal_user_id;
 
-    if (!portalUserId) {
-      throw new Error("User not found");
-    }
+  if (!portalUserId) {
+    throw createError(401, "User not found");
+  }
 
-    await pool.query(
-      `UPDATE portal.notifications
+  await pool.query(
+    `UPDATE portal.notifications
        SET is_read = TRUE
        WHERE notification_id = $1 AND user_id = $2`,
-      [id, portalUserId],
-    );
+    [id, portalUserId],
+  );
 
-    res.json({ message: "Notification marked as read" });
+  res.json({ message: "Notification marked as read" });
 });
 
 // Delete a specific notification
 exports.deleteNotification = catchAsync(async (req, res) => {
-    const { id } = req.params;
+  const { id } = req.params;
 
-    const portalUserId = req.user.portal_user_id;
-    if (!portalUserId) {
-      throw new Error("User not found");
-    }
+  const portalUserId = req.user.portal_user_id;
+  if (!portalUserId) {
+    throw createError(401, "User not found");
+  }
 
-    await pool.query(
-      `DELETE FROM portal.notifications
+  await pool.query(
+    `DELETE FROM portal.notifications
        WHERE notification_id = $1 AND user_id = $2`,
-      [id, portalUserId],
-    );
+    [id, portalUserId],
+  );
 
-    res.json({ message: "Notification deleted successfully" });
+  res.json({ message: "Notification deleted successfully" });
 });
 
 // Clear all notifications for the user
 exports.clearAll = catchAsync(async (req, res) => {
-    const portalUserId = req.user.portal_user_id;
-    if (!portalUserId) {
-      throw new Error("User not found");
-    }
+  const portalUserId = req.user.portal_user_id;
+  if (!portalUserId) {
+    throw createError(401, "User not found");
+  }
 
-    await pool.query(
-      `DELETE FROM portal.notifications
+  await pool.query(
+    `DELETE FROM portal.notifications
        WHERE user_id = $1`,
-      [portalUserId],
-    );
+    [portalUserId],
+  );
 
-    res.json({ message: "All notifications cleared" });
+  res.json({ message: "All notifications cleared" });
 });

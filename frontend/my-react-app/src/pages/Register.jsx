@@ -1,7 +1,9 @@
 import { useEffect, useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { usePrograms } from "../hooks/usePrograms";
-import { register, login } from "../services/auth";
+import { register as registerUser, login } from "../services/auth";
 import {
   Mail,
   Lock,
@@ -19,6 +21,8 @@ import {
   Briefcase,
   FileText,
   CheckCircle,
+  Eye,
+  EyeOff,
 } from "lucide-react";
 import LoadingSpinner from "../components/ui/LoadingSpinner";
 import { calculateSemesterFromBatch } from "../utils/academic";
@@ -26,6 +30,10 @@ import { toast } from "react-toastify";
 import { Tag } from "lucide-react";
 import Button from "../components/ui/Button";
 import api from "../services/api";
+import {
+  registerStep1Schema,
+  normalizeFullName,
+} from "../validation/registerSchema";
 
 const Register = () => {
   const navigate = useNavigate();
@@ -54,6 +62,17 @@ const Register = () => {
   const [studentIdFile, setStudentIdFile] = useState(null);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const { register: registerField, handleSubmit: handleStep1Submit } = useForm({
+    resolver: zodResolver(registerStep1Schema),
+    defaultValues: {
+      full_name: formData.full_name,
+      email: formData.email,
+      password: formData.password,
+      confirmPassword: formData.confirmPassword,
+    },
+  });
 
   useEffect(() => {
     const fetchTags = async () => {
@@ -144,42 +163,19 @@ const Register = () => {
     setStudentIdFile(file);
   };
 
-  const validateStep1 = () => {
-    if (
-      !formData.email ||
-      !formData.password ||
-      !formData.confirmPassword ||
-      !formData.full_name
-    ) {
-      setError("Fill in all required fields.");
-      return false;
-    }
-    if (formData.password.length < 8) {
-      setError("Password must be at least 8 characters.");
-      return false;
-    }
-    if (
-      !/[A-Z]/.test(formData.password) ||
-      !/[a-z]/.test(formData.password) ||
-      !/[0-9]/.test(formData.password)
-    ) {
-      setError("Password must include uppercase, lowercase, and a number.");
-      return false;
-    }
-    if (formData.password !== formData.confirmPassword) {
-      setError("Passwords do not match.");
-      return false;
-    }
+  const onStep1Valid = (step1Data) => {
     setError("");
-    return true;
+    setFormData((prev) => ({
+      ...prev,
+      ...step1Data,
+    }));
+    setStep(2);
+    window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-  const handleStep1Submit = (e) => {
-    e.preventDefault();
-    if (validateStep1()) {
-      setStep(2);
-      window.scrollTo({ top: 0, behavior: "smooth" });
-    }
+  const onStep1Invalid = (validationErrors) => {
+    const firstError = Object.values(validationErrors)[0];
+    setError(firstError?.message || "Fill in all required fields.");
   };
 
   const handleFinalSubmit = async (e) => {
@@ -188,9 +184,10 @@ const Register = () => {
     setLoading(true);
 
     const finalPayload = new FormData();
+    const normalizedFullName = normalizeFullName(formData.full_name);
     finalPayload.append("email", formData.email);
     finalPayload.append("password", formData.password);
-    finalPayload.append("full_name", formData.full_name);
+    finalPayload.append("full_name", normalizedFullName);
     finalPayload.append("university", formData.university);
     finalPayload.append("campus", formData.campus);
     finalPayload.append("program_id", formData.program_id);
@@ -205,7 +202,7 @@ const Register = () => {
     }
 
     try {
-      await register(finalPayload);
+      await registerUser(finalPayload);
 
       toast.success("Account created! Logging you in...");
 
@@ -232,9 +229,9 @@ const Register = () => {
 
   return (
     <div className="max-w-2xl mx-auto py-12 px-4 sm:px-6">
-      <div className="bg-[var(--bg-card)] rounded-sm sm:rounded-3xl border border-[var(--border-main)] p-8 sm:p-10 shadow-xl shadow-purple-500/5 relative overflow-hidden">
+      <div className="bg-(--bg-card) rounded-sm sm:rounded-3xl border border-(--border-main) p-8 sm:p-10 shadow-xl shadow-purple-500/5 relative overflow-hidden">
         {/* Progress bar */}
-        <div className="absolute top-0 left-0 w-full h-1.5 bg-[var(--bg-active)]">
+        <div className="absolute top-0 left-0 w-full h-1.5 bg-(--bg-active)">
           <div
             className="h-full bg-purple-600 transition-all duration-500 ease-out"
             style={{ width: `${(step / 2) * 100}%` }}
@@ -243,10 +240,10 @@ const Register = () => {
 
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-10 gap-4">
           <div>
-            <h1 className="text-3xl font-black text-[var(--text-main)] tracking-tight">
+            <h1 className="text-3xl font-black text-(--text-main) tracking-tight">
               {step === 1 ? "Start Your Journey" : "Academic Profile"}
             </h1>
-            <p className="text-[var(--text-muted)] mt-1 font-medium italic">
+            <p className="text-(--text-muted) mt-1 font-medium italic">
               {step === 1
                 ? "Join the community of IT students."
                 : "Help us personalize your experience."}
@@ -265,80 +262,113 @@ const Register = () => {
         )}
 
         {step === 1 ? (
-          <form onSubmit={handleStep1Submit} className="space-y-6">
+          <form
+            onSubmit={handleStep1Submit(onStep1Valid, onStep1Invalid)}
+            className="space-y-6"
+          >
             <div className="space-y-4">
               <div>
-                <label className="text-[10px] font-black uppercase text-[var(--text-muted)] tracking-widest mb-2 block">
+                <label className="text-[10px] font-black uppercase text-(--text-muted) tracking-widest mb-2 block">
                   Full Name
                 </label>
                 <div className="relative group">
-                  <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[var(--text-muted)] group-focus-within:text-purple-500 transition-colors" />
+                  <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-(--text-muted) group-focus-within:text-purple-500 transition-colors" />
                   <input
                     type="text"
-                    name="full_name"
                     required
-                    value={formData.full_name}
-                    onChange={handleChange}
-                    className="w-full pl-12 pr-4 py-3.5 bg-[var(--bg-active)] border border-[var(--border-main)] rounded-2xl focus:bg-[var(--bg-card)] focus:ring-4 focus:ring-purple-500/10 focus:border-purple-500 outline-none transition-all font-medium text-[var(--text-main)]"
+                    {...registerField("full_name", {
+                      onChange: () => setError(""),
+                    })}
+                    className="w-full pl-12 pr-4 py-3.5 bg-(--bg-active) border border-(--border-main) rounded-2xl focus:bg-(--bg-card) focus:ring-4 focus:ring-purple-500/10 focus:border-purple-500 outline-none transition-all font-medium text-(--text-main)"
                     placeholder="e.g. Aakash Bhandari"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="text-[10px] font-black uppercase text-[var(--text-muted)] tracking-widest mb-2 block">
+                <label className="text-[10px] font-black uppercase text-(--text-muted) tracking-widest mb-2 block">
                   Email Address
                 </label>
                 <div className="relative group">
-                  <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[var(--text-muted)] group-focus-within:text-purple-500 transition-colors" />
+                  <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-(--text-muted) group-focus-within:text-purple-500 transition-colors" />
                   <input
                     type="email"
-                    name="email"
                     required
-                    value={formData.email}
-                    onChange={handleChange}
-                    className="w-full pl-12 pr-4 py-3.5 bg-[var(--bg-active)] border border-[var(--border-main)] rounded-2xl focus:bg-[var(--bg-card)] focus:ring-4 focus:ring-purple-500/10 focus:border-purple-500 outline-none transition-all font-medium text-[var(--text-main)]"
+                    {...registerField("email", {
+                      onChange: () => setError(""),
+                    })}
+                    className="w-full pl-12 pr-4 py-3.5 bg-(--bg-active) border border-(--border-main) rounded-2xl focus:bg-(--bg-card) focus:ring-4 focus:ring-purple-500/10 focus:border-purple-500 outline-none transition-all font-medium text-(--text-main)"
                     placeholder="you@example.com"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="text-[10px] font-black uppercase text-[var(--text-muted)] tracking-widest mb-2 block">
+                <label className="text-[10px] font-black uppercase text-(--text-muted) tracking-widest mb-2 block">
                   Password
                 </label>
                 <div className="relative group">
-                  <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[var(--text-muted)] group-focus-within:text-purple-500 transition-colors" />
+                  <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-(--text-muted) group-focus-within:text-purple-500 transition-colors" />
                   <input
-                    type="password"
-                    name="password"
+                    type={showPassword ? "text" : "password"}
                     required
-                    value={formData.password}
-                    onChange={handleChange}
-                    className="w-full pl-12 pr-4 py-3.5 bg-[var(--bg-active)] border border-[var(--border-main)] rounded-2xl focus:bg-[var(--bg-card)] focus:ring-4 focus:ring-purple-500/10 focus:border-purple-500 outline-none transition-all font-medium text-[var(--text-main)]"
+                    {...registerField("password", {
+                      onChange: () => setError(""),
+                    })}
+                    className="w-full pl-12 pr-12 py-3.5 bg-(--bg-active) border border-(--border-main) rounded-2xl focus:bg-(--bg-card) focus:ring-4 focus:ring-purple-500/10 focus:border-purple-500 outline-none transition-all font-medium text-(--text-main)"
                     placeholder="Min. 8 characters"
                   />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword((prev) => !prev)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-(--text-muted) hover:text-purple-500 transition-colors"
+                    aria-label={
+                      showPassword ? "Hide password" : "Show password"
+                    }
+                  >
+                    {showPassword ? (
+                      <EyeOff className="w-5 h-5" />
+                    ) : (
+                      <Eye className="w-5 h-5" />
+                    )}
+                  </button>
                 </div>
-                <p className="mt-2 text-[10px] text-[var(--text-muted)] font-medium">
+                <p className="mt-2 text-[10px] text-(--text-muted) font-medium">
                   Use a mix of uppercase, lowercase, and numbers.
                 </p>
               </div>
 
               <div>
-                <label className="text-[10px] font-black uppercase text-[var(--text-muted)] tracking-widest mb-2 block">
+                <label className="text-[10px] font-black uppercase text-(--text-muted) tracking-widest mb-2 block">
                   Confirm Password
                 </label>
                 <div className="relative group">
-                  <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[var(--text-muted)] group-focus-within:text-purple-500 transition-colors" />
+                  <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-(--text-muted) group-focus-within:text-purple-500 transition-colors" />
                   <input
-                    type="password"
-                    name="confirmPassword"
+                    type={showConfirmPassword ? "text" : "password"}
                     required
-                    value={formData.confirmPassword}
-                    onChange={handleChange}
-                    className="w-full pl-12 pr-4 py-3.5 bg-[var(--bg-active)] border border-[var(--border-main)] rounded-2xl focus:bg-[var(--bg-card)] focus:ring-4 focus:ring-purple-500/10 focus:border-purple-500 outline-none transition-all font-medium text-[var(--text-main)]"
+                    {...registerField("confirmPassword", {
+                      onChange: () => setError(""),
+                    })}
+                    className="w-full pl-12 pr-12 py-3.5 bg-(--bg-active) border border-(--border-main) rounded-2xl focus:bg-(--bg-card) focus:ring-4 focus:ring-purple-500/10 focus:border-purple-500 outline-none transition-all font-medium text-(--text-main)"
                     placeholder="Confirm your password"
                   />
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirmPassword((prev) => !prev)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-(--text-muted) hover:text-purple-500 transition-colors"
+                    aria-label={
+                      showConfirmPassword
+                        ? "Hide confirm password"
+                        : "Show confirm password"
+                    }
+                  >
+                    {showConfirmPassword ? (
+                      <EyeOff className="w-5 h-5" />
+                    ) : (
+                      <Eye className="w-5 h-5" />
+                    )}
+                  </button>
                 </div>
               </div>
             </div>
@@ -353,7 +383,7 @@ const Register = () => {
               <ChevronRight className="h-5 w-5 transition-transform group-hover:translate-x-1" />
             </Button>
 
-            <p className="text-center text-sm font-medium text-[var(--text-muted)]">
+            <p className="text-center text-sm font-medium text-(--text-muted)">
               Already have an account?{" "}
               <Link
                 to="/login"
@@ -367,16 +397,16 @@ const Register = () => {
           <form onSubmit={handleFinalSubmit} className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
               <div>
-                <label className="text-[10px] font-black uppercase text-[var(--text-muted)] tracking-widest mb-2 block">
+                <label className="text-[10px] font-black uppercase text-(--text-muted) tracking-widest mb-2 block">
                   University
                 </label>
                 <div className="relative">
-                  <School className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[var(--text-muted)]" />
+                  <School className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-(--text-muted)" />
                   <select
                     name="university"
                     value={formData.university}
                     onChange={handleChange}
-                    className="w-full pl-12 pr-4 py-3.5 bg-[var(--bg-active)] border border-[var(--border-main)] rounded-2xl focus:bg-[var(--bg-card)] focus:ring-4 focus:ring-purple-500/10 focus:border-purple-500 outline-none transition-all font-bold text-[var(--text-main)] appearance-none"
+                    className="w-full pl-12 pr-4 py-3.5 bg-(--bg-active) border border-(--border-main) rounded-2xl focus:bg-(--bg-card) focus:ring-4 focus:ring-purple-500/10 focus:border-purple-500 outline-none transition-all font-bold text-(--text-main) appearance-none"
                   >
                     <option value="TU">Tribhuvan University (TU)</option>
                     <option value="PU">Pokhara University (PU)</option>
@@ -386,35 +416,35 @@ const Register = () => {
               </div>
 
               <div>
-                <label className="text-[10px] font-black uppercase text-[var(--text-muted)] tracking-widest mb-2 block">
+                <label className="text-[10px] font-black uppercase text-(--text-muted) tracking-widest mb-2 block">
                   Campus Name
                 </label>
                 <div className="relative group">
-                  <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[var(--text-muted)]" />
+                  <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-(--text-muted)" />
                   <input
                     type="text"
                     name="campus"
                     required
                     value={formData.campus}
                     onChange={handleChange}
-                    className="w-full pl-12 pr-4 py-3.5 bg-[var(--bg-active)] border border-[var(--border-main)] rounded-2xl focus:bg-[var(--bg-card)] focus:ring-4 focus:ring-purple-500/10 focus:border-purple-500 outline-none transition-all font-medium text-[var(--text-main)]"
+                    className="w-full pl-12 pr-4 py-3.5 bg-(--bg-active) border border-(--border-main) rounded-2xl focus:bg-(--bg-card) focus:ring-4 focus:ring-purple-500/10 focus:border-purple-500 outline-none transition-all font-medium text-(--text-main)"
                     placeholder="e.g. ASCOL, Birendra"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="text-[10px] font-black uppercase text-[var(--text-muted)] tracking-widest mb-2 block">
+                <label className="text-[10px] font-black uppercase text-(--text-muted) tracking-widest mb-2 block">
                   Program
                 </label>
                 <div className="relative">
-                  <GraduationCap className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[var(--text-muted)]" />
+                  <GraduationCap className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-(--text-muted)" />
                   <select
                     name="program_id"
                     required
                     value={formData.program_id}
                     onChange={handleChange}
-                    className="w-full pl-12 pr-4 py-3.5 bg-[var(--bg-active)] border border-[var(--border-main)] rounded-2xl focus:bg-[var(--bg-card)] focus:ring-4 focus:ring-purple-500/10 focus:border-purple-500 outline-none transition-all font-bold text-[var(--text-main)] appearance-none"
+                    className="w-full pl-12 pr-4 py-3.5 bg-(--bg-active) border border-(--border-main) rounded-2xl focus:bg-(--bg-card) focus:ring-4 focus:ring-purple-500/10 focus:border-purple-500 outline-none transition-all font-bold text-(--text-main) appearance-none"
                   >
                     <option value="">Select Program</option>
                     {programs?.map((p) => (
@@ -428,11 +458,11 @@ const Register = () => {
 
               <div className="grid grid-cols-12 gap-3">
                 <div className="col-span-7">
-                  <label className="text-[10px] font-black uppercase text-[var(--text-muted)] tracking-widest mb-2 block">
+                  <label className="text-[10px] font-black uppercase text-(--text-muted) tracking-widest mb-2 block">
                     Batch Enrollment
                   </label>
                   <div className="relative">
-                    <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--text-muted)] pointer-events-none" />
+                    <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-(--text-muted) pointer-events-none" />
                     <input
                       type="date"
                       name="batch_date"
@@ -441,16 +471,16 @@ const Register = () => {
                       value={formData.batch_date}
                       onChange={handleChange}
                       onKeyDown={(e) => e.preventDefault()}
-                      className="w-full pl-9 pr-3 py-3.5 bg-[var(--bg-active)] border border-[var(--border-main)] rounded-2xl focus:bg-[var(--bg-card)] outline-none transition-all font-bold text-[var(--text-main)] [color-scheme:dark]"
+                      className="w-full pl-9 pr-3 py-3.5 bg-(--bg-active) border border-(--border-main) rounded-2xl focus:bg-(--bg-card) outline-none transition-all font-bold text-(--text-main) scheme-dark"
                     />
                   </div>
                 </div>
                 <div className="col-span-5">
-                  <label className="text-[10px] font-black uppercase text-[var(--text-muted)] tracking-widest mb-2 block">
+                  <label className="text-[10px] font-black uppercase text-(--text-muted) tracking-widest mb-2 block">
                     Semester
                   </label>
                   <div className="relative">
-                    <BookOpen className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--text-muted)]" />
+                    <BookOpen className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-(--text-muted)" />
                     <input
                       type="number"
                       name="semester"
@@ -459,7 +489,7 @@ const Register = () => {
                       max="12"
                       value={formData.semester}
                       onChange={handleChange}
-                      className="w-full pl-9 pr-3 py-3.5 bg-[var(--bg-active)] border border-[var(--border-main)] rounded-2xl focus:bg-[var(--bg-card)] outline-none transition-all font-bold text-[var(--text-main)]"
+                      className="w-full pl-9 pr-3 py-3.5 bg-(--bg-active) border border-(--border-main) rounded-2xl focus:bg-(--bg-card) outline-none transition-all font-bold text-(--text-main)"
                       placeholder="1"
                     />
                   </div>
@@ -468,18 +498,18 @@ const Register = () => {
             </div>
 
             <div>
-              <label className="text-[10px] font-black uppercase text-[var(--text-muted)] tracking-widest mb-2 block">
+              <label className="text-[10px] font-black uppercase text-(--text-muted) tracking-widest mb-2 block">
                 TU Registration Number
               </label>
               <div className="relative group">
-                <FileText className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[var(--text-muted)]" />
+                <FileText className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-(--text-muted)" />
                 <input
                   type="text"
                   name="tu_registration_no"
                   required
                   value={formData.tu_registration_no}
                   onChange={handleChange}
-                  className="w-full pl-12 pr-4 py-3.5 bg-[var(--bg-active)] border border-[var(--border-main)] rounded-2xl focus:bg-[var(--bg-card)] focus:ring-4 focus:ring-purple-500/10 focus:border-purple-500 outline-none transition-all font-medium text-[var(--text-main)]"
+                  className="w-full pl-12 pr-4 py-3.5 bg-(--bg-active) border border-(--border-main) rounded-2xl focus:bg-(--bg-card) focus:ring-4 focus:ring-purple-500/10 focus:border-purple-500 outline-none transition-all font-medium text-(--text-main)"
                   placeholder="5-2-37-123-2019"
                 />
               </div>
@@ -487,7 +517,7 @@ const Register = () => {
 
             <div>
               <div className="flex items-center justify-between mb-2">
-                <label className="flex items-center gap-1.5 text-[10px] font-black text-[var(--text-muted)] uppercase tracking-widest ml-1">
+                <label className="flex items-center gap-1.5 text-[10px] font-black text-(--text-muted) uppercase tracking-widest ml-1">
                   <Tag className="w-3.5 h-3.5 text-purple-500" />
                   Interested Areas
                 </label>
@@ -495,7 +525,7 @@ const Register = () => {
                   className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
                     formData.career_scope.length >= 5
                       ? "bg-purple-100 text-purple-700"
-                      : "text-[var(--text-muted)]"
+                      : "text-(--text-muted)"
                   }`}
                 >
                   {formData.career_scope.length}/5 selected
@@ -503,7 +533,7 @@ const Register = () => {
               </div>
               <div className="flex flex-wrap gap-2 px-1">
                 {isLoadingTags && (
-                  <p className="text-xs text-[var(--text-muted)] italic">
+                  <p className="text-xs text-(--text-muted) italic">
                     Loading tags…
                   </p>
                 )}
@@ -524,8 +554,8 @@ const Register = () => {
                         isSelected
                           ? "bg-purple-600 text-white border-purple-600 shadow-sm"
                           : isDisabled
-                            ? "bg-[var(--bg-active)] text-[var(--text-muted)] border-[var(--border-main)] opacity-40 cursor-not-allowed"
-                            : "bg-[var(--bg-active)] text-[var(--text-main)] border-[var(--border-main)] hover:border-purple-400 hover:text-purple-600 cursor-pointer"
+                            ? "bg-(--bg-active) text-(--text-muted) border-(--border-main) opacity-40 cursor-not-allowed"
+                            : "bg-(--bg-active) text-(--text-main) border-(--border-main) hover:border-purple-400 hover:text-purple-600 cursor-pointer"
                       }`}
                     >
                       {tag.name}
@@ -547,7 +577,7 @@ const Register = () => {
             </div>
 
             <div>
-              <label className="text-[10px] font-black uppercase text-[var(--text-muted)] tracking-widest mb-2 block">
+              <label className="text-[10px] font-black uppercase text-(--text-muted) tracking-widest mb-2 block">
                 Student ID Proof (Max 1MB)
               </label>
               <div className="relative">
@@ -562,7 +592,7 @@ const Register = () => {
                   htmlFor="studentIdFile"
                   className={`
                     flex flex-col items-center justify-center gap-2 w-full p-6 border-2 border-dashed rounded-3xl cursor-pointer transition-all
-                    ${studentIdFile ? "bg-green-50 dark:bg-green-950/30 border-green-200 dark:border-green-800" : "bg-[var(--bg-active)] border-[var(--border-main)] hover:border-purple-300 dark:hover:border-purple-700 hover:bg-[var(--bg-card)]/50"}
+                    ${studentIdFile ? "bg-green-50 dark:bg-green-950/30 border-green-200 dark:border-green-800" : "bg-(--bg-active) border-(--border-main) hover:border-purple-300 dark:hover:border-purple-700 hover:bg-(--bg-card)/50"}
                   `}
                 >
                   {studentIdFile ? (
@@ -577,11 +607,11 @@ const Register = () => {
                     </>
                   ) : (
                     <>
-                      <Upload className="w-8 h-8 text-[var(--text-muted)]" />
-                      <span className="text-sm font-bold text-[var(--text-muted)]">
+                      <Upload className="w-8 h-8 text-(--text-muted)" />
+                      <span className="text-sm font-bold text-(--text-muted)">
                         Upload Student ID Photo
                       </span>
-                      <span className="text-[10px] text-[var(--text-muted)] uppercase tracking-widest font-black">
+                      <span className="text-[10px] text-(--text-muted) uppercase tracking-widest font-black">
                         JPG, PNG, WebP only
                       </span>
                     </>
@@ -604,7 +634,7 @@ const Register = () => {
                 type="submit"
                 variant="shiny"
                 size="lg"
-                className="flex-[2] justify-center"
+                className="flex-2 justify-center"
                 isLoading={loading}
                 disabled={loading}
               >

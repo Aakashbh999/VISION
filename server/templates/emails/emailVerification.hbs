@@ -1,0 +1,71 @@
+<table role="presentation" cellpadding="0" cellspacing="0" width="100%">
+  <tr>
+    <td>
+      <h2
+        style="margin: 0 0 20px 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-size: 24px; font-weight: 600; color: {{darkColor}};"
+      >
+        Verify Your Email Address
+      </h2>
+
+      <p
+        style="margin: 0 0 20px 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-size: 16px; line-height: 24px; color: #4B5563;"
+      >
+        Hi{{{userNameHtml}}},
+      </p>
+
+      <p
+        style="margin: 0 0 20px 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-size: 16px; line-height: 24px; color: #4B5563;"
+      >
+        Welcome to VISION! Please verify your email address to complete your
+        registration and unlock all features of our academic portal.
+      </p>
+
+      <table role="presentation" cellpadding="0" cellspacing="0" width="100%">
+        <tr>
+          <td align="center" style="padding: 20px 0;">
+            <a
+              href="{{verificationLink}}"
+              target="_blank"
+              style="display: inline-block; padding: 14px 32px; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-size: 16px; font-weight: 600; color: {{whiteColor}}; background: linear-gradient(135deg, {{primaryColor}} 0%, {{secondaryColor}} 100%); text-decoration: none; border-radius: 8px; box-shadow: 0 4px 6px -1px rgba(79, 70, 229, 0.4);"
+            >
+              Verify Email Address
+            </a>
+          </td>
+        </tr>
+      </table>
+
+      <p
+        style="margin: 20px 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-size: 14px; line-height: 22px; color: #6B7280;"
+      >
+        Or copy and paste this link into your browser:
+      </p>
+
+      <p
+        style="margin: 0 0 20px 0; font-family: 'Courier New', monospace; font-size: 13px; line-height: 20px; color: {{primaryColor}}; word-break: break-all; background-color: {{lightColor}}; padding: 12px; border-radius: 6px;"
+      >
+        {{verificationLink}}
+      </p>
+
+      <table
+        role="presentation"
+        cellpadding="0"
+        cellspacing="0"
+        width="100%"
+        style="background-color: #FEF3C7; border-radius: 8px; border-left: 4px solid {{warningColor}};"
+      >
+        <tr>
+          <td style="padding: 16px;">
+            <p
+              style="margin: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-size: 14px; line-height: 20px; color: #92400E;"
+            >
+              <strong>Note:</strong>
+              This link will expire in
+              <strong>{{expiresIn}}</strong>. If you didn't create an account
+              with VISION, you can safely ignore this email.
+            </p>
+          </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+</table>

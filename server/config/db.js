@@ -1,11 +1,9 @@
 const { Pool } = require("pg");
-const path = require("path");
-
-// Safely loads your .env from the root folder
-require("dotenv").config({ path: path.resolve(__dirname, "../.env") });
+const env = require("./env");
+const logger = require("../utils/logger");
 
 // Sanitize DATABASE_URL if it contains CLI prefix or surrounding quotes
-let connectionString = process.env.DATABASE_URL || "";
+let connectionString = env.DATABASE_URL || "";
 if (typeof connectionString === "string") {
   connectionString = connectionString.trim();
   // remove leading 'psql ' if someone pasted the CLI command
@@ -26,11 +24,9 @@ pool.on("connect", (client) => {
   client
     .query("SET search_path TO auth, portal, public")
     .then(() => {
-      console.log(
-        "🐘 Neon Connected: Search path set to [auth, portal, public]",
-      );
+      logger.info("DB connected: search path set to [auth, portal, public]");
     })
-    .catch((err) => console.error("❌ Error setting search path:", err));
+    .catch((err) => logger.error({ err }, "Error setting DB search path"));
 });
 
 module.exports = pool;

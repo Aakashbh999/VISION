@@ -1,6 +1,7 @@
 const pool = require("../config/db");
 const XPService = require("../services/xpService");
 const { successResponse, errorResponse } = require("./response");
+const logger = require("./logger");
 
 /**
  * Shared utility for handling image uploads with cooldown and VXP bypass logic.
@@ -51,7 +52,11 @@ async function handleImageUploadWithCooldown({
       const stats = await XPService.getUserStats(userId);
       if (!stats || stats.total_xp < vxpCost) {
         await client.query("ROLLBACK");
-        return errorResponse(res, `Need ${vxpCost} VXP to bypass cooldown`, 403);
+        return errorResponse(
+          res,
+          `Need ${vxpCost} VXP to bypass cooldown`,
+          403,
+        );
       }
       await XPService.updateUserXP(userId, -vxpCost, vxpLogMessage, client);
     }
@@ -70,14 +75,10 @@ async function handleImageUploadWithCooldown({
 
     await client.query("COMMIT");
 
-    return successResponse(
-      res,
-      { [returnKey]: imageUrl },
-      successMessage
-    );
+    return successResponse(res, { [returnKey]: imageUrl }, successMessage);
   } catch (err) {
     await client.query("ROLLBACK");
-    console.error("handleImageUploadWithCooldown error:", err);
+    logger.error({ err }, "handleImageUploadWithCooldown error");
     return errorResponse(res, "Failed to update image");
   } finally {
     client.release();

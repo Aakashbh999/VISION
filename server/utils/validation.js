@@ -2,6 +2,7 @@
  * Shared validation helpers used across controllers.
  * Centralized to follow DRY — previously duplicated in groupController + profileController.
  */
+const { addDays, differenceInCalendarDays, isAfter } = require("date-fns");
 
 /**
  * Count words in a text string.
@@ -20,7 +21,7 @@ function countWords(text = "") {
  */
 function isCooldownActive(lastUpdate, days) {
   if (!lastUpdate) return false;
-  return Date.now() - new Date(lastUpdate).getTime() < days * 86400000;
+  return isAfter(addDays(new Date(lastUpdate), days), new Date());
 }
 
 /**
@@ -31,9 +32,9 @@ function isCooldownActive(lastUpdate, days) {
  */
 function getCooldownDaysLeft(lastUpdate, cooldownDays) {
   if (!lastUpdate) return 0;
-  const elapsed = Date.now() - new Date(lastUpdate).getTime();
-  const remaining = cooldownDays * 86400000 - elapsed;
-  return remaining > 0 ? Math.ceil(remaining / 86400000) : 0;
+  const cooldownEnds = addDays(new Date(lastUpdate), cooldownDays);
+  if (!isAfter(cooldownEnds, new Date())) return 0;
+  return Math.max(differenceInCalendarDays(cooldownEnds, new Date()), 1);
 }
 
 /**
@@ -43,11 +44,18 @@ function getCooldownDaysLeft(lastUpdate, cooldownDays) {
  * @returns {{ valid: boolean, error?: string }}
  */
 function validateDescription(description, maxWords) {
-  if (description !== undefined && description !== null && typeof description !== "string") {
+  if (
+    description !== undefined &&
+    description !== null &&
+    typeof description !== "string"
+  ) {
     return { valid: false, error: "Description must be text" };
   }
   if (description && countWords(description) > maxWords) {
-    return { valid: false, error: `Description must be ${maxWords} words or less` };
+    return {
+      valid: false,
+      error: `Description must be ${maxWords} words or less`,
+    };
   }
   return { valid: true };
 }

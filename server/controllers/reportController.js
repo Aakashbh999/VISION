@@ -1,5 +1,6 @@
 const pool = require("../config/db");
 const XPService = require("../services/xpService");
+const logger = require("../utils/logger");
 
 /**
  * Report Controller
@@ -26,9 +27,9 @@ exports.createReport = async (req, res) => {
 
     // 0. Check for self-reporting and duplicate reports
     const checkResult = await client.query(
-          `SELECT reporter_user_id, target_type, target_id FROM portal.reports 
+      `SELECT reporter_user_id, target_type, target_id FROM portal.reports 
             WHERE reporter_user_id = $1 AND target_type = $2 AND target_id = $3`,
-          [reporterUserId, target_type, normalizedTargetId],
+      [reporterUserId, target_type, normalizedTargetId],
     );
 
     if (checkResult.rows.length > 0) {
@@ -106,7 +107,7 @@ exports.createReport = async (req, res) => {
     });
   } catch (error) {
     await client.query("ROLLBACK");
-    console.error("[Report Controller Error]:", error);
+    logger.error({ err: error }, "Report controller error");
     res.status(500).json({ error: "Internal server error" });
   } finally {
     client.release();
