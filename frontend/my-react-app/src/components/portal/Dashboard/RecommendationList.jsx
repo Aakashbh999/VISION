@@ -1,6 +1,8 @@
 import React from "react";
-import { Sparkles, ArrowUpRight, BookOpen } from "lucide-react";
+import { Sparkles, ArrowUpRight, BookOpen, TrendingUp } from "lucide-react";
 import { motion } from "framer-motion";
+import { CircularProgressbar, buildStyles } from "react-circular-progressbar";
+import "react-circular-progressbar/dist/styles.css";
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -17,22 +19,63 @@ const itemVariants = {
   visible: { y: 0, opacity: 1, transition: { type: "spring", stiffness: 100 } }
 };
 
-const RecommendationList = ({ recommendations }) => {
+const RecommendationList = ({ recommendations, progressPercent = 0 }) => {
   if (!recommendations?.length) {
+    const pct = parseFloat(progressPercent) || 0;
+    const message =
+      pct >= 75
+        ? "You're in a great rhythm. Keep the streak going."
+        : pct >= 40
+        ? "Steady progress — one more focused session moves you ahead."
+        : "Small consistent steps now will accelerate your learning curve.";
+
     return (
-      <div className="bg-gradient-to-br from-[var(--bg-card)] to-[var(--bg-active)] rounded-sm sm:rounded-3xl border border-[var(--border-main)] border-x-0 sm:border-x p-6 sm:p-8 relative overflow-hidden group">
-        <div className="absolute top-0 right-0 p-8 opacity-5 pointer-events-none">
-          <Sparkles className="w-32 h-32" />
-        </div>
-        <div className="relative z-10 flex flex-col items-center justify-center text-center py-8">
-          <div className="w-16 h-16 bg-gradient-to-tr from-purple-100 to-purple-50 dark:from-purple-900/30 dark:to-purple-800/20 rounded-full flex items-center justify-center mb-4 border border-purple-200 dark:border-purple-800">
-            <BookOpen className="w-8 h-8 text-purple-600 dark:text-purple-400" />
+      <div className="bg-white dark:bg-slate-900 rounded-2xl border border-gray-100 dark:border-slate-700 shadow-sm p-6 h-full flex flex-col">
+        {/* Header */}
+        <div className="flex items-center gap-2 mb-5">
+          <div className="p-1.5 bg-violet-100 dark:bg-violet-900/40 rounded-lg">
+            <TrendingUp className="w-4 h-4 text-violet-600 dark:text-violet-400" />
           </div>
-          <h3 className="text-lg font-bold text-[var(--text-main)] mb-2">
-            Keep Learning
+          <h3 className="text-sm font-bold text-gray-900 dark:text-white uppercase tracking-wide">
+            Overall Progress
           </h3>
-          <p className="text-[var(--text-muted)] text-sm max-w-[250px]">
-            We're gathering data to build your personalized recommendations. Check back soon!
+        </div>
+
+        {/* Circular progress — same library as old ProgressCard */}
+        <div className="flex flex-col items-center gap-2 flex-1 justify-center py-4">
+          <div className="w-28 h-28">
+            <CircularProgressbar
+              value={pct}
+              text={`${pct.toFixed(0)}%`}
+              styles={buildStyles({
+                textSize: "16px",
+                pathColor: `rgba(139, 92, 246, ${0.4 + (pct / 100) * 0.6})`,
+                textColor: "var(--text-main, #111827)",
+                trailColor: "rgba(148,163,184,0.2)",
+                pathTransitionDuration: 1.1,
+              })}
+            />
+          </div>
+
+          {/* Progress bar */}
+          <div className="w-full mt-3">
+            <div className="flex justify-between text-xs text-slate-500 mb-1.5">
+              <span className="font-medium">Roadmap</span>
+              <span className="font-bold text-violet-600 dark:text-violet-400">{pct.toFixed(1)}%</span>
+            </div>
+            <div className="h-2 bg-slate-100 dark:bg-slate-700 rounded-full overflow-hidden">
+              <motion.div
+                initial={{ width: 0 }}
+                animate={{ width: `${pct}%` }}
+                transition={{ duration: 1.1, ease: "easeOut", delay: 0.2 }}
+                className="h-full rounded-full bg-gradient-to-r from-violet-500 to-purple-600"
+              />
+            </div>
+          </div>
+
+          {/* Contextual message */}
+          <p className="text-xs text-slate-500 dark:text-slate-400 text-center mt-3 leading-relaxed">
+            {message}
           </p>
         </div>
       </div>
