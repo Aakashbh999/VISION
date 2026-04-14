@@ -1,24 +1,41 @@
 import { useDashboard } from "../../hooks/useDashboard";
 import { useNotifications } from "../../hooks/useNotifications";
+import { useUserStats } from "../../hooks/useUserStats";
 import { Link } from "react-router-dom";
-import { motion } from "framer-motion";
-import { ArrowRight, Bell, BookOpen, MessageSquare, Users } from "lucide-react";
-import Skeleton from "../../components/ui/Skeleton";
-import ProgressCard from "../../components/portal/Dashboard/ProgressCard";
-import XpMilestoneCard from "../../components/portal/Dashboard/XpMilestoneCard";
-import PrimaryPortalTabs from "../../components/portal/Dashboard/PrimaryPortalTabs";
 
-// Skeleton placeholder with theme-aware styling
+import {
+  Bell,
+  BookOpen,
+  MessageSquare,
+  Users,
+  Flame,
+  TrendingUp,
+  Zap,
+} from "lucide-react";
+
+import Skeleton from "../../components/ui/Skeleton";
+import SurfaceCard, {
+  CardHeader,
+  CardTitle,
+  CardBody,
+} from "../../components/ui/SurfaceCard";
+import EmptyState from "../../components/ui/EmptyState";
+import ErrorState from "../../components/ui/ErrorState";
+import PrimaryPortalTabs from "../../components/portal/Dashboard/PrimaryPortalTabs";
+import VXPActivityGraph from "../../components/portal/Dashboard/VXPActivityGraph";
+import RecommendationList from "../../components/portal/Dashboard/RecommendationList";
+import StatCard from "../../components/portal/Dashboard/StatCard";
+import XpMilestoneCard from "../../components/portal/Dashboard/XpMilestoneCard";
+
 const CardSkeleton = ({ className = "" }) => (
-  <div
-    className={`bg-white dark:bg-slate-900 rounded-3xl border border-gray-200 dark:border-slate-700 p-4 sm:p-6 space-y-3 ${className}`}
-  >
+  <SurfaceCard className={`space-y-3 ${className}`} radius="lg" padding="md">
     <Skeleton variant="text" className="w-1/3 h-4" />
-    <Skeleton variant="rectangular" className="h-20 rounded-xl" />
+    <Skeleton variant="rectangular" className="h-16 rounded-xl" />
     <Skeleton variant="text" className="w-2/3 h-3" />
-  </div>
+  </SurfaceCard>
 );
 
+// ─── Quick Actions ───────────────────────────────────────────
 const quickActions = [
   {
     label: "Browse Roadmaps",
@@ -40,240 +57,157 @@ const quickActions = [
   },
 ];
 
+// ─── Main Dashboard ──────────────────────────────────────────
 const Dashboard = () => {
-  const {
-    data: dashboard,
-    isLoading: dashLoading,
-    error: dashError,
-  } = useDashboard();
-  const { data: notificationsPayload, isLoading: notifLoading } =
-    useNotifications(5);
-  const notifications = notificationsPayload?.data || [];
-  const progressPercent = Number.parseFloat(dashboard?.progress_percent || 0);
-  const progressMessage =
-    progressPercent >= 75
-      ? "You are in a great rhythm. Keep the streak going."
-      : progressPercent >= 40
-        ? "Steady progress. One more focused session will move you ahead."
-        : "Small consistent steps now will accelerate your learning curve.";
+  const { data: dashboard, isLoading: dashLoading, error } = useDashboard();
+  const { data: stats, isLoading: statsLoading } = useUserStats();
+  const { data: notifPayload, isLoading: notifLoading } = useNotifications(5);
 
-  const dashboardStats = [
+  const notifications = notifPayload?.data || [];
+
+  const statCards = [
     {
-      label: "Notifications",
-      value: notifications.length,
+      label: "Total VXP",
+      value: statsLoading ? null : (stats?.total_xp ?? 0).toLocaleString(),
+      icon: Zap,
+      color:
+        "bg-violet-100 text-violet-600 dark:bg-violet-900/40 dark:text-violet-400",
+      sub: "Experience Points",
     },
     {
-      label: "Current progress",
-      value: progressPercent,
-      suffix: "%",
+      label: "Level",
+      value: statsLoading ? null : `Lvl ${stats?.current_level ?? 1}`,
+      icon: TrendingUp,
+      color: "bg-sky-100 text-sky-600 dark:bg-sky-900/40 dark:text-sky-400",
+      sub: "Current rank",
+    },
+    {
+      label: "Day Streak",
+      value: statsLoading ? null : `${stats?.current_streak ?? 0}d`,
+      icon: Flame,
+      color:
+        "bg-orange-100 text-orange-600 dark:bg-orange-900/40 dark:text-orange-400",
+      sub: "Keep it going!",
+    },
+    {
+      label: "Discussions",
+      value: dashLoading ? null : (dashboard?.discussion_count ?? 0),
+      icon: MessageSquare,
+      color:
+        "bg-emerald-100 text-emerald-600 dark:bg-emerald-900/40 dark:text-emerald-400",
+      sub: "Posts created",
     },
   ];
 
-  const nextStep = dashboard?.next_step || null;
-
   return (
-    <div className="px-4 sm:px-6 lg:px-8 py-6 sm:py-8 space-y-8 bg-white dark:bg-slate-900 text-gray-900 dark:text-white">
+    <div className="space-y-6 bg-[var(--bg-main)] text-[var(--text-main)]">
       <PrimaryPortalTabs activeTab="dashboard" />
 
-      {!dashLoading && !dashError && (
-        <div className="rounded-3xl border border-gray-200 dark:border-slate-700 bg-gradient-to-br from-sky-50 via-indigo-50 to-purple-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900 p-5 sm:p-8 shadow-lg shadow-slate-200/40 dark:shadow-slate-950/40">
-          <div className="grid gap-6 lg:grid-cols-[1.55fr_1fr] lg:items-end">
-            <div className="max-w-2xl space-y-3 sm:space-y-4">
-              <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-slate-500 dark:text-slate-300">
-                Learning overview
-              </p>
-              <h1 className="text-2xl sm:text-4xl font-black tracking-tight text-gray-900 dark:text-white">
-                Your Learning Dashboard
-              </h1>
-              <p className="max-w-xl text-sm sm:text-base leading-7 text-slate-600 dark:text-slate-300">
-                {progressMessage}
-              </p>
-            </div>
+      {/* Stats */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        {statCards.map((stat, i) =>
+          stat.value === null ? (
+            <CardSkeleton key={i} />
+          ) : (
+            <StatCard key={i} {...stat} />
+          ),
+        )}
+      </div>
 
-            <div className="grid grid-cols-2 gap-3">
-              {dashboardStats.map((stat) => (
-                <div
-                  key={stat.label}
-                  className="rounded-2xl border border-gray-200 dark:border-slate-700 bg-white/90 dark:bg-slate-900/80 p-4 text-center backdrop-blur"
-                >
-                  <div className="text-xl sm:text-2xl font-black text-gray-900 dark:text-white">
-                    {stat.value}
-                    {stat.suffix || ""}
-                  </div>
-                  <div className="mt-1 text-[10px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-300">
-                    {stat.label}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
+      {/* Graph + Recommendations */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="lg:col-span-2">
+          <VXPActivityGraph
+            activityData={dashboard?.vxp_activity || []}
+            isLoading={dashLoading}
+          />
         </div>
-      )}
 
-      {dashLoading ? (
-        <div className="space-y-6">
-          <div className="grid grid-cols-1 xl:grid-cols-[1.7fr_1fr] gap-6">
-            <CardSkeleton className="min-h-[250px]" />
-            <div className="space-y-6">
-              <CardSkeleton className="min-h-[160px]" />
-              <CardSkeleton className="min-h-[160px]" />
-            </div>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {[1, 2, 3].map((i) => (
-              <CardSkeleton key={i} />
-            ))}
-          </div>
-          <CardSkeleton className="min-h-[170px]" />
+        <div>
+          {dashLoading ? (
+            <CardSkeleton className="h-full min-h-52" />
+          ) : (
+            <RecommendationList
+              recommendations={dashboard?.recommendations}
+              progressPercent={dashboard?.progress_percent}
+            />
+          )}
         </div>
-      ) : dashError ? (
-        <div className="p-6 bg-rose-50 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-800 text-rose-700 dark:text-rose-300 rounded-3xl text-sm font-medium">
-          Failed to load dashboard data. Refresh.
-        </div>
-      ) : (
-        <>
-          <div className="grid grid-cols-1 xl:grid-cols-[1.7fr_1fr] gap-6 lg:gap-8">
-            <motion.div
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="rounded-3xl p-[1px] bg-gradient-to-br from-indigo-400/60 via-sky-400/50 to-purple-500/55 shadow-xl shadow-indigo-200/35 dark:shadow-indigo-900/20"
-            >
-              <div className="rounded-3xl h-full border border-transparent bg-white dark:bg-slate-900 p-6 sm:p-7">
-                <p className="text-xs uppercase tracking-[0.28em] font-bold text-slate-500 dark:text-slate-300 mb-3">
-                  Next Step
-                </p>
+      </div>
 
-                {nextStep ? (
-                  <>
-                    <h2 className="text-2xl sm:text-3xl font-black text-gray-900 dark:text-white leading-tight">
-                      {nextStep.title}
-                    </h2>
-                    <p className="mt-3 text-sm sm:text-base text-slate-600 dark:text-slate-300 max-w-2xl">
-                      Continue from your roadmap and keep momentum on your
-                      current learning track.
-                    </p>
+      {/* Milestones + Notifications */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <XpMilestoneCard />
 
-                    <div className="mt-6">
-                      <div className="flex items-center justify-between mb-2 text-xs font-semibold text-slate-500 dark:text-slate-300 uppercase tracking-wider">
-                        <span>Overall progress</span>
-                        <span>{progressPercent}%</span>
-                      </div>
-                      <div className="h-2.5 rounded-full bg-gray-100 dark:bg-slate-800 overflow-hidden">
-                        <motion.div
-                          initial={{ width: 0 }}
-                          animate={{
-                            width: `${Math.min(progressPercent, 100)}%`,
-                          }}
-                          transition={{ duration: 0.7, ease: "easeOut" }}
-                          className="h-full rounded-full bg-gradient-to-r from-indigo-500 via-sky-500 to-purple-500"
-                        />
-                      </div>
-                    </div>
-
-                    <Link
-                      to={`/roadmaps/${nextStep.roadmap_id}`}
-                      className="mt-7 inline-flex items-center gap-2 rounded-2xl bg-gray-900 dark:bg-white text-white dark:text-slate-900 px-5 py-3 text-sm font-semibold hover:shadow-lg hover:shadow-slate-300/40 dark:hover:shadow-slate-100/20 transition-all active:scale-[0.98]"
-                    >
-                      Continue Learning
-                      <ArrowRight className="w-4 h-4" />
-                    </Link>
-                  </>
-                ) : (
-                  <div className="rounded-2xl border border-dashed border-gray-300 dark:border-slate-700 bg-gray-50 dark:bg-slate-800/50 p-6">
-                    <p className="text-lg font-bold text-gray-900 dark:text-white">
-                      You are all caught up.
-                    </p>
-                    <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">
-                      Explore a new roadmap section or revisit discussions to
-                      help others.
-                    </p>
-                    <Link
-                      to="/roadmaps"
-                      className="mt-4 inline-flex items-center gap-2 rounded-xl border border-gray-200 dark:border-slate-700 px-4 py-2.5 text-sm font-semibold text-gray-800 dark:text-slate-100 hover:shadow-md transition-all"
-                    >
-                      Browse Roadmaps
-                    </Link>
-                  </div>
-                )}
-              </div>
-            </motion.div>
-
-            <div className="space-y-6">
-              <ProgressCard percent={dashboard.progress_percent} />
-              <XpMilestoneCard compact />
-            </div>
-          </div>
-
-          <section className="space-y-4">
-            <h3 className="text-sm font-bold uppercase tracking-[0.22em] text-slate-500 dark:text-slate-300">
-              Quick Actions
-            </h3>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {quickActions.map((action, idx) => (
-                <motion.div
-                  key={action.label}
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: idx * 0.06 }}
-                >
-                  <Link
-                    to={action.href}
-                    className="group block rounded-2xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-5 hover:scale-[1.015] hover:shadow-lg hover:shadow-indigo-200/30 dark:hover:shadow-indigo-900/20 transition-all"
-                  >
-                    <div className="inline-flex items-center justify-center w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500/15 to-sky-500/20 text-indigo-600 dark:text-sky-300 mb-3">
-                      <action.icon className="w-5 h-5" />
-                    </div>
-                    <p className="text-base font-bold text-gray-900 dark:text-white">
-                      {action.label}
-                    </p>
-                    <p className="text-sm mt-1 text-slate-600 dark:text-slate-300">
-                      {action.helper}
-                    </p>
-                  </Link>
-                </motion.div>
-              ))}
-            </div>
-          </section>
-
-          <section className="rounded-2xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-5 sm:p-6">
-            <div className="flex items-center justify-between gap-4 mb-4">
-              <h3 className="text-sm font-bold uppercase tracking-[0.22em] text-slate-500 dark:text-slate-300 flex items-center gap-2">
-                <Bell className="w-4 h-4 text-indigo-500" />
-                Notifications Preview
-              </h3>
-              <Link
-                to="/notifications"
-                className="text-sm font-semibold text-indigo-600 dark:text-sky-300 hover:underline"
-              >
-                View all
-              </Link>
-            </div>
-
+        <SurfaceCard>
+          <CardHeader className="mb-3">
+            <CardTitle className="flex items-center gap-2 text-(--text-muted)">
+              <Bell className="w-4 h-4 text-violet-500" />
+              Notifications
+            </CardTitle>
+          </CardHeader>
+          <CardBody className="space-y-2">
             {notifLoading ? (
-              <CardSkeleton className="min-h-[120px]" />
-            ) : notifications.length === 0 ? (
-              <p className="text-sm text-slate-600 dark:text-slate-300">
-                No new notifications. You are up to date.
-              </p>
-            ) : (
               <div className="space-y-3">
-                {notifications.slice(0, 3).map((notif) => (
-                  <div
-                    key={notif.notification_id}
-                    className="rounded-xl border border-gray-200 dark:border-slate-700 p-3.5 bg-gray-50 dark:bg-slate-800/50"
-                  >
-                    <p className="text-sm text-gray-900 dark:text-white">
-                      {notif.message}
-                    </p>
-                    <p className="mt-1 text-xs text-slate-500 dark:text-slate-300">
-                      {new Date(notif.created_at).toLocaleDateString()}
-                    </p>
-                  </div>
+                {[1, 2, 3].map((i) => (
+                  <Skeleton key={i} className="h-12 rounded-xl" />
                 ))}
               </div>
+            ) : notifications.length === 0 ? (
+              <EmptyState
+                icon={Bell}
+                title="All Caught Up"
+                description="No new notifications right now."
+                className="py-8"
+              />
+            ) : (
+              notifications.slice(0, 4).map((n) => (
+                <div
+                  key={n.notification_id}
+                  className="p-3 rounded-2xl border border-(--border-main) bg-(--bg-active)"
+                >
+                  <p className="text-xs font-medium line-clamp-2 text-(--text-main)">
+                    {n.message}
+                  </p>
+                  <p className="text-[10px] text-(--text-muted) mt-1">
+                    {new Date(n.created_at).toLocaleDateString()}
+                  </p>
+                </div>
+              ))
             )}
-          </section>
-        </>
+          </CardBody>
+        </SurfaceCard>
+      </div>
+
+      {/* Quick Actions */}
+      <SurfaceCard>
+        <CardHeader className="mb-3">
+          <CardTitle className="text-(--text-muted)">Quick Actions</CardTitle>
+        </CardHeader>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          {quickActions.map((action) => (
+            <Link
+              key={action.label}
+              to={action.href}
+              className="flex items-center gap-3 p-3 rounded-2xl border border-(--border-main) bg-(--bg-active) hover:border-purple-300 hover:bg-(--bg-card) transition"
+            >
+              <action.icon className="w-4 h-4 text-purple-600" />
+              <div>
+                <p className="text-sm font-bold text-(--text-main)">{action.label}</p>
+                <p className="text-xs text-(--text-muted)">{action.helper}</p>
+              </div>
+            </Link>
+          ))}
+        </div>
+      </SurfaceCard>
+
+      {error && (
+        <ErrorState
+          title="Dashboard sync failed"
+          description="We could not load dashboard data. Please retry."
+          onRetry={() => window.location.reload()}
+          className="rounded-3xl"
+        />
       )}
     </div>
   );

@@ -6,6 +6,10 @@ import UniversalSearch from "../../components/ui/UniversalSearch";
 import Pagination from "../../components/ui/Pagination";
 import { motion } from "framer-motion";
 import { Search, MapPin, Tag, Sparkles, Zap, Building2 } from "lucide-react";
+import SurfaceCard from "../../components/ui/SurfaceCard";
+import EmptyState from "../../components/ui/EmptyState";
+import ErrorState from "../../components/ui/ErrorState";
+import Button from "../../components/ui/Button";
 
 const specialtiesList = [
   "All",
@@ -76,9 +80,9 @@ const Clubs = () => {
   };
 
   return (
-    <div className="max-w-6xl mx-auto space-y-6 sm:space-y-8 pb-20 px-2 sm:px-6 lg:px-8 py-5 sm:py-8">
+    <div className="max-w-6xl mx-auto space-y-6 sm:space-y-8 pb-20">
       {/* Header Section */}
-      <div className="relative bg-[var(--bg-card)]/40 backdrop-blur-xl border border-[var(--border-main)]/40 rounded-[2.5rem] p-5 sm:p-8 shadow-2xl shadow-purple-500/5 overflow-hidden">
+      <SurfaceCard className="relative bg-[var(--bg-card)]/40 backdrop-blur-xl border-[var(--border-main)]/40 p-5 sm:p-8 shadow-2xl shadow-purple-500/5 overflow-hidden">
         <div className="absolute top-0 right-0 -mr-20 -mt-20 w-64 h-64 bg-purple-500/10 rounded-full blur-3xl pointer-events-none" />
         <div className="absolute bottom-0 left-0 -ml-20 -mb-20 w-64 h-64 bg-purple-500/10 rounded-full blur-3xl pointer-events-none" />
 
@@ -109,7 +113,7 @@ const Clubs = () => {
             />
           </div>
         </div>
-      </div>
+      </SurfaceCard>
 
       {!isLoading && !error && !filters.search && forYouClubs.length > 0 && (
         <div className="space-y-4">
@@ -180,47 +184,38 @@ const Clubs = () => {
       {/* Main Grid */}
       <div className="min-h-[400px]">
         {isLoading ? (
-          <div className="flex flex-col items-center justify-center py-24">
+          <SurfaceCard className="flex flex-col items-center justify-center py-24">
             <LoadingSpinner />
             <p className="text-[var(--text-muted)] font-bold mt-4 uppercase tracking-widest text-xs">
               Finding Communities...
             </p>
-          </div>
+          </SurfaceCard>
         ) : error ? (
-          <div className="bg-rose-50 border border-rose-100 text-rose-600 p-8 sm:p-12 rounded-[2.5rem] text-center font-bold">
-            Failed to load clubs. Try again.
-          </div>
+          <ErrorState
+            title="Clubs unavailable"
+            description="Failed to load clubs. Try again."
+            onRetry={() => window.location.reload()}
+          />
         ) : clubs?.length === 0 ? (
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="bg-[var(--bg-card)]/60 backdrop-blur-xl border border-[var(--border-main)]/50 rounded-[3rem] p-10 sm:p-16 lg:p-24 text-center shadow-inner"
+            className="text-center"
           >
-            <div className="max-w-md mx-auto space-y-5 sm:space-y-6">
-              <div className="w-24 h-24 bg-purple-50 rounded-[2rem] flex items-center justify-center mx-auto shadow-sm rotate-12">
-                <Search className="w-10 h-10 text-purple-400 -rotate-12" />
-              </div>
-              <div>
-                <h3 className="text-xl sm:text-2xl font-black text-[var(--text-main)] mb-2">
-                  No clubs found for "{filters.search}"
-                </h3>
-                <p className="text-[var(--text-muted)] font-medium">
-                  We couldn't track down any communities matching your criteria.
-                  Want to start a movement?
-                </p>
-              </div>
-              <button
-                onClick={() =>
+            <SurfaceCard className="p-10 sm:p-16 lg:p-24 shadow-inner">
+              <EmptyState
+                icon={Search}
+                title={`No Clubs Found${filters.search ? ` for "${filters.search}"` : ""}`}
+                description="We couldn't find communities matching your criteria."
+                actionText="Register a New Club"
+                actionOnClick={() =>
                   window.open(
                     "mailto:admin@vision.edu.np?subject=New Club Request",
                     "_blank",
                   )
                 }
-                className="mt-4 px-6 sm:px-8 py-3 sm:py-3.5 bg-purple-600 text-white font-black rounded-2xl hover:bg-purple-700 transition-colors shadow-lg shadow-purple-500/20 hover:-translate-y-1"
-              >
-                Register a New Club
-              </button>
-            </div>
+              />
+            </SurfaceCard>
           </motion.div>
         ) : (
           <motion.div
@@ -238,8 +233,10 @@ const Clubs = () => {
                 animate="visible"
                 className="group h-full"
               >
-                <Link
+                <SurfaceCard
                   to={`/clubs/${club.slug}`}
+                  as={Link}
+                  variant="interactive"
                   className="relative h-full bg-[var(--bg-card)] border border-[var(--border-main)] border-x-0 sm:border-x rounded-[2.5rem] p-5 sm:p-6 hover:shadow-[0_20px_40px_-15px_rgba(124,58,237,0.15)] hover:border-purple-500/45 transition-all duration-300 flex flex-col overflow-hidden"
                 >
                   <div className="flex items-start gap-4">
@@ -284,7 +281,7 @@ const Clubs = () => {
                       </span>
                     </div>
                   </div>
-                </Link>
+                </SurfaceCard>
               </motion.div>
             ))}
           </motion.div>

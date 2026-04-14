@@ -106,8 +106,7 @@ export const useLeaveGroup = (groupId) => {
 export const useCreatePost = (groupId) => {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ content, section }) =>
-      createGroupPost(groupId, content, section),
+    mutationFn: (payload) => createGroupPost(groupId, payload),
     onSuccess: () => {
       // Invalidate both the general and specific section queries
       queryClient.invalidateQueries({ queryKey: ["groupPosts", groupId] });

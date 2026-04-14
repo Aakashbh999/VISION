@@ -31,7 +31,7 @@ exports.handleVote = catchAsync(async (req, res) => {
         await discussionService.createNotification(
           result.authorId,
           "like",
-          `Someone upvoted your discussion "${discussion.title}"`,
+          `upvoted your post "${discussion.title}"`,
           userId,
           id,
           "discussion",
@@ -78,10 +78,10 @@ exports.handleCommentVote = catchAsync(async (req, res) => {
         await discussionService.createNotification(
           result.authorId,
           "comment_like",
-          `Someone upvoted your comment: "${preview}"`,
+          `upvoted your comment "${preview}"`,
           userId,
-          discussion_id,
-          "discussion",
+          id,
+          "comment",
         );
       }
     } catch (notifErr) {

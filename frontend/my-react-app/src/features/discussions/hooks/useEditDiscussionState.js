@@ -3,17 +3,21 @@ import { useNavigate, useParams } from "react-router-dom";
 import {
   useDiscussion,
   useUpdateDiscussion,
-  useDiscussionTags,
 } from "../../../hooks/useDiscussionHooks";
 import api from "../../../services/api";
+import { useSystemTags } from "../../../hooks/useSystemTags";
+import {
+  addUniqueCappedTag,
+  removeTag,
+  toggleCappedSelection,
+} from "../../../utils/tagSelection";
+import { getApiErrorMessage } from "../../../utils/apiError";
 
 export const useEditDiscussionState = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { data, isLoading, error } = useDiscussion(id);
   const updateMutation = useUpdateDiscussion(id);
-  const { data: availableTags } = useDiscussionTags();
-
   const discussion = data?.discussion;
 
   const initialFormData = useMemo(
@@ -34,8 +38,7 @@ export const useEditDiscussionState = () => {
   const [customTagInput, setCustomTagInput] = useState("");
   const [specializations, setSpecializations] = useState([]);
   const [degrees, setDegrees] = useState([]);
-  const [systemTagOptions, setSystemTagOptions] = useState([]);
-  const [isLoadingTags, setIsLoadingTags] = useState(false);
+  const { systemTagOptions, isLoadingTags } = useSystemTags(true);
 
   useEffect(() => {
     const fetchReferenceData = async () => {
@@ -52,20 +55,7 @@ export const useEditDiscussionState = () => {
       }
     };
 
-    const fetchSystemTags = async () => {
-      setIsLoadingTags(true);
-      try {
-        const res = await api.get("/discussions/tags", { params: { type: "system" } });
-        setSystemTagOptions(Array.isArray(res.data) ? res.data : []);
-      } catch (err) {
-        setSystemTagOptions([]);
-      } finally {
-        setIsLoadingTags(false);
-      }
-    };
-
     fetchReferenceData();
-    fetchSystemTags();
   }, []);
 
   const canEdit = discussion?.can_edit ?? true;
@@ -85,23 +75,19 @@ export const useEditDiscussionState = () => {
   const toggleSystemTag = (tagId) => {
     setDraftFormData((prev) => {
       const base = prev || initialFormData;
-      const already = base.system_tags.includes(tagId);
-      if (already) {
-        return { ...base, system_tags: base.system_tags.filter((id) => id !== tagId) };
-      }
-      if (base.system_tags.length >= 5) return base; // MAX 5 SYSTEM TAGS
-      return { ...base, system_tags: [...base.system_tags, tagId] };
+      return {
+        ...base,
+        system_tags: toggleCappedSelection(base.system_tags, tagId, 5),
+      };
     });
   };
 
   const addCustomTag = () => {
-    const tag = customTagInput.trim();
-    if (!tag) return;
     setDraftFormData((prev) => {
       const base = prev || initialFormData;
-      if (base.custom_tags.length >= 2) return base; // MAX 2 CUSTOM TAGS
-      if (base.custom_tags.map(t => t.toLowerCase()).includes(tag.toLowerCase())) return base;
-      return { ...base, custom_tags: [...base.custom_tags, tag] };
+      const nextCustomTags = addUniqueCappedTag(base.custom_tags, customTagInput, 2);
+      if (nextCustomTags.length === base.custom_tags.length) return base;
+      return { ...base, custom_tags: nextCustomTags };
     });
     setCustomTagInput("");
   };
@@ -109,7 +95,7 @@ export const useEditDiscussionState = () => {
   const removeCustomTag = (tag) => {
     setDraftFormData((prev) => {
       const base = prev || initialFormData;
-      return { ...base, custom_tags: base.custom_tags.filter((t) => t !== tag) };
+      return { ...base, custom_tags: removeTag(base.custom_tags, tag) };
     });
   };
 
@@ -161,21 +147,10 @@ export const useEditDiscussionState = () => {
       onSuccess: () => navigate(`/discussions/${id}`),
       onError: (mutationError) => {
         setErrors({
-          submit:
-            mutationError?.response?.data?.error ||
-            "Failed to update discussion",
+          submit: getApiErrorMessage(mutationError, "Failed to update discussion"),
         });
       },
     });
-  };
-
-  const getTagName = (tagId) => {
-    if (typeof tagId === "string") {
-      return tagId;
-    }
-
-    const matchedTag = availableTags?.find((tag) => tag.tag_id === tagId);
-    return matchedTag?.name || tagId;
   };
 
   return {

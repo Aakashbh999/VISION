@@ -17,10 +17,12 @@ import SearchModal, { useSearchModal } from "../ui/SearchModal";
 import { useAuth } from "../../context/AuthContext";
 import { useSidebar } from "../../hooks/useSidebar";
 import { useUnreadCount } from "../../hooks/useUnreadCount";
+import { useMarkAllRead } from "../../hooks/useMarkAllRead";
 import { useClickOutside } from "../../hooks/useClickOutside";
 import XpWidget from "../portal/XpWidget";
 import Logo from "../ui/Logo/Logo";
 import ThemeToggle from "./ThemeToggle";
+import NotificationsPopup from "../notifications/NotificationsPopup";
 
 // Breadcrumb mapping
 const routeLabels = {
@@ -85,10 +87,12 @@ const TopNavBar = () => {
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [exploreDropdownOpen, setExploreDropdownOpen] = useState(false);
+  const [notificationsOpen, setNotificationsOpen] = useState(false);
   const searchModal = useSearchModal();
 
   const isLoggedIn = !!user;
   const { data: unreadCount = 0 } = useUnreadCount(isLoggedIn);
+  const markAllReadMut = useMarkAllRead();
 
   const profileRef = useRef(null);
   const exploreRef = useRef(null);
@@ -110,6 +114,20 @@ const TopNavBar = () => {
     { label: "Job Market", href: "/it-jobs" },
     { label: "Community", href: "/it-clubs" },
   ];
+
+  const handleNotificationsToggle = () => {
+    setNotificationsOpen((open) => {
+      const nextOpen = !open;
+      if (
+        nextOpen &&
+        unreadCount > 0 &&
+        !markAllReadMut.isPending
+      ) {
+        markAllReadMut.mutate();
+      }
+      return nextOpen;
+    });
+  };
 
   return (
     <header className="fixed top-0 left-0 right-0 h-16 bg-[var(--bg-main)]/95 backdrop-blur-sm border-b border-[var(--border-main)] z-40 flex items-center justify-between px-4 lg:px-6 transition-colors duration-300">
@@ -183,17 +201,26 @@ const TopNavBar = () => {
         <ThemeToggle />
 
         {/* Notifications */}
-        <Link
-          to="/notifications"
-          className="relative p-2 rounded-lg hover:bg-[var(--bg-active)] transition-colors"
-        >
-          <Bell className="w-5 h-5 text-[var(--text-main)]" />
-          {unreadCount > 0 && (
-            <span className="absolute top-1 right-1 min-w-4.5 h-4.5 bg-red-500 text-white text-[10px] font-bold flex items-center justify-center rounded-full px-1">
-              {unreadCount > 99 ? "99+" : unreadCount}
-            </span>
-          )}
-        </Link>
+        <div className="relative">
+          <button
+            type="button"
+            onClick={handleNotificationsToggle}
+            className="relative p-2 rounded-lg hover:bg-[var(--bg-active)] transition-colors"
+            aria-label="Open notifications"
+            aria-expanded={notificationsOpen}
+          >
+            <Bell className="w-5 h-5 text-[var(--text-main)]" />
+            {unreadCount > 0 && (
+              <span className="absolute top-1 right-1 min-w-4.5 h-4.5 bg-red-500 text-white text-[10px] font-bold flex items-center justify-center rounded-full px-1">
+                {unreadCount > 99 ? "99+" : unreadCount}
+              </span>
+            )}
+          </button>
+          <NotificationsPopup
+            isOpen={notificationsOpen}
+            onClose={() => setNotificationsOpen(false)}
+          />
+        </div>
 
         {/* Profile Menu */}
         <div className="relative" ref={profileRef}>

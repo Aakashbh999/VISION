@@ -20,7 +20,7 @@ export const AuthProvider = ({ children }) => {
   // Fetch user profile if token exists
   const { data, isLoading, refetch } = useQuery({
     queryKey: ["me", token],
-    queryFn: () => getUserProfile(token),
+    queryFn: () => getUserProfile(),
     enabled: !!token,
     retry: false,
     staleTime: 5 * 60 * 1000, // Consider data fresh for 5 minutes
@@ -131,7 +131,7 @@ export const AuthProvider = ({ children }) => {
     try {
       const profile = await queryClient.fetchQuery({
         queryKey: ["me", accessToken],
-        queryFn: () => getUserProfile(accessToken),
+        queryFn: () => getUserProfile(),
       });
 
       return profile;

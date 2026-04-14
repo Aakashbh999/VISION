@@ -1,21 +1,16 @@
-import api from "./api";
+import { httpGet, httpPatch } from "./http";
 
 // Get pending resources for moderation
 export const getPendingResources = async (page = 1, limit = 10) => {
-  const response = await api.get(
-    `/admin/resources/pending?page=${page}&limit=${limit}`,
-  );
-  return response.data;
+  return httpGet("/admin/resources/pending", { page, limit });
 };
 
 // Approve a resource
 export const approveResource = async (id) => {
-  const response = await api.patch(`/admin/resources/${id}/approve`);
-  return response.data;
+  return httpPatch(`/admin/resources/${id}/approve`);
 };
 
 // Reject a resource
 export const rejectResource = async (id, reason) => {
-  const response = await api.patch(`/admin/resources/${id}/reject`, { reason });
-  return response.data;
+  return httpPatch(`/admin/resources/${id}/reject`, { reason });
 };

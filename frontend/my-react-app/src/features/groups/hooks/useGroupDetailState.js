@@ -21,6 +21,10 @@ export const useGroupDetailState = () => {
   const isInitialLoad = useRef(true);
 
   const [newPost, setNewPost] = useState("");
+  const [resourceFile, setResourceFile] = useState(null);
+  const [answerDrafts, setAnswerDrafts] = useState({});
+  const [editingAnswerId, setEditingAnswerId] = useState(null);
+  const [editingAnswerText, setEditingAnswerText] = useState("");
   const [activeSection, setActiveSection] = useState("general");
   const [showAdminPanel, setShowAdminPanel] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -141,6 +145,28 @@ export const useGroupDetailState = () => {
       showToast.error(error.response?.data?.error || "Join failed"),
   });
 
+  const deletePostMut = useMutation({
+    mutationFn: ({ postId, reason }) => groupService.softDeleteGroupPost(postId, reason),
+    onSuccess: () => {
+      showToast.success("Post deleted");
+      refetchPosts();
+    },
+    onError: (error) =>
+      showToast.error(error.response?.data?.error || "Delete failed"),
+  });
+
+  const editQaAnswerMut = useMutation({
+    mutationFn: ({ postId, content }) => groupService.updateGroupQaAnswer(postId, content),
+    onSuccess: () => {
+      showToast.success("Answer updated");
+      setEditingAnswerId(null);
+      setEditingAnswerText("");
+      refetchPosts();
+    },
+    onError: (error) =>
+      showToast.error(error.response?.data?.error || "Update failed"),
+  });
+
   useEffect(() => {
     if (!isMember) return;
     const pollInterval = setInterval(() => refetchPosts(), 30000);
@@ -155,6 +181,20 @@ export const useGroupDetailState = () => {
 
     if (activeSection === "discussion" || activeSection === "general") {
       return items.slice().reverse();
+    }
+
+    if (activeSection === "qa") {
+      const questions = items.filter((post) => post.qa_post_type === "question");
+      const answersByQuestionId = new Map(
+        items
+          .filter((post) => post.qa_post_type === "answer" && post.qa_question_post_id)
+          .map((answer) => [Number(answer.qa_question_post_id), answer]),
+      );
+
+      return questions.map((question) => ({
+        ...question,
+        answer: answersByQuestionId.get(Number(question.post_id)) || null,
+      }));
     }
 
     return items;
@@ -185,18 +225,31 @@ export const useGroupDetailState = () => {
 
   const handlePostSubmit = (event) => {
     event.preventDefault();
-    if (!newPost.trim() || !isMember) return;
+    if (!isMember) return;
 
     if (activeSection === "notice_board" && !canPostNotice) {
       showToast.error("You do not have notice board permission.");
       return;
     }
 
+    if (activeSection !== "resources" && !newPost.trim()) {
+      return;
+    }
+    if (activeSection === "resources" && !resourceFile) {
+      showToast.error("Please select an image/file up to 5MB.");
+      return;
+    }
+
     createPostMutation.mutate(
-      { content: newPost, section: activeSection },
+      {
+        content: newPost,
+        section: activeSection,
+        file: activeSection === "resources" ? resourceFile : null,
+      },
       {
         onSuccess: () => {
           setNewPost("");
+          setResourceFile(null);
           refetchPosts();
           if (activeSection === "discussion" || activeSection === "general") {
             requestAnimationFrame(() => scrollToBottom("smooth"));
@@ -204,6 +257,39 @@ export const useGroupDetailState = () => {
         },
       },
     );
+  };
+
+  const handleQaAnswerCreate = (questionPostId) => {
+    const content = (answerDrafts[questionPostId] || "").trim();
+    if (!content) return;
+
+    createPostMutation.mutate(
+      {
+        content,
+        section: "qa",
+        qa_post_type: "answer",
+        qa_question_post_id: questionPostId,
+      },
+      {
+        onSuccess: () => {
+          setAnswerDrafts((prev) => ({ ...prev, [questionPostId]: "" }));
+          refetchPosts();
+        },
+      },
+    );
+  };
+
+  const handleStartEditAnswer = (answerPostId, currentContent) => {
+    setEditingAnswerId(answerPostId);
+    setEditingAnswerText(currentContent || "");
+  };
+
+  const handleSaveEditedAnswer = () => {
+    if (!editingAnswerId || !editingAnswerText.trim()) return;
+    editQaAnswerMut.mutate({
+      postId: editingAnswerId,
+      content: editingAnswerText.trim(),
+    });
   };
 
   const handleJoinAction = () => {
@@ -259,6 +345,14 @@ export const useGroupDetailState = () => {
     isFetchingNextPage,
     newPost,
     setNewPost,
+    resourceFile,
+    setResourceFile,
+    answerDrafts,
+    setAnswerDrafts,
+    editingAnswerId,
+    setEditingAnswerId,
+    editingAnswerText,
+    setEditingAnswerText,
     activeSection,
     showAdminPanel,
     setShowAdminPanel,
@@ -277,7 +371,12 @@ export const useGroupDetailState = () => {
     requestJoinMut,
     joinGroupMut,
     createPostMutation,
+    deletePostMut,
+    editQaAnswerMut,
     handlePostSubmit,
+    handleQaAnswerCreate,
+    handleStartEditAnswer,
+    handleSaveEditedAnswer,
     handleJoinAction,
     handleSectionChange,
   };

@@ -5,117 +5,22 @@
 
 const pool = require("../config/db");
 const XPService = require("./xpService");
-
-/**
- * Build dynamic WHERE conditions for filtering
- * @param {Object} filters - Filter parameters
- * @returns {Object} - { whereClause, params, paramIndex }
- */
-const buildFilterConditions = (filters, startParamIndex = 1) => {
-  const conditions = ["d.deleted_at IS NULL", "d.is_deleted = FALSE"];
-  const params = [];
-  let paramIndex = startParamIndex;
-
-  if (filters.specialization) {
-    conditions.push(`d.specialization_id = $${paramIndex}`);
-    params.push(parseInt(filters.specialization));
-    paramIndex++;
-  }
-
-  if (filters.degree) {
-    conditions.push(`d.degree_id = $${paramIndex}`);
-    params.push(parseInt(filters.degree));
-    paramIndex++;
-  }
-
-  if (filters.jobRole) {
-    conditions.push(`d.job_role_id = $${paramIndex}`);
-    params.push(parseInt(filters.jobRole));
-    paramIndex++;
-  }
-
-  if (filters.program) {
-    conditions.push(`d.program_id = $${paramIndex}`);
-    params.push(parseInt(filters.program));
-    paramIndex++;
-  }
-
-  if (filters.tag) {
-    conditions.push(`
-      EXISTS (
-        SELECT 1 FROM portal.discussion_tags dt
-        JOIN portal.tags t ON t.tag_id = dt.tag_id
-        WHERE dt.discussion_id = d.discussion_id
-        AND t.slug = $${paramIndex}
-      )
-    `);
-    params.push(filters.tag);
-    paramIndex++;
-  }
-
-  if (filters.search) {
-    // Use trigram similarity operator (%) for fuzzy matching + ILIKE for prefix/exact matching
-    conditions.push(
-      `(d.title % $${paramIndex} OR d.content % $${paramIndex} OR d.title ILIKE $${paramIndex + 1} OR d.content ILIKE $${paramIndex + 1})`,
-    );
-    params.push(filters.search);
-    params.push(`%${filters.search}%`);
-    paramIndex += 2;
-  }
-
-  if (filters.userId) {
-    conditions.push(`d.user_id = $${paramIndex}`);
-    params.push(parseInt(filters.userId));
-    paramIndex++;
-  }
-
-  return {
-    whereClause: conditions.join(" AND "),
-    params,
-    paramIndex,
-  };
-};
-
-/**
- * Build ORDER BY clause based on sort parameter
- * Defaults to prioritizing active boosts
- * @param {string} sort - Sort option
- * @param {string} search - Search query
- * @param {boolean} hasUserId - Whether a user is logged in
- * @param {number} searchParamIndex - The index of the primary search parameter
- * @returns {string} - ORDER BY clause
- */
-const buildSortClause = (
-  sort,
-  search = null,
-  hasUserId = false,
-  searchParamIndex = 1,
-) => {
-  const boostPriority = `CASE WHEN d.is_boosted = TRUE AND d.boosted_until > NOW() THEN 0 ELSE 1 END ASC`;
-
-  // If searching and no specific sort is requested, prioritize by similarity score
-  if (search && (!sort || sort === "latest")) {
-    return `ORDER BY ${boostPriority}, similarity(d.title, $${searchParamIndex}) DESC, d.created_at DESC`;
-  }
-
-  if (sort === "recommended" && hasUserId) {
-    // Dynamic relevance score based on tags, degree, and engagement
-    return `ORDER BY ${boostPriority}, relevance_score DESC, d.created_at DESC`;
-  }
-
-  switch (sort) {
-    case "popular":
-      return `ORDER BY ${boostPriority}, d.like_count DESC, d.created_at DESC`;
-    case "discussed":
-      return `ORDER BY ${boostPriority}, d.comment_count DESC, d.created_at DESC`;
-    case "trending":
-      return `ORDER BY ${boostPriority}, (d.like_count * 2 + d.comment_count) DESC, d.created_at DESC`;
-    case "oldest":
-      return "ORDER BY d.created_at ASC";
-    default:
-      return `ORDER BY ${boostPriority}, d.created_at DESC`;
-  }
-};
+const { withTransaction } = require("../utils/withTransaction");
+const { parsePagination, buildPaginationMeta } = require("../utils/pagination");
+const {
+  buildFilterConditions,
+  buildSortClause,
+  getSearchParamIndex,
+} = require("./discussionQueryService");
+const {
+  handleDiscussionVote,
+  handleCommentVote,
+} = require("./discussionVotingService");
+const {
+  addComment: addCommentEntry,
+  getComments: getDiscussionComments,
+  deleteComment: removeCommentEntry,
+} = require("./discussionCommentService");
 
 /**
  * Get all discussions with filters, sorting, and pagination
@@ -127,21 +32,7 @@ exports.getDiscussions = async (filters = {}, currentUserId = null) => {
     paramIndex: filterParamIndex,
   } = buildFilterConditions(filters);
 
-  // Find the search parameter index if search is present
-  // In buildFilterConditions, search params are added last (before userId)
-  // We need the index of the RAW search term, which is filters.search
-  let searchParamIndex = 1;
-  if (filters.search) {
-    // It's the paramIndex *before* the search params were added
-    // Let's re-calculate it more reliably
-    let idx = 1;
-    if (filters.specialization) idx++;
-    if (filters.degree) idx++;
-    if (filters.jobRole) idx++;
-    if (filters.program) idx++;
-    if (filters.tag) idx++;
-    searchParamIndex = idx;
-  }
+  const searchParamIndex = getSearchParamIndex(filters);
 
   const sortClause = buildSortClause(
     filters.sort,
@@ -150,10 +41,10 @@ exports.getDiscussions = async (filters = {}, currentUserId = null) => {
     searchParamIndex,
   );
 
-  // Pagination
-  const page = parseInt(filters.page) || 1;
-  const limit = parseInt(filters.limit) || 20;
-  const offset = (page - 1) * limit;
+  const { page, limit, offset } = parsePagination(filters, {
+    defaultLimit: 20,
+    maxLimit: 50,
+  });
 
   // Track param index for user-specific queries
   let paramIndex = filterParamIndex;
@@ -264,12 +155,11 @@ exports.getDiscussions = async (filters = {}, currentUserId = null) => {
 
   return {
     discussions: discussions.rows,
-    pagination: {
+    pagination: buildPaginationMeta({
       page,
       limit,
-      total: parseInt(countResult.rows[0].total),
-      totalPages: Math.ceil(countResult.rows[0].total / limit),
-    },
+      total: parseInt(countResult.rows[0].total, 10),
+    }),
   };
 };
 
@@ -337,12 +227,7 @@ exports.getDiscussionById = async (discussionId, currentUserId = null) => {
  * Create a new discussion with tags
  */
 exports.createDiscussion = async (discussionData) => {
-  const client = await pool.connect();
-
-  try {
-    await client.query("BEGIN");
-
-    // Insert discussion
+  const discussion = await withTransaction(async (client) => {
     const discussionResult = await client.query(
       `INSERT INTO portal.discussions 
         (user_id, title, content, specialization_id, degree_id, job_role_id, program_id, image_url, image_public_id, image_caption)
@@ -361,40 +246,29 @@ exports.createDiscussion = async (discussionData) => {
         discussionData.imageCaption || null,
       ],
     );
+    const createdDiscussion = discussionResult.rows[0];
 
-    const discussion = discussionResult.rows[0];
-
-    // Insert tags if provided
     if (discussionData.tags && discussionData.tags.length > 0) {
       const tagValues = discussionData.tags
         .map((_, i) => `($1, $${i + 2})`)
         .join(", ");
-      const tagParams = [discussion.discussion_id, ...discussionData.tags];
-
       await client.query(
         `INSERT INTO portal.discussion_tags (discussion_id, tag_id)
          VALUES ${tagValues}
          ON CONFLICT DO NOTHING`,
-        tagParams,
+        [createdDiscussion.discussion_id, ...discussionData.tags],
       );
     }
 
-    await client.query("COMMIT");
+    return createdDiscussion;
+  });
 
-    // Grant XP for post creation
-    await XPService.updateUserXP(
-      discussionData.userId,
-      5,
-      "Discussion Post Creation",
-    );
-
-    return discussion;
-  } catch (error) {
-    await client.query("ROLLBACK");
-    throw error;
-  } finally {
-    client.release();
-  }
+  await XPService.updateUserXP(
+    discussionData.userId,
+    5,
+    "Discussion Post Creation",
+  );
+  return discussion;
 };
 
 /**
@@ -433,12 +307,7 @@ exports.updateDiscussion = async (
     }
   }
 
-  const client = await pool.connect();
-
-  try {
-    await client.query("BEGIN");
-
-    // Update discussion
+  return withTransaction(async (client) => {
     const updateResult = await client.query(
       `UPDATE portal.discussions
        SET title = COALESCE($1, title),
@@ -459,15 +328,11 @@ exports.updateDiscussion = async (
       ],
     );
 
-    // Update tags if provided
     if (updateData.tags) {
-      // Remove existing tags
       await client.query(
         `DELETE FROM portal.discussion_tags WHERE discussion_id = $1`,
         [discussionId],
       );
-
-      // Add new tags
       if (updateData.tags.length > 0) {
         const tagValues = updateData.tags
           .map((_, i) => `($1, $${i + 2})`)
@@ -483,14 +348,8 @@ exports.updateDiscussion = async (
       }
     }
 
-    await client.query("COMMIT");
     return updateResult.rows[0];
-  } catch (error) {
-    await client.query("ROLLBACK");
-    throw error;
-  } finally {
-    client.release();
-  }
+  });
 };
 
 /**
@@ -556,108 +415,7 @@ exports.hardDeleteDiscussion = async (discussionId, userId) => {
  * Handle voting (Upvote/Downvote) on a discussion
  */
 exports.handleVote = async (discussionId, userId, voteType) => {
-  const discId = parseInt(discussionId);
-  const uId = parseInt(userId);
-
-  if (isNaN(discId) || isNaN(uId)) {
-    throw new Error(
-      `Invalid IDs: discussionId=${discussionId}, userId=${userId}`,
-    );
-  }
-
-  const client = await pool.connect();
-  try {
-    await client.query("BEGIN");
-
-    const authorRes = await client.query(
-      "SELECT user_id FROM portal.discussions WHERE discussion_id = $1",
-      [discId],
-    );
-    const authorId = authorRes.rows[0]?.user_id;
-
-    // 1. Get existing vote
-    const existingRes = await client.query(
-      `SELECT vote_type FROM portal.discussion_likes WHERE discussion_id = $1 AND user_id = $2`,
-      [discId, uId],
-    );
-
-    const oldVoteType =
-      existingRes.rows.length > 0 ? existingRes.rows[0].vote_type : 0;
-
-    // YouTube-style toggle: clicking same button removes the vote
-    const newVoteType = oldVoteType === voteType ? 0 : voteType;
-
-    // 2. Update discussion_likes table
-    if (oldVoteType === 0 && newVoteType !== 0) {
-      // Insert new vote
-      await client.query(
-        `INSERT INTO portal.discussion_likes (discussion_id, user_id, vote_type) 
-         VALUES ($1, $2, $3)
-         ON CONFLICT (discussion_id, user_id) 
-         DO UPDATE SET vote_type = EXCLUDED.vote_type`,
-        [discId, uId, newVoteType],
-      );
-    } else if (newVoteType === 0) {
-      // Remove vote entirely
-      await client.query(
-        `DELETE FROM portal.discussion_likes WHERE discussion_id = $1 AND user_id = $2`,
-        [discId, uId],
-      );
-    } else {
-      // Update existing vote
-      await client.query(
-        `UPDATE portal.discussion_likes SET vote_type = $1 WHERE discussion_id = $2 AND user_id = $3`,
-        [newVoteType, discId, uId],
-      );
-    }
-
-    // 3. Count only upvotes for display (YouTube-style)
-    await client.query(
-      `UPDATE portal.discussions 
-       SET like_count = (
-         SELECT COUNT(*) 
-         FROM portal.discussion_likes 
-         WHERE discussion_id = $1 AND vote_type = 1
-       )
-       WHERE discussion_id = $1`,
-      [discId],
-    );
-    const diff = newVoteType - oldVoteType;
-
-    // 4. XP Logic
-    if (authorId && authorId !== uId) {
-      // Grant +5 XP for NEW upvote
-      if (newVoteType === 1 && oldVoteType !== 1) {
-        await XPService.updateUserXP(
-          authorId,
-          5,
-          "Received a Discussion Upvote",
-          client,
-        );
-      }
-      // Deduct 5 XP if removing upvote (toggle off or switch to downvote)
-      else if (oldVoteType === 1 && newVoteType !== 1) {
-        await XPService.updateUserXP(
-          authorId,
-          -5,
-          "Discussion Upvote Removed",
-          client,
-        );
-      }
-    }
-
-    await client.query("COMMIT");
-    return {
-      voteType: newVoteType,
-      scoreDiff: diff,
-      authorId,
-    };
-  } catch (error) {
-    await client.query("ROLLBACK");
-    throw error;
-  } finally {
-    client.release();
-  }
+  return handleDiscussionVote(discussionId, userId, voteType);
 };
 
 /**
@@ -671,32 +429,7 @@ exports.toggleLike = async (discussionId, userId) => {
  * Add a comment to a discussion
  */
 exports.addComment = async (discussionId, userId, content, parentId = null) => {
-  const client = await pool.connect();
-
-  try {
-    await client.query("BEGIN");
-
-    const result = await client.query(
-      `INSERT INTO portal.discussion_comments (discussion_id, user_id, content, parent_id)
-       VALUES ($1, $2, $3, $4)
-       RETURNING *`,
-      [discussionId, userId, content, parentId],
-    );
-
-    // Update comment count
-    await client.query(
-      `UPDATE portal.discussions SET comment_count = comment_count + 1 WHERE discussion_id = $1`,
-      [discussionId],
-    );
-
-    await client.query("COMMIT");
-    return result.rows[0];
-  } catch (error) {
-    await client.query("ROLLBACK");
-    throw error;
-  } finally {
-    client.release();
-  }
+  return addCommentEntry(discussionId, userId, content, parentId);
 };
 
 /**
@@ -704,106 +437,7 @@ exports.addComment = async (discussionId, userId, content, parentId = null) => {
  * Grants +2 XP for upvotes, deducts 2 XP if switching from UP to DOWN
  */
 exports.handleCommentVote = async (commentId, userId, voteType) => {
-  const commId = parseInt(commentId);
-  const uId = parseInt(userId);
-
-  if (isNaN(commId) || isNaN(uId)) {
-    throw new Error(`Invalid IDs: commentId=${commentId}, userId=${userId}`);
-  }
-
-  const client = await pool.connect();
-  try {
-    await client.query("BEGIN");
-
-    const authorRes = await client.query(
-      "SELECT user_id FROM portal.discussion_comments WHERE comment_id = $1",
-      [commId],
-    );
-    const authorId = authorRes.rows[0]?.user_id;
-
-    if (authorId && authorId === uId) {
-      throw new Error("Cannot vote on your own comment.");
-    }
-
-    // 1. Get existing vote
-    const existingRes = await client.query(
-      `SELECT vote_type FROM portal.comment_likes WHERE comment_id = $1 AND user_id = $2`,
-      [commId, uId],
-    );
-
-    const oldVoteType =
-      existingRes.rows.length > 0 ? existingRes.rows[0].vote_type : 0;
-
-    // YouTube-style toggle: clicking same button removes the vote
-    const newVoteType = oldVoteType === voteType ? 0 : voteType;
-
-    // 2. Update comment_likes table
-    if (oldVoteType === 0 && newVoteType !== 0) {
-      // Insert new vote
-      await client.query(
-        `INSERT INTO portal.comment_likes (comment_id, user_id, vote_type) VALUES ($1, $2, $3)`,
-        [commId, uId, newVoteType],
-      );
-    } else if (newVoteType === 0) {
-      // Remove vote entirely
-      await client.query(
-        `DELETE FROM portal.comment_likes WHERE comment_id = $1 AND user_id = $2`,
-        [commId, uId],
-      );
-    } else {
-      // Update existing vote
-      await client.query(
-        `UPDATE portal.comment_likes SET vote_type = $1 WHERE comment_id = $2 AND user_id = $3`,
-        [newVoteType, commId, uId],
-      );
-    }
-
-    // 3. Count only upvotes for display (YouTube-style)
-    await client.query(
-      `UPDATE portal.discussion_comments 
-       SET likes_count = (
-         SELECT COUNT(*) 
-         FROM portal.comment_likes 
-         WHERE comment_id = $1 AND vote_type = 1
-       )
-       WHERE comment_id = $1`,
-      [commId],
-    );
-    const diff = newVoteType - oldVoteType;
-
-    if (authorId && authorId !== uId) {
-      // Grant +2 XP for NEW upvote
-      if (newVoteType === 1 && oldVoteType !== 1) {
-        await XPService.updateUserXP(
-          authorId,
-          2,
-          "Comment received an Upvote",
-          client,
-        );
-      }
-      // Deduct 2 XP if removing upvote (toggle off or switch to downvote)
-      else if (oldVoteType === 1 && newVoteType !== 1) {
-        await XPService.updateUserXP(
-          authorId,
-          -2,
-          "Comment Upvote Removed",
-          client,
-        );
-      }
-    }
-
-    await client.query("COMMIT");
-    return {
-      voteType: newVoteType,
-      scoreDiff: diff,
-      authorId,
-    };
-  } catch (error) {
-    await client.query("ROLLBACK");
-    throw error;
-  } finally {
-    client.release();
-  }
+  return handleCommentVote(commentId, userId, voteType);
 };
 
 /**
@@ -814,78 +448,14 @@ exports.getComments = async (
   currentUserId = null,
   sort = "newest",
 ) => {
-  const dId = parseInt(discussionId);
-  const params = [dId];
-  let userVoteClause = "0";
-
-  if (currentUserId) {
-    userVoteClause = `COALESCE((SELECT vote_type FROM portal.comment_likes cl WHERE cl.comment_id = c.comment_id AND cl.user_id = $2), 0)`;
-    params.push(parseInt(currentUserId));
-  }
-
-  const orderBy =
-    sort === "top"
-      ? "c.likes_count DESC, c.created_at DESC"
-      : "c.created_at DESC";
-
-  const result = await pool.query(
-    `SELECT 
-      c.comment_id,
-      c.content,
-      c.created_at,
-      c.parent_id,
-      c.likes_count,
-      ${userVoteClause} AS user_vote,
-      u.user_id,
-      u.full_name,
-      u.profile_image
-     FROM portal.discussion_comments c
-     JOIN portal.users u ON u.user_id = c.user_id
-     WHERE c.discussion_id = $1 AND c.deleted_at IS NULL AND c.is_deleted = FALSE AND u.status = 'active'
-     ORDER BY ${orderBy}`,
-    params,
-  );
-  return result.rows;
+  return getDiscussionComments(discussionId, currentUserId, sort);
 };
 
 /**
  * Delete a comment (Soft or Hard)
  */
 exports.deleteComment = async (commentId, userId, isAdmin = false) => {
-  const checkResult = await pool.query(
-    `SELECT c.user_id, c.discussion_id FROM portal.discussion_comments c WHERE c.comment_id = $1`,
-    [commentId],
-  );
-
-  if (checkResult.rows.length === 0) {
-    throw new Error("Comment not found");
-  }
-
-  const comment = checkResult.rows[0];
-
-  if (isAdmin) {
-    // Admin performs HARD DELETE
-    await pool.query(
-      `DELETE FROM portal.discussion_comments WHERE comment_id = $1`,
-      [commentId],
-    );
-  } else if (Number(comment.user_id) === Number(userId)) {
-    // Owner performs SOFT DELETE
-    await pool.query(
-      `UPDATE portal.discussion_comments SET deleted_at = NOW() WHERE comment_id = $1`,
-      [commentId],
-    );
-  } else {
-    throw new Error("Not authorized to delete this comment");
-  }
-
-  // Update comment count
-  await pool.query(
-    `UPDATE portal.discussions SET comment_count = GREATEST(0, comment_count - 1) WHERE discussion_id = $1`,
-    [comment.discussion_id],
-  );
-
-  return true;
+  return removeCommentEntry(commentId, userId, isAdmin);
 };
 
 /**
@@ -943,12 +513,7 @@ exports.toggleSave = async (discussionId, userId) => {
 };
 
 exports.boostDiscussion = async (discussionId, userId) => {
-  const client = await pool.connect();
-
-  try {
-    await client.query("BEGIN");
-
-    // 1. Check if user has enough reputation points
+  return withTransaction(async (client) => {
     const userRes = await client.query(
       `SELECT reputation_points FROM portal.users WHERE user_id = $1`,
       [userId],
@@ -965,7 +530,6 @@ exports.boostDiscussion = async (discussionId, userId) => {
       );
     }
 
-    // 2. Check if discussion exists and is not already actively boosted
     const discussionRes = await client.query(
       `SELECT is_boosted, boosted_until FROM portal.discussions WHERE discussion_id = $1 AND deleted_at IS NULL`,
       [discussionId],
@@ -983,13 +547,11 @@ exports.boostDiscussion = async (discussionId, userId) => {
       throw new Error("Discussion is already actively boosted");
     }
 
-    // 3. Deduct points
     await client.query(
       `UPDATE portal.users SET reputation_points = reputation_points - 50 WHERE user_id = $1`,
       [userId],
     );
 
-    // 4. Boost discussion
     const boostRes = await client.query(
       `UPDATE portal.discussions 
        SET is_boosted = TRUE, 
@@ -999,14 +561,8 @@ exports.boostDiscussion = async (discussionId, userId) => {
       [discussionId],
     );
 
-    await client.query("COMMIT");
     return boostRes.rows[0];
-  } catch (error) {
-    await client.query("ROLLBACK");
-    throw error;
-  } finally {
-    client.release();
-  }
+  });
 };
 
 /**

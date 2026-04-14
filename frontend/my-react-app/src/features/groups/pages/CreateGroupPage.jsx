@@ -14,14 +14,18 @@ import {
   Shield,
   Zap,
   Rocket,
-  Tag,
-  X,
-  Plus
+  Tag
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "react-toastify";
-import api from "../../../services/api";
+import TagSelectorSection from "../../../components/ui/TagSelectorSection";
+import { useSystemTags } from "../../../hooks/useSystemTags";
+import {
+  addUniqueCappedTag,
+  removeTag,
+  toggleCappedSelection,
+} from "../../../utils/tagSelection";
 
 const SYSTEM_TAG_CAP = 5;
 const CUSTOM_TAG_CAP = 2;
@@ -91,42 +95,35 @@ const CreateGroupPage = () => {
     custom_tags: [],
   });
 
-  const [systemTagOptions, setSystemTagOptions] = useState([]);
-  const [isLoadingTags, setIsLoadingTags] = useState(false);
   const [customTagInput, setCustomTagInput] = useState("");
-
-  React.useEffect(() => {
-    setIsLoadingTags(true);
-    api.get("/discussions/tags", { params: { type: "system" } })
-      .then((res) => setSystemTagOptions(Array.isArray(res.data) ? res.data : []))
-      .catch(() => setSystemTagOptions([]))
-      .finally(() => setIsLoadingTags(false));
-  }, []);
+  const { systemTagOptions, isLoadingTags } = useSystemTags(true);
 
   const toggleSystemTag = (tagId) => {
     setFormData((prev) => {
-      const already = prev.system_tags.includes(tagId);
-      if (already) {
-        return { ...prev, system_tags: prev.system_tags.filter((id) => id !== tagId) };
-      }
-      if (prev.system_tags.length >= SYSTEM_TAG_CAP) return prev;
-      return { ...prev, system_tags: [...prev.system_tags, tagId] };
+      const nextSystemTags = toggleCappedSelection(
+        prev.system_tags,
+        tagId,
+        SYSTEM_TAG_CAP,
+      );
+      return { ...prev, system_tags: nextSystemTags };
     });
   };
 
   const addCustomTag = () => {
-    const tag = customTagInput.trim();
-    if (!tag) return;
-    if (formData.custom_tags.length >= CUSTOM_TAG_CAP) return;
-    if (formData.custom_tags.map(t => t.toLowerCase()).includes(tag.toLowerCase())) return;
-    setFormData((prev) => ({ ...prev, custom_tags: [...prev.custom_tags, tag] }));
+    const nextCustomTags = addUniqueCappedTag(
+      formData.custom_tags,
+      customTagInput,
+      CUSTOM_TAG_CAP,
+    );
+    if (nextCustomTags.length === formData.custom_tags.length) return;
+    setFormData((prev) => ({ ...prev, custom_tags: nextCustomTags }));
     setCustomTagInput("");
   };
 
   const removeCustomTag = (tag) => {
     setFormData((prev) => ({
       ...prev,
-      custom_tags: prev.custom_tags.filter((t) => t !== tag),
+      custom_tags: removeTag(prev.custom_tags, tag),
     }));
   };
 
@@ -272,112 +269,22 @@ const CreateGroupPage = () => {
                   </p>
                 </div>
 
-                {/* ── System Tags ─────────────────────────────────── */}
-                <div>
-                  <div className="flex items-center justify-between mb-2">
-                    <label className="flex items-center gap-1.5 text-[10px] font-black text-[var(--text-muted)] uppercase tracking-widest ml-1">
-                      <Tag className="w-3.5 h-3.5 text-purple-500" />
-                      System Tags
-                    </label>
-                    <span
-                      className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
-                        formData.system_tags.length >= SYSTEM_TAG_CAP
-                          ? "bg-purple-100 text-purple-700"
-                          : "text-[var(--text-muted)]"
-                      }`}
-                    >
-                      {formData.system_tags.length}/{SYSTEM_TAG_CAP} selected
-                    </span>
-                  </div>
-                  <div className="flex flex-wrap gap-2 px-1">
-                    {isLoadingTags && (
-                      <p className="text-xs text-[var(--text-muted)] italic">Loading tags…</p>
-                    )}
-                    {systemTagOptions.map((tag) => {
-                      const isSelected = formData.system_tags.includes(tag.tag_id);
-                      const isDisabled =
-                        !isSelected && formData.system_tags.length >= SYSTEM_TAG_CAP;
-                      return (
-                        <button
-                          key={tag.tag_id}
-                          type="button"
-                          onClick={() => toggleSystemTag(tag.tag_id)}
-                          disabled={isDisabled}
-                          className={`px-3 py-1.5 rounded-full text-[11px] font-medium border transition-all ${
-                            isSelected
-                              ? "bg-purple-600 text-white border-purple-600 shadow-sm"
-                              : isDisabled
-                              ? "bg-[var(--bg-active)] text-[var(--text-muted)] border-[var(--border-main)] opacity-40 cursor-not-allowed"
-                              : "bg-[var(--bg-active)] text-[var(--text-main)] border-[var(--border-main)] hover:border-purple-400 hover:text-purple-600 cursor-pointer"
-                          }`}
-                        >
-                          {tag.name}
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-
-                {/* ── Custom Tags ──────────────────────────────────── */}
                 <div className="pt-2">
-                  <div className="flex items-center justify-between mb-2">
-                    <label className="text-[10px] font-black text-[var(--text-muted)] uppercase tracking-widest ml-1">
-                      Custom Tags <span className="text-[var(--text-muted)] font-medium lowercase">(optional)</span>
-                    </label>
-                    <span
-                      className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
-                        formData.custom_tags.length >= CUSTOM_TAG_CAP
-                          ? "bg-indigo-100 text-indigo-700"
-                          : "text-[var(--text-muted)]"
-                      }`}
-                    >
-                      {formData.custom_tags.length}/{CUSTOM_TAG_CAP} added
-                    </span>
-                  </div>
-
-                  {/* Existing custom tags */}
-                  {formData.custom_tags.length > 0 && (
-                    <div className="flex flex-wrap gap-2 mb-2 px-1">
-                      {formData.custom_tags.map((tag) => (
-                        <span
-                          key={tag}
-                          className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-[11px] font-bold bg-indigo-50 text-indigo-700 border border-indigo-200"
-                        >
-                          {tag}
-                          <button
-                            type="button"
-                            onClick={() => removeCustomTag(tag)}
-                            className="hover:text-indigo-900 ml-0.5 transition-colors"
-                          >
-                            <X className="w-3 h-3" />
-                          </button>
-                        </span>
-                      ))}
-                    </div>
-                  )}
-
-                  {/* Custom tag input — hidden once cap is reached */}
-                  {formData.custom_tags.length < CUSTOM_TAG_CAP && (
-                    <div className="flex gap-2">
-                      <input
-                        type="text"
-                        value={customTagInput}
-                        onChange={(e) => setCustomTagInput(e.target.value)}
-                        onKeyDown={handleCustomTagKeyDown}
-                        placeholder="e.g. quantum-computing…"
-                        maxLength={50}
-                        className="flex-1 px-5 py-3 bg-[var(--bg-active)] border border-[var(--border-main)] rounded-xl focus:ring-4 focus:ring-purple-500/10 focus:border-purple-500 outline-none transition-all font-medium text-[var(--text-main)] text-sm placeholder:text-[var(--text-muted)]"
-                      />
-                      <button
-                        type="button"
-                        onClick={addCustomTag}
-                        disabled={!customTagInput.trim()}
-                        className="px-4 py-2 bg-[var(--bg-main)] text-purple-600 border border-[var(--border-main)] rounded-xl hover:bg-purple-50 hover:border-purple-200 transition-colors disabled:opacity-40 disabled:hover:bg-transparent disabled:cursor-not-allowed"
-                      >
-                        <Plus className="w-5 h-5" />
-                      </button>
-                    </div>
-                  )}
+                  <TagSelectorSection
+                    customTags={formData.custom_tags}
+                    systemTags={formData.system_tags}
+                    customTagInput={customTagInput}
+                    setCustomTagInput={setCustomTagInput}
+                    customTagCap={CUSTOM_TAG_CAP}
+                    systemTagCap={SYSTEM_TAG_CAP}
+                    systemTagOptions={systemTagOptions}
+                    isLoadingTags={isLoadingTags}
+                    customTagPlaceholder="e.g. quantum-computing..."
+                    onAddCustomTag={addCustomTag}
+                    onRemoveCustomTag={removeCustomTag}
+                    onToggleSystemTag={toggleSystemTag}
+                    onCustomTagKeyDown={handleCustomTagKeyDown}
+                  />
                 </div>
 
                 <button

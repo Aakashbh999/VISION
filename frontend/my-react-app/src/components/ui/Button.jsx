@@ -20,6 +20,8 @@ const Button = ({
       "bg-gradient-to-r from-purple-600 to-purple-800 text-white hover:from-purple-700 hover:to-purple-900 shadow-lg shadow-purple-500/20 focus:ring-purple-500/20 rounded-xl",
     secondary:
       "bg-[var(--bg-card)] border border-[var(--border-main)] text-[var(--text-main)] hover:bg-[var(--bg-active)] focus:ring-slate-100 rounded-xl",
+    outline:
+      "bg-transparent border border-[var(--border-main)] text-[var(--text-main)] hover:border-purple-400 hover:text-purple-700 hover:bg-purple-50/50 focus:ring-purple-500/20 rounded-xl",
     ghost:
       "bg-transparent text-purple-700 hover:bg-purple-50 hover:text-purple-800 focus:ring-purple-100 rounded-xl",
     danger:

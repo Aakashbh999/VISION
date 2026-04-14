@@ -27,16 +27,21 @@ import {
 import LoadingSpinner from "../components/ui/LoadingSpinner";
 import { calculateSemesterFromBatch } from "../utils/academic";
 import { toast } from "react-toastify";
-import { Tag } from "lucide-react";
 import Button from "../components/ui/Button";
-import api from "../services/api";
+import TagSelectorSection from "../components/ui/TagSelectorSection";
 import {
   registerStep1Schema,
+  registerStep2Schema,
   normalizeFullName,
 } from "../validation/registerSchema";
+import { useAuth } from "../context/AuthContext";
+import { getUserLandingPath } from "../utils/authRedirect";
+import { useSystemTags } from "../hooks/useSystemTags";
+import { toggleCappedSelection } from "../utils/tagSelection";
 
 const Register = () => {
   const navigate = useNavigate();
+  const { login: loginWithContext } = useAuth();
   const { data: programs, isLoading: programsLoading } = usePrograms();
 
   const [step, setStep] = useState(1);
@@ -56,9 +61,8 @@ const Register = () => {
     career_scope: [],
   });
 
-  const [systemTagOptions, setSystemTagOptions] = useState([]);
-  const [isLoadingTags, setIsLoadingTags] = useState(false);
   const [showAllTags, setShowAllTags] = useState(false);
+  const { systemTagOptions, isLoadingTags } = useSystemTags(true);
   const [studentIdFile, setStudentIdFile] = useState(null);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -73,23 +77,6 @@ const Register = () => {
       confirmPassword: formData.confirmPassword,
     },
   });
-
-  useEffect(() => {
-    const fetchTags = async () => {
-      setIsLoadingTags(true);
-      try {
-        const res = await api.get("/discussions/tags", {
-          params: { type: "system" },
-        });
-        setSystemTagOptions(Array.isArray(res.data) ? res.data : []);
-      } catch (err) {
-        setSystemTagOptions([]);
-      } finally {
-        setIsLoadingTags(false);
-      }
-    };
-    fetchTags();
-  }, []);
 
   // Auto-calculate semester logic
   useEffect(() => {
@@ -142,15 +129,8 @@ const Register = () => {
 
   const toggleCareerScope = (tagName) => {
     setFormData((prev) => {
-      const already = prev.career_scope.includes(tagName);
-      if (already) {
-        return {
-          ...prev,
-          career_scope: prev.career_scope.filter((t) => t !== tagName),
-        };
-      }
-      if (prev.career_scope.length >= 5) return prev;
-      return { ...prev, career_scope: [...prev.career_scope, tagName] };
+      const nextCareerScope = toggleCappedSelection(prev.career_scope, tagName, 5);
+      return { ...prev, career_scope: nextCareerScope };
     });
   };
 
@@ -183,6 +163,25 @@ const Register = () => {
     setError("");
     setLoading(true);
 
+    const step2Validation = registerStep2Schema.safeParse({
+      university: formData.university,
+      campus: formData.campus,
+      program_id: formData.program_id,
+      semester: formData.semester,
+      batch_year: formData.batch_year,
+      tu_registration_no: formData.tu_registration_no,
+      career_scope: formData.career_scope,
+    });
+
+    if (!step2Validation.success) {
+      setError(
+        step2Validation.error.issues[0]?.message ||
+          "Please complete all required fields.",
+      );
+      setLoading(false);
+      return;
+    }
+
     const finalPayload = new FormData();
     const normalizedFullName = normalizeFullName(formData.full_name);
     finalPayload.append("email", formData.email);
@@ -207,14 +206,10 @@ const Register = () => {
       toast.success("Account created! Logging you in...");
 
       const tokenData = await login(formData.email, formData.password);
-
-      if (tokenData.accessToken) {
-        localStorage.setItem("token", tokenData.accessToken);
-        localStorage.setItem("refreshToken", tokenData.refreshToken);
-      }
+      const user = await loginWithContext(tokenData);
 
       toast.success("Welcome to VISION");
-      navigate("/dashboard");
+      navigate(getUserLandingPath(user) || "/dashboard");
     } catch (err) {
       setError(
         err.response?.data?.error || "Registration failed. Check your data.",
@@ -516,53 +511,28 @@ const Register = () => {
             </div>
 
             <div>
-              <div className="flex items-center justify-between mb-2">
-                <label className="flex items-center gap-1.5 text-[10px] font-black text-(--text-muted) uppercase tracking-widest ml-1">
-                  <Tag className="w-3.5 h-3.5 text-purple-500" />
-                  Interested Areas
-                </label>
-                <span
-                  className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
-                    formData.career_scope.length >= 5
-                      ? "bg-purple-100 text-purple-700"
-                      : "text-(--text-muted)"
-                  }`}
-                >
-                  {formData.career_scope.length}/5 selected
-                </span>
-              </div>
-              <div className="flex flex-wrap gap-2 px-1">
-                {isLoadingTags && (
-                  <p className="text-xs text-(--text-muted) italic">
-                    Loading tags…
-                  </p>
-                )}
-                {(showAllTags
-                  ? systemTagOptions
-                  : systemTagOptions.slice(0, 7)
-                ).map((tag) => {
-                  const isSelected = formData.career_scope.includes(tag.name);
-                  const isDisabled =
-                    !isSelected && formData.career_scope.length >= 5;
-                  return (
-                    <button
-                      key={tag.tag_id}
-                      type="button"
-                      onClick={() => toggleCareerScope(tag.name)}
-                      disabled={isDisabled}
-                      className={`px-3 py-1.5 rounded-full text-[11px] font-medium border transition-all ${
-                        isSelected
-                          ? "bg-purple-600 text-white border-purple-600 shadow-sm"
-                          : isDisabled
-                            ? "bg-(--bg-active) text-(--text-muted) border-(--border-main) opacity-40 cursor-not-allowed"
-                            : "bg-(--bg-active) text-(--text-main) border-(--border-main) hover:border-purple-400 hover:text-purple-600 cursor-pointer"
-                      }`}
-                    >
-                      {tag.name}
-                    </button>
-                  );
-                })}
-                {systemTagOptions.length > 7 && (
+              <TagSelectorSection
+                customTags={[]}
+                systemTags={formData.career_scope}
+                customTagInput=""
+                setCustomTagInput={() => {}}
+                customTagCap={0}
+                systemTagCap={5}
+                systemTagOptions={
+                  showAllTags ? systemTagOptions : systemTagOptions.slice(0, 7)
+                }
+                isLoadingTags={isLoadingTags}
+                customTagPlaceholder=""
+                onAddCustomTag={() => {}}
+                onRemoveCustomTag={() => {}}
+                onToggleSystemTag={toggleCareerScope}
+                onCustomTagKeyDown={() => {}}
+                showCustomTags={false}
+                getSystemTagId={(tag) => tag.name}
+                getSystemTagLabel={(tag) => tag.name}
+              />
+              {systemTagOptions.length > 7 && (
+                <div className="mt-2 px-1">
                   <button
                     type="button"
                     onClick={() => setShowAllTags(!showAllTags)}
@@ -572,8 +542,8 @@ const Register = () => {
                       ? "Show less"
                       : `+${systemTagOptions.length - 7} more`}
                   </button>
-                )}
-              </div>
+                </div>
+              )}
             </div>
 
             <div>

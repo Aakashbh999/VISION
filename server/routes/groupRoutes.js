@@ -4,6 +4,7 @@ const crudController = require("../controllers/groupCRUDController");
 const mediaController = require("../controllers/groupMediaController");
 const membershipController = require("../controllers/groupMembershipController");
 const postController = require("../controllers/groupPostController");
+const groupPostUpload = require("../middleware/groupPostUpload");
 const {
   verifyJWT,
   optionalJWT,
@@ -24,6 +25,7 @@ router.post(
   "/:id/posts",
   verifyJWT,
   requireApprovedStudent,
+  groupPostUpload.single("file"),
   sanitizeInput,
   postController.createPost,
 );
@@ -33,6 +35,13 @@ router.post(
   "/posts/:postId/soft-delete",
   verifyJWT,
   postController.softDeletePost,
+);
+
+router.patch(
+  "/posts/:postId/answer",
+  verifyJWT,
+  sanitizeInput,
+  postController.updateQaAnswer,
 );
 
 // Members

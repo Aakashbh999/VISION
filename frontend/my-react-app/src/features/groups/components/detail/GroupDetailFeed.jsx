@@ -6,6 +6,12 @@ import {
   Code,
   Loader2,
   Send,
+  Trash2,
+  FileUp,
+  Download,
+  Pencil,
+  Save,
+  X,
 } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import Button from "../../../../components/ui/Button";
@@ -22,11 +28,33 @@ const GroupDetailFeed = ({
   isFetchingNextPage,
   newPost,
   setNewPost,
+  resourceFile,
+  setResourceFile,
+  answerDrafts,
+  setAnswerDrafts,
+  editingAnswerId,
+  setEditingAnswerId,
+  editingAnswerText,
+  setEditingAnswerText,
   createPostMutation,
+  deletePostMut,
+  editQaAnswerMut,
   handlePostSubmit,
+  handleQaAnswerCreate,
+  handleStartEditAnswer,
+  handleSaveEditedAnswer,
   messagesContainerRef,
   messagesEndRef,
 }) => {
+  const confirmAndDeletePost = (postId, reason, label = "this item") => {
+    const confirmed = window.confirm(
+      `Are you sure you want to delete ${label}? This action cannot be undone.`,
+    );
+    if (!confirmed) return;
+
+    deletePostMut.mutate({ postId, reason });
+  };
+
   return (
     <>
       <div
@@ -70,7 +98,13 @@ const GroupDetailFeed = ({
                             <div className="flex-1">
                               <textarea
                                 rows="2"
-                                placeholder="Initialize data sequence..."
+                                placeholder={
+                                  activeSection === "qa"
+                                    ? "Ask your question..."
+                                    : activeSection === "resources"
+                                      ? "Add a short note for this resource (optional)..."
+                                      : "Initialize data sequence..."
+                                }
                                 value={newPost}
                                 onChange={(event) =>
                                   setNewPost(event.target.value)
@@ -86,11 +120,40 @@ const GroupDetailFeed = ({
                                   size="sm"
                                   onClick={handlePostSubmit}
                                   isLoading={createPostMutation.isPending}
-                                  disabled={!newPost.trim()}
+                                  disabled={
+                                    activeSection === "resources"
+                                      ? !resourceFile
+                                      : !newPost.trim()
+                                  }
                                 >
-                                  Publish
+                                  {activeSection === "qa" ? "Ask" : "Publish"}
                                 </Button>
                               </div>
+                              {activeSection === "resources" && (
+                                <div className="mt-3">
+                                  <label className="inline-flex items-center gap-2 text-xs font-semibold text-(--text-muted) cursor-pointer hover:text-purple-600">
+                                    <FileUp className="w-4 h-4 text-purple-600"  />
+                                    Upload resource
+                                    <input
+                                      type="file"
+                                      className="hidden"
+                                      onChange={(event) =>
+                                        setResourceFile(
+                                          event.target.files?.[0] || null,
+                                        )
+                                      }
+                                    />
+                                  </label>
+                                  <p className="text-[11px] text-(--text-muted) mt-1">
+                                    image/file (max 5MB)
+                                  </p>
+                                  {resourceFile && (
+                                    <p className="text-xs text-(--text-muted) mt-2">
+                                      Selected: {resourceFile.name}
+                                    </p>
+                                  )}
+                                </div>
+                              )}
                             </div>
                           </div>
                         </div>
@@ -168,6 +231,150 @@ const GroupDetailFeed = ({
                         );
                       }
 
+                      if (activeSection === "qa") {
+                        const answer = post.answer;
+                        const answerIsEditing = editingAnswerId === answer?.post_id;
+
+                        return (
+                          <div
+                            key={post.post_id}
+                            className="bg-(--bg-card) border border-(--border-main) border-x-0 sm:border-x p-6 rounded-3xl shadow-sm"
+                          >
+                            <header className="flex items-center justify-between mb-3">
+                              <div className="flex gap-2 items-center">
+                                <span className="font-bold text-(--text-main)">
+                                  {post.full_name}
+                                </span>
+                                <Badge color="emerald" size="sm">
+                                  Question
+                                </Badge>
+                              </div>
+                              {isAdmin && (
+                                <button
+                                  type="button"
+                                  onClick={() =>
+                                    confirmAndDeletePost(
+                                      post.post_id,
+                                      "Deleted by group admin",
+                                      "this question",
+                                    )
+                                  }
+                                  className="text-(--text-muted) hover:text-red-500"
+                                  title="Delete question"
+                                >
+                                  <Trash2 className="w-4 h-4" />
+                                </button>
+                              )}
+                            </header>
+                            <div className="text-(--text-main) text-sm whitespace-pre-wrap mb-4">
+                              {post.content}
+                            </div>
+
+                            {answer ? (
+                              <div className="bg-(--bg-active) border border-(--border-main) rounded-2xl p-4">
+                                <div className="flex items-center justify-between mb-2">
+                                  <span className="text-xs font-semibold text-(--text-muted)">
+                                    Answer by {answer.full_name}
+                                  </span>
+                                  <div className="flex items-center gap-2">
+                                    {isAdmin && (
+                                      <button
+                                        type="button"
+                                        onClick={() =>
+                                          confirmAndDeletePost(
+                                            answer.post_id,
+                                            "Deleted by group admin",
+                                            "this answer",
+                                          )
+                                        }
+                                        className="text-(--text-muted) hover:text-red-500"
+                                        title="Delete answer"
+                                      >
+                                        <Trash2 className="w-4 h-4" />
+                                      </button>
+                                    )}
+                                    {isAdmin && !answerIsEditing && (
+                                      <button
+                                        type="button"
+                                        onClick={() =>
+                                          handleStartEditAnswer(
+                                            answer.post_id,
+                                            answer.content,
+                                          )
+                                        }
+                                        className="text-(--text-muted) hover:text-blue-500"
+                                        title="Edit answer"
+                                      >
+                                        <Pencil className="w-4 h-4" />
+                                      </button>
+                                    )}
+                                  </div>
+                                </div>
+                                {answerIsEditing ? (
+                                  <div className="space-y-2">
+                                    <textarea
+                                      rows="3"
+                                      value={editingAnswerText}
+                                      onChange={(event) =>
+                                        setEditingAnswerText(event.target.value)
+                                      }
+                                      className="w-full bg-(--bg-card) p-3 border border-(--border-main) rounded-xl text-sm focus:outline-none"
+                                    />
+                                    <div className="flex justify-end gap-2">
+                                      <Button
+                                        size="sm"
+                                        onClick={() => setEditingAnswerId(null)}
+                                        variant="ghost"
+                                      >
+                                        <X className="w-4 h-4" />
+                                      </Button>
+                                      <Button
+                                        size="sm"
+                                        onClick={handleSaveEditedAnswer}
+                                        isLoading={editQaAnswerMut.isPending}
+                                      >
+                                        <Save className="w-4 h-4" />
+                                      </Button>
+                                    </div>
+                                  </div>
+                                ) : (
+                                  <div className="text-(--text-main) text-sm whitespace-pre-wrap">
+                                    {answer.content}
+                                  </div>
+                                )}
+                              </div>
+                            ) : (
+                              isAdmin && (
+                                <div className="space-y-2">
+                                  <textarea
+                                    rows="2"
+                                    placeholder="Write the official answer..."
+                                    value={answerDrafts[post.post_id] || ""}
+                                    onChange={(event) =>
+                                      setAnswerDrafts((prev) => ({
+                                        ...prev,
+                                        [post.post_id]: event.target.value,
+                                      }))
+                                    }
+                                    className="w-full bg-(--bg-active) p-3 border border-(--border-main) rounded-xl text-sm focus:outline-none"
+                                  />
+                                  <div className="flex justify-end">
+                                    <Button
+                                      size="sm"
+                                      onClick={() =>
+                                        handleQaAnswerCreate(post.post_id)
+                                      }
+                                    >
+                                      Publish Answer
+                                    </Button>
+                                  </div>
+                                </div>
+                              )
+                            )}
+                          </div>
+                        );
+                      }
+
                       return (
                         <div
                           key={post.post_id}
@@ -204,6 +411,35 @@ const GroupDetailFeed = ({
                               <div className="text-(--text-muted) text-sm whitespace-pre-wrap leading-relaxed">
                                 {post.content}
                               </div>
+                              {activeSection === "resources" && post.file_url && (
+                                <div className="mt-3 flex items-center justify-between gap-3">
+                                  <a
+                                    href={post.file_url}
+                                    target="_blank"
+                                    rel="noreferrer"
+                                    className="inline-flex items-center gap-2 text-sm text-purple-600 hover:underline"
+                                  >
+                                    <Download className="w-4 h-4" />
+                                    {post.file_name || "Download resource"}
+                                  </a>
+                                  {isAdmin && (
+                                    <button
+                                      type="button"
+                                      onClick={() =>
+                                        confirmAndDeletePost(
+                                          post.post_id,
+                                          "Deleted by group admin",
+                                          "this resource",
+                                        )
+                                      }
+                                      className="text-(--text-muted) hover:text-red-500"
+                                      title="Delete resource"
+                                    >
+                                      <Trash2 className="w-4 h-4" />
+                                    </button>
+                                  )}
+                                </div>
+                              )}
                             </div>
                           </div>
                         </div>

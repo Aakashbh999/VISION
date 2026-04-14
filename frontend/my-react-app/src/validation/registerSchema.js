@@ -39,3 +39,28 @@ export const registerStep1Schema = z
       });
     }
   });
+
+export const loginSchema = z.object({
+  email: z.string().trim().email("Please enter a valid email address."),
+  password: z.string().min(1, "Password is required."),
+});
+
+const currentYear = new Date().getFullYear();
+
+export const registerStep2Schema = z.object({
+  university: z.string().trim().min(1, "University is required."),
+  campus: z.string().trim().min(2, "Campus is required."),
+  program_id: z.coerce.number().int().positive("Please select a program."),
+  semester: z.coerce
+    .number()
+    .int()
+    .min(1, "Semester must be between 1 and 12.")
+    .max(12, "Semester must be between 1 and 12."),
+  batch_year: z.coerce
+    .number()
+    .int()
+    .min(2000, "Batch year is invalid.")
+    .max(currentYear, "Batch year cannot be in the future."),
+  tu_registration_no: z.string().trim().min(3, "TU registration number is required."),
+  career_scope: z.array(z.string()).max(5, "You can select up to 5 interests."),
+});

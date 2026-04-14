@@ -15,6 +15,9 @@ const TagSelectorSection = ({
   onRemoveCustomTag,
   onToggleSystemTag,
   onCustomTagKeyDown,
+  showCustomTags = true,
+  getSystemTagId = (tag) => tag.tag_id,
+  getSystemTagLabel = (tag) => tag.name,
 }) => {
   return (
     <div>
@@ -26,22 +29,24 @@ const TagSelectorSection = ({
       </div>
 
       <div className="space-y-3">
-        <div className="flex items-center justify-between">
-          <p className="text-xs font-medium text-[var(--text-main)]">
-            Custom tags (optional)
-          </p>
-          <span
-            className={`text-xs font-medium px-2 py-0.5 rounded-full ${
-              customTags.length >= customTagCap
-                ? "bg-indigo-100 text-indigo-700"
-                : "text-[var(--text-muted)]"
-            }`}
-          >
-            {customTags.length}/{customTagCap} added
-          </span>
-        </div>
+        {showCustomTags && (
+          <div className="flex items-center justify-between">
+            <p className="text-xs font-medium text-[var(--text-main)]">
+              Custom tags (optional)
+            </p>
+            <span
+              className={`text-xs font-medium px-2 py-0.5 rounded-full ${
+                customTags.length >= customTagCap
+                  ? "bg-indigo-100 text-indigo-700"
+                  : "text-[var(--text-muted)]"
+              }`}
+            >
+              {customTags.length}/{customTagCap} added
+            </span>
+          </div>
+        )}
 
-        {customTags.length > 0 && (
+        {showCustomTags && customTags.length > 0 && (
           <div className="flex flex-wrap gap-2">
             {customTags.map((tag) => (
               <span
@@ -61,7 +66,7 @@ const TagSelectorSection = ({
           </div>
         )}
 
-        {customTags.length < customTagCap && (
+        {showCustomTags && customTags.length < customTagCap && (
           <div className="flex gap-2">
             <input
               type="text"
@@ -105,14 +110,15 @@ const TagSelectorSection = ({
               </p>
             )}
             {systemTagOptions.map((tag) => {
-              const isSelected = systemTags.includes(tag.tag_id);
+              const tagId = getSystemTagId(tag);
+              const isSelected = systemTags.includes(tagId);
               const isDisabled =
                 !isSelected && systemTags.length >= systemTagCap;
               return (
                 <button
-                  key={tag.tag_id}
+                  key={tagId}
                   type="button"
-                  onClick={() => onToggleSystemTag(tag.tag_id)}
+                  onClick={() => onToggleSystemTag(tagId)}
                   disabled={isDisabled}
                   className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-all ${
                     isSelected
@@ -122,7 +128,7 @@ const TagSelectorSection = ({
                         : "bg-transparent text-[var(--text-main)] border-[var(--border-main)] hover:border-purple-400 hover:text-purple-600 cursor-pointer"
                   }`}
                 >
-                  {tag.name}
+                  {getSystemTagLabel(tag)}
                 </button>
               );
             })}

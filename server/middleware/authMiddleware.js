@@ -1,87 +1,36 @@
 const jwt = require("jsonwebtoken");
-const pool = require("../config/db");
-const { resolveEffectiveSemester } = require("../utils/academicUtils");
+const createError = require("http-errors");
 const env = require("../config/env");
 const logger = require("../utils/logger");
+const { loadAuthUserContext } = require("../utils/authUserContext");
 
 exports.verifyJWT = async (req, res, next) => {
   try {
     const authHeader = req.headers.authorization;
 
     if (!authHeader || !authHeader.startsWith("Bearer ")) {
-      return res.status(401).json({ error: "Unauthorized" });
+      return next(createError(401, "Unauthorized"));
     }
 
     const token = authHeader.split(" ")[1];
     const decoded = jwt.verify(token, env.JWT_SECRET);
 
-    const userData = await pool.query(
-      `SELECT 
-         p.user_id,
-         p.student_status,
-         p.is_suspended,
-         p.is_moderator,
-         p.program_id,
-         p.semester,
-         p.batch_year,
-         p.semester_is_manual,
-         p.academic_degree_id,
-         a.email_status,
-         a.role
-       FROM auth.users a
-       JOIN portal.users p ON a.auth_user_id = p.auth_user_id
-       WHERE a.auth_user_id = $1`,
-      [decoded.auth_user_id],
-    );
-
-    if (!userData.rows.length) {
-      return res.status(401).json({ error: "User not found" });
+    const userContext = await loadAuthUserContext(decoded.auth_user_id);
+    if (!userContext) {
+      return next(createError(401, "User not found"));
+    }
+    if (userContext.is_suspended) {
+      return next(
+        createError(403, "Your account has been suspended. Contact admin."),
+      );
     }
 
-    const {
-      user_id,
-      student_status,
-      email_status,
-      is_suspended,
-      role,
-      is_moderator,
-      program_id,
-      semester,
-      batch_year,
-      semester_is_manual,
-      academic_degree_id,
-    } = userData.rows[0];
-
-    const effectiveSemester = resolveEffectiveSemester({
-      semester,
-      batchYear: batch_year,
-      semesterIsManual: semester_is_manual,
-    });
-
-    if (is_suspended) {
-      return res.status(403).json({
-        error: "Your account has been suspended. Contact admin.",
-      });
-    }
-
-    req.user = {
-      auth_user_id: decoded.auth_user_id,
-      role,
-      is_moderator: is_moderator === true,
-      portal_user_id: user_id,
-      student_status,
-      email_status,
-      program_id,
-      batch_year,
-      semester_is_manual,
-      current_semester: effectiveSemester,
-      academic_degree_id,
-    };
+    req.user = userContext;
 
     next();
   } catch (err) {
     logger.warn({ err }, "JWT verification failed");
-    return res.status(401).json({ error: "Invalid token" });
+    return next(createError(401, "Invalid token"));
   }
 };
 
@@ -90,11 +39,11 @@ exports.requireApprovedStudent = (req, res, next) => {
   const { email_status, student_status } = req.user;
 
   if (email_status !== "verified") {
-    return res.status(403).json({ error: "Email not verified" });
+    return next(createError(403, "Email not verified"));
   }
 
   if (student_status !== "approved") {
-    return res.status(403).json({ error: "Awaiting admin approval" });
+    return next(createError(403, "Awaiting admin approval"));
   }
 
   next();
@@ -114,68 +63,13 @@ exports.optionalJWT = async (req, res, next) => {
     const token = authHeader.split(" ")[1];
     const decoded = jwt.verify(token, env.JWT_SECRET);
 
-    const userData = await pool.query(
-      `SELECT 
-         p.user_id,
-         p.student_status,
-         p.is_suspended,
-         p.is_moderator,
-         p.program_id,
-         p.semester,
-         p.batch_year,
-         p.semester_is_manual,
-         p.academic_degree_id,
-         a.email_status,
-         a.role
-       FROM auth.users a
-       JOIN portal.users p ON a.auth_user_id = p.auth_user_id
-       WHERE a.auth_user_id = $1`,
-      [decoded.auth_user_id],
-    );
-
-    if (!userData.rows.length) {
+    const userContext = await loadAuthUserContext(decoded.auth_user_id);
+    if (!userContext || userContext.is_suspended) {
       req.user = null;
       return next();
     }
 
-    const {
-      user_id,
-      student_status,
-      email_status,
-      is_suspended,
-      role,
-      is_moderator,
-      program_id,
-      semester,
-      batch_year,
-      semester_is_manual,
-      academic_degree_id,
-    } = userData.rows[0];
-
-    const effectiveSemester = resolveEffectiveSemester({
-      semester,
-      batchYear: batch_year,
-      semesterIsManual: semester_is_manual,
-    });
-
-    if (is_suspended) {
-      req.user = null;
-      return next();
-    }
-
-    req.user = {
-      auth_user_id: decoded.auth_user_id,
-      role,
-      is_moderator: is_moderator === true,
-      portal_user_id: user_id,
-      student_status,
-      email_status,
-      program_id,
-      batch_year,
-      semester_is_manual,
-      current_semester: effectiveSemester,
-      academic_degree_id,
-    };
+    req.user = userContext;
 
     next();
   } catch (err) {

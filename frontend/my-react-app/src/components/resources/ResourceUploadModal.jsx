@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import {
   X,
   Upload,
@@ -8,8 +8,14 @@ import {
 } from "lucide-react";
 import { useUploadResource } from "../../hooks/useUploadResource";
 import { usePrograms } from "../../hooks/usePrograms";
-import api from "../../services/api";
 import TagSelectorSection from "../ui/TagSelectorSection";
+import { useSystemTags } from "../../hooks/useSystemTags";
+import {
+  addUniqueCappedTag,
+  removeTag,
+  toggleCappedSelection,
+} from "../../utils/tagSelection";
+import { getApiErrorMessage } from "../../utils/apiError";
 
 const SYSTEM_TAG_CAP = 5;
 const CUSTOM_TAG_CAP = 2;
@@ -27,27 +33,12 @@ const ResourceUploadModal = ({ isOpen, onClose }) => {
   });
   const [file, setFile] = useState(null);
   const [localError, setLocalError] = useState("");
-  const [systemTagOptions, setSystemTagOptions] = useState([]);
-  const [isLoadingTags, setIsLoadingTags] = useState(false);
   const [customTagInput, setCustomTagInput] = useState("");
 
   const { data: programsData } = usePrograms();
   const programs = programsData?.data || programsData || [];
   const uploadMutation = useUploadResource();
-
-  // Fetch the 15 authoritative system tags when modal opens
-  useEffect(() => {
-    if (!isOpen) return;
-    setIsLoadingTags(true);
-    api
-      .get("/discussions/tags", { params: { type: "system" } })
-      .then((res) => {
-        const data = res.data;
-        setSystemTagOptions(Array.isArray(data) ? data : []);
-      })
-      .catch(() => setSystemTagOptions([]))
-      .finally(() => setIsLoadingTags(false));
-  }, [isOpen]);
+  const { systemTagOptions, isLoadingTags } = useSystemTags(isOpen);
 
   if (!isOpen) return null;
 
@@ -67,31 +58,25 @@ const ResourceUploadModal = ({ isOpen, onClose }) => {
   // Toggle a system tag on/off (respects cap)
   const toggleSystemTag = (tagId) => {
     setFormData((prev) => {
-      const already = prev.system_tags.includes(tagId);
-      if (already) {
-        return {
-          ...prev,
-          system_tags: prev.system_tags.filter((id) => id !== tagId),
-        };
-      }
-      if (prev.system_tags.length >= SYSTEM_TAG_CAP) return prev;
-      return { ...prev, system_tags: [...prev.system_tags, tagId] };
+      const nextSystemTags = toggleCappedSelection(
+        prev.system_tags,
+        tagId,
+        SYSTEM_TAG_CAP,
+      );
+      return { ...prev, system_tags: nextSystemTags };
     });
   };
 
   const addCustomTag = () => {
-    const tag = customTagInput.trim();
-    if (!tag) return;
-    if (formData.custom_tags.length >= CUSTOM_TAG_CAP) return;
-    if (
-      formData.custom_tags
-        .map((t) => t.toLowerCase())
-        .includes(tag.toLowerCase())
-    )
-      return;
+    const nextCustomTags = addUniqueCappedTag(
+      formData.custom_tags,
+      customTagInput,
+      CUSTOM_TAG_CAP,
+    );
+    if (nextCustomTags.length === formData.custom_tags.length) return;
     setFormData((prev) => ({
       ...prev,
-      custom_tags: [...prev.custom_tags, tag],
+      custom_tags: nextCustomTags,
     }));
     setCustomTagInput("");
   };
@@ -99,7 +84,7 @@ const ResourceUploadModal = ({ isOpen, onClose }) => {
   const removeCustomTag = (tag) => {
     setFormData((prev) => ({
       ...prev,
-      custom_tags: prev.custom_tags.filter((t) => t !== tag),
+      custom_tags: removeTag(prev.custom_tags, tag),
     }));
   };
 
@@ -177,12 +162,7 @@ const ResourceUploadModal = ({ isOpen, onClose }) => {
         onClose();
       },
       onError: (error) => {
-        const apiError =
-          error?.response?.data?.error ||
-          error?.response?.data?.message ||
-          error?.message ||
-          "Failed to upload resource";
-        setLocalError(apiError);
+        setLocalError(getApiErrorMessage(error, "Failed to upload resource"));
       },
     });
   };

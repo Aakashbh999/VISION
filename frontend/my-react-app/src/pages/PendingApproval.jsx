@@ -2,6 +2,8 @@ import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Clock } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
+import { getUserLandingPath } from "../utils/authRedirect";
+import { useUserStatusPolling } from "../hooks/useUserStatusPolling";
 
 const PendingApproval = () => {
   const navigate = useNavigate();
@@ -9,40 +11,13 @@ const PendingApproval = () => {
 
   useEffect(() => {
     if (!user) return;
-
-    if (user.role === "admin") {
-      navigate("/admin/dashboard", { replace: true });
-      return;
-    }
-
-    if (user.email_status !== "verified") {
-      navigate("/verify-email", { replace: true });
-      return;
-    }
-
-    if (user.student_status === "approved") {
-      navigate("/dashboard", { replace: true });
+    const nextPath = getUserLandingPath(user);
+    if (nextPath && nextPath !== "/pending-approval") {
+      navigate(nextPath, { replace: true });
     }
   }, [user, navigate]);
 
-  useEffect(() => {
-    refetchUser();
-
-    const intervalId = window.setInterval(() => {
-      refetchUser();
-    }, 15000);
-
-    const handleFocus = () => {
-      refetchUser();
-    };
-
-    window.addEventListener("focus", handleFocus);
-
-    return () => {
-      window.clearInterval(intervalId);
-      window.removeEventListener("focus", handleFocus);
-    };
-  }, [refetchUser]);
+  useUserStatusPolling(refetchUser, true);
 
   return (
     <div className="max-w-md mx-auto text-center py-12">

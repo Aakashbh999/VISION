@@ -16,9 +16,8 @@ const ProfilePage = () => {
     programs,
     updateAvatarMut,
     updateBannerMut,
-    removeAvatarMut,
-    removeBannerMut,
     followMut,
+    profileUserId,
     isEditMode,
     draftProfile,
     setDraftProfile,
@@ -62,7 +61,7 @@ const ProfilePage = () => {
   }
 
   return (
-    <div className="px-2 sm:px-6 lg:px-8 py-5 sm:py-8 space-y-12 max-w-5xl mx-auto pb-28">
+    <div className="px-2 sm:px-6 lg:px-8 py-5 sm:py-8 space-y-12 max-w-5xl mx-auto pb-8">
       <ProfileHeaderCard
         profile={profile}
         isOwner={isOwner}
@@ -71,12 +70,11 @@ const ProfilePage = () => {
         setFollowDropdownOpen={setFollowDropdownOpen}
         followDropdownRef={followDropdownRef}
         followMut={followMut}
+        profileUserId={profileUserId}
         handleFollowToggle={handleFollowToggle}
         handleEditStart={handleEditStart}
         setActiveEditor={setActiveEditor}
         setViewingAvatar={setViewingAvatar}
-        removeAvatarMut={removeAvatarMut}
-        removeBannerMut={removeBannerMut}
         draftProfile={draftProfile}
         handleDraftChange={handleDraftChange}
         programName={programName}
@@ -91,6 +89,16 @@ const ProfilePage = () => {
         handleAvatarDone={handleAvatarDone}
         handleBannerDone={handleBannerDone}
       />
+
+      <div className="flex justify-end">
+        <ProfileEditActionBar
+          isOwner={isOwner}
+          isEditMode={isEditMode}
+          isSavingProfile={isSavingProfile}
+          handleEditCancel={handleEditCancel}
+          handleSaveChanges={handleSaveChanges}
+        />
+      </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
         <div className="lg:col-span-2 space-y-12">
@@ -123,14 +131,6 @@ const ProfilePage = () => {
         viewingAvatar={viewingAvatar}
         setViewingAvatar={setViewingAvatar}
         profile={profile}
-      />
-
-      <ProfileEditActionBar
-        isOwner={isOwner}
-        isEditMode={isEditMode}
-        isSavingProfile={isSavingProfile}
-        handleEditCancel={handleEditCancel}
-        handleSaveChanges={handleSaveChanges}
       />
     </div>
   );

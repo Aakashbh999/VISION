@@ -1,14 +1,12 @@
 import { Navigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import Home from "../pages/Home";
+import { getUserLandingPath } from "../utils/authRedirect";
 
 const RedirectIfAuthenticated = () => {
   const { user } = useAuth();
-  if (user?.role === "admin") {
-    return <Navigate to="/admin/dashboard" replace />;
-  }
-  const isApproved = user?.student_status === "approved";
-  return isApproved ? <Navigate to="/dashboard" replace /> : <Home />;
+  const landingPath = getUserLandingPath(user);
+  return landingPath ? <Navigate to={landingPath} replace /> : <Home />;
 };
 
 export default RedirectIfAuthenticated;

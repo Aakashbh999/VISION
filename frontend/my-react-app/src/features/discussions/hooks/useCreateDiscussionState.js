@@ -7,6 +7,13 @@ import {
   createDiscussion,
   uploadDiscussionImage,
 } from "../../../services/discussion";
+import { useSystemTags } from "../../../hooks/useSystemTags";
+import {
+  addUniqueCappedTag,
+  removeTag,
+  toggleCappedSelection,
+} from "../../../utils/tagSelection";
+import { getApiErrorMessage } from "../../../utils/apiError";
 
 export const SYSTEM_TAG_CAP = 5;
 export const CUSTOM_TAG_CAP = 2;
@@ -29,10 +36,9 @@ export const useCreateDiscussionState = () => {
   const [selectedFile, setSelectedFile] = useState(null);
   const [previewUrl, setPreviewUrl] = useState(null);
   const [specializations, setSpecializations] = useState([]);
-  const [systemTagOptions, setSystemTagOptions] = useState([]);
-  const [isLoadingTags, setIsLoadingTags] = useState(false);
   const [customTagInput, setCustomTagInput] = useState("");
   const [uploading, setUploading] = useState(false);
+  const { systemTagOptions, isLoadingTags } = useSystemTags(true);
 
   useEffect(() => {
     // Fetch specializations
@@ -40,14 +46,6 @@ export const useCreateDiscussionState = () => {
       .get("/discussions/specializations")
       .then((response) => setSpecializations(response.data || []));
 
-    // Fetch system tags
-    setIsLoadingTags(true);
-    api.get("/discussions/tags", { params: { type: "system" } })
-      .then((res) => {
-        setSystemTagOptions(Array.isArray(res.data) ? res.data : []);
-      })
-      .catch(() => setSystemTagOptions([]))
-      .finally(() => setIsLoadingTags(false));
   }, []);
 
   const createMutation = useMutation({
@@ -59,7 +57,7 @@ export const useCreateDiscussionState = () => {
       navigate(`/discussions/${data.discussion_id}`);
     },
     onError: (error) => {
-      toast.error(error?.response?.data?.error || "Failed to create post");
+      toast.error(getApiErrorMessage(error, "Failed to create post"));
     },
   });
 
@@ -109,28 +107,30 @@ export const useCreateDiscussionState = () => {
   // Toggle a system tag on/off (respects cap)
   const toggleSystemTag = (tagId) => {
     setFormData((prev) => {
-      const already = prev.system_tags.includes(tagId);
-      if (already) {
-        return { ...prev, system_tags: prev.system_tags.filter((id) => id !== tagId) };
-      }
-      if (prev.system_tags.length >= SYSTEM_TAG_CAP) return prev;
-      return { ...prev, system_tags: [...prev.system_tags, tagId] };
+      const nextSystemTags = toggleCappedSelection(
+        prev.system_tags,
+        tagId,
+        SYSTEM_TAG_CAP,
+      );
+      return { ...prev, system_tags: nextSystemTags };
     });
   };
 
   const addCustomTag = () => {
-    const tag = customTagInput.trim();
-    if (!tag) return;
-    if (formData.custom_tags.length >= CUSTOM_TAG_CAP) return;
-    if (formData.custom_tags.map((t) => t.toLowerCase()).includes(tag.toLowerCase())) return;
-    setFormData((prev) => ({ ...prev, custom_tags: [...prev.custom_tags, tag] }));
+    const nextCustomTags = addUniqueCappedTag(
+      formData.custom_tags,
+      customTagInput,
+      CUSTOM_TAG_CAP,
+    );
+    if (nextCustomTags.length === formData.custom_tags.length) return;
+    setFormData((prev) => ({ ...prev, custom_tags: nextCustomTags }));
     setCustomTagInput("");
   };
 
   const removeCustomTag = (tag) => {
     setFormData((prev) => ({
       ...prev,
-      custom_tags: prev.custom_tags.filter((t) => t !== tag),
+      custom_tags: removeTag(prev.custom_tags, tag),
     }));
   };
 

@@ -69,14 +69,29 @@ export const getGroupPosts = async (
 };
 
 // Create a post in a group
-export const createGroupPost = async (
-  groupId,
-  content,
-  section = "general",
-) => {
-  const response = await api.post(`/groups/${groupId}/posts`, {
-    content,
-    section,
+export const createGroupPost = async (groupId, payload) => {
+  const hasFile = payload?.file instanceof File;
+  const body = hasFile ? new FormData() : {};
+
+  const appendValue = (key, value) => {
+    if (value === undefined || value === null || value === "") return;
+    if (hasFile) {
+      body.append(key, value);
+    } else {
+      body[key] = value;
+    }
+  };
+
+  appendValue("content", payload?.content);
+  appendValue("section", payload?.section || "general");
+  appendValue("qa_post_type", payload?.qa_post_type);
+  appendValue("qa_question_post_id", payload?.qa_question_post_id);
+  if (hasFile) {
+    body.append("file", payload.file);
+  }
+
+  const response = await api.post(`/groups/${groupId}/posts`, body, {
+    headers: hasFile ? { "Content-Type": "multipart/form-data" } : undefined,
   });
   return response.data;
 };
@@ -186,5 +201,10 @@ export const softDeleteGroupPost = async (postId, reason) => {
   const response = await api.post(`/groups/posts/${postId}/soft-delete`, {
     reason,
   });
+  return response.data;
+};
+
+export const updateGroupQaAnswer = async (postId, content) => {
+  const response = await api.patch(`/groups/posts/${postId}/answer`, { content });
   return response.data;
 };

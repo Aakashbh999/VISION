@@ -17,6 +17,7 @@ const {
 const { buildPresenceSelect } = require("../utils/presence");
 const catchAsync = require("../utils/catchAsync");
 const logger = require("../utils/logger");
+const { withTransaction } = require("../utils/withTransaction");
 
 /* ===============================
    GET GROUP MEMBERS
@@ -194,10 +195,7 @@ exports.approveRequest = catchAsync(async (req, res) => {
     return errorResponse(res, "Group is at full capacity", 400);
   }
 
-  const client = await pool.connect();
-  try {
-    await client.query("BEGIN");
-
+  await withTransaction(async (client) => {
     await client.query(
       `INSERT INTO portal.group_members (group_id, user_id, role, status) VALUES ($1, $2, 'member', 'approved') ON CONFLICT DO NOTHING`,
       [id, request.rows[0].user_id],
@@ -206,14 +204,7 @@ exports.approveRequest = catchAsync(async (req, res) => {
       `UPDATE portal.join_requests SET status = 'approved' WHERE request_id = $1`,
       [requestId],
     );
-
-    await client.query("COMMIT");
-  } catch (err) {
-    await client.query("ROLLBACK");
-    throw err;
-  } finally {
-    client.release();
-  }
+  });
 
   try {
     await feed({
@@ -406,18 +397,12 @@ exports.expandCapacity = catchAsync(async (req, res) => {
     );
   }
 
-  const client = await pool.connect();
-  try {
-    await client.query("BEGIN");
-
+  const newCapacity = await withTransaction(async (client) => {
     const stats = await XPService.getUserStats(userId);
     if (!stats || stats.total_xp < VXP_EXPAND_COST) {
-      await client.query("ROLLBACK");
-      return errorResponse(
-        res,
-        `Need ${VXP_EXPAND_COST} VXP to expand capacity`,
-        403,
-      );
+      const error = new Error(`Need ${VXP_EXPAND_COST} VXP to expand capacity`);
+      error.statusCode = 403;
+      throw error;
     }
 
     await XPService.updateUserXP(
@@ -427,24 +412,19 @@ exports.expandCapacity = catchAsync(async (req, res) => {
       client,
     );
 
-    const newCapacity = Math.min(currentCapacity + 2, MAX_CAPACITY);
+    const nextCapacity = Math.min(currentCapacity + 2, MAX_CAPACITY);
     await client.query(
       `UPDATE portal.study_groups SET capacity = $1 WHERE group_id = $2`,
-      [newCapacity, id],
+      [nextCapacity, id],
     );
+    return nextCapacity;
+  });
 
-    await client.query("COMMIT");
-    return successResponse(
-      res,
-      { capacity: newCapacity },
-      `Capacity expanded to ${newCapacity} members`,
-    );
-  } catch (err) {
-    await client.query("ROLLBACK");
-    throw err;
-  } finally {
-    client.release();
-  }
+  return successResponse(
+    res,
+    { capacity: newCapacity },
+    `Capacity expanded to ${newCapacity} members`,
+  );
 });
 
 /* ===============================

@@ -8,6 +8,35 @@ const {
 const catchAsync = require("../utils/catchAsync");
 const createError = require("http-errors");
 const logger = require("../utils/logger");
+const {
+  parsePagination,
+  buildPaginationMeta,
+} = require("../utils/pagination");
+const { withTransaction } = require("../utils/withTransaction");
+const { getModerationTargetConfig } = require("../utils/adminModerationTargets");
+
+const logModerationAction = (adminId, actionType, targetType, targetId) =>
+  pool.query(
+    `INSERT INTO portal.moderation_logs
+      (admin_user_id, action_type, target_type, target_id)
+      VALUES ($1, $2, $3, $4)`,
+    [adminId, actionType, targetType, targetId],
+  );
+
+const updateStudentStatus = async (userId, nextStatus, errorMessage) => {
+  const result = await pool.query(
+    `UPDATE portal.users
+      SET student_status = $2
+      WHERE user_id = $1
+      AND student_status != $2
+      RETURNING user_id`,
+    [userId, nextStatus],
+  );
+
+  if (result.rowCount === 0) {
+    throw createError(400, errorMessage);
+  }
+};
 
 /* ===============================
    GET Pending Students
@@ -47,9 +76,10 @@ exports.getPendingStudents = catchAsync(async (req, res) => {
  ================================ */
 exports.getStudentsByStatus = catchAsync(async (req, res) => {
   const status = req.query.status;
-  const page = parseInt(req.query.page) || 1;
-  const limit = parseInt(req.query.limit) || 10;
-  const offset = (page - 1) * limit;
+  const { page, limit, offset } = parsePagination(req.query, {
+    defaultLimit: 10,
+    maxLimit: 50,
+  });
 
   let whereClause = "";
   const values = [];
@@ -95,12 +125,7 @@ exports.getStudentsByStatus = catchAsync(async (req, res) => {
   res.json({
     success: true,
     data: result.rows,
-    pagination: {
-      total,
-      page,
-      limit,
-      totalPages: Math.ceil(total / limit),
-    },
+    pagination: buildPaginationMeta({ total, page, limit }),
   });
 });
 
@@ -111,29 +136,8 @@ exports.approveStudent = catchAsync(async (req, res) => {
   const { user_id } = req.params;
   const adminId = req.user.portal_user_id;
 
-  const result = await pool.query(
-    `
-      UPDATE portal.users
-      SET student_status = 'approved'
-      WHERE user_id = $1
-      AND student_status != 'approved'
-      RETURNING user_id
-      `,
-    [user_id],
-  );
-
-  if (result.rowCount === 0) {
-    throw createError(400, "Already approved or not found");
-  }
-
-  await pool.query(
-    `
-      INSERT INTO portal.moderation_logs
-      (admin_user_id, action_type, target_type, target_id)
-      VALUES ($1, 'approve', 'user', $2)
-      `,
-    [adminId, user_id],
-  );
+  await updateStudentStatus(user_id, "approved", "Already approved or not found");
+  await logModerationAction(adminId, "approve", "user", user_id);
 
   res.json({ message: "Student approved successfully" });
 });
@@ -145,29 +149,8 @@ exports.rejectStudent = catchAsync(async (req, res) => {
   const { user_id } = req.params;
   const adminId = req.user.portal_user_id;
 
-  const result = await pool.query(
-    `
-      UPDATE portal.users
-      SET student_status = 'rejected'
-      WHERE user_id = $1
-      AND student_status != 'rejected'
-      RETURNING user_id
-      `,
-    [user_id],
-  );
-
-  if (result.rowCount === 0) {
-    throw createError(400, "Already rejected or not found");
-  }
-
-  await pool.query(
-    `
-      INSERT INTO portal.moderation_logs
-      (admin_user_id, action_type, target_type, target_id)
-      VALUES ($1, 'reject', 'user', $2)
-      `,
-    [adminId, user_id],
-  );
+  await updateStudentStatus(user_id, "rejected", "Already rejected or not found");
+  await logModerationAction(adminId, "reject", "user", user_id);
 
   res.json({ message: "Student rejected successfully" });
 });
@@ -227,9 +210,10 @@ exports.deleteDiscussion = catchAsync(async (req, res) => {
   GET ALL REPORTS
  ================================ */
 exports.getReports = catchAsync(async (req, res) => {
-  const page = parseInt(req.query.page) || 1;
-  const limit = parseInt(req.query.limit) || 10;
-  const offset = (page - 1) * limit;
+  const { page, limit, offset } = parsePagination(req.query, {
+    defaultLimit: 10,
+    maxLimit: 50,
+  });
 
   const [reportsResult, totalResult] = await Promise.all([
     pool.query(
@@ -251,12 +235,7 @@ exports.getReports = catchAsync(async (req, res) => {
   res.json({
     success: true,
     data: reportsResult.rows,
-    pagination: {
-      total,
-      page,
-      limit,
-      totalPages: Math.ceil(total / limit),
-    },
+    pagination: buildPaginationMeta({ total, page, limit }),
   });
 });
 
@@ -308,14 +287,7 @@ exports.suspendUser = catchAsync(async (req, res) => {
     throw createError(404, "User not found");
   }
 
-  await pool.query(
-    `
-      INSERT INTO portal.moderation_logs
-      (admin_user_id, action_type, target_type, target_id)
-      VALUES ($1, 'suspend', 'user', $2)
-      `,
-    [adminId, user_id],
-  );
+  await logModerationAction(adminId, "suspend", "user", user_id);
 
   res.json({ message: "User suspended successfully" });
 });
@@ -336,14 +308,7 @@ exports.reactivateUser = catchAsync(async (req, res) => {
     [user_id],
   );
 
-  await pool.query(
-    `
-      INSERT INTO portal.moderation_logs
-      (admin_user_id, action_type, target_type, target_id)
-      VALUES ($1, 'reactivate', 'user', $2)
-      `,
-    [adminId, user_id],
-  );
+  await logModerationAction(adminId, "reactivate", "user", user_id);
 
   res.json({ message: "User reactivated successfully" });
 });
@@ -382,9 +347,10 @@ exports.getAdminDashboard = catchAsync(async (req, res) => {
   Audit log viewer (legacy moderation logs)
  ================================ */
 exports.getModerationLogs = catchAsync(async (req, res) => {
-  const page = parseInt(req.query.page) || 1;
-  const limit = parseInt(req.query.limit) || 20;
-  const offset = (page - 1) * limit;
+  const { page, limit, offset } = parsePagination(req.query, {
+    defaultLimit: 20,
+    maxLimit: 100,
+  });
 
   const [logsResult, countResult] = await Promise.all([
     pool.query(
@@ -403,12 +369,7 @@ exports.getModerationLogs = catchAsync(async (req, res) => {
   res.json({
     success: true,
     data: logsResult.rows,
-    pagination: {
-      total,
-      page,
-      limit,
-      totalPages: Math.ceil(total / limit),
-    },
+    pagination: buildPaginationMeta({ total, page, limit }),
   });
 });
 
@@ -612,10 +573,7 @@ exports.hardDeleteContent = catchAsync(async (req, res) => {
     return res.status(400).json({ message: "Type and ID are required" });
   }
 
-  const client = await pool.connect();
-  try {
-    await client.query("BEGIN");
-
+  const resultMessage = await withTransaction(async (client) => {
     let tableName;
     let idColumn;
     let cloudinaryIdColumn;
@@ -691,17 +649,13 @@ exports.hardDeleteContent = catchAsync(async (req, res) => {
       permanent: true,
     });
 
-    await client.query("COMMIT");
-    res.json({ message: `${type} permanently deleted successfully` });
-  } catch (err) {
-    await client.query("ROLLBACK");
+    return `${type} permanently deleted successfully`;
+  }).catch((err) => {
     logger.error({ err }, "Hard delete content error");
-    res
-      .status(err.statusCode || 500)
-      .json({ message: err.message || "Failed to permanently delete content" });
-  } finally {
-    client.release();
-  }
+    throw err;
+  });
+
+  res.json({ message: resultMessage });
 });
 
 /* ===============================
@@ -719,10 +673,7 @@ exports.hardDeleteUser = catchAsync(async (req, res) => {
     });
   }
 
-  const client = await pool.connect();
-  try {
-    await client.query("BEGIN");
-
+  const message = await withTransaction(async (client) => {
     // 1. Get Auth User ID first
     const userRes = await client.query(
       `SELECT auth_user_id FROM portal.users WHERE user_id = $1`,
@@ -758,17 +709,13 @@ exports.hardDeleteUser = catchAsync(async (req, res) => {
       },
     );
 
-    await client.query("COMMIT");
-    res.json({ message: "User account and all data permanently deleted" });
-  } catch (err) {
-    await client.query("ROLLBACK");
+    return "User account and all data permanently deleted";
+  }).catch((err) => {
     logger.error({ err }, "Hard delete user error");
-    res
-      .status(err.statusCode || 500)
-      .json({ message: err.message || "Failed to permanently delete user" });
-  } finally {
-    client.release();
-  }
+    throw err;
+  });
+
+  res.json({ message });
 });
 
 /* ===============================
@@ -790,34 +737,10 @@ exports.examineReportContent = catchAsync(async (req, res) => {
   let content = null;
 
   try {
-    switch (report.target_type) {
-      case "discussion": {
-        const result = await pool.query(
-          `SELECT discussion_id, title, content, image_url, created_at FROM portal.discussions WHERE discussion_id = $1`,
-          [report.target_id],
-        );
-        content = result.rows[0];
-        break;
-      }
-      case "comment": {
-        const result = await pool.query(
-          `SELECT c.comment_id, c.content, c.created_at, d.title as discussion_title 
-                     FROM portal.discussion_comments c
-                     JOIN portal.discussions d ON c.discussion_id = d.discussion_id
-                     WHERE c.comment_id = $1`,
-          [report.target_id],
-        );
-        content = result.rows[0];
-        break;
-      }
-      case "resource": {
-        const result = await pool.query(
-          `SELECT resource_id, title, description as content, file_url as image_url, created_at FROM portal.resources WHERE resource_id = $1`,
-          [report.target_id],
-        );
-        content = result.rows[0];
-        break;
-      }
+    const config = getModerationTargetConfig(report.target_type);
+    if (config?.examineQuery) {
+      const result = await pool.query(config.examineQuery, [report.target_id]);
+      content = result.rows[0];
     }
   } catch (err) {
     logger.error({ err }, "Examine report content error");
@@ -843,10 +766,7 @@ exports.resolveReportWithAction = catchAsync(async (req, res) => {
     throw createError(400, "Invalid report action");
   }
 
-  const client = await pool.connect();
-  try {
-    await client.query("BEGIN");
-
+  const message = await withTransaction(async (client) => {
     // 1. Get report info
     const reportRes = await client.query(
       `SELECT * FROM portal.reports WHERE report_id = $1`,
@@ -861,39 +781,18 @@ exports.resolveReportWithAction = catchAsync(async (req, res) => {
 
     // 2. Perform Action on Targeted Content
     if (action === "soft_delete") {
-      let tableName, idColumn;
-      switch (report.target_type) {
-        case "discussion":
-          tableName = "portal.discussions";
-          idColumn = "discussion_id";
-          break;
-        case "comment":
-          tableName = "portal.discussion_comments";
-          idColumn = "comment_id";
-          break;
-        case "resource":
-          tableName = "portal.resources";
-          idColumn = "resource_id";
-          break;
-        case "group":
-          tableName = "portal.study_groups";
-          idColumn = "group_id";
-          break;
-        default:
-          throw createError(
-            400,
-            `Unsupported target type: ${report.target_type}`,
-          );
+      const config = getModerationTargetConfig(report.target_type);
+      if (!config) {
+        throw createError(400, `Unsupported target type: ${report.target_type}`);
       }
 
-      if (tableName) {
+      if (config.tableName) {
         const extraSet =
-          report.target_type === "discussion" ||
-          report.target_type === "comment"
+          config.softDeleteSetsDeletedFlag
             ? ", is_deleted = TRUE"
             : "";
         await client.query(
-          `UPDATE ${tableName} SET deleted_at = NOW()${extraSet} WHERE ${idColumn} = $1`,
+          `UPDATE ${config.tableName} SET deleted_at = NOW()${extraSet} WHERE ${config.idColumn} = $1`,
           [report.target_id],
         );
         await logAdminEvent(
@@ -904,48 +803,23 @@ exports.resolveReportWithAction = catchAsync(async (req, res) => {
         );
       }
     } else if (action === "hard_delete") {
-      // UNIFIED HARD DELETE LOGIC
-      let tableName, idColumn, cloudinaryIdColumn;
-      switch (report.target_type) {
-        case "discussion":
-          tableName = "portal.discussions";
-          idColumn = "discussion_id";
-          cloudinaryIdColumn = "image_public_id";
-          break;
-        case "comment":
-          tableName = "portal.discussion_comments";
-          idColumn = "comment_id";
-          break;
-        case "resource":
-          tableName = "portal.resources";
-          idColumn = "resource_id";
-          cloudinaryIdColumn = "cloudinary_public_id";
-          break;
-        case "group":
-          tableName = "portal.study_groups";
-          idColumn = "group_id";
-          cloudinaryIdColumn = "group_image_public_id";
-          break;
-        default:
-          throw createError(
-            400,
-            `Unsupported target type: ${report.target_type}`,
-          );
+      const config = getModerationTargetConfig(report.target_type);
+      if (!config) {
+        throw createError(400, `Unsupported target type: ${report.target_type}`);
       }
 
-      if (tableName) {
-        // Image Cleanup
-        if (cloudinaryIdColumn) {
+      if (config.tableName) {
+        if (config.cloudinaryIdColumn) {
           const imgRes = await client.query(
-            `SELECT ${cloudinaryIdColumn} ${report.target_type === "group" ? ", banner_image_public_id" : ""} FROM ${tableName} WHERE ${idColumn} = $1`,
+            `SELECT ${config.cloudinaryIdColumn} ${report.target_type === "group" ? ", banner_image_public_id" : ""} FROM ${config.tableName} WHERE ${config.idColumn} = $1`,
             [report.target_id],
           );
           if (imgRes.rowCount > 0) {
             const cloudinary = require("../config/cloudinary");
             const row = imgRes.rows[0];
-            if (row[cloudinaryIdColumn])
+            if (row[config.cloudinaryIdColumn])
               await cloudinary.uploader
-                .destroy(row[cloudinaryIdColumn])
+                .destroy(row[config.cloudinaryIdColumn])
                 .catch((e) =>
                   logger.error({ err: e }, "Cloudinary cleanup error"),
                 );
@@ -959,9 +833,12 @@ exports.resolveReportWithAction = catchAsync(async (req, res) => {
           }
         }
 
-        await client.query(`DELETE FROM ${tableName} WHERE ${idColumn} = $1`, [
+        await client.query(
+          `DELETE FROM ${config.tableName} WHERE ${config.idColumn} = $1`,
+          [
           report.target_id,
-        ]);
+          ],
+        );
         await logAdminEvent(
           req,
           AuditActions.ADMIN_HARD_DELETE_CONTENT,
@@ -986,17 +863,11 @@ exports.resolveReportWithAction = catchAsync(async (req, res) => {
       { action },
     );
 
-    await client.query("COMMIT");
-    res.json({
-      message: `Report ${status} successfully with action: ${action}`,
-    });
-  } catch (err) {
-    await client.query("ROLLBACK");
+    return `Report ${status} successfully with action: ${action}`;
+  }).catch((err) => {
     logger.error({ err }, "Resolve report error");
-    res
-      .status(err.statusCode || 500)
-      .json({ message: err.message || "Failed to resolve report" });
-  } finally {
-    client.release();
-  }
+    throw err;
+  });
+
+  res.json({ message });
 });

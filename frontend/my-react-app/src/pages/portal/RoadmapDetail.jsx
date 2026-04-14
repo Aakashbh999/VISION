@@ -29,7 +29,7 @@ const RoadmapDetail = () => {
   };
 
   return (
-    <div className="space-y-8 px-2 sm:px-6 lg:px-8 py-5 sm:py-8 lg:py-10">
+    <div className="space-y-8">
       {/* Back button and title */}
       <div>
         <Link

@@ -3,9 +3,11 @@ import { Menu, ChevronDown, Bell, User, LogOut } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import { useUnreadCount } from "../../hooks/useUnreadCount";
+import { useMarkAllRead } from "../../hooks/useMarkAllRead";
 import { useClickOutside } from "../../hooks/useClickOutside";
 import Logo from "../ui/Logo/Logo";
 import ThemeToggle from "./ThemeToggle";
+import NotificationsPopup from "../notifications/NotificationsPopup";
 
 const Navbar = ({ onMobileMenuToggle, variant, user }) => {
   const navigate = useNavigate();
@@ -13,8 +15,10 @@ const Navbar = ({ onMobileMenuToggle, variant, user }) => {
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
   const [resourcesDropdownOpen, setResourcesDropdownOpen] = useState(false);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+  const [notificationsOpen, setNotificationsOpen] = useState(false);
   const isLoggedIn = !!authUser;
   const { data: unreadCount = 0 } = useUnreadCount(isLoggedIn);
+  const markAllReadMut = useMarkAllRead();
 
   const profileRef = useRef(null);
   const resourcesRef = useRef(null);
@@ -61,6 +65,20 @@ const Navbar = ({ onMobileMenuToggle, variant, user }) => {
     { label: "Job Market", href: "/it-jobs" },
     { label: "Community", href: "/it-clubs" },
   ];
+
+  const handleNotificationsToggle = () => {
+    setNotificationsOpen((open) => {
+      const nextOpen = !open;
+      if (
+        nextOpen &&
+        unreadCount > 0 &&
+        !markAllReadMut.isPending
+      ) {
+        markAllReadMut.mutate();
+      }
+      return nextOpen;
+    });
+  };
 
   return (
     <header className="fixed top-0 left-0 right-0 h-16 bg-[var(--bg-main)]/90 backdrop-blur-sm border-b border-[var(--border-main)] z-50 flex items-center justify-between px-4 sm:px-6 lg:px-8 shadow-sm transition-colors duration-300">
@@ -111,17 +129,26 @@ const Navbar = ({ onMobileMenuToggle, variant, user }) => {
             </div>
 
             {/* Notification bell */}
-            <Link
-              to="/notifications"
-              className="relative p-2 rounded-full hover:bg-[var(--bg-active)] transition-colors"
-            >
-              <Bell className="w-5 h-5 text-[var(--text-main)]" />
-              {unreadCount > 0 && (
-                <span className="absolute top-1 right-1 w-4 h-4 bg-red-500 text-white text-xs flex items-center justify-center rounded-full">
-                  {unreadCount > 9 ? "9+" : unreadCount}
-                </span>
-              )}
-            </Link>
+            <div className="relative">
+              <button
+                type="button"
+                onClick={handleNotificationsToggle}
+                className="relative p-2 rounded-full hover:bg-[var(--bg-active)] transition-colors"
+                aria-label="Open notifications"
+                aria-expanded={notificationsOpen}
+              >
+                <Bell className="w-5 h-5 text-[var(--text-main)]" />
+                {unreadCount > 0 && (
+                  <span className="absolute top-1 right-1 w-4 h-4 bg-red-500 text-white text-xs flex items-center justify-center rounded-full">
+                    {unreadCount > 9 ? "9+" : unreadCount}
+                  </span>
+                )}
+              </button>
+              <NotificationsPopup
+                isOpen={notificationsOpen}
+                onClose={() => setNotificationsOpen(false)}
+              />
+            </div>
 
             {/* User avatar dropdown */}
             <div className="relative" ref={profileRef}>
