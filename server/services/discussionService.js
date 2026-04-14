@@ -12,6 +12,15 @@ const {
   buildSortClause,
   getSearchParamIndex,
 } = require("./discussionQueryService");
+const {
+  handleDiscussionVote,
+  handleCommentVote,
+} = require("./discussionVotingService");
+const {
+  addComment: addCommentEntry,
+  getComments: getDiscussionComments,
+  deleteComment: removeCommentEntry,
+} = require("./discussionCommentService");
 
 /**
  * Get all discussions with filters, sorting, and pagination
@@ -406,99 +415,7 @@ exports.hardDeleteDiscussion = async (discussionId, userId) => {
  * Handle voting (Upvote/Downvote) on a discussion
  */
 exports.handleVote = async (discussionId, userId, voteType) => {
-  const discId = parseInt(discussionId);
-  const uId = parseInt(userId);
-
-  if (isNaN(discId) || isNaN(uId)) {
-    throw new Error(
-      `Invalid IDs: discussionId=${discussionId}, userId=${userId}`,
-    );
-  }
-
-  return withTransaction(async (client) => {
-    const authorRes = await client.query(
-      "SELECT user_id FROM portal.discussions WHERE discussion_id = $1",
-      [discId],
-    );
-    const authorId = authorRes.rows[0]?.user_id;
-
-    // 1. Get existing vote
-    const existingRes = await client.query(
-      `SELECT vote_type FROM portal.discussion_likes WHERE discussion_id = $1 AND user_id = $2`,
-      [discId, uId],
-    );
-
-    const oldVoteType =
-      existingRes.rows.length > 0 ? existingRes.rows[0].vote_type : 0;
-
-    // YouTube-style toggle: clicking same button removes the vote
-    const newVoteType = oldVoteType === voteType ? 0 : voteType;
-
-    // 2. Update discussion_likes table
-    if (oldVoteType === 0 && newVoteType !== 0) {
-      // Insert new vote
-      await client.query(
-        `INSERT INTO portal.discussion_likes (discussion_id, user_id, vote_type) 
-         VALUES ($1, $2, $3)
-         ON CONFLICT (discussion_id, user_id) 
-         DO UPDATE SET vote_type = EXCLUDED.vote_type`,
-        [discId, uId, newVoteType],
-      );
-    } else if (newVoteType === 0) {
-      // Remove vote entirely
-      await client.query(
-        `DELETE FROM portal.discussion_likes WHERE discussion_id = $1 AND user_id = $2`,
-        [discId, uId],
-      );
-    } else {
-      // Update existing vote
-      await client.query(
-        `UPDATE portal.discussion_likes SET vote_type = $1 WHERE discussion_id = $2 AND user_id = $3`,
-        [newVoteType, discId, uId],
-      );
-    }
-
-    // 3. Count only upvotes for display (YouTube-style)
-    await client.query(
-      `UPDATE portal.discussions 
-       SET like_count = (
-         SELECT COUNT(*) 
-         FROM portal.discussion_likes 
-         WHERE discussion_id = $1 AND vote_type = 1
-       )
-       WHERE discussion_id = $1`,
-      [discId],
-    );
-    const diff = newVoteType - oldVoteType;
-
-    // 4. XP Logic
-    if (authorId && authorId !== uId) {
-      // Grant +5 XP for NEW upvote
-      if (newVoteType === 1 && oldVoteType !== 1) {
-        await XPService.updateUserXP(
-          authorId,
-          5,
-          "Received a Discussion Upvote",
-          client,
-        );
-      }
-      // Deduct 5 XP if removing upvote (toggle off or switch to downvote)
-      else if (oldVoteType === 1 && newVoteType !== 1) {
-        await XPService.updateUserXP(
-          authorId,
-          -5,
-          "Discussion Upvote Removed",
-          client,
-        );
-      }
-    }
-
-    return {
-      voteType: newVoteType,
-      scoreDiff: diff,
-      authorId,
-    };
-  });
+  return handleDiscussionVote(discussionId, userId, voteType);
 };
 
 /**
@@ -512,20 +429,7 @@ exports.toggleLike = async (discussionId, userId) => {
  * Add a comment to a discussion
  */
 exports.addComment = async (discussionId, userId, content, parentId = null) => {
-  return withTransaction(async (client) => {
-    const result = await client.query(
-      `INSERT INTO portal.discussion_comments (discussion_id, user_id, content, parent_id)
-       VALUES ($1, $2, $3, $4)
-       RETURNING *`,
-      [discussionId, userId, content, parentId],
-    );
-
-    await client.query(
-      `UPDATE portal.discussions SET comment_count = comment_count + 1 WHERE discussion_id = $1`,
-      [discussionId],
-    );
-    return result.rows[0];
-  });
+  return addCommentEntry(discussionId, userId, content, parentId);
 };
 
 /**
@@ -533,97 +437,7 @@ exports.addComment = async (discussionId, userId, content, parentId = null) => {
  * Grants +2 XP for upvotes, deducts 2 XP if switching from UP to DOWN
  */
 exports.handleCommentVote = async (commentId, userId, voteType) => {
-  const commId = parseInt(commentId);
-  const uId = parseInt(userId);
-
-  if (isNaN(commId) || isNaN(uId)) {
-    throw new Error(`Invalid IDs: commentId=${commentId}, userId=${userId}`);
-  }
-
-  return withTransaction(async (client) => {
-    const authorRes = await client.query(
-      "SELECT user_id FROM portal.discussion_comments WHERE comment_id = $1",
-      [commId],
-    );
-    const authorId = authorRes.rows[0]?.user_id;
-
-    if (authorId && authorId === uId) {
-      throw new Error("Cannot vote on your own comment.");
-    }
-
-    // 1. Get existing vote
-    const existingRes = await client.query(
-      `SELECT vote_type FROM portal.comment_likes WHERE comment_id = $1 AND user_id = $2`,
-      [commId, uId],
-    );
-
-    const oldVoteType =
-      existingRes.rows.length > 0 ? existingRes.rows[0].vote_type : 0;
-
-    // YouTube-style toggle: clicking same button removes the vote
-    const newVoteType = oldVoteType === voteType ? 0 : voteType;
-
-    // 2. Update comment_likes table
-    if (oldVoteType === 0 && newVoteType !== 0) {
-      // Insert new vote
-      await client.query(
-        `INSERT INTO portal.comment_likes (comment_id, user_id, vote_type) VALUES ($1, $2, $3)`,
-        [commId, uId, newVoteType],
-      );
-    } else if (newVoteType === 0) {
-      // Remove vote entirely
-      await client.query(
-        `DELETE FROM portal.comment_likes WHERE comment_id = $1 AND user_id = $2`,
-        [commId, uId],
-      );
-    } else {
-      // Update existing vote
-      await client.query(
-        `UPDATE portal.comment_likes SET vote_type = $1 WHERE comment_id = $2 AND user_id = $3`,
-        [newVoteType, commId, uId],
-      );
-    }
-
-    // 3. Count only upvotes for display (YouTube-style)
-    await client.query(
-      `UPDATE portal.discussion_comments 
-       SET likes_count = (
-         SELECT COUNT(*) 
-         FROM portal.comment_likes 
-         WHERE comment_id = $1 AND vote_type = 1
-       )
-       WHERE comment_id = $1`,
-      [commId],
-    );
-    const diff = newVoteType - oldVoteType;
-
-    if (authorId && authorId !== uId) {
-      // Grant +2 XP for NEW upvote
-      if (newVoteType === 1 && oldVoteType !== 1) {
-        await XPService.updateUserXP(
-          authorId,
-          2,
-          "Comment received an Upvote",
-          client,
-        );
-      }
-      // Deduct 2 XP if removing upvote (toggle off or switch to downvote)
-      else if (oldVoteType === 1 && newVoteType !== 1) {
-        await XPService.updateUserXP(
-          authorId,
-          -2,
-          "Comment Upvote Removed",
-          client,
-        );
-      }
-    }
-
-    return {
-      voteType: newVoteType,
-      scoreDiff: diff,
-      authorId,
-    };
-  });
+  return handleCommentVote(commentId, userId, voteType);
 };
 
 /**
@@ -634,78 +448,14 @@ exports.getComments = async (
   currentUserId = null,
   sort = "newest",
 ) => {
-  const dId = parseInt(discussionId);
-  const params = [dId];
-  let userVoteClause = "0";
-
-  if (currentUserId) {
-    userVoteClause = `COALESCE((SELECT vote_type FROM portal.comment_likes cl WHERE cl.comment_id = c.comment_id AND cl.user_id = $2), 0)`;
-    params.push(parseInt(currentUserId));
-  }
-
-  const orderBy =
-    sort === "top"
-      ? "c.likes_count DESC, c.created_at DESC"
-      : "c.created_at DESC";
-
-  const result = await pool.query(
-    `SELECT 
-      c.comment_id,
-      c.content,
-      c.created_at,
-      c.parent_id,
-      c.likes_count,
-      ${userVoteClause} AS user_vote,
-      u.user_id,
-      u.full_name,
-      u.profile_image
-     FROM portal.discussion_comments c
-     JOIN portal.users u ON u.user_id = c.user_id
-     WHERE c.discussion_id = $1 AND c.deleted_at IS NULL AND c.is_deleted = FALSE AND u.status = 'active'
-     ORDER BY ${orderBy}`,
-    params,
-  );
-  return result.rows;
+  return getDiscussionComments(discussionId, currentUserId, sort);
 };
 
 /**
  * Delete a comment (Soft or Hard)
  */
 exports.deleteComment = async (commentId, userId, isAdmin = false) => {
-  const checkResult = await pool.query(
-    `SELECT c.user_id, c.discussion_id FROM portal.discussion_comments c WHERE c.comment_id = $1`,
-    [commentId],
-  );
-
-  if (checkResult.rows.length === 0) {
-    throw new Error("Comment not found");
-  }
-
-  const comment = checkResult.rows[0];
-
-  if (isAdmin) {
-    // Admin performs HARD DELETE
-    await pool.query(
-      `DELETE FROM portal.discussion_comments WHERE comment_id = $1`,
-      [commentId],
-    );
-  } else if (Number(comment.user_id) === Number(userId)) {
-    // Owner performs SOFT DELETE
-    await pool.query(
-      `UPDATE portal.discussion_comments SET deleted_at = NOW() WHERE comment_id = $1`,
-      [commentId],
-    );
-  } else {
-    throw new Error("Not authorized to delete this comment");
-  }
-
-  // Update comment count
-  await pool.query(
-    `UPDATE portal.discussions SET comment_count = GREATEST(0, comment_count - 1) WHERE discussion_id = $1`,
-    [comment.discussion_id],
-  );
-
-  return true;
+  return removeCommentEntry(commentId, userId, isAdmin);
 };
 
 /**

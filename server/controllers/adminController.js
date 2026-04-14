@@ -13,6 +13,7 @@ const {
   buildPaginationMeta,
 } = require("../utils/pagination");
 const { withTransaction } = require("../utils/withTransaction");
+const { getModerationTargetConfig } = require("../utils/adminModerationTargets");
 
 const logModerationAction = (adminId, actionType, targetType, targetId) =>
   pool.query(
@@ -736,34 +737,10 @@ exports.examineReportContent = catchAsync(async (req, res) => {
   let content = null;
 
   try {
-    switch (report.target_type) {
-      case "discussion": {
-        const result = await pool.query(
-          `SELECT discussion_id, title, content, image_url, created_at FROM portal.discussions WHERE discussion_id = $1`,
-          [report.target_id],
-        );
-        content = result.rows[0];
-        break;
-      }
-      case "comment": {
-        const result = await pool.query(
-          `SELECT c.comment_id, c.content, c.created_at, d.title as discussion_title 
-                     FROM portal.discussion_comments c
-                     JOIN portal.discussions d ON c.discussion_id = d.discussion_id
-                     WHERE c.comment_id = $1`,
-          [report.target_id],
-        );
-        content = result.rows[0];
-        break;
-      }
-      case "resource": {
-        const result = await pool.query(
-          `SELECT resource_id, title, description as content, file_url as image_url, created_at FROM portal.resources WHERE resource_id = $1`,
-          [report.target_id],
-        );
-        content = result.rows[0];
-        break;
-      }
+    const config = getModerationTargetConfig(report.target_type);
+    if (config?.examineQuery) {
+      const result = await pool.query(config.examineQuery, [report.target_id]);
+      content = result.rows[0];
     }
   } catch (err) {
     logger.error({ err }, "Examine report content error");
@@ -804,39 +781,18 @@ exports.resolveReportWithAction = catchAsync(async (req, res) => {
 
     // 2. Perform Action on Targeted Content
     if (action === "soft_delete") {
-      let tableName, idColumn;
-      switch (report.target_type) {
-        case "discussion":
-          tableName = "portal.discussions";
-          idColumn = "discussion_id";
-          break;
-        case "comment":
-          tableName = "portal.discussion_comments";
-          idColumn = "comment_id";
-          break;
-        case "resource":
-          tableName = "portal.resources";
-          idColumn = "resource_id";
-          break;
-        case "group":
-          tableName = "portal.study_groups";
-          idColumn = "group_id";
-          break;
-        default:
-          throw createError(
-            400,
-            `Unsupported target type: ${report.target_type}`,
-          );
+      const config = getModerationTargetConfig(report.target_type);
+      if (!config) {
+        throw createError(400, `Unsupported target type: ${report.target_type}`);
       }
 
-      if (tableName) {
+      if (config.tableName) {
         const extraSet =
-          report.target_type === "discussion" ||
-          report.target_type === "comment"
+          config.softDeleteSetsDeletedFlag
             ? ", is_deleted = TRUE"
             : "";
         await client.query(
-          `UPDATE ${tableName} SET deleted_at = NOW()${extraSet} WHERE ${idColumn} = $1`,
+          `UPDATE ${config.tableName} SET deleted_at = NOW()${extraSet} WHERE ${config.idColumn} = $1`,
           [report.target_id],
         );
         await logAdminEvent(
@@ -847,48 +803,23 @@ exports.resolveReportWithAction = catchAsync(async (req, res) => {
         );
       }
     } else if (action === "hard_delete") {
-      // UNIFIED HARD DELETE LOGIC
-      let tableName, idColumn, cloudinaryIdColumn;
-      switch (report.target_type) {
-        case "discussion":
-          tableName = "portal.discussions";
-          idColumn = "discussion_id";
-          cloudinaryIdColumn = "image_public_id";
-          break;
-        case "comment":
-          tableName = "portal.discussion_comments";
-          idColumn = "comment_id";
-          break;
-        case "resource":
-          tableName = "portal.resources";
-          idColumn = "resource_id";
-          cloudinaryIdColumn = "cloudinary_public_id";
-          break;
-        case "group":
-          tableName = "portal.study_groups";
-          idColumn = "group_id";
-          cloudinaryIdColumn = "group_image_public_id";
-          break;
-        default:
-          throw createError(
-            400,
-            `Unsupported target type: ${report.target_type}`,
-          );
+      const config = getModerationTargetConfig(report.target_type);
+      if (!config) {
+        throw createError(400, `Unsupported target type: ${report.target_type}`);
       }
 
-      if (tableName) {
-        // Image Cleanup
-        if (cloudinaryIdColumn) {
+      if (config.tableName) {
+        if (config.cloudinaryIdColumn) {
           const imgRes = await client.query(
-            `SELECT ${cloudinaryIdColumn} ${report.target_type === "group" ? ", banner_image_public_id" : ""} FROM ${tableName} WHERE ${idColumn} = $1`,
+            `SELECT ${config.cloudinaryIdColumn} ${report.target_type === "group" ? ", banner_image_public_id" : ""} FROM ${config.tableName} WHERE ${config.idColumn} = $1`,
             [report.target_id],
           );
           if (imgRes.rowCount > 0) {
             const cloudinary = require("../config/cloudinary");
             const row = imgRes.rows[0];
-            if (row[cloudinaryIdColumn])
+            if (row[config.cloudinaryIdColumn])
               await cloudinary.uploader
-                .destroy(row[cloudinaryIdColumn])
+                .destroy(row[config.cloudinaryIdColumn])
                 .catch((e) =>
                   logger.error({ err: e }, "Cloudinary cleanup error"),
                 );
@@ -902,9 +833,12 @@ exports.resolveReportWithAction = catchAsync(async (req, res) => {
           }
         }
 
-        await client.query(`DELETE FROM ${tableName} WHERE ${idColumn} = $1`, [
+        await client.query(
+          `DELETE FROM ${config.tableName} WHERE ${config.idColumn} = $1`,
+          [
           report.target_id,
-        ]);
+          ],
+        );
         await logAdminEvent(
           req,
           AuditActions.ADMIN_HARD_DELETE_CONTENT,
