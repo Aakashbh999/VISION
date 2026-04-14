@@ -587,12 +587,13 @@ exports.refreshToken = catchAsync(async (req, res) => {
       role: tokens.role,
     });
   } catch (err) {
-    if (err.message.includes("reuse detected")) {
+    const errorMessage = err?.message || "";
+    if (errorMessage.includes("reuse detected")) {
       throw createError(
         401,
         "Security alert: Token reuse detected. Please log in again.",
       );
-    } else if (err.message.includes("expired")) {
+    } else if (errorMessage.includes("expired")) {
       throw createError(401, "Refresh token expired. Please log in again.");
     } else {
       throw createError(401, "Invalid refresh token");

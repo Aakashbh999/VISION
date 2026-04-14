@@ -3,6 +3,11 @@ const { notify, feed } = require("../utils/activityService");
 const { successResponse, errorResponse } = require("../utils/response");
 const catchAsync = require("../utils/catchAsync");
 const logger = require("../utils/logger");
+const {
+  parsePagination,
+  buildPaginationMeta,
+} = require("../utils/pagination");
+const { withTransaction } = require("../utils/withTransaction");
 
 /**
  * Find an existing tag or create a new 'custom' type tag.
@@ -286,13 +291,12 @@ exports.getResources = catchAsync(async (req, res) => {
     program_tag,
     hashtags,
     sort,
-    page = 1,
-    limit = 20,
   } = req.query;
 
-  const pageNum = Math.max(1, parseInt(page));
-  const limitNum = Math.min(50, Math.max(1, parseInt(limit)));
-  const offset = (pageNum - 1) * limitNum;
+  const { page: pageNum, limit: limitNum, offset } = parsePagination(req.query, {
+    defaultLimit: 20,
+    maxLimit: 50,
+  });
 
   const params = [];
   const conditions = [
@@ -417,10 +421,7 @@ exports.getResources = catchAsync(async (req, res) => {
   return res.json({
     data: result.rows,
     pagination: {
-      total,
-      page: pageNum,
-      limit: limitNum,
-      totalPages: Math.ceil(total / limitNum),
+      ...buildPaginationMeta({ total, page: pageNum, limit: limitNum }),
     },
   });
 });
@@ -467,10 +468,10 @@ exports.getMyResources = catchAsync(async (req, res) => {
  * GET /api/admin/resources/pending
  */
 exports.getPendingResources = catchAsync(async (req, res) => {
-  const { page = 1, limit = 10 } = req.query;
-  const pageNum = Math.max(1, parseInt(page));
-  const limitNum = Math.min(50, Math.max(1, parseInt(limit)));
-  const offset = (pageNum - 1) * limitNum;
+  const { page: pageNum, limit: limitNum, offset } = parsePagination(req.query, {
+    defaultLimit: 10,
+    maxLimit: 50,
+  });
 
   const [dataResult, countResult] = await Promise.all([
     pool.query(
@@ -501,10 +502,7 @@ exports.getPendingResources = catchAsync(async (req, res) => {
   return res.json({
     resources: dataResult.rows,
     pagination: {
-      page: pageNum,
-      limit: limitNum,
-      total,
-      totalPages: Math.ceil(total / limitNum),
+      ...buildPaginationMeta({ total, page: pageNum, limit: limitNum }),
     },
     totalPages: Math.ceil(total / limitNum), // For backward compatibility
   });
@@ -518,12 +516,9 @@ exports.getPendingResources = catchAsync(async (req, res) => {
  * PATCH /api/admin/resources/:id/approve
  */
 exports.approveResource = catchAsync(async (req, res) => {
-  const client = await pool.connect();
-  try {
-    const { id } = req.params;
-    const modId = req.user.portal_user_id;
-
-    await client.query("BEGIN");
+  const { id } = req.params;
+  const modId = req.user.portal_user_id;
+  const { title, uploaderId } = await withTransaction(async (client) => {
 
     // Update resource status
     const resourceRes = await client.query(
@@ -535,8 +530,9 @@ exports.approveResource = catchAsync(async (req, res) => {
     );
 
     if (resourceRes.rowCount === 0) {
-      await client.query("ROLLBACK");
-      return errorResponse(res, "Resource not found or already reviewed", 404);
+      const error = new Error("Resource not found or already reviewed");
+      error.statusCode = 404;
+      throw error;
     }
 
     const { title, created_by: uploaderId } = resourceRes.rows[0];
@@ -556,48 +552,42 @@ exports.approveResource = catchAsync(async (req, res) => {
        VALUES ($1, 'approve_resource', 'resource', $2)`,
       [modId, id],
     );
+    return { title, uploaderId };
+  });
 
-    await client.query("COMMIT");
-
-    // Send notification (outside transaction – non-critical)
-    try {
-      await notify({
-        userId: uploaderId,
-        actorId: modId,
-        type: "resource_approved",
-        title: "Resource Approved",
-        message: `Your resource "${title}" was approved. You earned 10 reputation points!`,
-        relatedType: "resource",
-        relatedId: parseInt(id),
-      });
-    } catch (notifErr) {
-      logger.warn({ err: notifErr }, "Resource approval notification failed");
-    }
-
-    try {
-      await feed({
-        actorId: uploaderId,
-        actionType: "resource_uploaded",
-        referenceType: "resource",
-        referenceId: parseInt(id, 10),
-        metadata: {
-          title,
-          approved_by: modId,
-        },
-      });
-    } catch (feedErr) {
-      logger.warn({ err: feedErr }, "Resource feed event failed");
-    }
-
-    return res.json({
-      message: "Resource approved and uploader awarded 10 reputation points",
+  // Send notification (outside transaction – non-critical)
+  try {
+    await notify({
+      userId: uploaderId,
+      actorId: modId,
+      type: "resource_approved",
+      title: "Resource Approved",
+      message: `Your resource "${title}" was approved. You earned 10 reputation points!`,
+      relatedType: "resource",
+      relatedId: parseInt(id),
     });
-  } catch (err) {
-    await client.query("ROLLBACK");
-    throw err;
-  } finally {
-    client.release();
+  } catch (notifErr) {
+    logger.warn({ err: notifErr }, "Resource approval notification failed");
   }
+
+  try {
+    await feed({
+      actorId: uploaderId,
+      actionType: "resource_uploaded",
+      referenceType: "resource",
+      referenceId: parseInt(id, 10),
+      metadata: {
+        title,
+        approved_by: modId,
+      },
+    });
+  } catch (feedErr) {
+    logger.warn({ err: feedErr }, "Resource feed event failed");
+  }
+
+  return res.json({
+    message: "Resource approved and uploader awarded 10 reputation points",
+  });
 });
 
 /* ===============================

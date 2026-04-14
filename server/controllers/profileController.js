@@ -24,17 +24,10 @@ const {
 } = require("../utils/constants");
 const catchAsync = require("../utils/catchAsync");
 const logger = require("../utils/logger");
-
-const parsePagination = (req) => {
-  let page = parseInt(req.query.page, 10);
-  let limit = parseInt(req.query.limit, 10);
-
-  page = page > 0 ? page : 1;
-  limit = limit > 0 && limit <= 50 ? limit : 12;
-
-  const offset = (page - 1) * limit;
-  return { page, limit, offset };
-};
+const {
+  parsePagination,
+  buildPaginationMeta,
+} = require("../utils/pagination");
 
 function normalizeAcademicProfile(profile) {
   if (!profile) return profile;
@@ -605,7 +598,10 @@ exports.unfollowUser = catchAsync(async (req, res) => {
  */
 exports.getFollowers = catchAsync(async (req, res) => {
   const viewerId = req.user?.portal_user_id || null;
-  const { page, limit, offset } = parsePagination(req);
+  const { page, limit, offset } = parsePagination(req.query, {
+    defaultLimit: 12,
+    maxLimit: 50,
+  });
   const { userId } = req.params;
   const targetUserId = userId === "me" ? viewerId : parseInt(userId, 10);
 
@@ -648,12 +644,7 @@ exports.getFollowers = catchAsync(async (req, res) => {
 
   return successResponse(res, {
     data: dataResult.rows,
-    pagination: {
-      page,
-      limit,
-      total,
-      totalPages: Math.ceil(total / limit),
-    },
+    pagination: buildPaginationMeta({ total, page, limit }),
   });
 });
 
@@ -662,7 +653,10 @@ exports.getFollowers = catchAsync(async (req, res) => {
  */
 exports.getFollowing = catchAsync(async (req, res) => {
   const viewerId = req.user?.portal_user_id || null;
-  const { page, limit, offset } = parsePagination(req);
+  const { page, limit, offset } = parsePagination(req.query, {
+    defaultLimit: 12,
+    maxLimit: 50,
+  });
   const { userId } = req.params;
   const targetUserId = userId === "me" ? viewerId : parseInt(userId, 10);
 
@@ -702,11 +696,6 @@ exports.getFollowing = catchAsync(async (req, res) => {
 
   return successResponse(res, {
     data: dataResult.rows,
-    pagination: {
-      page,
-      limit,
-      total,
-      totalPages: Math.ceil(total / limit),
-    },
+    pagination: buildPaginationMeta({ total, page, limit }),
   });
 });

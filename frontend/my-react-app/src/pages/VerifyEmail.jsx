@@ -3,6 +3,8 @@ import { useNavigate } from "react-router-dom";
 import { Mail, RefreshCw, CheckCircle, AlertCircle } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import api from "../services/api";
+import { getUserLandingPath } from "../utils/authRedirect";
+import { useUserStatusPolling } from "../hooks/useUserStatusPolling";
 
 const VerifyEmail = () => {
   const { user, refetchUser } = useAuth();
@@ -13,39 +15,13 @@ const VerifyEmail = () => {
 
   useEffect(() => {
     if (!user) return;
-
-    if (user.role === "admin") {
-      navigate("/admin/dashboard", { replace: true });
-      return;
-    }
-
-    if (user.email_status === "verified") {
-      if (user.student_status === "approved") {
-        navigate("/dashboard", { replace: true });
-      } else {
-        navigate("/pending-approval", { replace: true });
-      }
+    const nextPath = getUserLandingPath(user);
+    if (nextPath && nextPath !== "/verify-email") {
+      navigate(nextPath, { replace: true });
     }
   }, [user, navigate]);
 
-  useEffect(() => {
-    refetchUser();
-
-    const intervalId = window.setInterval(() => {
-      refetchUser();
-    }, 15000);
-
-    const handleFocus = () => {
-      refetchUser();
-    };
-
-    window.addEventListener("focus", handleFocus);
-
-    return () => {
-      window.clearInterval(intervalId);
-      window.removeEventListener("focus", handleFocus);
-    };
-  }, [refetchUser]);
+  useUserStatusPolling(refetchUser, true);
 
   const handleResend = async () => {
     setLoading(true);

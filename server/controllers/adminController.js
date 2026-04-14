@@ -8,6 +8,34 @@ const {
 const catchAsync = require("../utils/catchAsync");
 const createError = require("http-errors");
 const logger = require("../utils/logger");
+const {
+  parsePagination,
+  buildPaginationMeta,
+} = require("../utils/pagination");
+const { withTransaction } = require("../utils/withTransaction");
+
+const logModerationAction = (adminId, actionType, targetType, targetId) =>
+  pool.query(
+    `INSERT INTO portal.moderation_logs
+      (admin_user_id, action_type, target_type, target_id)
+      VALUES ($1, $2, $3, $4)`,
+    [adminId, actionType, targetType, targetId],
+  );
+
+const updateStudentStatus = async (userId, nextStatus, errorMessage) => {
+  const result = await pool.query(
+    `UPDATE portal.users
+      SET student_status = $2
+      WHERE user_id = $1
+      AND student_status != $2
+      RETURNING user_id`,
+    [userId, nextStatus],
+  );
+
+  if (result.rowCount === 0) {
+    throw createError(400, errorMessage);
+  }
+};
 
 /* ===============================
    GET Pending Students
@@ -47,9 +75,10 @@ exports.getPendingStudents = catchAsync(async (req, res) => {
  ================================ */
 exports.getStudentsByStatus = catchAsync(async (req, res) => {
   const status = req.query.status;
-  const page = parseInt(req.query.page) || 1;
-  const limit = parseInt(req.query.limit) || 10;
-  const offset = (page - 1) * limit;
+  const { page, limit, offset } = parsePagination(req.query, {
+    defaultLimit: 10,
+    maxLimit: 50,
+  });
 
   let whereClause = "";
   const values = [];
@@ -95,12 +124,7 @@ exports.getStudentsByStatus = catchAsync(async (req, res) => {
   res.json({
     success: true,
     data: result.rows,
-    pagination: {
-      total,
-      page,
-      limit,
-      totalPages: Math.ceil(total / limit),
-    },
+    pagination: buildPaginationMeta({ total, page, limit }),
   });
 });
 
@@ -111,29 +135,8 @@ exports.approveStudent = catchAsync(async (req, res) => {
   const { user_id } = req.params;
   const adminId = req.user.portal_user_id;
 
-  const result = await pool.query(
-    `
-      UPDATE portal.users
-      SET student_status = 'approved'
-      WHERE user_id = $1
-      AND student_status != 'approved'
-      RETURNING user_id
-      `,
-    [user_id],
-  );
-
-  if (result.rowCount === 0) {
-    throw createError(400, "Already approved or not found");
-  }
-
-  await pool.query(
-    `
-      INSERT INTO portal.moderation_logs
-      (admin_user_id, action_type, target_type, target_id)
-      VALUES ($1, 'approve', 'user', $2)
-      `,
-    [adminId, user_id],
-  );
+  await updateStudentStatus(user_id, "approved", "Already approved or not found");
+  await logModerationAction(adminId, "approve", "user", user_id);
 
   res.json({ message: "Student approved successfully" });
 });
@@ -145,29 +148,8 @@ exports.rejectStudent = catchAsync(async (req, res) => {
   const { user_id } = req.params;
   const adminId = req.user.portal_user_id;
 
-  const result = await pool.query(
-    `
-      UPDATE portal.users
-      SET student_status = 'rejected'
-      WHERE user_id = $1
-      AND student_status != 'rejected'
-      RETURNING user_id
-      `,
-    [user_id],
-  );
-
-  if (result.rowCount === 0) {
-    throw createError(400, "Already rejected or not found");
-  }
-
-  await pool.query(
-    `
-      INSERT INTO portal.moderation_logs
-      (admin_user_id, action_type, target_type, target_id)
-      VALUES ($1, 'reject', 'user', $2)
-      `,
-    [adminId, user_id],
-  );
+  await updateStudentStatus(user_id, "rejected", "Already rejected or not found");
+  await logModerationAction(adminId, "reject", "user", user_id);
 
   res.json({ message: "Student rejected successfully" });
 });
@@ -227,9 +209,10 @@ exports.deleteDiscussion = catchAsync(async (req, res) => {
   GET ALL REPORTS
  ================================ */
 exports.getReports = catchAsync(async (req, res) => {
-  const page = parseInt(req.query.page) || 1;
-  const limit = parseInt(req.query.limit) || 10;
-  const offset = (page - 1) * limit;
+  const { page, limit, offset } = parsePagination(req.query, {
+    defaultLimit: 10,
+    maxLimit: 50,
+  });
 
   const [reportsResult, totalResult] = await Promise.all([
     pool.query(
@@ -251,12 +234,7 @@ exports.getReports = catchAsync(async (req, res) => {
   res.json({
     success: true,
     data: reportsResult.rows,
-    pagination: {
-      total,
-      page,
-      limit,
-      totalPages: Math.ceil(total / limit),
-    },
+    pagination: buildPaginationMeta({ total, page, limit }),
   });
 });
 
@@ -308,14 +286,7 @@ exports.suspendUser = catchAsync(async (req, res) => {
     throw createError(404, "User not found");
   }
 
-  await pool.query(
-    `
-      INSERT INTO portal.moderation_logs
-      (admin_user_id, action_type, target_type, target_id)
-      VALUES ($1, 'suspend', 'user', $2)
-      `,
-    [adminId, user_id],
-  );
+  await logModerationAction(adminId, "suspend", "user", user_id);
 
   res.json({ message: "User suspended successfully" });
 });
@@ -336,14 +307,7 @@ exports.reactivateUser = catchAsync(async (req, res) => {
     [user_id],
   );
 
-  await pool.query(
-    `
-      INSERT INTO portal.moderation_logs
-      (admin_user_id, action_type, target_type, target_id)
-      VALUES ($1, 'reactivate', 'user', $2)
-      `,
-    [adminId, user_id],
-  );
+  await logModerationAction(adminId, "reactivate", "user", user_id);
 
   res.json({ message: "User reactivated successfully" });
 });
@@ -382,9 +346,10 @@ exports.getAdminDashboard = catchAsync(async (req, res) => {
   Audit log viewer (legacy moderation logs)
  ================================ */
 exports.getModerationLogs = catchAsync(async (req, res) => {
-  const page = parseInt(req.query.page) || 1;
-  const limit = parseInt(req.query.limit) || 20;
-  const offset = (page - 1) * limit;
+  const { page, limit, offset } = parsePagination(req.query, {
+    defaultLimit: 20,
+    maxLimit: 100,
+  });
 
   const [logsResult, countResult] = await Promise.all([
     pool.query(
@@ -403,12 +368,7 @@ exports.getModerationLogs = catchAsync(async (req, res) => {
   res.json({
     success: true,
     data: logsResult.rows,
-    pagination: {
-      total,
-      page,
-      limit,
-      totalPages: Math.ceil(total / limit),
-    },
+    pagination: buildPaginationMeta({ total, page, limit }),
   });
 });
 
@@ -612,10 +572,7 @@ exports.hardDeleteContent = catchAsync(async (req, res) => {
     return res.status(400).json({ message: "Type and ID are required" });
   }
 
-  const client = await pool.connect();
-  try {
-    await client.query("BEGIN");
-
+  const resultMessage = await withTransaction(async (client) => {
     let tableName;
     let idColumn;
     let cloudinaryIdColumn;
@@ -691,17 +648,13 @@ exports.hardDeleteContent = catchAsync(async (req, res) => {
       permanent: true,
     });
 
-    await client.query("COMMIT");
-    res.json({ message: `${type} permanently deleted successfully` });
-  } catch (err) {
-    await client.query("ROLLBACK");
+    return `${type} permanently deleted successfully`;
+  }).catch((err) => {
     logger.error({ err }, "Hard delete content error");
-    res
-      .status(err.statusCode || 500)
-      .json({ message: err.message || "Failed to permanently delete content" });
-  } finally {
-    client.release();
-  }
+    throw err;
+  });
+
+  res.json({ message: resultMessage });
 });
 
 /* ===============================
@@ -719,10 +672,7 @@ exports.hardDeleteUser = catchAsync(async (req, res) => {
     });
   }
 
-  const client = await pool.connect();
-  try {
-    await client.query("BEGIN");
-
+  const message = await withTransaction(async (client) => {
     // 1. Get Auth User ID first
     const userRes = await client.query(
       `SELECT auth_user_id FROM portal.users WHERE user_id = $1`,
@@ -758,17 +708,13 @@ exports.hardDeleteUser = catchAsync(async (req, res) => {
       },
     );
 
-    await client.query("COMMIT");
-    res.json({ message: "User account and all data permanently deleted" });
-  } catch (err) {
-    await client.query("ROLLBACK");
+    return "User account and all data permanently deleted";
+  }).catch((err) => {
     logger.error({ err }, "Hard delete user error");
-    res
-      .status(err.statusCode || 500)
-      .json({ message: err.message || "Failed to permanently delete user" });
-  } finally {
-    client.release();
-  }
+    throw err;
+  });
+
+  res.json({ message });
 });
 
 /* ===============================
@@ -843,10 +789,7 @@ exports.resolveReportWithAction = catchAsync(async (req, res) => {
     throw createError(400, "Invalid report action");
   }
 
-  const client = await pool.connect();
-  try {
-    await client.query("BEGIN");
-
+  const message = await withTransaction(async (client) => {
     // 1. Get report info
     const reportRes = await client.query(
       `SELECT * FROM portal.reports WHERE report_id = $1`,
@@ -986,17 +929,11 @@ exports.resolveReportWithAction = catchAsync(async (req, res) => {
       { action },
     );
 
-    await client.query("COMMIT");
-    res.json({
-      message: `Report ${status} successfully with action: ${action}`,
-    });
-  } catch (err) {
-    await client.query("ROLLBACK");
+    return `Report ${status} successfully with action: ${action}`;
+  }).catch((err) => {
     logger.error({ err }, "Resolve report error");
-    res
-      .status(err.statusCode || 500)
-      .json({ message: err.message || "Failed to resolve report" });
-  } finally {
-    client.release();
-  }
+    throw err;
+  });
+
+  res.json({ message });
 });

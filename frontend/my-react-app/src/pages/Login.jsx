@@ -1,36 +1,37 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { useAuth } from "../context/AuthContext";
 import { login as apiLogin } from "../services/auth";
-import { Mail, Lock, LogIn } from "lucide-react";
+import { Mail, Lock, LogIn, Eye, EyeOff } from "lucide-react";
 import Button from "../components/ui/Button";
+import { loginSchema } from "../validation/registerSchema";
+import { getUserLandingPath } from "../utils/authRedirect";
 
 const Login = () => {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
   const { login } = useAuth();
+  const { register, handleSubmit } = useForm({
+    resolver: zodResolver(loginSchema),
+    defaultValues: {
+      email: "",
+      password: "",
+    },
+  });
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  const onSubmit = async ({ email, password }) => {
     setError("");
     setLoading(true);
 
     try {
-      const token = await apiLogin(email, password);
-      const currentUser = await login(token);
-
-      if (currentUser?.role === "admin") {
-        navigate("/admin/dashboard", { replace: true });
-      } else if (currentUser?.email_status !== "verified") {
-        navigate("/verify-email", { replace: true });
-      } else if (currentUser?.student_status !== "approved") {
-        navigate("/pending-approval", { replace: true });
-      } else {
-        navigate("/dashboard", { replace: true });
-      }
+      const tokenData = await apiLogin(email, password);
+      const currentUser = await login(tokenData);
+      const nextPath = getUserLandingPath(currentUser) || "/dashboard";
+      navigate(nextPath, { replace: true });
     } catch (err) {
       setError(err.response?.data?.error || "Invalid email or password");
     } finally {
@@ -66,7 +67,7 @@ const Login = () => {
           )}
 
           <form
-            onSubmit={handleSubmit}
+            onSubmit={handleSubmit(onSubmit)}
             className="space-y-5"
             aria-busy={loading}
           >
@@ -80,8 +81,7 @@ const Login = () => {
                   type="email"
                   required
                   autoComplete="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  {...register("email")}
                   className="w-full rounded-xl border border-[var(--border-main)] bg-[var(--bg-main)] py-3 pl-10 pr-4 text-[var(--text-main)] outline-none transition-all focus:border-purple-500 focus:ring-4 focus:ring-purple-500/10"
                   placeholder="you@example.com"
                 />
@@ -95,14 +95,25 @@ const Login = () => {
               <div className="relative">
                 <Lock className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-[var(--text-muted)]" />
                 <input
-                  type="password"
+                  type={showPassword ? "text" : "password"}
                   required
                   autoComplete="current-password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="w-full rounded-xl border border-[var(--border-main)] bg-[var(--bg-main)] py-3 pl-10 pr-4 text-[var(--text-main)] outline-none transition-all focus:border-purple-500 focus:ring-4 focus:ring-purple-500/10"
+                  {...register("password")}
+                  className="w-full rounded-xl border border-[var(--border-main)] bg-[var(--bg-main)] py-3 pl-10 pr-12 text-[var(--text-main)] outline-none transition-all focus:border-purple-500 focus:ring-4 focus:ring-purple-500/10"
                   placeholder="••••••••"
                 />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((prev) => !prev)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-[var(--text-muted)] hover:text-purple-500 transition-colors"
+                  aria-label={showPassword ? "Hide password" : "Show password"}
+                >
+                  {showPassword ? (
+                    <EyeOff className="h-5 w-5" />
+                  ) : (
+                    <Eye className="h-5 w-5" />
+                  )}
+                </button>
               </div>
             </div>
 

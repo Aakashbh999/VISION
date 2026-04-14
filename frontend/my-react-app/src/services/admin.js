@@ -1,97 +1,79 @@
-import api from "./api";
+import { httpDelete, httpGet, httpPatch, httpPost } from "./http";
 
 // Dashboard stats (Aggregated)
 export const getAdminDashboardStats = async () => {
-  const response = await api.get("/admin/dashboard");
-  return response.data;
+  return httpGet("/admin/dashboard");
 };
 
 // Legacy/Basic student stats
 export const getAdminStats = async () => {
-  const response = await api.get("/admin/stats");
-  return response.data;
+  return httpGet("/admin/stats");
 };
 
 // Pending students
 export const getPendingStudents = async () => {
-  const response = await api.get("/admin/pending");
-  return response.data;
+  return httpGet("/admin/pending");
 };
 
 // Get students by status (approved, pending_review, rejected, suspended)
 export const getStudentsByStatus = async (status, page = 1, limit = 10) => {
-  const params = new URLSearchParams({ status, page, limit }).toString();
-  const response = await api.get(`/admin/students?${params}`);
-  return response.data;
+  return httpGet("/admin/students", { status, page, limit });
 };
 
 // Approve student
 export const approveStudent = async (userId) => {
-  const response = await api.patch(`/admin/approve/${userId}`);
-  return response.data;
+  return httpPatch(`/admin/approve/${userId}`);
 };
 
 // Reject student
 export const rejectStudent = async (userId) => {
-  const response = await api.patch(`/admin/reject/${userId}`);
-  return response.data;
+  return httpPatch(`/admin/reject/${userId}`);
 };
 
 // Suspend student
 export const suspendStudent = async (userId) => {
-  const response = await api.patch(`/admin/suspend/${userId}`);
-  return response.data;
+  return httpPatch(`/admin/suspend/${userId}`);
 };
 
 // Reactivate student
 export const reactivateStudent = async (userId) => {
-  const response = await api.patch(`/admin/reactivate/${userId}`);
-  return response.data;
+  return httpPatch(`/admin/reactivate/${userId}`);
 };
 
 // Get open reports (with pagination)
 export const getReports = async (page = 1, limit = 10) => {
-  const params = new URLSearchParams({ page, limit }).toString();
-  const response = await api.get(`/admin/reports?${params}`);
-  return response.data;
+  return httpGet("/admin/reports", { page, limit });
 };
 
 // Close a report
 export const closeReport = async (reportId) => {
-  const response = await api.patch(`/admin/reports/${reportId}/close`);
-  return response.data;
+  return httpPatch(`/admin/reports/${reportId}/close`);
 };
 
 // Get moderation logs
 export const getModerationLogs = async (page = 1, limit = 20) => {
-  const params = new URLSearchParams({ page, limit }).toString();
-  const response = await api.get(`/admin/logs?${params}`);
-  return response.data;
+  return httpGet("/admin/logs", { page, limit });
 };
 
 // Permanently delete content
 export const permanentlyDeleteContent = async (type, id) => {
-  const response = await api.delete("/admin/content", {
+  return httpDelete("/admin/content", {
     data: { type, id },
   });
-  return response.data;
 };
 
 // Permanently delete user
 export const permanentlyDeleteUser = async (userId) => {
-  const response = await api.delete(`/admin/users/${userId}`);
-  return response.data;
+  return httpDelete(`/admin/users/${userId}`);
 };
 
 // Resolve report with specific action
 export const resolveReportAction = async (reportId, action) => {
-  const response = await api.post(`/admin/reports/${reportId}/resolve`, {
+  return httpPost(`/admin/reports/${reportId}/resolve`, {
     action,
   });
-  return response.data;
 };
 
 export const examineReport = async (reportId) => {
-  const response = await api.get(`/admin/reports/${reportId}/examine`);
-  return response.data;
+  return httpGet(`/admin/reports/${reportId}/examine`);
 };
