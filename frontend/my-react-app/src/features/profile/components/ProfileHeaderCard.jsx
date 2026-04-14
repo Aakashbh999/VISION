@@ -2,6 +2,7 @@ import {
   Camera,
   Check,
   ChevronDown,
+  MoreHorizontal,
   FileText,
   Github,
   Globe,
@@ -9,7 +10,6 @@ import {
   Linkedin,
   MessageSquare,
   PencilLine,
-  Trash2,
   Twitter,
   UserMinus,
   Users,
@@ -21,6 +21,7 @@ import {
   Plus
 } from "lucide-react";
 import { RedditIcon } from "../utils/profileHelpers";
+import ActionMenu from "../../../components/ui/ActionMenu";
 
 const ProfileHeaderCard = ({
   profile,
@@ -30,12 +31,11 @@ const ProfileHeaderCard = ({
   setFollowDropdownOpen,
   followDropdownRef,
   followMut,
+  profileUserId,
   handleFollowToggle,
   handleEditStart,
   setActiveEditor,
   setViewingAvatar,
-  removeAvatarMut,
-  removeBannerMut,
   draftProfile,
   handleDraftChange,
   programName,
@@ -101,8 +101,24 @@ const ProfileHeaderCard = ({
             className="w-full h-full object-cover"
           />
         )}
+        {isOwner && !isEditMode && (
+          <div className="absolute top-4 right-4 z-20">
+            <ActionMenu
+              align="right"
+              trigger={<MoreHorizontal className="w-5 h-5 text-white" />}
+              className="rounded-xl bg-black/35 backdrop-blur-sm border border-white/15"
+              actions={[
+                {
+                  label: "Edit Profile",
+                  icon: <PencilLine className="w-4 h-4" />,
+                  onClick: handleEditStart,
+                },
+              ]}
+            />
+          </div>
+        )}
         {isOwner && isEditMode && (
-          <div className="absolute inset-0 bg-black/35 flex items-center justify-center gap-3 opacity-0 group-hover/banner:opacity-100 transition-opacity">
+          <div className="absolute inset-0 bg-black/35 flex items-center justify-center opacity-0 group-hover/banner:opacity-100 transition-opacity">
             <button
               type="button"
               onClick={() => setActiveEditor("banner")}
@@ -110,17 +126,6 @@ const ProfileHeaderCard = ({
             >
               <Camera className="w-4 h-4" /> Upload Banner
             </button>
-            {profile.banner_image && (
-              <button
-                type="button"
-                onClick={() => removeBannerMut.mutate()}
-                disabled={removeBannerMut.isPending}
-                className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-rose-600 text-white text-sm font-bold shadow-lg disabled:opacity-60"
-              >
-                <Trash2 className="w-4 h-4" />
-                {removeBannerMut.isPending ? "Removing..." : "Remove"}
-              </button>
-            )}
           </div>
         )}
       </div>
@@ -168,18 +173,6 @@ const ProfileHeaderCard = ({
                 </button>
               )}
             </div>
-
-            {isOwner && isEditMode && profile.profile_image && (
-              <button
-                type="button"
-                onClick={() => removeAvatarMut.mutate()}
-                disabled={removeAvatarMut.isPending}
-                className="absolute -bottom-3 left-1/2 -translate-x-1/2 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-rose-600 text-white text-xs font-bold shadow-lg disabled:opacity-60 z-30"
-              >
-                <Trash2 className="w-3.5 h-3.5" />
-                {removeAvatarMut.isPending ? "Removing" : "Remove"}
-              </button>
-            )}
           </div>
 
           {/* Info and Buttons Area */}
@@ -284,12 +277,13 @@ const ProfileHeaderCard = ({
                         <button
                           onClick={() => {
                             setFollowDropdownOpen(false);
+                              if (!profileUserId) return;
                             followMut.mutate({
-                              userId: profile.user_id,
+                                userId: profileUserId,
                               isFollowing: true,
                             });
                           }}
-                          disabled={followMut.isPending}
+                            disabled={followMut.isPending || !profileUserId}
                           className="w-full flex items-center gap-2 px-4 py-2.5 text-sm font-semibold text-red-600 hover:bg-red-50 transition-colors disabled:opacity-50"
                         >
                           <UserMinus className="w-4 h-4" />
@@ -301,23 +295,13 @@ const ProfileHeaderCard = ({
                 ) : (
                   <button
                     onClick={handleFollowToggle}
-                    disabled={followMut.isPending}
+                    disabled={followMut.isPending || !profileUserId}
                     className="w-full sm:w-auto px-6 py-2.5 rounded-lg font-bold bg-blue-600 text-white hover:bg-blue-700 transition-all shadow-sm disabled:opacity-50 flex items-center justify-center gap-2 text-[15px]"
                   >
                     <Plus className="w-4 h-4" />
                     {followMut.isPending ? "..." : "Follow"}
                   </button>
                 ))}
-
-              {isOwner && !isEditMode && (
-                <button
-                  type="button"
-                  onClick={handleEditStart}
-                  className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-2.5 bg-[#e4e6eb] dark:bg-[#3a3b3c] text-slate-900 dark:text-gray-100 hover:bg-[#d8dadf] dark:hover:bg-[#4e4f50] rounded-lg font-bold transition-all text-[15px]"
-                >
-                  <PencilLine className="w-4 h-4" /> Edit profile
-                </button>
-              )}
             </div>
           </div>
         </div>

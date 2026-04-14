@@ -23,6 +23,10 @@ import { formatDistanceToNow } from "date-fns";
 import DeleteAction from "../../components/DeleteAction";
 import profileService from "../../services/profile";
 import { getManagedGroups } from "../../services/group";
+import SurfaceCard from "../../components/ui/SurfaceCard";
+import EmptyState from "../../components/ui/EmptyState";
+import ErrorState from "../../components/ui/ErrorState";
+import Button from "../../components/ui/Button";
 
 const SOCIAL_PAGE_SIZE = 8;
 
@@ -119,7 +123,7 @@ const ManageContent = () => {
   return (
     <div className="max-w-7xl mx-auto space-y-6 sm:space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 px-2 sm:px-6 lg:px-8 py-5 sm:py-8">
       {/* Header */}
-      <div className="bg-[var(--bg-card)] p-5 sm:p-8 rounded-3xl shadow-sm border border-[var(--border-main)] border-x-0 sm:border-x">
+      <SurfaceCard className="p-5 sm:p-8">
         <div>
           <h1 className="text-xl sm:text-3xl lg:text-4xl font-black text-[var(--text-main)] tracking-tight mb-1 sm:mb-2 leading-tight">
             Manage Content
@@ -129,10 +133,10 @@ const ManageContent = () => {
             created across VISION.
           </p>
         </div>
-      </div>
+      </SurfaceCard>
 
       {/* Tabs */}
-      <div className="bg-[var(--bg-card)] p-2 rounded-2xl shadow-sm border border-[var(--border-main)] border-x-0 sm:border-x flex gap-2 overflow-x-auto">
+      <SurfaceCard className="p-2 flex gap-2 overflow-x-auto">
         <button
           onClick={() => setActiveTab("resources")}
           className={`flex items-center gap-2 sm:gap-3 px-4 sm:px-6 py-2.5 sm:py-3 rounded-xl font-bold whitespace-nowrap transition-all ${
@@ -177,10 +181,10 @@ const ManageContent = () => {
           <UserRound className="w-5 h-5" />
           Social
         </button>
-      </div>
+      </SurfaceCard>
 
       {/* Tab Content */}
-      <div className="bg-[var(--bg-card)] rounded-3xl shadow-sm border border-[var(--border-main)] border-x-0 sm:border-x overflow-hidden min-h-[400px]">
+      <SurfaceCard className="overflow-hidden min-h-[400px]" padding="none">
         {activeTab === "resources" && (
           <div className="p-4 sm:p-6 md:p-8">
             <div className="flex justify-between items-center mb-6">
@@ -200,21 +204,15 @@ const ManageContent = () => {
                 <LoadingSpinner />
               </div>
             ) : resources.length === 0 ? (
-              <div className="text-center py-14 sm:py-20 bg-[var(--bg-active)] rounded-2xl border-2 border-dashed border-[var(--border-main)]">
-                <BookOpen className="w-12 h-12 text-[var(--text-muted)] mx-auto mb-4" />
-                <h3 className="text-lg sm:text-xl font-bold text-[var(--text-main)] mb-2">
-                  No Resources Found
-                </h3>
-                <p className="text-[var(--text-muted)] mb-6">
-                  You haven't uploaded any resources yet.
-                </p>
-                <Link
-                  to="/resources"
-                  className="px-6 py-2 bg-purple-600 text-white font-bold rounded-xl hover:bg-purple-700 transition-colors"
-                >
-                  Go to Library
-                </Link>
-              </div>
+              <SurfaceCard className="text-center py-14 sm:py-20 bg-(--bg-active) border-dashed border-2">
+                <EmptyState
+                  icon={BookOpen}
+                  title="No Resources Found"
+                  description="You haven't uploaded any resources yet."
+                  actionText="Go to Library"
+                  actionHref="/resources"
+                />
+              </SurfaceCard>
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full text-left border-collapse">
@@ -288,21 +286,15 @@ const ManageContent = () => {
         )}
 
         {activeTab === "discussions" && (
-          <div className="p-4 sm:p-6 md:p-8 text-center py-16 sm:py-20">
-            <MessageSquare className="w-12 h-12 text-[var(--text-muted)] mx-auto mb-4" />
-            <h2 className="text-lg sm:text-2xl font-black text-[var(--text-main)] mb-1 sm:mb-2 leading-tight">
-              My Discussions
-            </h2>
-            <p className="text-[var(--text-muted)] mb-6">
-              Manage your discussion threads here.
-            </p>
-            <Link
-              to="/discussions/my-posts"
-              className="px-6 py-2 bg-purple-600 text-white font-bold rounded-xl hover:bg-purple-700 transition-colors"
-            >
-              Go to My Posts
-            </Link>
-          </div>
+            <div className="p-4 sm:p-6 md:p-8 text-center py-16 sm:py-20">
+              <EmptyState
+                icon={MessageSquare}
+                title="My Discussions"
+                description="Manage your discussion threads here."
+                actionText="Go to My Posts"
+                actionHref="/discussions/my-posts"
+              />
+            </div>
         )}
 
         {activeTab === "groups" && (
@@ -318,21 +310,15 @@ const ManageContent = () => {
                 <LoadingSpinner />
               </div>
             ) : managedGroups.length === 0 ? (
-              <div className="text-center py-14 sm:py-20 bg-[var(--bg-active)] rounded-2xl border-2 border-dashed border-[var(--border-main)]">
-                <Users className="w-12 h-12 text-[var(--text-muted)] mx-auto mb-4" />
-                <h3 className="text-lg sm:text-xl font-bold text-[var(--text-main)] mb-2">
-                  No Groups Managed
-                </h3>
-                <p className="text-[var(--text-muted)] mb-6">
-                  You are not an admin or co-leader of any groups yet.
-                </p>
-                <Link
-                  to="/groups"
-                  className="px-6 py-2 bg-purple-600 text-white font-bold rounded-xl hover:bg-purple-700 transition-colors"
-                >
-                  Discover Groups
-                </Link>
-              </div>
+              <SurfaceCard className="text-center py-14 sm:py-20 bg-(--bg-active) border-dashed border-2">
+                <EmptyState
+                  icon={Users}
+                  title="No Groups Managed"
+                  description="You are not an admin or co-leader of any groups yet."
+                  actionText="Discover Groups"
+                  actionHref="/groups"
+                />
+              </SurfaceCard>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
                 {managedGroups.map((group) => (
@@ -632,7 +618,7 @@ const ManageContent = () => {
             )}
           </div>
         )}
-      </div>
+      </SurfaceCard>
     </div>
   );
 };

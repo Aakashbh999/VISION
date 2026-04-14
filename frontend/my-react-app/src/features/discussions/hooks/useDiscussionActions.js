@@ -27,6 +27,50 @@ const updateDiscussionVote = (discussion, nextVoteType) => {
   };
 };
 
+const updateDiscussionSaved = (discussion, isSaved) => {
+  if (!discussion) return discussion;
+  return {
+    ...discussion,
+    user_saved: isSaved,
+  };
+};
+
+const updateDiscussionCollection = (currentData, discussionId, updater) => {
+  if (!currentData) return currentData;
+
+  if (Array.isArray(currentData)) {
+    return currentData.map((discussion) =>
+      String(discussion.discussion_id) === String(discussionId)
+        ? updater(discussion)
+        : discussion,
+    );
+  }
+
+  if (currentData?.discussions && Array.isArray(currentData.discussions)) {
+    return {
+      ...currentData,
+      discussions: currentData.discussions.map((discussion) =>
+        String(discussion.discussion_id) === String(discussionId)
+          ? updater(discussion)
+          : discussion,
+      ),
+    };
+  }
+
+  if (currentData?.data && Array.isArray(currentData.data)) {
+    return {
+      ...currentData,
+      data: currentData.data.map((discussion) =>
+        String(discussion.discussion_id) === String(discussionId)
+          ? updater(discussion)
+          : discussion,
+      ),
+    };
+  }
+
+  return currentData;
+};
+
 export const useDiscussionActions = ({ user, queryClient }) => {
   const [loadingLike, setLoadingLike] = useState(null);
   const [loadingSave, setLoadingSave] = useState(null);
@@ -34,58 +78,45 @@ export const useDiscussionActions = ({ user, queryClient }) => {
   const likeMutation = useMutation({
     mutationFn: ({ discussionId, voteType }) =>
       voteOnDiscussion(discussionId, voteType),
-    onMutate: ({ discussionId }) => {
+    onMutate: async ({ discussionId, voteType, currentVote = 0 }) => {
       setLoadingLike(discussionId);
+      await queryClient.cancelQueries({ queryKey: ["discussions"] });
+
+      const previousSnapshots = queryClient.getQueriesData({
+        queryKey: ["discussions"],
+      });
+
+      const normalizedCurrentVote = Number(currentVote || 0);
+      const optimisticVote =
+        normalizedCurrentVote === voteType ? 0 : Number(voteType);
+
+      queryClient.setQueriesData({ queryKey: ["discussions"] }, (currentData) =>
+        updateDiscussionCollection(currentData, discussionId, (discussion) =>
+          updateDiscussionVote(discussion, optimisticVote),
+        ),
+      );
+
+      return { previousSnapshots };
     },
     onSuccess: (response, variables) => {
       const nextVoteType = Number(response?.voteType ?? 0);
 
-      queryClient.setQueriesData(
-        { queryKey: ["discussions"] },
-        (currentData) => {
-          if (Array.isArray(currentData)) {
-            return currentData.map((discussion) =>
-              String(discussion.discussion_id) ===
-              String(variables.discussionId)
-                ? updateDiscussionVote(discussion, nextVoteType)
-                : discussion,
-            );
-          }
-
-          if (
-            currentData?.discussions &&
-            Array.isArray(currentData.discussions)
-          ) {
-            return {
-              ...currentData,
-              discussions: currentData.discussions.map((discussion) =>
-                String(discussion.discussion_id) ===
-                String(variables.discussionId)
-                  ? updateDiscussionVote(discussion, nextVoteType)
-                  : discussion,
-              ),
-            };
-          }
-
-          if (currentData?.data && Array.isArray(currentData.data)) {
-            return {
-              ...currentData,
-              data: currentData.data.map((discussion) =>
-                String(discussion.discussion_id) ===
-                String(variables.discussionId)
-                  ? updateDiscussionVote(discussion, nextVoteType)
-                  : discussion,
-              ),
-            };
-          }
-
-          return currentData;
-        },
+      queryClient.setQueriesData({ queryKey: ["discussions"] }, (currentData) =>
+        updateDiscussionCollection(
+          currentData,
+          variables.discussionId,
+          (discussion) => updateDiscussionVote(discussion, nextVoteType),
+        ),
       );
 
       // Skip immediate refetch here to avoid stale payload snapping counts back.
     },
-    onError: (error) => {
+    onError: (error, _variables, context) => {
+      if (context?.previousSnapshots?.length) {
+        context.previousSnapshots.forEach(([queryKey, snapshot]) => {
+          queryClient.setQueryData(queryKey, snapshot);
+        });
+      }
       toast.error(
         error?.response?.data?.error || "Failed to vote on discussion",
       );
@@ -97,21 +128,39 @@ export const useDiscussionActions = ({ user, queryClient }) => {
 
   const saveMutation = useMutation({
     mutationFn: toggleSaveDiscussion,
-    onMutate: (discussionId) => {
+    onMutate: async ({ discussionId, currentSaved = false }) => {
       setLoadingSave(discussionId);
+      await queryClient.cancelQueries({ queryKey: ["discussions"] });
+
+      const previousSnapshots = queryClient.getQueriesData({
+        queryKey: ["discussions"],
+      });
+
+      queryClient.setQueriesData({ queryKey: ["discussions"] }, (currentData) =>
+        updateDiscussionCollection(currentData, discussionId, (discussion) =>
+          updateDiscussionSaved(discussion, !currentSaved),
+        ),
+      );
+
+      return { previousSnapshots };
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["discussions"] });
+      // Keep optimistic UI without hard invalidation jitter.
     },
     onSettled: () => {
       setLoadingSave(null);
     },
-    onError: (error) => {
+    onError: (error, _variables, context) => {
+      if (context?.previousSnapshots?.length) {
+        context.previousSnapshots.forEach(([queryKey, snapshot]) => {
+          queryClient.setQueryData(queryKey, snapshot);
+        });
+      }
       toast.error(error?.response?.data?.error || "Failed to save discussion");
     },
   });
 
-  const handleLike = (event, discussionId) => {
+  const handleLike = async (event, discussionId, currentVote = 0) => {
     event.preventDefault();
     event.stopPropagation();
 
@@ -120,10 +169,10 @@ export const useDiscussionActions = ({ user, queryClient }) => {
       return;
     }
 
-    likeMutation.mutate({ discussionId, voteType: 1 });
+    await likeMutation.mutateAsync({ discussionId, voteType: 1, currentVote });
   };
 
-  const handleDownvote = (event, discussionId, currentVote) => {
+  const handleDownvote = async (event, discussionId, currentVote) => {
     event.preventDefault();
     event.stopPropagation();
 
@@ -132,10 +181,14 @@ export const useDiscussionActions = ({ user, queryClient }) => {
       return;
     }
 
-    likeMutation.mutate({ discussionId, voteType: -1 });
+    await likeMutation.mutateAsync({
+      discussionId,
+      voteType: -1,
+      currentVote,
+    });
   };
 
-  const handleSave = (event, discussionId) => {
+  const handleSave = async (event, discussionId, currentSaved = false) => {
     event.preventDefault();
     event.stopPropagation();
 
@@ -144,7 +197,7 @@ export const useDiscussionActions = ({ user, queryClient }) => {
       return;
     }
 
-    saveMutation.mutate(discussionId);
+    await saveMutation.mutateAsync({ discussionId, currentSaved });
   };
 
   const handleShare = async (event, discussionId, discussionTitle) => {

@@ -21,6 +21,12 @@ import {
 } from "../utils/profileHelpers";
 
 export const useProfilePageState = () => {
+  const normalizeProfileId = (value) => {
+    if (value === null || value === undefined) return null;
+    const normalized = String(value).trim();
+    return /^\d+$/.test(normalized) ? normalized : null;
+  };
+
   const { userId } = useParams();
   const { user: currentUser } = useAuth();
   const { data: programs } = usePrograms();
@@ -37,6 +43,9 @@ export const useProfilePageState = () => {
 
   const profile = isOwner ? ownProfile : publicProfile;
   const isLoading = isOwner ? isOwnLoading : isPublicLoading;
+  const profileUserId = normalizeProfileId(
+    profile?.user_id ?? profile?.portal_user_id,
+  );
 
   const updateProfileMut = useUpdateProfile();
   const updateAvatarMut = useUpdateProfileImage();
@@ -170,8 +179,9 @@ export const useProfilePageState = () => {
   };
 
   const handleFollowToggle = () => {
+    if (!profileUserId) return;
     followMut.mutate({
-      userId: profile.user_id,
+      userId: profileUserId,
       isFollowing: profile.is_following,
     });
   };
@@ -185,6 +195,7 @@ export const useProfilePageState = () => {
     currentUser,
     programs,
     profile,
+    profileUserId,
     isOwner,
     isLoading,
     updateProfileMut,

@@ -23,6 +23,10 @@ import api from "../../../services/api";
 import { toast } from "react-toastify";
 import UniversalSearch from "../../../components/ui/UniversalSearch";
 import ForYouBadge from "../../discussions/components/ForYouBadge";
+import SurfaceCard from "../../../components/ui/SurfaceCard";
+import EmptyState from "../../../components/ui/EmptyState";
+import ErrorState from "../../../components/ui/ErrorState";
+import Button from "../../../components/ui/Button";
 
 const Groups = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -143,34 +147,32 @@ const Groups = () => {
                 : `${500 - userXP} VXP to Unlock Creator`}
             </div>
 
-            <motion.button
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              onClick={() => {
-                if (canCreateGroup) {
-                  navigate("/groups/new");
-                } else {
-                  toast.error(
-                    `Unlock the Admin badge first! (${userXP}/500 VXP)`,
-                  );
-                }
-              }}
-              className={`group px-6 sm:px-8 py-3 sm:py-3.5 font-black rounded-2xl transition-all flex items-center justify-center gap-2 shadow-xl shrink-0 ${
-                canCreateGroup
-                  ? "bg-purple-600 text-white hover:bg-purple-700 shadow-purple-500/40 relative overflow-hidden"
-                  : "bg-[var(--bg-active)] text-[var(--text-muted)] cursor-not-allowed border border-[var(--border-main)]"
-              }`}
-            >
-              {canCreateGroup && (
-                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
-              )}
-              {canCreateGroup ? (
-                <Plus className="w-5 h-5" />
-              ) : (
-                <Lock className="w-5 h-5" />
-              )}
-              Start a Circle
-            </motion.button>
+            <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+              <Button
+                onClick={() => {
+                  if (canCreateGroup) {
+                    navigate("/groups/new");
+                  } else {
+                    toast.error(
+                      `Unlock the Admin badge first! (${userXP}/500 VXP)`,
+                    );
+                  }
+                }}
+                variant={canCreateGroup ? "primary" : "outline"}
+                className={`group px-6 sm:px-8 py-3 sm:py-3.5 font-black rounded-2xl transition-all flex items-center justify-center gap-2 shadow-xl shrink-0 ${
+                  canCreateGroup
+                    ? "bg-purple-600 text-white hover:bg-purple-700 shadow-purple-500/40 relative overflow-hidden"
+                    : "bg-[var(--bg-active)] text-[var(--text-muted)] border border-[var(--border-main)]"
+                }`}
+              >
+                {canCreateGroup ? (
+                  <Plus className="w-5 h-5" />
+                ) : (
+                  <Lock className="w-5 h-5" />
+                )}
+                Start a Circle
+              </Button>
+            </motion.div>
           </div>
         </div>
 
@@ -245,16 +247,19 @@ const Groups = () => {
           </div>
         )}
         {isLoading ? (
-          <div className="flex flex-col items-center justify-center py-24">
+          <SurfaceCard className="flex flex-col items-center justify-center py-24">
             <LoadingSpinner />
             <p className="text-[var(--text-muted)] font-bold mt-4 uppercase tracking-widest text-xs">
               Summoning Circles...
             </p>
-          </div>
+          </SurfaceCard>
         ) : error ? (
-          <div className="bg-rose-50 border border-rose-100 text-rose-600 p-12 rounded-[2.5rem] text-center font-bold">
-            Failed to load circles. Try again.
-          </div>
+          <ErrorState
+            title="Groups unavailable"
+            description="Failed to load circles. Try again."
+            onRetry={() => window.location.reload()}
+            className="rounded-3xl"
+          />
         ) : effectiveGroups.length === 0 ? (
           <motion.div
             variants={containerVariants}
@@ -264,7 +269,7 @@ const Groups = () => {
           >
             <motion.div
               variants={itemVariants}
-              className="bg-[var(--bg-card)]/60 backdrop-blur-xl border border-[var(--border-main)]/50 rounded-[3rem] p-24 text-center shadow-inner"
+              className="text-center"
             >
               {data?.noResults ? (
                 <div className="max-w-2xl mx-auto space-y-10 px-4 text-left">
@@ -312,21 +317,19 @@ const Groups = () => {
                   </div>
                 </div>
               ) : (
-                <div className="text-center">
-                  <div className="w-24 h-24 bg-[var(--bg-active)] rounded-full flex items-center justify-center mx-auto mb-6">
-                    <Users className="w-10 h-10 text-[var(--text-muted)]" />
-                  </div>
-                  <h3 className="text-xl sm:text-2xl font-black text-[var(--text-main)] mb-2">
-                    No Circles Found
-                  </h3>
-                  <p className="text-[var(--text-muted)] max-w-xs mx-auto">
-                    {filters.search
-                      ? "Try adjusting your filters or search terms."
-                      : sort === "joined"
-                        ? "You haven't engaged in any group yet."
-                        : "The labyrinth is empty. Be the first to start a circle."}
-                  </p>
-                </div>
+                <SurfaceCard className="rounded-3xl p-12 sm:p-16">
+                  <EmptyState
+                    icon={Users}
+                    title="No Circles Found"
+                    description={
+                      filters.search
+                        ? "Try adjusting your filters or search terms."
+                        : sort === "joined"
+                          ? "You haven't engaged in any group yet."
+                          : "The labyrinth is empty. Be the first to start a circle."
+                    }
+                  />
+                </SurfaceCard>
               )}
             </motion.div>
           </motion.div>

@@ -79,9 +79,13 @@ const buildRankedFeedQuery = ({ config, includeBreakdown = false }) => {
       LEFT JOIN portal.roadmap_steps rs
         ON af.reference_type = 'roadmap_step'
        AND rs.step_id = af.reference_id
+      -- Updated join: always join group for group_post and group
       LEFT JOIN portal.study_groups sg
-        ON af.reference_type = 'group'
-       AND sg.group_id = af.reference_id
+        ON (
+          (af.reference_type = 'group' AND sg.group_id = af.reference_id)
+          OR
+          (af.reference_type = 'group_post' AND gp.group_id = sg.group_id)
+        )
       WHERE af.actor_user_id <> viewer.user_id
         AND ($2::text IS NULL OR af.action_type = $2)
         AND (
@@ -230,111 +234,103 @@ const fetchRankedFeed = async ({
 };
 
 exports.getFeed = catchAsync(async (req, res) => {
-    const viewerId = req.user?.portal_user_id;
-    const page = Math.max(1, parseInt(req.query.page, 10) || 1);
-    const limit = Math.min(
-      50,
-      Math.max(1, parseInt(req.query.limit, 10) || 20),
-    );
-    const offset = (page - 1) * limit;
-    const actionType = req.query.actionType
-      ? String(req.query.actionType).trim()
-      : null;
-    const search = req.query.search ? String(req.query.search).trim() : null;
-    const tab = req.query.tab ? String(req.query.tab).trim() : 'for-you';
-    const config = resolveFeedRankingConfig(req.query);
+  const viewerId = req.user?.portal_user_id;
+  const page = Math.max(1, parseInt(req.query.page, 10) || 1);
+  const limit = Math.min(50, Math.max(1, parseInt(req.query.limit, 10) || 20));
+  const offset = (page - 1) * limit;
+  const actionType = req.query.actionType
+    ? String(req.query.actionType).trim()
+    : null;
+  const search = req.query.search ? String(req.query.search).trim() : null;
+  const tab = req.query.tab ? String(req.query.tab).trim() : "for-you";
+  const config = resolveFeedRankingConfig(req.query);
 
-    const feedResult = await fetchRankedFeed({
-      viewerId,
-      actionType,
-      search,
+  const feedResult = await fetchRankedFeed({
+    viewerId,
+    actionType,
+    search,
+    limit,
+    offset,
+    tab,
+    config,
+    includeBreakdown: req.query.debug === "1",
+  });
+
+  const rows = feedResult.rows;
+  const total = rows.length ? rows[0].total_count : 0;
+  const totalPages = Math.max(1, Math.ceil(total / limit));
+  const actionTypes = Array.from(new Set(rows.map((item) => item.action_type)));
+
+  res.json({
+    data: rows.map(({ total_count, ...rest }) => rest),
+    pagination: {
+      page,
       limit,
-      offset,
-      tab,
-      config,
-      includeBreakdown: req.query.debug === "1",
-    });
-
-    const rows = feedResult.rows;
-    const total = rows.length ? rows[0].total_count : 0;
-    const totalPages = Math.max(1, Math.ceil(total / limit));
-    const actionTypes = Array.from(
-      new Set(rows.map((item) => item.action_type)),
-    );
-
-    res.json({
-      data: rows.map(({ total_count, ...rest }) => rest),
-      pagination: {
-        page,
-        limit,
-        total,
-        totalPages,
-      },
-      meta: {
-        actionTypes,
-        weights: config,
-      },
-    });
+      total,
+      totalPages,
+    },
+    meta: {
+      actionTypes,
+      weights: config,
+    },
+  });
 });
 
 exports.getFeedEvaluation = catchAsync(async (req, res) => {
-    const viewerId = req.user?.portal_user_id;
-    const page = Math.max(1, parseInt(req.query.page, 10) || 1);
-    const limit = Math.min(
-      50,
-      Math.max(1, parseInt(req.query.limit, 10) || 20),
-    );
-    const offset = (page - 1) * limit;
-    const actionType = req.query.actionType
-      ? String(req.query.actionType).trim()
-      : null;
-    const search = req.query.search ? String(req.query.search).trim() : null;
-    const config = resolveFeedRankingConfig(req.query);
+  const viewerId = req.user?.portal_user_id;
+  const page = Math.max(1, parseInt(req.query.page, 10) || 1);
+  const limit = Math.min(50, Math.max(1, parseInt(req.query.limit, 10) || 20));
+  const offset = (page - 1) * limit;
+  const actionType = req.query.actionType
+    ? String(req.query.actionType).trim()
+    : null;
+  const search = req.query.search ? String(req.query.search).trim() : null;
+  const config = resolveFeedRankingConfig(req.query);
 
-    const feedResult = await fetchRankedFeed({
-      viewerId,
-      actionType,
-      search,
+  const feedResult = await fetchRankedFeed({
+    viewerId,
+    actionType,
+    search,
+    limit,
+    offset,
+    config,
+    includeBreakdown: true,
+  });
+
+  const rows = feedResult.rows;
+  const total = rows.length ? rows[0].total_count : 0;
+  const totalPages = Math.max(1, Math.ceil(total / limit));
+
+  const actionDistribution = rows.reduce((acc, row) => {
+    acc[row.action_type] = (acc[row.action_type] || 0) + 1;
+    return acc;
+  }, {});
+
+  const avgScore =
+    rows.length > 0
+      ? Number(
+          (
+            rows.reduce(
+              (sum, item) => sum + Number(item.relevance_score || 0),
+              0,
+            ) / rows.length
+          ).toFixed(2),
+        )
+      : 0;
+
+  res.json({
+    weights: config,
+    pagination: {
+      page,
       limit,
-      offset,
-      config,
-      includeBreakdown: true,
-    });
-
-    const rows = feedResult.rows;
-    const total = rows.length ? rows[0].total_count : 0;
-    const totalPages = Math.max(1, Math.ceil(total / limit));
-
-    const actionDistribution = rows.reduce((acc, row) => {
-      acc[row.action_type] = (acc[row.action_type] || 0) + 1;
-      return acc;
-    }, {});
-
-    const avgScore =
-      rows.length > 0
-        ? Number(
-            (
-              rows.reduce(
-                (sum, item) => sum + Number(item.relevance_score || 0),
-                0,
-              ) / rows.length
-            ).toFixed(2),
-          )
-        : 0;
-
-    res.json({
-      weights: config,
-      pagination: {
-        page,
-        limit,
-        total,
-        totalPages,
-      },
-      summary: {
-        returnedCount: rows.length,
-        averageScore: avgScore,
-        actionDistribution,
-      },
-      samples: rows.map(({ total_count, ...rest }) => rest),
-    });
+      total,
+      totalPages,
+    },
+    summary: {
+      returnedCount: rows.length,
+      averageScore: avgScore,
+      actionDistribution,
+    },
+    samples: rows.map(({ total_count, ...rest }) => rest),
+  });
 });

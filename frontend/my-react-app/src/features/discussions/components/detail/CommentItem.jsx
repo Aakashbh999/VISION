@@ -42,19 +42,19 @@ const CommentItem = ({
     String(comment.user_id) === String(user.portal_user_id || user.user_id);
 
   return (
-    <div className={`${depth > 0 ? "ml-3 sm:ml-8 mt-4" : ""}`}>
-      <div className="flex gap-2">
+    <div className={`${depth > 0 ? "ml-2 sm:ml-6 mt-3" : ""}`}>
+      <div className="flex gap-1.5">
         {depth > 0 && (
           <div className="flex-shrink-0 w-0.5 bg-purple-200/50 rounded-full" />
         )}
         <div className="flex-1">
-          <div className="flex items-center gap-2 mb-2">
-            <div className="w-7 h-7 bg-[var(--bg-active)] rounded-full flex items-center justify-center font-black text-[var(--text-muted)] text-[10px] shadow-sm border border-[var(--border-main)]">
+          <div className="flex items-center gap-2 mb-1.5">
+            <div className="w-6 h-6 bg-[var(--bg-active)] rounded-full flex items-center justify-center font-black text-[var(--text-muted)] text-[9px] shadow-sm border border-[var(--border-main)]">
               {comment.full_name?.charAt(0)}
             </div>
             <div className="flex flex-col">
               <div className="flex items-center gap-2">
-                <span className="text-xs font-black text-[var(--text-main)]">
+                <span className="text-[11px] font-black text-[var(--text-main)]">
                   {comment.full_name}
                 </span>
                 {isAuthor && (
@@ -63,18 +63,18 @@ const CommentItem = ({
                   </span>
                 )}
               </div>
-              <span className="text-[9px] text-[var(--text-muted)] font-bold uppercase tracking-tighter">
+              <span className="text-[8px] text-[var(--text-muted)] font-bold uppercase tracking-tighter">
                 {new Date(comment.created_at).toLocaleString()}
               </span>
             </div>
           </div>
 
-          <div className="bg-[var(--bg-active)]/50 p-4 rounded-xl border border-[var(--border-main)] text-[var(--text-main)] text-sm leading-relaxed mb-2">
+          <div className="bg-[var(--bg-active)]/50 p-3 rounded-lg border border-[var(--border-main)] text-[var(--text-main)] text-[13px] leading-relaxed mb-1.5">
             {comment.content}
           </div>
 
-          <div className="flex items-center gap-1 ml-1 mb-3">
-            <div className="flex items-center gap-0.5 mr-3 bg-[var(--bg-active)] rounded-lg p-0.5 border border-[var(--border-main)]">
+          <div className="flex items-center gap-1 ml-1 mb-2">
+            <div className="flex items-center gap-0.5 mr-2 bg-[var(--bg-active)] rounded-lg p-0.5 border border-[var(--border-main)]">
               <button
                 onClick={() =>
                   handleCommentVote(comment.comment_id, 1, comment.user_vote)
@@ -86,7 +86,7 @@ const CommentItem = ({
                   <ButtonLoader size={16} />
                 ) : (
                   <ArrowBigUp
-                    className={`w-5 h-5 ${comment.user_vote === 1 ? "fill-purple-600" : ""}`}
+                    className={`w-4 h-4 ${comment.user_vote === 1 ? "fill-purple-600" : ""}`}
                   />
                 )}
               </button>
@@ -106,7 +106,7 @@ const CommentItem = ({
                   <ButtonLoader size={16} />
                 ) : (
                   <ArrowBigDown
-                    className={`w-5 h-5 ${comment.user_vote === -1 ? "fill-red-600" : ""}`}
+                    className={`w-4 h-4 ${comment.user_vote === -1 ? "fill-red-600" : ""}`}
                   />
                 )}
               </button>
@@ -116,7 +116,7 @@ const CommentItem = ({
               onClick={() => setReplyingTo(comment.comment_id)}
               className="flex items-center gap-1.5 px-2 py-1 rounded-md text-[var(--text-muted)] hover:bg-[var(--bg-active)] hover:text-purple-600 transition-all"
             >
-              <Reply className="w-4 h-4" />
+              <Reply className="w-3.5 h-3.5" />
               <span className="text-[10px] font-black uppercase tracking-wider">
                 Reply
               </span>
@@ -158,21 +158,21 @@ const CommentItem = ({
                 initial={{ opacity: 0, height: 0 }}
                 animate={{ opacity: 1, height: "auto" }}
                 exit={{ opacity: 0, height: 0 }}
-                className="mb-4 overflow-hidden"
+                className="mb-3 overflow-hidden"
               >
                 <form
                   onSubmit={(event) =>
                     handleReplySubmit(event, comment.comment_id)
                   }
-                  className="border-2 border-purple-200 rounded-xl p-2 bg-purple-50/30"
+                  className="border border-purple-200 rounded-lg p-2 bg-purple-50/30"
                 >
-                  <div className="flex items-start gap-2 mb-2">
-                    <CornerDownRight className="w-4 h-4 text-purple-400 mt-3" />
+                  <div className="flex items-start gap-2 mb-1.5">
+                    <CornerDownRight className="w-3.5 h-3.5 text-purple-400 mt-2.5" />
                     <textarea
                       value={replyContent}
                       onChange={(event) => setReplyContent(event.target.value)}
                       placeholder={`Reply to ${comment.full_name}...`}
-                      className="flex-1 p-2 text-sm bg-[var(--bg-card)] border border-[var(--border-main)] rounded-lg outline-none focus:border-purple-300 min-h-[80px] resize-none text-[var(--text-main)]"
+                      className="flex-1 p-2 text-sm bg-[var(--bg-card)] border border-[var(--border-main)] rounded-lg outline-none focus:border-purple-300 min-h-[68px] resize-none text-[var(--text-main)]"
                       autoFocus
                     />
                   </div>
@@ -189,7 +189,7 @@ const CommentItem = ({
                       disabled={
                         !replyContent.trim() || addCommentMutation.isPending
                       }
-                      className="bg-purple-600 text-white px-6 py-2 rounded-lg font-black text-xs uppercase tracking-wider hover:bg-purple-700 disabled:opacity-50 flex items-center gap-2"
+                      className="bg-purple-600 text-white px-5 py-2 rounded-lg font-black text-[11px] uppercase tracking-wider hover:bg-purple-700 disabled:opacity-50 flex items-center gap-2"
                     >
                       {addCommentMutation.isPending ? (
                         <ButtonLoader size={14} />
@@ -216,7 +216,7 @@ const CommentItem = ({
                 </button>
               ) : (
                 <>
-                  <div className="space-y-4">
+                  <div className="space-y-3">
                     {comment.replies
                       .slice(0, visibleCount * repliesBatchSize)
                       .map((reply) => (
@@ -239,7 +239,7 @@ const CommentItem = ({
                         />
                       ))}
                   </div>
-                  <div className="flex items-center gap-4 ml-4 mt-4">
+                  <div className="flex items-center gap-4 ml-4 mt-3">
                     {comment.replies.length >
                       visibleCount * repliesBatchSize && (
                       <button

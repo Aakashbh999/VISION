@@ -53,6 +53,11 @@ function normalizeAcademicProfile(profile) {
 exports.getPublicProfile = catchAsync(async (req, res) => {
   const { userId } = req.params;
   const viewerId = req.user?.portal_user_id;
+  const parsedUserId = Number.parseInt(userId, 10);
+
+  if (!Number.isInteger(parsedUserId) || parsedUserId <= 0) {
+    return errorResponse(res, "Invalid user id", 400);
+  }
 
   const result = await pool.query(
     `SELECT
@@ -100,7 +105,7 @@ exports.getPublicProfile = catchAsync(async (req, res) => {
        LEFT JOIN portal.resources r    ON r.created_by = u.user_id AND r.deleted_at IS NULL
        WHERE u.user_id = $1 AND u.status = 'active'
        GROUP BY u.user_id, u.last_seen_at, p.program_name, us.total_xp, us.current_level`,
-    viewerId ? [userId, viewerId] : [userId],
+    viewerId ? [parsedUserId, viewerId] : [parsedUserId],
   );
 
   if (!result.rows.length) {
@@ -109,7 +114,7 @@ exports.getPublicProfile = catchAsync(async (req, res) => {
 
   const badgesRes = await pool.query(
     `SELECT badge_name, earned_at FROM portal.user_badges WHERE user_id = $1 ORDER BY earned_at DESC`,
-    [userId],
+    [parsedUserId],
   );
 
   return successResponse(res, {

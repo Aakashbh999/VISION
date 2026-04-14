@@ -1,10 +1,14 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { Search, SlidersHorizontal, Loader2 } from "lucide-react";
 import { useFeed } from "../../hooks/useFeed";
 import LoadingSpinner from "../../components/ui/LoadingSpinner";
 import FeedTabs from "./components/FeedTabs";
 import SocialFeedCard from "./components/SocialFeedCard";
 import PrimaryPortalTabs from "../../components/portal/Dashboard/PrimaryPortalTabs";
+import SurfaceCard from "../../components/ui/SurfaceCard";
+import EmptyState from "../../components/ui/EmptyState";
+import ErrorState from "../../components/ui/ErrorState";
+import Button from "../../components/ui/Button";
 
 const FEED_PAGE_SIZE = 20;
 
@@ -29,11 +33,15 @@ const Feed = () => {
     tab: activeTab,
   });
 
-  const pagination = feedPayload?.pagination || {
-    page: 1,
-    totalPages: 1,
-    total: 0,
-  };
+  const pagination = useMemo(
+    () =>
+      feedPayload?.pagination || {
+        page: 1,
+        totalPages: 1,
+        total: 0,
+      },
+    [feedPayload],
+  );
 
   // Sync feed payload with accumulated list
   useEffect(() => {
@@ -90,7 +98,7 @@ const Feed = () => {
   }, [isFetching, pagination]);
 
   return (
-    <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8 bg-white dark:bg-slate-900 text-gray-900 dark:text-white">
+    <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8 bg-(--bg-main) text-(--text-main)">
       <PrimaryPortalTabs activeTab="feed" />
 
       {/* Header & Tabs Section */}
@@ -107,21 +115,23 @@ const Feed = () => {
 
           <div className="flex items-center gap-3">
             <div className="relative flex-1 md:w-64">
-              <Search className="w-4 h-4 text-slate-500 dark:text-slate-300 absolute left-3 top-1/2 -translate-y-1/2" />
+              <Search className="w-4 h-4 text-(--text-muted) absolute left-3 top-1/2 -translate-y-1/2" />
               <input
                 type="text"
                 value={query}
                 onChange={handleQueryChange}
                 placeholder="Search Feed..."
-                className="w-full bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-2xl pl-10 pr-4 py-2.5 text-sm text-gray-900 dark:text-white placeholder:text-slate-500 dark:placeholder:text-slate-400 outline-none focus:border-indigo-500 transition-all font-medium"
+                className="w-full bg-(--bg-card) border border-(--border-main) rounded-2xl pl-10 pr-4 py-2.5 text-sm text-(--text-main) placeholder:text-(--text-muted) outline-none focus:border-indigo-500 transition-all font-medium"
               />
             </div>
-            <button
+            <Button
               onClick={() => setShowFilters(!showFilters)}
-              className={`p-2.5 rounded-xl border transition-all ${showFilters ? "bg-indigo-600 border-indigo-600 text-white" : "bg-gray-50 dark:bg-slate-800 border-gray-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:text-indigo-600 hover:border-indigo-500"}`}
+              variant={showFilters ? "primary" : "outline"}
+              size="sm"
+              className="px-3 py-2.5"
             >
               <SlidersHorizontal className="w-5 h-5" />
-            </button>
+            </Button>
           </div>
         </div>
 
@@ -131,30 +141,27 @@ const Feed = () => {
       {/* Feed Content */}
       <div className="space-y-6 min-h-[60vh]">
         {isLoading && page === 1 ? (
-          <div className="py-32 flex flex-col items-center justify-center gap-4">
+          <SurfaceCard className="py-20 flex flex-col items-center justify-center gap-4">
             <LoadingSpinner />
-            <p className="text-xs font-black uppercase tracking-widest text-slate-500 dark:text-slate-300 animate-pulse">
+            <p className="text-xs font-black uppercase tracking-widest text-(--text-muted) animate-pulse">
               Curating your feed...
             </p>
-          </div>
+          </SurfaceCard>
         ) : error ? (
-          <div className="py-14 text-center rounded-3xl bg-rose-500/10 border border-rose-500/20 text-rose-600 font-bold">
-            Failed to sync with the Feed. Please try again.
-          </div>
+          <ErrorState
+            title="Feed sync failed"
+            description="We could not load your feed. Please try again."
+            onRetry={() => window.location.reload()}
+            className="rounded-3xl"
+          />
         ) : allFeedItems.length === 0 && !isLoading ? (
-          <div className="py-24 text-center bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-700 border-dashed rounded-3xl">
-            <div className="w-16 h-16 bg-gray-100 dark:bg-slate-800 rounded-full flex items-center justify-center mx-auto mb-4">
-              <Search className="w-8 h-8 text-slate-500 dark:text-slate-300" />
-            </div>
-            <p className="text-gray-900 dark:text-white font-black text-xl">
-              Orbit looks empty here
-            </p>
-            <p className="text-slate-600 dark:text-slate-300 mt-2 text-sm max-w-xs mx-auto">
-              We couldn't find any activities in the{" "}
-              <b>{activeTab.replace("-", " ")}</b> section that match your
-              orbit.
-            </p>
-          </div>
+          <SurfaceCard className="py-12">
+            <EmptyState
+              icon={Search}
+              title="No Feed Results"
+              description={`No activities found in ${activeTab.replace("-", " ")}.`}
+            />
+          </SurfaceCard>
         ) : (
           <div className="flex flex-col gap-6 w-full">
             {allFeedItems.map((item, index) => (
@@ -180,12 +187,14 @@ const Feed = () => {
                 </span>
               </div>
             ) : (
-              <button
+              <Button
                 onClick={() => setPage((prev) => prev + 1)}
-                className="px-8 py-3 bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-700 rounded-2xl text-sm font-black text-indigo-600 dark:text-sky-300 hover:bg-indigo-50 dark:hover:bg-slate-800 transition-all shadow-sm active:scale-95 uppercase tracking-widest"
+                variant="outline"
+                size="md"
+                className="px-8"
               >
                 Load More Contents
-              </button>
+              </Button>
             )}
           </div>
         )}

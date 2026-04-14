@@ -1,23 +1,28 @@
 import { cn } from "../../../utils/cn";
 
-export default function StatCard({ icon: Icon, value, label, color }) {
+export default function StatCard({ icon: Icon, value, label, color, sub }) {
   return (
-    <div className="flex items-center gap-4 bg-white dark:bg-slate-900 rounded-2xl shadow-lg p-6 min-w-[160px]">
+    <div className="flex items-center gap-4 bg-(--bg-card) border border-(--border-main) rounded-3xl shadow-sm p-5 min-w-[160px]">
       <div
         className={cn(
-          "w-12 h-12 flex items-center justify-center rounded-xl",
+          "w-11 h-11 flex items-center justify-center rounded-xl",
           color || "bg-indigo-100 text-indigo-600",
         )}
       >
-        {Icon && <Icon className="w-6 h-6" />}
+        {Icon && <Icon className="w-5 h-5" />}
       </div>
-      <div>
-        <div className="text-2xl font-black text-gray-900 dark:text-white">
+      <div className="min-w-0">
+        <div className="text-xl font-black text-(--text-main) truncate">
           {value}
         </div>
-        <div className="text-sm text-gray-500 dark:text-slate-300 font-semibold mt-1">
+        <div className="text-xs text-(--text-muted) font-semibold mt-1 truncate">
           {label}
         </div>
+        {sub ? (
+          <div className="text-[10px] text-(--text-muted) mt-0.5 truncate">
+            {sub}
+          </div>
+        ) : null}
       </div>
     </div>
   );

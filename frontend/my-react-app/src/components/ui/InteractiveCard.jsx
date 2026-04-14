@@ -17,7 +17,6 @@ const InteractiveCard = ({
   className = "",
   variant = "default",
   disabled = false,
-  as: Component = "div",
   ...props
 }) => {
   const variantClasses = {
@@ -63,6 +62,7 @@ const InteractiveCard = ({
       onClick={onClick}
       className={finalClassName}
       aria-disabled={disabled}
+      aria-label={onClick ? "Interactive card" : undefined}
       {...props}
     >
       {children}

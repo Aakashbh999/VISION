@@ -25,6 +25,14 @@ const GroupDetail = () => {
     isFetchingNextPage,
     newPost,
     setNewPost,
+    resourceFile,
+    setResourceFile,
+    answerDrafts,
+    setAnswerDrafts,
+    editingAnswerId,
+    setEditingAnswerId,
+    editingAnswerText,
+    setEditingAnswerText,
     activeSection,
     showAdminPanel,
     setShowAdminPanel,
@@ -43,7 +51,12 @@ const GroupDetail = () => {
     requestJoinMut,
     joinGroupMut,
     createPostMutation,
+    deletePostMut,
+    editQaAnswerMut,
     handlePostSubmit,
+    handleQaAnswerCreate,
+    handleStartEditAnswer,
+    handleSaveEditedAnswer,
     handleJoinAction,
     handleSectionChange,
   } = useGroupDetailState();
@@ -96,8 +109,21 @@ const GroupDetail = () => {
             isFetchingNextPage={isFetchingNextPage}
             newPost={newPost}
             setNewPost={setNewPost}
+            resourceFile={resourceFile}
+            setResourceFile={setResourceFile}
+            answerDrafts={answerDrafts}
+            setAnswerDrafts={setAnswerDrafts}
+            editingAnswerId={editingAnswerId}
+            setEditingAnswerId={setEditingAnswerId}
+            editingAnswerText={editingAnswerText}
+            setEditingAnswerText={setEditingAnswerText}
             createPostMutation={createPostMutation}
+            deletePostMut={deletePostMut}
+            editQaAnswerMut={editQaAnswerMut}
             handlePostSubmit={handlePostSubmit}
+            handleQaAnswerCreate={handleQaAnswerCreate}
+            handleStartEditAnswer={handleStartEditAnswer}
+            handleSaveEditedAnswer={handleSaveEditedAnswer}
             messagesContainerRef={messagesContainerRef}
             messagesEndRef={messagesEndRef}
           />

@@ -21,6 +21,10 @@ import ResourceCard from "../../components/resources/ResourceCard";
 import ResourceUploadModal from "../../components/resources/ResourceUploadModal";
 import LoadingSpinner from "../../components/ui/LoadingSpinner";
 import UniversalSearch from "../../components/ui/UniversalSearch";
+import SurfaceCard from "../../components/ui/SurfaceCard";
+import EmptyState from "../../components/ui/EmptyState";
+import ErrorState from "../../components/ui/ErrorState";
+import Button from "../../components/ui/Button";
 
 const ResourcesContent = () => {
   const navigate = useNavigate();
@@ -79,7 +83,7 @@ const ResourcesContent = () => {
       </div>
 
       {/* Filters Section */}
-      <div className="bg-[var(--bg-card)] p-4 sm:p-6 rounded-sm sm:rounded-2xl shadow-sm border border-[var(--border-main)] border-x-0 sm:border-x mb-6 sm:mb-8">
+      <SurfaceCard className="mb-6 sm:mb-8">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
           <div>
             <div className="text-[10px] font-black text-[var(--text-muted)] uppercase tracking-widest mb-2">
@@ -222,19 +226,21 @@ const ResourcesContent = () => {
             )}
           </select>
         </div>
-      </div>
+      </SurfaceCard>
 
       {/* Content Results */}
       {isLoading ? (
-        <div className="py-16 sm:py-24 flex justify-center">
+        <SurfaceCard className="py-16 sm:py-24 flex justify-center">
           <LoadingSpinner size="lg" />
-        </div>
+        </SurfaceCard>
       ) : error ? (
-        <div className="text-center py-12 bg-red-50 text-red-600 rounded-sm sm:rounded-2xl font-bold border border-red-100 border-x-0 sm:border-x">
-          Failed to load resources. Check your connection.
-        </div>
+        <ErrorState
+          title="Resource library unavailable"
+          description="Failed to load resources. Check your connection."
+          onRetry={() => window.location.reload()}
+        />
       ) : !resourcesData?.data?.length || resourcesData?.noResults ? (
-        <div className="text-center py-14 sm:py-20 bg-[var(--bg-card)] border-2 border-dashed border-[var(--border-main)] border-x-0 sm:border-x rounded-sm sm:rounded-3xl">
+        <SurfaceCard className="text-center py-14 sm:py-20 border-dashed border-2">
           {resourcesData?.noResults ? (
             <div className="max-w-3xl mx-auto px-3 sm:px-6">
               <div className="w-16 h-16 bg-purple-50 rounded-2xl flex items-center justify-center mx-auto mb-6">
@@ -249,10 +255,12 @@ const ResourcesContent = () => {
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-left">
                 {resourcesData.recommendations?.resources?.map((rec) => (
-                  <Link
+                  <SurfaceCard
                     key={rec.id}
+                    as={Link}
                     to={`/resources?id=${rec.id}`}
-                    className="group p-4 bg-[var(--bg-active)] border border-transparent hover:border-purple-200 hover:bg-[var(--bg-card)] hover:shadow-xl rounded-2xl transition-all duration-300"
+                    variant="interactive"
+                    className="group p-4 bg-(--bg-active) rounded-2xl transition-all duration-300 text-left"
                   >
                     <div className="flex items-center gap-4">
                       <div className="p-3 bg-[var(--bg-card)] rounded-xl shadow-sm group-hover:bg-purple-50 transition-colors">
@@ -267,24 +275,18 @@ const ResourcesContent = () => {
                         </p>
                       </div>
                     </div>
-                  </Link>
+                  </SurfaceCard>
                 ))}
               </div>
             </div>
           ) : (
-            <div className="py-8 sm:py-10">
-              <div className="w-16 h-16 bg-[var(--bg-active)] rounded-full flex items-center justify-center mx-auto mb-4">
-                <Search className="w-8 h-8 text-[var(--text-muted)]" />
-              </div>
-              <h3 className="text-base sm:text-lg font-bold text-[var(--text-main)] uppercase">
-                No results found
-              </h3>
-              <p className="text-sm text-[var(--text-muted)]">
-                Try adjusting your filters or search query
-              </p>
-            </div>
+            <EmptyState
+              icon={Search}
+              title="No Results Found"
+              description="Try adjusting your filters or search query."
+            />
           )}
-        </div>
+        </SurfaceCard>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
           {resourcesData.data.map((resource) => (
