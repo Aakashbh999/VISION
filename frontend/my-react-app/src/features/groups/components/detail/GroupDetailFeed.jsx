@@ -131,9 +131,9 @@ const GroupDetailFeed = ({
                               </div>
                               {activeSection === "resources" && (
                                 <div className="mt-3">
-                                  <label className="inline-flex items-center gap-2 text-xs font-semibold text-(--text-muted) cursor-pointer">
-                                    <FileUp className="w-4 h-4" />
-                                    Upload image/file (max 5MB)
+                                  <label className="inline-flex items-center gap-2 text-xs font-semibold text-(--text-muted) cursor-pointer hover:text-purple-600">
+                                    <FileUp className="w-4 h-4 text-purple-600"  />
+                                    Upload resource
                                     <input
                                       type="file"
                                       className="hidden"
@@ -144,6 +144,9 @@ const GroupDetailFeed = ({
                                       }
                                     />
                                   </label>
+                                  <p className="text-[11px] text-(--text-muted) mt-1">
+                                    image/file (max 5MB)
+                                  </p>
                                   {resourceFile && (
                                     <p className="text-xs text-(--text-muted) mt-2">
                                       Selected: {resourceFile.name}

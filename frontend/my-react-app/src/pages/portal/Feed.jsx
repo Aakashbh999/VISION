@@ -98,7 +98,7 @@ const Feed = () => {
   }, [isFetching, pagination]);
 
   return (
-    <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8 bg-(--bg-main) text-(--text-main)">
+    <div className="max-w-6xl mx-auto space-y-8 bg-(--bg-main) text-(--text-main)">
       <PrimaryPortalTabs activeTab="feed" />
 
       {/* Header & Tabs Section */}

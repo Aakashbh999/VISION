@@ -14,6 +14,7 @@ const NotificationsWidget = ({ notifications }) => {
     mutationFn: markNotificationRead,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["notifications"] });
+      queryClient.invalidateQueries({ queryKey: ["unreadCount"] });
     },
   });
 
@@ -21,6 +22,7 @@ const NotificationsWidget = ({ notifications }) => {
     mutationFn: deleteNotification,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["notifications"] });
+      queryClient.invalidateQueries({ queryKey: ["unreadCount"] });
     },
   });
 
@@ -28,6 +30,7 @@ const NotificationsWidget = ({ notifications }) => {
     mutationFn: clearNotifications,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["notifications"] });
+      queryClient.invalidateQueries({ queryKey: ["unreadCount"] });
     },
   });
 

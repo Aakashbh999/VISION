@@ -378,10 +378,10 @@ exports.addComment = catchAsync(async (req, res) => {
     await discussionService.createNotification(
       discussion.author_id,
       "comment",
-      `Someone commented on your discussion "${discussion.title}"`,
+      `commented on your post "${discussion.title}"`,
       userId,
-      id,
-      "discussion",
+      comment.comment_id,
+      "comment",
     );
   }
 
@@ -475,7 +475,7 @@ exports.toggleLike = catchAsync(async (req, res) => {
         await discussionService.createNotification(
           discussion.author_id,
           "like",
-          `Someone liked your discussion "${discussion.title}"`,
+          `liked your post "${discussion.title}"`,
           userId,
           id,
           "discussion",

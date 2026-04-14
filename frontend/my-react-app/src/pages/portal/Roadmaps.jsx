@@ -29,7 +29,7 @@ const Roadmaps = () => {
   const roadmapsList = Array.isArray(data) ? data : data?.roadmaps || [];
 
   return (
-    <div className="max-w-6xl mx-auto space-y-6 sm:space-y-8 px-2 sm:px-6 lg:px-8 py-5 sm:py-8 lg:py-10">
+    <div className="max-w-6xl mx-auto space-y-6 sm:space-y-8">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 sm:gap-6">
         <div className="space-y-2">
           <h1 className="text-2xl sm:text-3xl font-black text-[var(--text-main)] tracking-tight flex items-center gap-3">

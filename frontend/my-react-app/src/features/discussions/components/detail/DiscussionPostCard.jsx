@@ -5,6 +5,7 @@ import {
   MessageSquare,
   Share2,
   Bookmark,
+  ThumbsUp,
   Edit,
   AlertTriangle,
   Maximize2,
@@ -186,6 +187,19 @@ const DiscussionPostCard = ({
         </div>
 
         <div className="flex items-center gap-2 border-t border-[var(--border-main)] pt-6">
+          <div
+            className={`flex items-center gap-2 text-xs font-black px-4 py-2 rounded-full border ${
+              Number(discussion.user_vote || 0) === 1
+                ? "text-purple-700 bg-purple-50 border-purple-200 dark:bg-purple-900/30 dark:border-purple-700/50"
+                : "text-[var(--text-main)] bg-[var(--bg-card)] border-[var(--border-main)]"
+            }`}
+            aria-label="Likes"
+          >
+            <ThumbsUp
+              className={`w-4 h-4 ${Number(discussion.user_vote || 0) === 1 ? "fill-current text-purple-600" : "text-purple-600"}`}
+            />
+            {Number(discussion.like_count || 0)}
+          </div>
           <button className="flex items-center gap-2 text-xs font-black text-[var(--text-main)] bg-[var(--bg-card)] border border-[var(--border-main)] px-4 py-2 rounded-full">
             <MessageSquare className="w-4 h-4 text-purple-600" />
             {comments?.length || 0} Comments

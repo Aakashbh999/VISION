@@ -22,11 +22,8 @@ import Pagination from "../../components/ui/Pagination";
 import { formatDistanceToNow } from "date-fns";
 import DeleteAction from "../../components/DeleteAction";
 import profileService from "../../services/profile";
-import { getManagedGroups } from "../../services/group";
 import SurfaceCard from "../../components/ui/SurfaceCard";
 import EmptyState from "../../components/ui/EmptyState";
-import ErrorState from "../../components/ui/ErrorState";
-import Button from "../../components/ui/Button";
 
 const SOCIAL_PAGE_SIZE = 8;
 
@@ -58,13 +55,6 @@ const ManageContent = () => {
     keepPreviousData: true,
     staleTime: 2 * 60 * 1000,
   });
-
-  const groupsQuery = useQuery({
-    queryKey: ["manage", "groups"],
-    queryFn: () => getManagedGroups(),
-    enabled: activeTab === "groups",
-  });
-  const managedGroups = groupsQuery.data || [];
 
   const activeSocialQuery =
     socialTab === "followers" ? followersQuery : followingQuery;
@@ -121,7 +111,7 @@ const ManageContent = () => {
     : UserPlus;
 
   return (
-    <div className="max-w-7xl mx-auto space-y-6 sm:space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 px-2 sm:px-6 lg:px-8 py-5 sm:py-8">
+    <div className="max-w-7xl mx-auto space-y-6 sm:space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
       {/* Header */}
       <SurfaceCard className="p-5 sm:p-8">
         <div>
@@ -129,7 +119,7 @@ const ManageContent = () => {
             Manage Content
           </h1>
           <p className="text-[var(--text-muted)] text-sm sm:text-base lg:text-lg font-medium leading-relaxed max-w-2xl">
-            Keep track of all the resources, discussions, and groups you've
+            Keep track of all the resources and discussions you've
             created across VISION.
           </p>
         </div>
@@ -158,17 +148,6 @@ const ManageContent = () => {
         >
           <MessageSquare className="w-5 h-5" />
           My Discussions
-        </button>
-        <button
-          onClick={() => setActiveTab("groups")}
-          className={`flex items-center gap-2 sm:gap-3 px-4 sm:px-6 py-2.5 sm:py-3 rounded-xl font-bold whitespace-nowrap transition-all ${
-            activeTab === "groups"
-              ? "bg-purple-50 text-purple-600"
-              : "text-[var(--text-muted)] hover:bg-[var(--bg-active)] hover:text-[var(--text-main)]"
-          }`}
-        >
-          <Users className="w-5 h-5" />
-          My Groups
         </button>
         <button
           onClick={() => setActiveTab("social")}
@@ -272,8 +251,8 @@ const ManageContent = () => {
                             targetType="resource"
                             targetId={resource.resource_id}
                             itemName={resource.title}
-                            buttonClassName="p-2 text-[var(--text-muted)] hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                            iconClassName="w-5 h-5"
+                            buttonClassName="px-3 py-1.5 text-xs font-semibold text-red-600 border border-red-200 hover:bg-red-50 rounded-lg transition-colors"
+                            label={<span>Delete</span>}
                           />
                         </td>
                       </tr>
@@ -295,88 +274,6 @@ const ManageContent = () => {
                 actionHref="/discussions/my-posts"
               />
             </div>
-        )}
-
-        {activeTab === "groups" && (
-          <div className="p-4 sm:p-6 md:p-8">
-            <div className="flex justify-between items-center mb-6">
-              <h2 className="text-lg sm:text-2xl font-black text-[var(--text-main)] leading-tight">
-                My Managed Groups
-              </h2>
-            </div>
-
-            {groupsQuery.isLoading ? (
-              <div className="py-14 sm:py-20 flex justify-center">
-                <LoadingSpinner />
-              </div>
-            ) : managedGroups.length === 0 ? (
-              <SurfaceCard className="text-center py-14 sm:py-20 bg-(--bg-active) border-dashed border-2">
-                <EmptyState
-                  icon={Users}
-                  title="No Groups Managed"
-                  description="You are not an admin or co-leader of any groups yet."
-                  actionText="Discover Groups"
-                  actionHref="/groups"
-                />
-              </SurfaceCard>
-            ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-                {managedGroups.map((group) => (
-                  <Link
-                    key={group.group_id}
-                    to={`/groups/${group.group_id}`}
-                    className="block bg-[var(--bg-main)] rounded-2xl border border-[var(--border-main)] overflow-hidden hover:shadow-md transition-all hover:-translate-y-1 group/card focus:outline-none focus:ring-2 focus:ring-purple-500"
-                  >
-                    <div className="h-24 sm:h-32 bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center relative overflow-hidden">
-                      {group.group_image ? (
-                        <img
-                          src={group.group_image}
-                          alt={group.name}
-                          className="w-full h-full object-cover"
-                        />
-                      ) : (
-                        <Users className="w-10 h-10 text-purple-400" />
-                      )}
-
-                      {group.privacy_type !== "public" && (
-                        <span className="absolute top-3 right-3 px-2.5 py-1 bg-black/60 backdrop-blur-sm text-white text-[10px] font-bold uppercase tracking-wider rounded-lg">
-                          {group.privacy_type}
-                        </span>
-                      )}
-                    </div>
-
-                    <div className="p-5">
-                      <h3 className="font-bold text-lg text-[var(--text-main)] line-clamp-1 group-hover/card:text-purple-600 transition-colors mb-1">
-                        {group.name}
-                      </h3>
-                      {group.description && (
-                        <p className="text-xs text-[var(--text-muted)] line-clamp-2 mt-1">
-                          {group.description}
-                        </p>
-                      )}
-
-                      <div className="flex items-center justify-between mt-4 bg-[var(--bg-active)] p-2.5 rounded-xl border border-[var(--border-main)]">
-                        <div className="flex items-center gap-1.5 text-[var(--text-main)] font-bold text-sm">
-                          <Users className="w-4 h-4 text-purple-500" />
-                          <span>{group.members_count || 1}</span>
-                        </div>
-
-                        <span
-                          className={`px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest ${
-                            group.my_role === "owner"
-                              ? "bg-purple-100 text-purple-700 dark:bg-purple-500/20 dark:text-purple-400"
-                              : "bg-blue-100 text-blue-700 dark:bg-blue-500/20 dark:text-blue-400"
-                          }`}
-                        >
-                          {group.my_role === "owner" ? "Owner" : "Co-Admin"}
-                        </span>
-                      </div>
-                    </div>
-                  </Link>
-                ))}
-              </div>
-            )}
-          </div>
         )}
 
         {activeTab === "social" && (

@@ -75,6 +75,7 @@ const GroupDetail = () => {
   }
 
   return (
+    // Intentional full-bleed layout: group detail owns its own spacing.
     <div
       className="h-[calc(100vh-64px)] flex flex-col -m-4 md:-m-6 lg:-m-8 overflow-hidden"
       style={{ backgroundColor: "var(--bg-main)" }}

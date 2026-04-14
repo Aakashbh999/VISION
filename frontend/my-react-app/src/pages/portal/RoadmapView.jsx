@@ -197,7 +197,7 @@ const RoadmapView = () => {
   return (
     <div className="min-h-screen bg-[var(--bg-main)] pb-24 transition-colors duration-300">
       {/* Header */}
-      <div className="max-w-7xl mx-auto px-2 sm:px-6 pt-10 sm:pt-12 mb-12 sm:mb-16">
+      <div className="max-w-7xl mx-auto pt-10 sm:pt-12 mb-12 sm:mb-16">
         <Link
           to="/roadmaps"
           className="inline-flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.3em] text-purple-700 mb-8 hover:translate-x-[-4px] transition-transform"
@@ -241,7 +241,7 @@ const RoadmapView = () => {
       </div>
 
       {/* Linear Track Area */}
-      <div className="max-w-7xl mx-auto px-2 sm:px-6">
+      <div className="max-w-7xl mx-auto">
         <div className="bg-[var(--bg-card)] rounded-sm sm:rounded-[2.5rem] border border-[var(--border-main)] border-x-0 sm:border-x shadow-2xl shadow-purple-900/5 p-5 sm:p-16 lg:p-24 overflow-x-auto overflow-y-visible scrollbar-hide">
           {isLoading ? (
             <div className="h-64 flex items-center justify-center">

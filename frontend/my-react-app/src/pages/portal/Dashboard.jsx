@@ -100,7 +100,7 @@ const Dashboard = () => {
   ];
 
   return (
-    <div className="px-4 sm:px-6 lg:px-8 py-6 space-y-6 bg-[var(--bg-main)] text-[var(--text-main)]">
+    <div className="space-y-6 bg-[var(--bg-main)] text-[var(--text-main)]">
       <PrimaryPortalTabs activeTab="dashboard" />
 
       {/* Stats */}

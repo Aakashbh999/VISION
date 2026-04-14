@@ -80,7 +80,7 @@ const Clubs = () => {
   };
 
   return (
-    <div className="max-w-6xl mx-auto space-y-6 sm:space-y-8 pb-20 px-2 sm:px-6 lg:px-8 py-5 sm:py-8">
+    <div className="max-w-6xl mx-auto space-y-6 sm:space-y-8 pb-20">
       {/* Header Section */}
       <SurfaceCard className="relative bg-[var(--bg-card)]/40 backdrop-blur-xl border-[var(--border-main)]/40 p-5 sm:p-8 shadow-2xl shadow-purple-500/5 overflow-hidden">
         <div className="absolute top-0 right-0 -mr-20 -mt-20 w-64 h-64 bg-purple-500/10 rounded-full blur-3xl pointer-events-none" />

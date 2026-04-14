@@ -25,7 +25,7 @@ const MyPosts = () => {
   const pagination = data?.pagination || { page: 1, totalPages: 1 };
 
   return (
-    <div className="space-y-6 px-2 sm:px-6 lg:px-8 py-5 sm:py-8 lg:py-10">
+    <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center gap-4">
         <Link
@@ -122,8 +122,8 @@ const MyPosts = () => {
                       targetType="discussion"
                       targetId={disc.discussion_id}
                       itemName={disc.title}
-                      buttonClassName="p-1.5 text-[var(--text-muted)] hover:text-red-600 rounded bg-[var(--bg-active)] hover:bg-red-50 transition-colors"
-                      iconClassName="w-4 h-4"
+                      buttonClassName="px-3 py-1.5 text-xs font-semibold text-red-600 border border-red-200 rounded bg-[var(--bg-card)] hover:bg-red-50 transition-colors"
+                      label={<span>Delete</span>}
                     />
                   </div>
                 </div>

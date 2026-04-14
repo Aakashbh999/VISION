@@ -193,9 +193,9 @@ exports.completeStep = catchAsync(async (req, res) => {
       await client.query(
         `
           INSERT INTO portal.notifications
-            (user_id, message, related_type, related_id)
+            (user_id, type, title, message, related_type, related_id)
           VALUES
-            ($1, 'You completed a roadmap step \ud83c\udf89', 'roadmap_step', $2)
+            ($1, 'roadmap_completed', 'Roadmap Progress', 'You completed a roadmap step', 'roadmap_step', $2)
         `,
         [portalUserId, stepId],
       );

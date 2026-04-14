@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from "react";
-import { Link, useSearchParams, useNavigate } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import {
   Search,
   Plus,
@@ -7,7 +7,6 @@ import {
   X,
   Award,
   SlidersHorizontal,
-  ChevronLeft,
 } from "lucide-react";
 // Forcing a fresh build by refactoring imports.
 
@@ -27,7 +26,6 @@ import ErrorState from "../../components/ui/ErrorState";
 import Button from "../../components/ui/Button";
 
 const ResourcesContent = () => {
-  const navigate = useNavigate();
   const { filters, updateFilter, resetFilters } = useFilters();
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
 
@@ -50,16 +48,6 @@ const ResourcesContent = () => {
 
   return (
     <div className="max-w-[1400px] mx-auto px-2 sm:px-4 md:px-8 lg:px-10 py-3 sm:py-4 md:py-8 lg:py-10 pb-16 sm:pb-20">
-      {/* Back navigation */}
-      <div className="mb-4">
-        <button
-          onClick={() => navigate(-1)}
-          className="flex items-center gap-2 text-sm font-semibold text-[var(--text-muted)] hover:text-purple-600 transition-colors"
-        >
-          <ChevronLeft className="w-4 h-4" /> Back
-        </button>
-      </div>
-
       {/* Header Section */}
       <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-4 sm:gap-6 mb-8 sm:mb-10">
         <div className="space-y-1">
