@@ -7,6 +7,7 @@ import {
   Loader2,
   Send,
   Trash2,
+  MoreVertical,
   FileUp,
   Download,
   Pencil,
@@ -14,6 +15,7 @@ import {
   X,
 } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
+import { useState } from "react";
 import Button from "../../../../components/ui/Button";
 import Avatar from "../../../../components/ui/Avatar";
 import Badge from "../../../../components/ui/Badge";
@@ -46,6 +48,8 @@ const GroupDetailFeed = ({
   messagesContainerRef,
   messagesEndRef,
 }) => {
+  const [activeMessageMenuId, setActiveMessageMenuId] = useState(null);
+
   const confirmAndDeletePost = (postId, reason, label = "this item") => {
     const confirmed = window.confirm(
       `Are you sure you want to delete ${label}? This action cannot be undone.`,
@@ -184,6 +188,7 @@ const GroupDetailFeed = ({
                     feedPosts.map((post) => {
                       const isMe =
                         String(post.user_id) === String(user?.portal_user_id);
+                      const isDeletedMessage = Boolean(post.is_deleted);
 
                       if (
                         activeSection === "discussion" ||
@@ -201,7 +206,7 @@ const GroupDetailFeed = ({
                               className="mt-1"
                             />
                             <div
-                              className={`flex flex-col ${isMe ? "items-end" : "items-start"} max-w-[80%]`}
+                              className={`flex flex-col ${isMe ? "items-end" : "items-start"} max-w-[80%] relative group`}
                             >
                               <div className="flex items-center gap-2 mb-1 px-1">
                                 <span className="text-[10px] text-(--text-muted) font-bold uppercase">
@@ -219,13 +224,52 @@ const GroupDetailFeed = ({
                               </div>
                               <div
                                 className={`px-4 py-2.5 rounded-[1.25rem] text-sm font-medium ${
-                                  isMe
+                                  isDeletedMessage
+                                    ? "bg-(--bg-active) text-(--text-muted) border border-(--border-main) italic"
+                                    : isMe
                                     ? "bg-purple-600 text-white rounded-tr-none"
                                     : "bg-(--bg-active) text-(--text-main) border-(--border-main) rounded-tl-none border"
                                 }`}
                               >
-                                {post.content}
+                                {isDeletedMessage ? "Message deleted" : post.content}
                               </div>
+                              {isMe && !isDeletedMessage && (
+                                <div
+                                  className={`absolute top-1/2 -translate-y-1/2 ${isMe ? "-left-10" : "-right-10"}`}
+                                >
+                                  <button
+                                    type="button"
+                                    onClick={() =>
+                                      setActiveMessageMenuId((prev) =>
+                                        prev === post.post_id ? null : post.post_id,
+                                      )
+                                    }
+                                    className="w-7 h-7 rounded-full border border-(--border-main) bg-(--bg-card) text-(--text-muted) hover:text-(--text-main) hover:border-purple-300 flex items-center justify-center opacity-0 group-hover:opacity-100 focus:opacity-100 transition-all"
+                                    aria-label="Message actions"
+                                    title="Message actions"
+                                  >
+                                    <MoreVertical className="w-4 h-4" />
+                                  </button>
+                                  {activeMessageMenuId === post.post_id && (
+                                    <div className="mt-2 w-28 rounded-xl border border-(--border-main) bg-(--bg-card) shadow-lg p-1 z-20">
+                                      <button
+                                        type="button"
+                                        onClick={() => {
+                                          setActiveMessageMenuId(null);
+                                          confirmAndDeletePost(
+                                            post.post_id,
+                                            "Unsent by user",
+                                            "this message",
+                                          );
+                                        }}
+                                        className="w-full text-left px-3 py-2 text-xs font-semibold rounded-lg text-red-500 hover:bg-red-500/10"
+                                      >
+                                        Unsend
+                                      </button>
+                                    </div>
+                                  )}
+                                </div>
+                              )}
                             </div>
                           </div>
                         );

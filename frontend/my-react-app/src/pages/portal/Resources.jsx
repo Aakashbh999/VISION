@@ -268,11 +268,7 @@ const ResourcesContent = () => {
               </div>
             </div>
           ) : (
-            <EmptyState
-              icon={Search}
-              title="No Results Found"
-              description="Try adjusting your filters or search query."
-            />
+            <EmptyState icon={Search} title="No Results Found" description="" />
           )}
         </SurfaceCard>
       ) : (
