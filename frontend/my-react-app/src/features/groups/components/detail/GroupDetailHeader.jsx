@@ -32,19 +32,33 @@ const GroupDetailHeader = ({
       ?.color.replace("text-", "")
       .split("-")[0] || "purple";
 
+  const joinLabelShort =
+    group.privacy_type === "request" ? "Request" : "Join";
+  const joinLabelFull =
+    group.privacy_type === "request" ? "Request to Join" : "Join Sector";
+
   return (
     <>
-      <div className="h-20 px-4 md:px-8 flex items-center justify-between border-b border-(--border-main)/50 sticky top-0 z-20 backdrop-blur-xl bg-(--bg-main)/80">
-        <div className="flex items-center gap-4">
-          <Button 
-            variant="ghost" 
-            size="sm" 
-            className="p-2.5"
+      <div
+        className="
+        px-3 sm:px-4 md:px-8 py-3 md:py-0 md:h-20
+        flex flex-col gap-3 md:flex-row md:items-center md:justify-between md:gap-4
+        border-b border-(--border-main)/50
+        max-md:sticky max-md:top-16 max-md:z-30
+        shrink-0
+        backdrop-blur-xl bg-(--bg-main)/80
+      "
+      >
+        <div className="flex items-center gap-2 sm:gap-4 min-w-0 flex-1 w-full md:w-auto">
+          <Button
+            variant="ghost"
+            size="sm"
+            className="p-2.5 shrink-0"
             onClick={() => navigate(-1)}
           >
             <ChevronLeft className="w-5 h-5" />
           </Button>
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3 sm:gap-4 min-w-0 flex-1">
             <Link
               to={`/groups/${id}/profile`}
               className="shrink-0 w-10 h-10 md:w-12 md:h-12 rounded-xl md:rounded-2xl overflow-hidden bg-slate-900 flex items-center justify-center shadow-lg hover:ring-2 hover:ring-purple-500 hover:ring-offset-1 transition-all"
@@ -60,7 +74,7 @@ const GroupDetailHeader = ({
               )}
             </Link>
             <div className="flex flex-col min-w-0">
-              <h1 className="font-black text-(--text-main) text-sm sm:text-base md:text-lg leading-tight flex items-center gap-2 sm:gap-3 truncate">
+              <h1 className="font-black text-(--text-main) text-sm sm:text-base md:text-lg leading-tight flex items-center gap-2 sm:gap-3 min-w-0">
                 <span className="truncate">{group.name}</span>
                 <Badge
                   color={activeSectionColor}
@@ -70,34 +84,13 @@ const GroupDetailHeader = ({
                 </Badge>
               </h1>
               <span className="text-[10px] font-black text-(--text-muted) uppercase tracking-widest truncate">
-                {group.members} Members • Capacity: {group.capacity}
+                {group.members} Members • Cap. {group.capacity}
               </span>
             </div>
           </div>
-        </div>
 
-        <div className="flex items-center gap-3 border-l border-(--border-main) pl-4">
-          {!isMember ? (
-            group.has_pending_request ? (
-              <Button variant="outline" disabled size="sm">
-                Request Pending
-              </Button>
-            ) : (
-              <Button
-                variant="shiny"
-                size="sm"
-                onClick={handleJoinAction}
-                isLoading={isJoining}
-                className="gap-2"
-              >
-                <UserPlus className="w-4 h-4" />
-                {group.privacy_type === "request"
-                  ? "Request to Join"
-                  : "Join Sector"}
-              </Button>
-            )
-          ) : (
-            <>
+          {isMember && (
+            <div className="flex items-center gap-2 shrink-0 md:border-l md:border-(--border-main) md:pl-4">
               {isAdmin && (
                 <Button
                   variant={showAdminPanel ? "shiny" : "ghost"}
@@ -106,12 +99,11 @@ const GroupDetailHeader = ({
                     setShowAdminPanel(!showAdminPanel);
                     setIsSidebarOpen(true);
                   }}
-                  className="p-2.5 gap-1.5 md:gap-2 flex"
+                  className="h-9 w-9 p-0 flex items-center justify-center"
+                  aria-label="Open admin panel"
+                  title="Admin panel"
                 >
-                  <Settings className="w-4 h-4 md:w-5 md:h-5" />
-                  <span className="text-[10px] md:text-xs font-bold hidden sm:inline">
-                    Admin Panel
-                  </span>
+                  <Settings className="w-4 h-4" />
                 </Button>
               )}
 
@@ -119,15 +111,50 @@ const GroupDetailHeader = ({
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="p-2.5 lg:hidden"
+                  className="h-9 w-9 p-0 lg:hidden flex items-center justify-center"
                   onClick={() => setIsSidebarOpen(true)}
+                  aria-label="Open group menu"
                 >
                   <Menu className="w-5 h-5" />
                 </Button>
               )}
-            </>
+            </div>
           )}
         </div>
+
+        {!isMember && (
+          <div
+            className="
+            flex items-center justify-stretch gap-2 md:gap-3
+            w-full max-md:pt-2 max-md:border-t max-md:border-(--border-main)/40
+            md:w-auto md:justify-end md:border-l md:border-t-0 md:border-(--border-main) md:pl-4 md:shrink-0
+          "
+          >
+            {group.has_pending_request ? (
+              <Button
+                variant="outline"
+                disabled
+                size="sm"
+                className="w-full md:w-auto justify-center"
+              >
+                <span className="sm:hidden">Pending</span>
+                <span className="hidden sm:inline">Request Pending</span>
+              </Button>
+            ) : (
+              <Button
+                variant="shiny"
+                size="sm"
+                onClick={handleJoinAction}
+                isLoading={isJoining}
+                className="gap-2 w-full md:w-auto justify-center shrink-0"
+              >
+                <UserPlus className="w-4 h-4 shrink-0" />
+                <span className="sm:hidden">{joinLabelShort}</span>
+                <span className="hidden sm:inline">{joinLabelFull}</span>
+              </Button>
+            )}
+          </div>
+        )}
       </div>
     </>
   );
