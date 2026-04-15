@@ -32,8 +32,7 @@ const GroupDetailHeader = ({
       ?.color.replace("text-", "")
       .split("-")[0] || "purple";
 
-  const joinLabelShort =
-    group.privacy_type === "request" ? "Request" : "Join";
+  const joinLabelShort = group.privacy_type === "request" ? "Request" : "Join";
   const joinLabelFull =
     group.privacy_type === "request" ? "Request to Join" : "Join Sector";
 
@@ -41,10 +40,10 @@ const GroupDetailHeader = ({
     <>
       <div
         className="
-        px-3 sm:px-4 md:px-8 py-3 md:py-0 md:h-20
-        flex flex-col gap-3 md:flex-row md:items-center md:justify-between md:gap-4
+        px-3 sm:px-4 md:px-8 py-1 md:py-0 md:h-20
+        flex flex-col gap-2 md:flex-row md:items-center md:justify-between md:gap-4
         border-b border-(--border-main)/50
-        max-md:sticky max-md:top-16 max-md:z-30
+        absolute left-0 top-0 w-full z-30
         shrink-0
         backdrop-blur-xl bg-(--bg-main)/80
       "
