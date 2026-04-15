@@ -18,7 +18,6 @@ const SocialFeedCard = ({ item }) => {
   const {
     actor_name,
     actor_profile_image,
-    action_type,
     created_at,
     entity_title,
     metadata,
@@ -45,13 +44,11 @@ const SocialFeedCard = ({ item }) => {
                   <span className="font-bold text-(--text-main) text-sm sm:text-base transition-colors">
                     {actor_name || "User"}
                   </span>
-                  {(action_type === "group_posted" ||
-                    action_type === "group_notice_posted") &&
-                    item.group_name && (
-                      <Badge color="purple" size="xs">
-                        {item.group_name}
-                      </Badge>
-                    )}
+                  {item.group_name && (
+                    <Badge color="purple" size="xs">
+                      {item.group_name}
+                    </Badge>
+                  )}
                   {is_following_actor && (
                     <span className="text-[10px] bg-sky-500/10 text-sky-600 px-1.5 py-0.5 rounded-md font-black uppercase tracking-tight">
                       Following

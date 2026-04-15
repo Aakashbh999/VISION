@@ -204,10 +204,11 @@ const buildRankedFeedQuery = ({ config, includeBreakdown = false }) => {
         r.discussion_title,
         r.resource_title,
         r.roadmap_step_title,
-        r.group_name,
         r.post_preview,
+        r.group_name,
         r.metadata ->> 'title'
     ) AS entity_title,
+    r.group_name,
     r.event_group_id,
     r.post_section,
     r.post_preview,

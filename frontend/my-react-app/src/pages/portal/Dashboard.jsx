@@ -135,9 +135,34 @@ const Dashboard = () => {
         </div>
       </div>
 
-      {/* Milestones + Notifications */}
+      {/* Row 3: Left stack (Milestones + Quick Actions) + Notifications */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <XpMilestoneCard />
+        <div className="space-y-6">
+          <XpMilestoneCard />
+
+          <SurfaceCard>
+            <CardHeader className="mb-3">
+              <CardTitle className="text-(--text-muted)">Quick Actions</CardTitle>
+            </CardHeader>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              {quickActions.map((action) => (
+                <Link
+                  key={action.label}
+                  to={action.href}
+                  className="flex items-center gap-3 p-3 rounded-2xl border border-(--border-main) bg-(--bg-active) hover:border-purple-300 hover:bg-(--bg-card) transition"
+                >
+                  <action.icon className="w-4 h-4 text-purple-600" />
+                  <div>
+                    <p className="text-sm font-bold text-(--text-main)">
+                      {action.label}
+                    </p>
+                    <p className="text-xs text-(--text-muted)">{action.helper}</p>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </SurfaceCard>
+        </div>
 
         <SurfaceCard>
           <CardHeader className="mb-3">
@@ -178,28 +203,6 @@ const Dashboard = () => {
           </CardBody>
         </SurfaceCard>
       </div>
-
-      {/* Quick Actions */}
-      <SurfaceCard>
-        <CardHeader className="mb-3">
-          <CardTitle className="text-(--text-muted)">Quick Actions</CardTitle>
-        </CardHeader>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-          {quickActions.map((action) => (
-            <Link
-              key={action.label}
-              to={action.href}
-              className="flex items-center gap-3 p-3 rounded-2xl border border-(--border-main) bg-(--bg-active) hover:border-purple-300 hover:bg-(--bg-card) transition"
-            >
-              <action.icon className="w-4 h-4 text-purple-600" />
-              <div>
-                <p className="text-sm font-bold text-(--text-main)">{action.label}</p>
-                <p className="text-xs text-(--text-muted)">{action.helper}</p>
-              </div>
-            </Link>
-          ))}
-        </div>
-      </SurfaceCard>
 
       {error && (
         <ErrorState

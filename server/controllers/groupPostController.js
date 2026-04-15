@@ -29,10 +29,20 @@ exports.getPosts = catchAsync(async (req, res) => {
       SELECT gp.post_id, gp.user_id, gp.content, gp.created_at, gp.section,
              gp.qa_post_type, gp.qa_question_post_id,
              gp.file_url, gp.file_name, gp.file_type,
+             gp.deleted_at,
+             (gp.deleted_at IS NOT NULL) AS is_deleted,
              u.full_name, u.profile_image
       FROM portal.group_posts gp
       JOIN portal.users u ON u.user_id = gp.user_id
-      WHERE gp.group_id = $1 AND gp.section = $2 AND gp.deleted_at IS NULL
+      WHERE gp.group_id = $1
+        AND gp.section = $2
+        AND (
+          gp.deleted_at IS NULL
+          OR (
+            gp.section IN ('general', 'discussion')
+            AND gp.deleted_at >= NOW() - INTERVAL '24 hours'
+          )
+        )
     `;
   const params = [id, section];
 
