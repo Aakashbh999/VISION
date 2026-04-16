@@ -46,7 +46,7 @@ const ProfilePage = () => {
       <div className="min-h-screen flex items-center justify-center">
         <div className="flex flex-col items-center gap-3">
           <div className="animate-spin rounded-full h-10 w-10 border-2 border-purple-200 border-t-purple-600"></div>
-          <p className="text-sm text-[var(--text-muted)]">Loading profile...</p>
+          <p className="text-sm text-(--text-muted)">Loading profile...</p>
         </div>
       </div>
     );
@@ -54,7 +54,7 @@ const ProfilePage = () => {
 
   if (!profile) {
     return (
-      <div className="p-8 text-center text-[var(--text-muted)]">
+      <div className="p-8 text-center text-(--text-muted)">
         Profile not found.
       </div>
     );
@@ -78,6 +78,8 @@ const ProfilePage = () => {
         draftProfile={draftProfile}
         handleDraftChange={handleDraftChange}
         programName={programName}
+        handleEditCancel={handleEditCancel}
+        handleSaveChanges={handleSaveChanges}
       />
 
       <ProfileImageEditors
@@ -90,15 +92,7 @@ const ProfilePage = () => {
         handleBannerDone={handleBannerDone}
       />
 
-      <div className="flex justify-end">
-        <ProfileEditActionBar
-          isOwner={isOwner}
-          isEditMode={isEditMode}
-          isSavingProfile={isSavingProfile}
-          handleEditCancel={handleEditCancel}
-          handleSaveChanges={handleSaveChanges}
-        />
-      </div>
+      {/* Removed bottom Save/Cancel bar, now in banner */}
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
         <div className="lg:col-span-2 space-y-12">

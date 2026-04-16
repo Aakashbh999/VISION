@@ -73,11 +73,9 @@ const ManageContent = () => {
       setSelectedSocialUser(null);
       return;
     }
-
     const stillVisible = selectedSocialUser
       ? socialUsers.some((user) => user.user_id === selectedSocialUser.user_id)
       : false;
-
     if (!stillVisible) {
       setSelectedSocialUser(socialUsers[0]);
     }
@@ -100,74 +98,56 @@ const ManageContent = () => {
     });
   };
 
-  const socialActionLabel = useMemo(() => {
-    if (!selectedSocialUser) return "";
-    if (selectedSocialUser.is_following) return "Unfollow";
-    return socialTab === "followers" ? "Follow Back" : "Follow";
-  }, [selectedSocialUser, socialTab]);
-
+  const socialActionLabel = selectedSocialUser?.is_following
+    ? "Unfollow"
+    : "Follow";
   const socialActionIcon = selectedSocialUser?.is_following
     ? UserMinus
     : UserPlus;
 
   return (
-    <div className="max-w-7xl mx-auto space-y-6 sm:space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+    <div className="max-w-7xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
       {/* Header */}
-      <SurfaceCard className="p-5 sm:p-8">
+      <div className="bg-[var(--bg-card)] p-8 rounded-3xl shadow-sm border border-[var(--border-main)] flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
         <div>
-          <h1 className="text-xl sm:text-3xl lg:text-4xl font-black text-[var(--text-main)] tracking-tight mb-1 sm:mb-2 leading-tight">
+          <h1 className="text-3xl lg:text-4xl font-black text-[var(--text-main)] tracking-tight mb-2">
             Manage Content
           </h1>
-          <p className="text-[var(--text-muted)] text-sm sm:text-base lg:text-lg font-medium leading-relaxed max-w-2xl">
-            Keep track of all the resources and discussions you've
-            created across VISION.
+          <p className="text-[var(--text-muted)] text-lg font-medium max-w-2xl">
+            Keep track of all the resources, discussions, and social connections
+            you've created across VISION.
           </p>
         </div>
-      </SurfaceCard>
+      </div>
 
       {/* Tabs */}
-      <SurfaceCard className="p-2 flex gap-2 overflow-x-auto">
-        <button
-          onClick={() => setActiveTab("resources")}
-          className={`flex items-center gap-2 sm:gap-3 px-4 sm:px-6 py-2.5 sm:py-3 rounded-xl font-bold whitespace-nowrap transition-all ${
-            activeTab === "resources"
-              ? "bg-purple-50 text-purple-600"
-              : "text-[var(--text-muted)] hover:bg-[var(--bg-active)] hover:text-[var(--text-main)]"
-          }`}
-        >
-          <BookOpen className="w-5 h-5" />
-          My Resources
-        </button>
-        <button
-          onClick={() => setActiveTab("discussions")}
-          className={`flex items-center gap-2 sm:gap-3 px-4 sm:px-6 py-2.5 sm:py-3 rounded-xl font-bold whitespace-nowrap transition-all ${
-            activeTab === "discussions"
-              ? "bg-purple-50 text-purple-600"
-              : "text-[var(--text-muted)] hover:bg-[var(--bg-active)] hover:text-[var(--text-main)]"
-          }`}
-        >
-          <MessageSquare className="w-5 h-5" />
-          My Discussions
-        </button>
-        <button
-          onClick={() => setActiveTab("social")}
-          className={`flex items-center gap-2 sm:gap-3 px-4 sm:px-6 py-2.5 sm:py-3 rounded-xl font-bold whitespace-nowrap transition-all ${
-            activeTab === "social"
-              ? "bg-purple-50 text-purple-600"
-              : "text-[var(--text-muted)] hover:bg-[var(--bg-active)] hover:text-[var(--text-main)]"
-          }`}
-        >
-          <UserRound className="w-5 h-5" />
-          Social
-        </button>
-      </SurfaceCard>
+      <div className="bg-[var(--bg-card)] p-2 rounded-2xl shadow-sm border border-[var(--border-main)] flex gap-2 overflow-x-auto">
+        {[
+          { id: "resources", label: "My Resources", icon: BookOpen },
+          { id: "discussions", label: "My Discussions", icon: MessageSquare },
+          { id: "social", label: "Social", icon: Users },
+        ].map((tab) => (
+          <button
+            key={tab.id}
+            onClick={() => setActiveTab(tab.id)}
+            className={`flex items-center gap-3 px-6 py-3 rounded-xl font-bold whitespace-nowrap transition-all ${
+              activeTab === tab.id
+                ? "bg-purple-50 text-purple-600 dark:bg-purple-950/30 dark:text-purple-400"
+                : "text-[var(--text-muted)] hover:bg-[var(--bg-active)] hover:text-[var(--text-main)]"
+            }`}
+          >
+            <tab.icon className="w-5 h-5" />
+            {tab.label}
+          </button>
+        ))}
+      </div>
 
       {/* Tab Content */}
-      <SurfaceCard className="overflow-hidden min-h-[400px]" padding="none">
+      <SurfaceCard className="overflow-hidden">
         {activeTab === "resources" && (
-          <div className="p-4 sm:p-6 md:p-8">
+          <div className="p-6 md:p-8">
             <div className="flex justify-between items-center mb-6">
-              <h2 className="text-lg sm:text-2xl font-black text-[var(--text-main)] leading-tight">
+              <h2 className="text-2xl font-black text-[var(--text-main)]">
                 Resource Uploads
               </h2>
               <Link
@@ -179,19 +159,17 @@ const ManageContent = () => {
             </div>
 
             {loadingResources ? (
-              <div className="py-14 sm:py-20 flex justify-center">
+              <div className="py-20 flex justify-center">
                 <LoadingSpinner />
               </div>
             ) : resources.length === 0 ? (
-              <SurfaceCard className="text-center py-14 sm:py-20 bg-(--bg-active) border-dashed border-2">
-                <EmptyState
-                  icon={BookOpen}
-                  title="No Resources Found"
-                  description="You haven't uploaded any resources yet."
-                  actionText="Go to Library"
-                  actionHref="/resources"
-                />
-              </SurfaceCard>
+              <EmptyState
+                icon={BookOpen}
+                title="No Resources Found"
+                description="You haven't uploaded any resources yet."
+                actionText="Go to Library"
+                actionHref="/resources"
+              />
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full text-left border-collapse">
@@ -237,10 +215,10 @@ const ManageContent = () => {
                           <span
                             className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold border ${
                               resource.status === "approved"
-                                ? "bg-green-50 text-green-700 border-green-200"
+                                ? "bg-green-50 text-green-700 border-green-200 dark:bg-green-950/30 dark:text-green-300 dark:border-green-800"
                                 : resource.status === "rejected"
-                                  ? "bg-red-50 text-red-700 border-red-200"
-                                  : "bg-yellow-50 text-yellow-700 border-yellow-200"
+                                  ? "bg-red-50 text-red-700 border-red-200 dark:bg-red-950/30 dark:text-red-300 dark:border-red-800"
+                                  : "bg-yellow-50 text-yellow-700 border-yellow-200 dark:bg-yellow-950/30 dark:text-yellow-300 dark:border-yellow-800"
                             }`}
                           >
                             {resource.status}
@@ -251,7 +229,7 @@ const ManageContent = () => {
                             targetType="resource"
                             targetId={resource.resource_id}
                             itemName={resource.title}
-                            buttonClassName="px-3 py-1.5 text-xs font-semibold text-red-600 border border-red-200 hover:bg-red-50 rounded-lg transition-colors"
+                            buttonClassName="px-3 py-1.5 text-xs font-semibold text-red-600 border border-red-200 hover:bg-red-50 dark:border-red-800 dark:text-red-400 dark:hover:bg-red-950/30 rounded-lg transition-colors"
                             label={<span>Delete</span>}
                           />
                         </td>
@@ -265,15 +243,15 @@ const ManageContent = () => {
         )}
 
         {activeTab === "discussions" && (
-            <div className="p-4 sm:p-6 md:p-8 text-center py-16 sm:py-20">
-              <EmptyState
-                icon={MessageSquare}
-                title="My Discussions"
-                description="Manage your discussion threads here."
-                actionText="Go to My Posts"
-                actionHref="/discussions/my-posts"
-              />
-            </div>
+          <div className="p-4 sm:p-6 md:p-8 text-center py-16 sm:py-20">
+            <EmptyState
+              icon={MessageSquare}
+              title="My Discussions"
+              description="Manage your discussion threads here."
+              actionText="Go to My Posts"
+              actionHref="/discussions/my-posts"
+            />
+          </div>
         )}
 
         {activeTab === "social" && (
@@ -288,49 +266,49 @@ const ManageContent = () => {
                   connection from one place.
                 </p>
               </div>
-
               <div className="flex bg-[var(--bg-active)] rounded-2xl p-1 border border-[var(--border-main)] w-full lg:w-auto">
-                {[
-                  { key: "followers", label: "Followers" },
-                  { key: "following", label: "Following" },
-                ].map((item) => (
-                  <button
-                    key={item.key}
-                    onClick={() => setSocialTab(item.key)}
-                    className={`flex-1 lg:flex-none px-5 py-2.5 rounded-xl text-sm font-bold transition-all ${
-                      socialTab === item.key
-                        ? "bg-[var(--bg-card)] text-purple-500 border border-[var(--border-main)] shadow-sm"
-                        : "text-[var(--text-muted)] hover:text-[var(--text-main)]"
-                    }`}
-                  >
-                    {item.label}
-                  </button>
-                ))}
+                <button
+                  onClick={() => setSocialTab("followers")}
+                  className={`flex-1 lg:flex-none px-5 py-2.5 rounded-xl text-sm font-bold transition-all ${
+                    socialTab === "followers"
+                      ? "bg-[var(--bg-card)] text-purple-500 border border-[var(--border-main)] shadow-sm"
+                      : "text-[var(--text-muted)] hover:text-[var(--text-main)]"
+                  }`}
+                >
+                  Followers
+                </button>
+                <button
+                  onClick={() => setSocialTab("following")}
+                  className={`flex-1 lg:flex-none px-5 py-2.5 rounded-xl text-sm font-bold transition-all ${
+                    socialTab === "following"
+                      ? "bg-[var(--bg-card)] text-purple-500 border border-[var(--border-main)] shadow-sm"
+                      : "text-[var(--text-muted)] hover:text-[var(--text-main)]"
+                  }`}
+                >
+                  Following
+                </button>
               </div>
             </div>
 
             <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,1.5fr)_minmax(320px,0.75fr)] gap-4 sm:gap-6 items-start">
-              <div className="space-y-4">
-                {(activeSocialQuery.isLoading ||
-                  activeSocialQuery.isFetching) &&
-                !socialUsers.length ? (
-                  <div className="py-16 sm:py-24 flex justify-center bg-[var(--bg-active)] rounded-3xl border border-[var(--border-main)]">
-                    <LoadingSpinner />
-                  </div>
-                ) : socialUsers.length === 0 ? (
-                  <div className="py-14 sm:py-20 text-center bg-[var(--bg-active)] rounded-3xl border border-dashed border-[var(--border-main)]">
-                    <Search className="w-10 h-10 text-[var(--text-muted)] mx-auto mb-3" />
-                    <h3 className="text-lg font-black text-[var(--text-main)] mb-1">
-                      No {socialTab} yet
-                    </h3>
-                    <p className="text-sm text-[var(--text-muted)]">
-                      {socialTab === "followers"
-                        ? "No one is following you yet."
-                        : "You aren't following anyone yet."}
-                    </p>
-                  </div>
-                ) : (
-                  <>
+              {/* Left column: list of users – NO FLICKER */}
+              <div className="relative">
+                <div
+                  className={`transition-opacity duration-300 ${activeSocialQuery.isFetching ? "opacity-60" : "opacity-100"}`}
+                >
+                  {socialUsers.length === 0 ? (
+                    <div className="py-14 sm:py-20 text-center bg-[var(--bg-active)] rounded-3xl border border-dashed border-[var(--border-main)]">
+                      <Search className="w-10 h-10 text-[var(--text-muted)] mx-auto mb-3" />
+                      <h3 className="text-lg font-black text-[var(--text-main)] mb-1">
+                        No {socialTab} yet
+                      </h3>
+                      <p className="text-sm text-[var(--text-muted)]">
+                        {socialTab === "followers"
+                          ? "No one is following you yet."
+                          : "You aren't following anyone yet."}
+                      </p>
+                    </div>
+                  ) : (
                     <div className="grid gap-3">
                       {socialUsers.map((user) => {
                         const isSelected =
@@ -356,7 +334,6 @@ const ManageContent = () => {
                                 <UserRound className="w-5 h-5 text-purple-600" />
                               )}
                             </div>
-
                             <div className="flex-1 min-w-0">
                               <div className="flex items-center gap-2 flex-wrap">
                                 <p className="font-black text-[var(--text-main)] truncate">
@@ -391,7 +368,6 @@ const ManageContent = () => {
                               {rowContent}
                               <ChevronRight className="w-5 h-5 shrink-0 text-[var(--text-muted)]" />
                             </Link>
-
                             <button
                               type="button"
                               onClick={() => setSelectedSocialUser(user)}
@@ -410,22 +386,19 @@ const ManageContent = () => {
                         );
                       })}
                     </div>
+                  )}
+                </div>
 
-                    {socialPagination.totalPages > 1 && (
-                      <Pagination
-                        currentPage={socialPagination.page}
-                        totalPages={socialPagination.totalPages}
-                        onPageChange={
-                          socialTab === "followers"
-                            ? setFollowersPage
-                            : setFollowingPage
-                        }
-                      />
-                    )}
-                  </>
+                {/* Loading overlay – no flicker */}
+                {(activeSocialQuery.isFetching ||
+                  activeSocialQuery.isLoading) && (
+                  <div className="absolute inset-0 flex justify-center items-center bg-[var(--bg-active)]/50 backdrop-blur-sm rounded-3xl z-10">
+                    <LoadingSpinner />
+                  </div>
                 )}
               </div>
 
+              {/* Right column: selected user details */}
               <div className="hidden xl:block bg-[var(--bg-active)] rounded-3xl border border-[var(--border-main)] p-4 sm:p-6 sticky top-6">
                 {selectedSocialUser ? (
                   <div className="space-y-4 sm:space-y-5">
@@ -441,7 +414,6 @@ const ManageContent = () => {
                           <UserRound className="w-7 h-7 text-purple-600" />
                         )}
                       </div>
-
                       <div className="min-w-0 flex-1">
                         <h3 className="text-lg font-black text-[var(--text-main)] truncate">
                           {selectedSocialUser.full_name}
@@ -457,7 +429,6 @@ const ManageContent = () => {
                         </p>
                       </div>
                     </div>
-
                     <div className="space-y-3">
                       <Link
                         to={`/profile/${selectedSocialUser.user_id}`}
@@ -465,7 +436,6 @@ const ManageContent = () => {
                       >
                         View Profile <ArrowRight className="w-4 h-4" />
                       </Link>
-
                       <button
                         type="button"
                         onClick={handleSocialAction}
@@ -502,12 +472,12 @@ const ManageContent = () => {
               </div>
             </div>
 
+            {/* Error messages */}
             {socialTab === "followers" && followersQuery.error && (
               <div className="text-center py-4 text-sm text-rose-500 bg-rose-500/10 rounded-2xl border border-rose-500/20">
                 Failed to load followers.
               </div>
             )}
-
             {socialTab === "following" && followingQuery.error && (
               <div className="text-center py-4 text-sm text-rose-500 bg-rose-500/10 rounded-2xl border border-rose-500/20">
                 Failed to load following.

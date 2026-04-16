@@ -1,4 +1,4 @@
-import { useState, useRef, useMemo } from "react";
+import { useState, useRef, useMemo, useEffect } from "react";
 import {
   Code2,
   Database,
@@ -54,42 +54,44 @@ const INITIAL_DOT_POSITIONS = Array.from({ length: DOT_COUNT }, () => ({
 const HeroFireflyIcons = () => {
   const containerRef = useRef(null);
   const [dotPositions] = useState(INITIAL_DOT_POSITIONS);
-  const [mousePos, setMousePos] = useState({ x: 50, y: 50 });
-  const [isHovering, setIsHovering] = useState(false);
+  const [glowingIndices, setGlowingIndices] = useState([]);
 
-  const handleMouseMove = (e) => {
-    if (!containerRef.current) return;
-    const rect = containerRef.current.getBoundingClientRect();
-    const x = ((e.clientX - rect.left) / rect.width) * 100;
-    const y = ((e.clientY - rect.top) / rect.height) * 100;
-    setMousePos({ x, y });
-  };
-
-  const activeIndices = useMemo(() => {
-    if (!isHovering) return [];
-    const indices = [];
-    for (let i = 0; i < dotPositions.length; i++) {
-      const dot = dotPositions[i];
-      const dx = dot.x - mousePos.x;
-      const dy = dot.y - mousePos.y;
-      const dist = Math.sqrt(dx * dx + dy * dy);
-      if (dist <= GLOW_RADIUS) {
-        indices.push(i);
-      }
+  // Helper to get N unique random indices
+  function getRandomIndices(count, max) {
+    const indices = new Set();
+    while (indices.size < count) {
+      indices.add(Math.floor(Math.random() * max));
     }
-    return indices;
-  }, [mousePos, dotPositions, isHovering]);
+    return Array.from(indices);
+  }
+
+  useEffect(() => {
+    // Pick a random number between 20 and 30
+    function pickRandomGlow() {
+      const count = Math.floor(Math.random() * 11) + 20; // 20 to 30
+      setGlowingIndices(getRandomIndices(count, dotPositions.length));
+    }
+    pickRandomGlow();
+    const interval = setInterval(pickRandomGlow, 1500); // Change every 1.5s
+    return () => clearInterval(interval);
+  }, [dotPositions.length]);
+
+  // Heartbeat: only one icon at a time
+  const [heartbeatIndex, setHeartbeatIndex] = useState(0);
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setHeartbeatIndex((prev) => (prev + 1) % icons.length);
+    }, 1200); // 1.2s per icon
+    return () => clearInterval(interval);
+  }, []);
 
   return (
     <div
       ref={containerRef}
       className="relative w-full h-64 sm:h-72 lg:h-80 overflow-hidden"
-      onMouseEnter={() => setIsHovering(true)}
-      onMouseMove={handleMouseMove}
-      onMouseLeave={() => setIsHovering(false)}
     >
       {dotPositions.map((pos, i) => {
-        const isActive = activeIndices.includes(i);
+        const isActive = glowingIndices.includes(i);
         return (
           <div
             key={i}
@@ -108,7 +110,7 @@ const HeroFireflyIcons = () => {
 
       {icons.map((Icon, i) => {
         const [x, y] = positions[i];
-
+        const isBeating = i === heartbeatIndex;
         return (
           <div
             key={i}
@@ -119,12 +121,30 @@ const HeroFireflyIcons = () => {
               transform: "translate(-50%, -50%)",
             }}
           >
-            <div className="p-2 rounded-lg text-purple-500/70 hover:text-purple-600 transition-colors">
+            <div
+              className={`p-2 rounded-lg text-purple-500/70 hover:text-purple-600 transition-colors${isBeating ? " animate-heartbeat" : ""}`}
+              style={
+                isBeating
+                  ? {
+                      animation: "heartbeat 1.1s cubic-bezier(0.4, 0, 0.6, 1)",
+                    }
+                  : {}
+              }
+            >
               <Icon size={18} strokeWidth={1.6} />
             </div>
           </div>
         );
       })}
+      {/* Heartbeat keyframes style */}
+      <style>{`
+      @keyframes heartbeat {
+        0% { transform: scale(1); }
+        20% { transform: scale(1.32); }
+        40% { transform: scale(1); }
+        100% { transform: scale(1); }
+      }
+    `}</style>
     </div>
   );
 };

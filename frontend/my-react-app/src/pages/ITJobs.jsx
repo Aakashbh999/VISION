@@ -68,7 +68,7 @@ const ITJobs = () => {
                   {job.salary_range}
                 </span>
               </p>
-              <SkillTags skillsString={job.key_skills} />
+              <SkillTags skills={job.key_skills} maxVisible={4} />
             </div>
           </div>
         ))}

@@ -1,3 +1,4 @@
+import SkillTags from "../../components/ui/SkillTags";
 import { useState, useEffect, useMemo } from "react";
 import { useClubs } from "../../hooks/useClubHooks";
 import { Link, useSearchParams } from "react-router-dom";
@@ -20,7 +21,6 @@ const specialtiesList = [
   "Data",
   "Robotics",
   "Open Source",
-  "General",
 ];
 
 const Clubs = () => {
@@ -51,7 +51,20 @@ const Clubs = () => {
     limit: 9,
   });
 
-  const clubs = useMemo(() => clubsData?.clubs || [], [clubsData]);
+  // Filter clubs by specialty if a filter is selected (frontend-only)
+  const clubs = useMemo(() => {
+    const allClubs = clubsData?.clubs || [];
+    if (!filters.specialty || filters.specialty === "All") return allClubs;
+    const selected = filters.specialty.toLowerCase().trim();
+    return allClubs.filter(
+      (club) =>
+        club.specialty &&
+        club.specialty
+          .split(",")
+          .map((s) => s.trim().toLowerCase())
+          .some((tag) => tag.includes(selected)),
+    );
+  }, [clubsData, filters.specialty]);
   const pagination = clubsData?.pagination;
 
   const activeSpecialty = filters.specialty || "All";
@@ -205,13 +218,17 @@ const Clubs = () => {
             <SurfaceCard className="p-10 sm:p-16 lg:p-24 shadow-inner">
               <EmptyState
                 icon={Search}
-                title={`No Clubs Found${filters.search ? ` for "${filters.search}"` : ""}`}
-                description="We couldn't find communities matching your criteria."
-                actionText="Register a New Club"
-                actionOnClick={() =>
-                  window.open(
-                    "mailto:admin@vision.edu.np?subject=New Club Request",
-                    "_blank",
+                title={`No Clubs Found${filters.specialty ? ` for "${filters.specialty}"` : filters.search ? ` for "${filters.search}"` : ""}`}
+                description={
+                  filters.specialty ? (
+                    <span className="font-bold">
+                      No clubs found for this tag on this page.{" "}
+                      <span className="text-purple-600 font-bold">
+                        Try checking other pages.
+                      </span>
+                    </span>
+                  ) : (
+                    "We couldn't find communities matching your criteria."
                   )
                 }
               />
@@ -275,10 +292,13 @@ const Clubs = () => {
 
                   <div className="flex items-center mt-5 sm:mt-6 pt-4 sm:pt-5 border-t border-[var(--border-main)]/80">
                     <div className="flex items-center gap-2">
-                      <span className="inline-flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest px-2.5 py-1 text-purple-500 bg-purple-500/15 border border-purple-500/25 rounded-lg">
-                        <Tag className="w-3 h-3" />{" "}
-                        {club.specialty || "General"}
-                      </span>
+                      <SkillTags
+                        skills={club.specialty || "General"}
+                        badgeVariant="purple"
+                        badgeTone="soft"
+                        maxVisible={3}
+                        className="text-[5px] font-black uppercase tracking-widest px-2 py-0.5"
+                      />
                     </div>
                   </div>
                 </SurfaceCard>

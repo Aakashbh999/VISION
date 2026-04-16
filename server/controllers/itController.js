@@ -38,69 +38,69 @@ const COLUMNS = {
    Reusable Paginated Fetch Helper
  ============================================ */
 const fetchPaginatedData = async (req, res, tableName, orderColumn = "id") => {
-    // Validate table name
-    if (!COLUMNS[tableName]) {
-      return res.status(400).json({ error: "Invalid table requested" });
-    }
+  // Validate table name
+  if (!COLUMNS[tableName]) {
+    return res.status(400).json({ error: "Invalid table requested" });
+  }
 
-    const { page, limit, offset } = parsePagination(req);
-    const columns = COLUMNS[tableName];
+  const { page, limit, offset } = parsePagination(req);
+  const columns = COLUMNS[tableName];
 
-    const dataQuery = `
+  const dataQuery = `
       SELECT ${columns}
       FROM portal.${tableName}
       ORDER BY ${orderColumn} ASC
       LIMIT $1 OFFSET $2
     `;
 
-    const countQuery = `
+  const countQuery = `
       SELECT COUNT(*)
       FROM portal.${tableName}
     `;
 
-    const [dataResult, countResult] = await Promise.all([
-      pool.query(dataQuery, [limit, offset]),
-      pool.query(countQuery),
-    ]);
+  const [dataResult, countResult] = await Promise.all([
+    pool.query(dataQuery, [limit, offset]),
+    pool.query(countQuery),
+  ]);
 
-    const total = parseInt(countResult.rows[0].count);
+  const total = parseInt(countResult.rows[0].count);
 
-    return res.json({
-      data: dataResult.rows,
-      pagination: {
-        page,
-        limit,
-        total,
-        totalPages: Math.ceil(total / limit),
-      },
-    });
+  return res.json({
+    data: dataResult.rows,
+    pagination: {
+      page,
+      limit,
+      total,
+      totalPages: Math.ceil(total / limit),
+    },
+  });
 };
 
 /* ============================================
    Reusable Slug-Based Fetch Helper
  ============================================ */
 const fetchBySlug = async (req, res, tableName, labelName) => {
-    if (!COLUMNS[tableName]) {
-      return res.status(400).json({ error: "Invalid table requested" });
-    }
+  if (!COLUMNS[tableName]) {
+    return res.status(400).json({ error: "Invalid table requested" });
+  }
 
-    const { slug } = req.params;
-    const columns = COLUMNS[tableName];
+  const { slug } = req.params;
+  const columns = COLUMNS[tableName];
 
-    const query = `
+  const query = `
       SELECT ${columns}
       FROM portal.${tableName}
       WHERE slug = $1
       LIMIT 1
     `;
 
-    const result = await pool.query(query, [slug]);
+  const result = await pool.query(query, [slug]);
 
-    if (!result.rows.length) {
-      return res.status(404).json({ error: `${labelName} not found` });
-    }
+  if (!result.rows.length) {
+    return res.status(404).json({ error: `${labelName} not found` });
+  }
 
-    return res.json(result.rows[0]);
+  return res.json(result.rows[0]);
 };
 
 /* ============================================
@@ -108,11 +108,14 @@ const fetchBySlug = async (req, res, tableName, labelName) => {
  ============================================ */
 
 // GET /api/it-fields?page=1&limit=9
-exports.getItFields = catchAsync(async (req, res) => fetchPaginatedData(req, res, "it_fields"));
+exports.getItFields = catchAsync(async (req, res) =>
+  fetchPaginatedData(req, res, "it_fields"),
+);
 
 // GET /api/it-fields/:slug
 exports.getItFieldBySlug = catchAsync(async (req, res) =>
-  fetchBySlug(req, res, "it_fields", "IT Field"));
+  fetchBySlug(req, res, "it_fields", "IT Field"),
+);
 
 /* ============================================
    ACADEMIC DEGREES
@@ -120,11 +123,13 @@ exports.getItFieldBySlug = catchAsync(async (req, res) =>
 
 // GET /api/academic-degrees?page=1&limit=9
 exports.getDegrees = catchAsync(async (req, res) =>
-  fetchPaginatedData(req, res, "academic_degrees"));
+  fetchPaginatedData(req, res, "academic_degrees"),
+);
 
 // GET /api/academic-degrees/:slug
 exports.getDegreeBySlug = catchAsync(async (req, res) =>
-  fetchBySlug(req, res, "academic_degrees", "Academic Degree"));
+  fetchBySlug(req, res, "academic_degrees", "Academic Degree"),
+);
 
 /* ============================================
    JOB MARKET
@@ -132,19 +137,83 @@ exports.getDegreeBySlug = catchAsync(async (req, res) =>
 
 // GET /api/job-market?page=1&limit=9
 exports.getJobMarket = catchAsync(async (req, res) =>
-  fetchPaginatedData(req, res, "job_market_insights"));
+  fetchPaginatedData(req, res, "job_market_insights"),
+);
 
 // GET /api/job-market/:slug
 exports.getJobMarketBySlug = catchAsync(async (req, res) =>
-  fetchBySlug(req, res, "job_market_insights", "Job Market Insight"));
+  fetchBySlug(req, res, "job_market_insights", "Job Market Insight"),
+);
 
 /* ============================================
    IT CLUBS
  ============================================ */
 
-// GET /api/it-clubs?page=1&limit=9
-exports.getItClubs = catchAsync(async (req, res) => fetchPaginatedData(req, res, "it_clubs"));
+// GET /api/it-clubs?page=1&limit=9&search=...&specialty=...&institution=...
+exports.getItClubs = catchAsync(async (req, res) => {
+  const { page, limit, offset } = parsePagination(req);
+  const { search, specialty, institution } = req.query;
+  const columns = COLUMNS.it_clubs;
+
+  let whereClauses = [];
+  let values = [];
+  let i = 1;
+
+  // Filtering logic
+  if (search) {
+    whereClauses.push(`(club_name ILIKE $${i} OR club_name % $${i})`);
+    values.push(`%${search}%`);
+    i++;
+  }
+  if (specialty) {
+    whereClauses.push(`specialty ILIKE $${i}`);
+    values.push(`%${specialty}%`);
+    i++;
+  }
+  if (institution) {
+    whereClauses.push(`institution ILIKE $${i}`);
+    values.push(`%${institution}%`);
+    i++;
+  }
+
+  let whereSQL = whereClauses.length
+    ? `WHERE ${whereClauses.join(" AND ")}`
+    : "";
+
+  const dataQuery = `
+    SELECT ${columns}
+    FROM portal.it_clubs
+    ${whereSQL}
+    ORDER BY id ASC
+    LIMIT $${i} OFFSET $${i + 1}
+  `;
+  values.push(limit, offset);
+
+  const countQuery = `
+    SELECT COUNT(*)
+    FROM portal.it_clubs
+    ${whereSQL}
+  `;
+
+  const [dataResult, countResult] = await Promise.all([
+    pool.query(dataQuery, values),
+    pool.query(countQuery, values.slice(0, values.length - 2)),
+  ]);
+
+  const total = parseInt(countResult.rows[0].count);
+
+  return res.json({
+    data: dataResult.rows,
+    pagination: {
+      page,
+      limit,
+      total,
+      totalPages: Math.ceil(total / limit),
+    },
+  });
+});
 
 // GET /api/it-clubs/:slug
 exports.getItClubBySlug = catchAsync(async (req, res) =>
-  fetchBySlug(req, res, "it_clubs", "IT Club"));
+  fetchBySlug(req, res, "it_clubs", "IT Club"),
+);

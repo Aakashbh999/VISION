@@ -3,6 +3,7 @@ import { useAcademicDegrees } from "../hooks/useAcademicDegrees";
 import LoadingSpinner from "../components/ui/LoadingSpinner";
 import Pagination from "../components/ui/Pagination";
 import Badge from "../components/ui/Badge";
+import SkillTags from "../components/ui/SkillTags";
 
 const EligibilityDisplay = ({ eligibility }) => {
   if (!eligibility) return null;
@@ -89,22 +90,30 @@ const AcademicGuide = () => {
 
             <div className="mt-4 space-y-2 text-sm">
               <p>
-                <span className="font-medium text-[var(--text-main)]">Duration:</span>{" "}
-                <span className="text-[var(--text-muted)]">{degree.duration}</span>
+                <span className="font-medium text-[var(--text-main)]">
+                  Duration:
+                </span>{" "}
+                <span className="text-[var(--text-muted)]">
+                  {degree.duration}
+                </span>
               </p>
               <div>
-                <span className="font-medium text-[var(--text-main)]">Eligibility:</span>
+                <span className="font-medium text-[var(--text-main)]">
+                  Eligibility:
+                </span>
                 <EligibilityDisplay eligibility={degree.eligibility} />
               </div>
               <div>
-                <span className="font-medium text-[var(--text-main)]">Focus:</span>
-                <div className="flex flex-wrap gap-2 mt-1">
-                  {degree.focus_area?.split(",").map((focus, i) => (
-                    <Badge key={i} variant="green">
-                      {focus.trim()}
-                    </Badge>
-                  ))}
-                </div>
+                <span className="font-medium text-[var(--text-main)]">
+                  Focus:
+                </span>
+                <SkillTags
+                  skills={degree.focus_area}
+                  maxVisible={4}
+                  className="mt-1"
+                  badgeVariant="green"
+                  badgeTone="soft"
+                />
               </div>
             </div>
           </div>

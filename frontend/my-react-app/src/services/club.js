@@ -5,6 +5,9 @@ export const getClubs = async (filters = {}) => {
   const params = new URLSearchParams();
   if (filters.page) params.set("page", filters.page);
   if (filters.limit) params.set("limit", filters.limit);
+  if (filters.search) params.set("search", filters.search);
+  if (filters.specialty) params.set("specialty", filters.specialty);
+  if (filters.institution) params.set("institution", filters.institution);
 
   const response = await api.get(`/it-clubs?${params.toString()}`);
   return {
