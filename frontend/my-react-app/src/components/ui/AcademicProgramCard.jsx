@@ -1,5 +1,6 @@
 import { ArrowRight, GraduationCap, Clock, Building } from "lucide-react";
 import Badge from "./Badge";
+import SkillTags from "./SkillTags";
 
 const AcademicProgramCard = ({ item }) => {
   return (
@@ -31,8 +32,20 @@ const AcademicProgramCard = ({ item }) => {
         </div>
       </div>
 
+      {/* Focus/Tags section if present */}
+      {item.focus_area && (
+        <div className="mt-4">
+          <SkillTags
+            skills={item.focus_area}
+            badgeVariant="green"
+            badgeTone="solid"
+            maxVisible={4}
+          />
+        </div>
+      )}
+
       {/* Level badge – keep green for variety, but you can change to purple */}
-      <div className="mt-4">
+      <div className="mt-2">
         <Badge variant="green">{item.level}</Badge>
       </div>
 

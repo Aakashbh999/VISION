@@ -39,6 +39,10 @@ import AdminStudents from "./pages/admin/StudentsList";
 import AdminReports from "./pages/admin/Reports";
 import AdminPendingResources from "./pages/admin/PendingResources";
 import AdminLogs from "./pages/admin/AdminLogs";
+import AdminRoadmapManagement from "./pages/admin/Roadmaps/RoadmapManagement";
+import AdminRoadmapBuilder from "./pages/admin/Roadmaps/RoadmapBuilder";
+import AdminRegistrationWhitelist from "./pages/admin/RegistrationWhitelist";
+import AdminCampuses from "./pages/admin/Campuses";
 
 // All portal pages lazy-loaded to minimise initial bundle size
 const Dashboard       = lazy(() => import("./pages/portal/Dashboard"));
@@ -90,6 +94,10 @@ const adminRoutes = [
   { path: "/admin/students", element: <AdminStudents /> },
   { path: "/admin/reports", element: <AdminReports /> },
   { path: "/admin/logs", element: <AdminLogs /> },
+  { path: "/admin/roadmaps", element: <AdminRoadmapManagement /> },
+  { path: "/admin/roadmaps/:id/builder", element: <AdminRoadmapBuilder /> },
+  { path: "/admin/registration-whitelist", element: <AdminRegistrationWhitelist /> },
+  { path: "/admin/campuses", element: <AdminCampuses /> },
   { path: "/admin", element: <AdminDashboard /> },
 ];
 

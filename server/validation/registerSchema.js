@@ -46,7 +46,10 @@ const registerSchema = z.object({
       message: rules.fullName.message,
     }),
   university: z.string().trim().optional(),
-  campus: z.string().trim().optional(),
+  campus_id: z.preprocess(
+    toNullableInteger,
+    z.number().int().positive().nullable().optional(),
+  ),
   program_id: z.preprocess(
     toNullableInteger,
     z.number().int().positive().nullable().optional(),
@@ -57,7 +60,7 @@ const registerSchema = z.object({
   ),
   batch_year: z.preprocess(
     toNullableInteger,
-    z.number().int().min(1900).max(9999).nullable().optional(),
+    z.number().int().min(1900).max(2100).nullable().optional(),
   ),
   semester_is_manual: z.preprocess(toBoolean, z.boolean().optional()),
   tu_registration_no: z
@@ -65,7 +68,14 @@ const registerSchema = z.object({
     .trim()
     .optional()
     .transform((value) => (value ? value : null)),
+  date_of_birth: z
+    .string()
+    .trim()
+    .regex(/^\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[012])$/, {
+      message: "Please enter a valid date of birth in YYYY-MM-DD format (B.S.).",
+    }),
   career_scope: z
+
     .string()
     .optional()
     .transform((value) => (typeof value === "string" ? value.trim() : value)),

@@ -1,26 +1,39 @@
 import React from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Star, ExternalLink, BookOpen, CheckCircle } from "lucide-react";
+import { X, Star, ExternalLink, BookOpen, CheckCircle, ShieldCheck, Clock, Lock, Info } from "lucide-react";
+import SubmissionModal from "./Roadmaps/SubmissionModal";
+import { trackStepResourceVisit } from "../../services/roadmap";
+import { toast } from "react-toastify";
 
 /**
  * ResourceCard Component
  */
-const ResourceCard = ({ resource }) => {
+const ResourceCard = ({ resource, onVisit }) => {
   return (
     <a
       href={resource.url}
       target="_blank"
       rel="noopener noreferrer"
-      className="group block p-4 bg-[var(--bg-card)] border border-[var(--border-main)] rounded-xl hover:border-purple-300 hover:shadow-md transition-all relative overflow-hidden"
+      onClick={() => onVisit(resource.resource_id)}
+      className={`group block p-4 bg-[var(--bg-card)] border border-[var(--border-main)] rounded-xl transition-all relative overflow-hidden ${
+        resource.is_visited 
+          ? "border-green-200 dark:border-green-900/30 bg-green-50/10" 
+          : "hover:border-purple-300 hover:shadow-md"
+      }`}
     >
       <div className="flex items-start justify-between">
         <div className="flex-1">
           <div className="flex items-center gap-2 mb-1">
-            <h4 className="text-sm font-bold text-[var(--text-main)] group-hover:text-purple-600 transition-colors">
+            <h4 className={`text-sm font-bold transition-colors ${
+              resource.is_visited ? "text-green-600 dark:text-green-500" : "text-[var(--text-main)] group-hover:text-purple-600"
+            }`}>
               {resource.title}
             </h4>
-            {resource.is_required && (
-              <span className="text-[10px] px-1.5 py-0.5 rounded-md bg-purple-100 text-purple-700 font-bold uppercase">
+            {resource.is_visited && (
+              <CheckCircle className="w-3.5 h-3.5 text-green-500" />
+            )}
+            {resource.is_required && !resource.is_visited && (
+              <span className="text-[10px] px-1.5 py-0.5 rounded-md bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 font-bold uppercase">
                 Required
               </span>
             )}
@@ -38,7 +51,11 @@ const ResourceCard = ({ resource }) => {
             </span>
           </div>
         </div>
-        <div className="w-8 h-8 rounded-full bg-[var(--bg-active)] flex items-center justify-center text-[var(--text-muted)] group-hover:bg-purple-100 group-hover:text-purple-600 transition-colors">
+        <div className={`w-8 h-8 rounded-full flex items-center justify-center transition-colors ${
+          resource.is_visited 
+            ? "bg-green-100 dark:bg-green-900/40 text-green-600" 
+            : "bg-[var(--bg-active)] text-[var(--text-muted)] group-hover:bg-purple-100 group-hover:text-purple-600"
+        }`}>
           <ExternalLink className="w-3.5 h-3.5" />
         </div>
       </div>
@@ -51,7 +68,56 @@ const ResourceCard = ({ resource }) => {
  * A slide-over drawer for roadmap step details and resources
  */
 const StepDrawer = ({ isOpen, onClose, step, onComplete }) => {
+  const [isModalOpen, setIsModalOpen] = React.useState(false);
+  const [isSubmitting, setIsSubmitting] = React.useState(false);
+  const [localVisited, setLocalVisited] = React.useState([]);
+
+  React.useEffect(() => {
+    if (step?.resources) {
+      setLocalVisited(step.resources.filter(r => r.is_visited).map(r => r.resource_id));
+    }
+  }, [step]);
+
   if (!step) return null;
+
+  // Requirements Check
+  const totalRequired = step.resources?.length || 0;
+  const visitedCount = localVisited.length;
+  const allResourcesVisited = visitedCount >= totalRequired;
+
+  // 24h Lockout Check
+  const waitPeriod = 24 * 60 * 60 * 1000;
+  const firstViewAt = step.first_viewed_at ? new Date(step.first_viewed_at).getTime() : null;
+  const timePassed = firstViewAt ? Date.now() - firstViewAt : 0;
+  const isTimeLocked = firstViewAt ? timePassed < waitPeriod : true;
+  const canMarkComplete = allResourcesVisited && !isTimeLocked;
+
+  const hoursRemaining = firstViewAt 
+    ? Math.max(0, Math.ceil((waitPeriod - timePassed) / (1000 * 60 * 60))) 
+    : 24;
+
+  const handleResourceVisit = async (resourceId) => {
+    if (localVisited.includes(resourceId)) return;
+    
+    try {
+      await trackStepResourceVisit(step.step_id, resourceId);
+      setLocalVisited(prev => [...prev, resourceId]);
+    } catch (error) {
+      console.error("Tracking failed:", error);
+    }
+  };
+
+  const handlePoWSubmit = async (data) => {
+    setIsSubmitting(true);
+    try {
+      await onComplete(step.step_id, data);
+      setIsModalOpen(false);
+    } catch (error) {
+      toast.error(error.response?.data?.error || "Failed to mark as complete");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   return (
     <AnimatePresence>
@@ -110,29 +176,68 @@ const StepDrawer = ({ isOpen, onClose, step, onComplete }) => {
                 )}
               </section>
 
+              {/* Requirements Banner */}
+              {!step.is_completed && (
+                <div className={`p-5 rounded-2xl border flex items-start gap-4 transition-all ${
+                  canMarkComplete 
+                    ? "bg-green-50/50 border-green-200 dark:bg-green-900/10 dark:border-green-800/30" 
+                    : "bg-amber-50/50 border-amber-200 dark:bg-amber-900/10 dark:border-amber-800/30"
+                }`}>
+                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${
+                    canMarkComplete ? "bg-green-100 text-green-600" : "bg-amber-100 text-amber-600"
+                  }`}>
+                    {canMarkComplete ? <CheckCircle className="w-5 h-5" /> : <Lock className="w-5 h-5" />}
+                  </div>
+                  <div className="space-y-1">
+                    <h4 className={`text-sm font-bold ${canMarkComplete ? "text-green-700" : "text-amber-700"}`}>
+                      {canMarkComplete ? "Requirements Met!" : "Completion Locked"}
+                    </h4>
+                    <ul className="text-[11px] font-medium space-y-1 text-[var(--text-muted)]">
+                      <li className="flex items-center gap-1.5">
+                        <div className={`w-1 h-1 rounded-full ${visitedCount >= totalRequired ? "bg-green-500" : "bg-[var(--text-muted)]"}`} />
+                        Resources: {visitedCount} of {totalRequired} opened
+                      </li>
+                      <li className="flex items-center gap-1.5">
+                        <div className={`w-1 h-1 rounded-full ${!isTimeLocked ? "bg-green-500" : "bg-[var(--text-muted)]"}`} />
+                        {isTimeLocked 
+                          ? `Unlock in approx. ${hoursRemaining}h (24h learning rule)` 
+                          : "Learning period completed"}
+                      </li>
+                    </ul>
+                  </div>
+                </div>
+              )}
+
               {/* Status Section */}
-              <section className="bg-[var(--bg-active)] p-4 rounded-xl border border-[var(--border-main)]">
+              <section className="bg-[var(--bg-active)] p-5 rounded-2xl border border-[var(--border-main)]">
                 <div className="flex items-center justify-between">
                   <div>
                     <h4 className="text-sm font-bold text-[var(--text-main)]">
-                      Step Status
+                      Achievement
                     </h4>
-                    <p className="text-xs text-[var(--text-muted)] mt-0.5">
-                      {step.is_completed ? "Completed" : "In Progress"}
+                    <p className="text-[10px] font-black uppercase tracking-widest text-[var(--text-muted)] mt-0.5">
+                      {step.is_completed ? "Step Mastered" : "Knowledge Building"}
                     </p>
                   </div>
                   {!step.is_completed && (
                     <button
-                      onClick={() => onComplete(step.step_id)}
-                      className="px-4 py-2 bg-purple-600 text-white rounded-lg text-sm font-bold hover:bg-purple-700 transition-all shadow-lg shadow-purple-500/20 active:scale-95"
+                      onClick={() => setIsModalOpen(true)}
+                      disabled={!canMarkComplete}
+                      className={`px-5 py-2.5 rounded-xl text-sm font-black uppercase tracking-wider transition-all shadow-lg active:scale-95 ${
+                        canMarkComplete
+                          ? "bg-purple-600 text-white hover:bg-purple-700 shadow-purple-500/20"
+                          : "bg-gray-200 text-gray-400 cursor-not-allowed shadow-none border border-gray-300"
+                      }`}
                     >
-                      Mark as Complete
+                      {canMarkComplete ? "Submit & Complete" : "Locked"}
                     </button>
                   )}
                   {step.is_completed && (
-                    <div className="flex items-center gap-1 text-purple-600 font-bold text-sm">
-                      <CheckCircle className="w-4 h-4" />
-                      Done
+                    <div className="flex flex-col items-end">
+                      <div className="flex items-center gap-1 text-purple-600 font-bold text-sm">
+                        <CheckCircle className="w-4 h-4" />
+                        Completed
+                      </div>
                     </div>
                   )}
                 </div>
@@ -155,7 +260,11 @@ const StepDrawer = ({ isOpen, onClose, step, onComplete }) => {
                     step.resources.map((resource) => (
                       <ResourceCard
                         key={resource.resource_id}
-                        resource={resource}
+                        resource={{
+                          ...resource,
+                          is_visited: localVisited.includes(resource.resource_id)
+                        }}
+                        onVisit={handleResourceVisit}
                       />
                     ))
                   ) : (
@@ -169,6 +278,14 @@ const StepDrawer = ({ isOpen, onClose, step, onComplete }) => {
               </section>
             </div>
           </motion.div>
+
+          <SubmissionModal
+            isOpen={isModalOpen}
+            onClose={() => setIsModalOpen(false)}
+            onSubmit={handlePoWSubmit}
+            stepTitle={step.title}
+            isSubmitting={isSubmitting}
+          />
         </>
       )}
     </AnimatePresence>

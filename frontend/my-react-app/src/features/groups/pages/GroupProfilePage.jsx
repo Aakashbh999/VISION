@@ -6,6 +6,7 @@ import * as groupService from "../../../services/group";
 import { showToast } from "../../../utils/toast";
 import DeleteAction from "../../../components/DeleteAction";
 import VisionImageEditor from "../../../components/VisionImageEditor";
+import ActionMenu from "../../../components/ui/ActionMenu";
 import Avatar from "../../../components/ui/Avatar";
 import {
   Users,
@@ -29,6 +30,7 @@ import {
   Trash2,
   PencilLine,
   LogOut,
+  MoreHorizontal,
 } from "lucide-react";
 import { motion as Motion } from "framer-motion";
 
@@ -263,8 +265,25 @@ export default function GroupProfilePage() {
           {!group.banner_image && (
             <div className="absolute inset-0 opacity-30 bg-[radial-gradient(at_top_right,rgba(124,58,237,0.8),transparent_50%),radial-gradient(at_bottom_left,rgba(59,130,246,0.8),transparent_50%)]" />
           )}
+          {/* Three dots menu for edit */}
+          {canEditDescription && (
+            <div className="absolute top-4 right-4 z-20">
+              <ActionMenu
+                align="right"
+                trigger={<MoreHorizontal className="w-5 h-5 text-white" />}
+                className="rounded-xl bg-black/35 backdrop-blur-sm border border-white/15"
+                actions={[
+                  {
+                    label: "Edit Profile",
+                    icon: <PencilLine className="w-4 h-4" />,
+                    onClick: handleEditStart,
+                  },
+                ]}
+              />
+            </div>
+          )}
           {canEditImages && isEditMode && (
-            <div className="absolute top-4 right-4">
+            <div className="absolute top-4 right-16">
               {activeEditor === "banner" ? (
                 <VisionImageEditor
                   aspect={16 / 9}
@@ -282,6 +301,32 @@ export default function GroupProfilePage() {
                   {updateBannerMut.isPending ? "Uploading..." : "Change Banner"}
                 </button>
               )}
+            </div>
+          )}
+          {/* Save/Cancel buttons in edit mode */}
+          {canEditDescription && isEditMode && (
+            <div className="absolute top-4 left-4 z-20 flex gap-2">
+              <button
+                type="button"
+                onClick={handleEditCancel}
+                className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-[var(--bg-active)] text-[var(--text-main)] font-bold hover:bg-[var(--border-main)] transition-colors"
+              >
+                <X className="w-4 h-4" /> Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleSaveChanges}
+                disabled={updateGroupMut.isPending}
+                className="inline-flex items-center gap-1 px-4 py-1.5 rounded-lg bg-purple-600 text-white font-bold hover:bg-purple-700 transition-all disabled:opacity-60"
+              >
+                {updateGroupMut.isPending ? (
+                  "Saving..."
+                ) : (
+                  <>
+                    <Check className="w-4 h-4" /> Save
+                  </>
+                )}
+              </button>
             </div>
           )}
         </div>
@@ -767,43 +812,7 @@ export default function GroupProfilePage() {
         </div>
       </div>
 
-      {canEditDescription && isEditMode && (
-        <div className="fixed bottom-0 left-0 right-0 z-50 border-t border-[var(--border-main)] bg-[var(--bg-card)]/95 backdrop-blur-xl shadow-2xl pb-16 sm:pb-0">
-          <div className="max-w-5xl mx-auto px-2 sm:px-6 lg:px-8 py-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-            <div>
-              <p className="text-sm font-bold text-[var(--text-main)]">
-                Group edit mode
-              </p>
-              <p className="text-xs text-[var(--text-muted)]">
-                Text changes save in one request. Image uploads apply instantly.
-              </p>
-            </div>
-            <div className="flex items-center gap-3 w-full sm:w-auto">
-              <button
-                type="button"
-                onClick={handleEditCancel}
-                className="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-[var(--bg-active)] text-[var(--text-main)] font-bold hover:bg-[var(--border-main)] transition-colors"
-              >
-                <X className="w-4 h-4" /> Cancel
-              </button>
-              <button
-                type="button"
-                onClick={handleSaveChanges}
-                disabled={updateGroupMut.isPending}
-                className="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-purple-600 text-white font-bold hover:bg-purple-700 hover:shadow-lg hover:shadow-purple-600/20 transition-all disabled:opacity-60"
-              >
-                {updateGroupMut.isPending ? (
-                  "Saving..."
-                ) : (
-                  <>
-                    <Check className="w-4 h-4" /> Save Changes
-                  </>
-                )}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Removed bottom Save/Cancel bar in edit mode */}
     </div>
   );
 }

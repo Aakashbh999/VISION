@@ -6,12 +6,10 @@ import {
   clearNotifications,
 } from "../../services/notifications";
 import LoadingSpinner from "../../components/ui/LoadingSpinner";
-import { CalendarClock, CheckCircle2, Trash2 } from "lucide-react";
-import {
-  formatNotificationMessage,
-  resolveNotificationPath,
-} from "../../utils/notificationRouting";
+import { CalendarClock, Trash2 } from "lucide-react";
+import { resolveNotificationPath } from "../../utils/notificationRouting";
 import { useNavigate } from "react-router-dom";
+import NotificationItem from "../../components/notifications/NotificationItem";
 
 const Notifications = () => {
   const navigate = useNavigate();
@@ -21,94 +19,46 @@ const Notifications = () => {
   });
   const queryClient = useQueryClient();
 
-  const markReadMutation = useMutation({
-    mutationFn: markNotificationRead,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["notifications"] });
-      queryClient.invalidateQueries({ queryKey: ["unreadCount"] });
-    },
-  });
-
-  const deleteMutation = useMutation({
-    mutationFn: deleteNotification,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["notifications"] });
-      queryClient.invalidateQueries({ queryKey: ["unreadCount"] });
-    },
-  });
-
-  const clearAllMutation = useMutation({
-    mutationFn: clearNotifications,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["notifications"] });
-      queryClient.invalidateQueries({ queryKey: ["unreadCount"] });
-    },
-  });
-
-  const handleMarkRead = (id) => {
-    markReadMutation.mutate(id);
+  const invalidate = () => {
+    queryClient.invalidateQueries({ queryKey: ["notifications"] });
+    queryClient.invalidateQueries({ queryKey: ["unreadCount"] });
   };
 
-  const handleDelete = (id) => {
-    deleteMutation.mutate(id);
-  };
+  const markReadMutation = useMutation({ mutationFn: markNotificationRead, onSuccess: invalidate });
+  const deleteMutation = useMutation({ mutationFn: deleteNotification, onSuccess: invalidate });
+  const clearAllMutation = useMutation({ mutationFn: clearNotifications, onSuccess: invalidate });
 
   const handleNotificationNavigate = async (notification) => {
     const destination = resolveNotificationPath(notification);
-
     if (!notification.is_read) {
       try {
         await markReadMutation.mutateAsync(notification.notification_id);
-      } catch {
-        // allow navigation even if read update fails
-      }
+      } catch { /* allow navigation even if read update fails */ }
     }
-
-    if (destination) {
-      navigate(destination);
-    }
+    if (destination) navigate(destination);
   };
 
   const notifications = notificationsPayload?.data || [];
+
+  // Group by today / yesterday / earlier
   const now = new Date();
-  const todayStart = new Date(
-    now.getFullYear(),
-    now.getMonth(),
-    now.getDate(),
-    0,
-    0,
-    0,
-    0,
-  );
+  const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
   const yesterdayStart = new Date(todayStart);
   yesterdayStart.setDate(yesterdayStart.getDate() - 1);
 
-  const groupedNotifications = {
-    today: [],
-    yesterday: [],
-    earlier: [],
-  };
-
-  notifications.forEach((notif) => {
-    const createdAt = new Date(notif.created_at);
-    if (createdAt >= todayStart) {
-      groupedNotifications.today.push(notif);
-    } else if (createdAt >= yesterdayStart) {
-      groupedNotifications.yesterday.push(notif);
-    } else {
-      groupedNotifications.earlier.push(notif);
-    }
+  const groups = { today: [], yesterday: [], earlier: [] };
+  notifications.forEach((n) => {
+    const d = new Date(n.created_at);
+    if (d >= todayStart) groups.today.push(n);
+    else if (d >= yesterdayStart) groups.yesterday.push(n);
+    else groups.earlier.push(n);
   });
 
   const sections = [
-    { key: "today", title: "Today", items: groupedNotifications.today },
-    { key: "yesterday", title: "Yesterday", items: groupedNotifications.yesterday },
-    {
-      key: "earlier",
-      title: "Earlier (last 7 days)",
-      items: groupedNotifications.earlier,
-    },
-  ].filter((section) => section.items.length > 0);
+    { key: "today", title: "Today", items: groups.today },
+    { key: "yesterday", title: "Yesterday", items: groups.yesterday },
+    { key: "earlier", title: "Earlier (last 7 days)", items: groups.earlier },
+  ].filter((s) => s.items.length > 0);
 
   if (isLoading) return <LoadingSpinner />;
   if (error)
@@ -116,6 +66,7 @@ const Notifications = () => {
 
   return (
     <div className="space-y-6">
+      {/* Header */}
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-xl sm:text-2xl font-bold text-[var(--text-main)]">
@@ -136,6 +87,7 @@ const Notifications = () => {
         )}
       </div>
 
+      {/* Sections */}
       {sections.length === 0 ? (
         <p className="text-[var(--text-muted)]">No notifications yet.</p>
       ) : (
@@ -148,58 +100,13 @@ const Notifications = () => {
               </h2>
               <div className="space-y-2.5">
                 {section.items.map((notif) => (
-                  <div
+                  <NotificationItem
                     key={notif.notification_id}
-                    className={`rounded-xl border p-4 flex items-start justify-between gap-4 cursor-pointer transition-all duration-150 hover:shadow-sm ${
-                      notif.is_read
-                        ? "bg-[var(--bg-active)] border-[var(--border-main)] hover:bg-[var(--bg-main)]"
-                        : "bg-purple-50 dark:bg-purple-950/30 border-purple-200 dark:border-purple-800 hover:bg-purple-100/70 dark:hover:bg-purple-900/30"
-                    }`}
-                    role="button"
-                    tabIndex={0}
-                    onClick={() => handleNotificationNavigate(notif)}
-                    onKeyDown={(event) => {
-                      if (event.key === "Enter" || event.key === " ") {
-                        event.preventDefault();
-                        handleNotificationNavigate(notif);
-                      }
-                    }}
-                  >
-                    <div className="flex-1 min-w-0">
-                      <p className="text-[var(--text-main)]">
-                        {formatNotificationMessage(notif)}
-                      </p>
-                      <span className="text-xs text-[var(--text-muted)]">
-                        {new Date(notif.created_at).toLocaleString()}
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-1.5">
-                      {!notif.is_read && (
-                        <button
-                          onClick={(event) => {
-                            event.preventDefault();
-                            event.stopPropagation();
-                            handleMarkRead(notif.notification_id);
-                          }}
-                          className="text-purple-600 hover:text-purple-700 p-1 rounded-md hover:bg-purple-100 dark:hover:bg-purple-900/40"
-                          title="Mark as read"
-                        >
-                          <CheckCircle2 className="w-4.5 h-4.5" />
-                        </button>
-                      )}
-                      <button
-                        onClick={(event) => {
-                          event.preventDefault();
-                          event.stopPropagation();
-                          handleDelete(notif.notification_id);
-                        }}
-                        className="text-[var(--text-muted)] hover:text-red-600 p-1 rounded-md hover:bg-red-50 dark:hover:bg-red-900/30"
-                        title="Delete notification"
-                      >
-                        <Trash2 className="w-4.5 h-4.5" />
-                      </button>
-                    </div>
-                  </div>
+                    notification={notif}
+                    onMarkRead={(id) => markReadMutation.mutate(id)}
+                    onDelete={(id) => deleteMutation.mutate(id)}
+                    onNavigate={handleNotificationNavigate}
+                  />
                 ))}
               </div>
             </div>

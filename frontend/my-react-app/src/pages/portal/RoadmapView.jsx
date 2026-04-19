@@ -15,10 +15,13 @@ import {
   CheckCircle2,
   Lock,
   ArrowRight,
+  ShieldCheck,
 } from "lucide-react";
 import { useRoadmapPath } from "../../hooks/useRoadmapPath";
 import { useCompleteStep } from "../../hooks/useCompleteStep";
+import { useRoadmapStatus } from "../../hooks/useRoadmapStatus";
 import StepDrawer from "../../components/portal/StepDrawer";
+import Button from "../../components/ui/Button";
 
 /**
  * Icon Mapper
@@ -75,8 +78,14 @@ const StationNode = ({ step, isActive, onClick }) => {
                 ? "bg-white border-2 border-purple-700 shadow-lg"
                 : "bg-white border border-[var(--border-main)] shadow-sm"
           }
+          ${step.is_verified ? "ring-4 ring-purple-400/50 ring-offset-4 ring-offset-[var(--bg-main)]" : ""}
         `}
       >
+        {step.is_verified && (
+          <div className="absolute -top-2 -right-2 bg-green-500 text-white p-1 rounded-full shadow-lg z-20 animate-bounce">
+            <ShieldCheck className="w-3.5 h-3.5" />
+          </div>
+        )}
         <AnimatePresence mode="wait">
           {step.is_completed ? (
             <motion.div
@@ -138,6 +147,7 @@ const StationNode = ({ step, isActive, onClick }) => {
 const RoadmapView = () => {
   const { id } = useParams();
   const { data, isLoading, error } = useRoadmapPath(id);
+  const { status, leaveRoadmap, isLeaving } = useRoadmapStatus(id);
   const completeStepMutation = useCompleteStep(id);
 
   const [selectedStep, setSelectedStep] = useState(null);
@@ -160,9 +170,9 @@ const RoadmapView = () => {
     setIsDrawerOpen(true);
   };
 
-  const handleComplete = async (stepId) => {
+  const handleComplete = async (stepId, data) => {
     try {
-      await completeStepMutation.mutateAsync(stepId);
+      await completeStepMutation.mutateAsync({ stepId, data });
 
       const stepIndex = steps.findIndex((s) => s.step_id === stepId);
       if (stepIndex !== -1) {
@@ -216,23 +226,40 @@ const RoadmapView = () => {
             </p>
           </div>
           {!isLoading && (
-            <div className="flex items-center gap-4 sm:gap-6 bg-[var(--bg-card)] p-4 rounded-sm sm:rounded-2xl border border-[var(--border-main)] border-x-0 sm:border-x shadow-sm min-w-[240px]">
-              <div className="flex-1">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-[10px] font-black uppercase text-[var(--text-muted)]">
-                    Total Progress
-                  </span>
-                  <span className="text-sm font-black text-purple-700">
-                    {Math.round(progress)}%
-                  </span>
-                </div>
-                <div className="h-2 bg-[var(--bg-active)] rounded-full overflow-hidden">
-                  <motion.div
-                    initial={{ width: 0 }}
-                    animate={{ width: `${progress}%` }}
-                    transition={{ duration: 1.5, ease: "easeOut" }}
-                    className="h-full bg-purple-700"
-                  />
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 sm:gap-6">
+              {status?.status === "active" && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    if (window.confirm("Are you sure you want to leave this roadmap? You will still keep your progress, but you cannot start another roadmap for 24 hours.")) {
+                      leaveRoadmap();
+                    }
+                  }}
+                  isLoading={isLeaving}
+                  className="border-red-200 text-red-600 hover:bg-red-50 hover:border-red-300 font-black h-14 sm:h-auto px-6 rounded-2xl"
+                >
+                  Leave Path
+                </Button>
+              )}
+              <div className="flex items-center gap-4 sm:gap-6 bg-[var(--bg-card)] p-4 rounded-sm sm:rounded-2xl border border-[var(--border-main)] border-x-0 sm:border-x shadow-sm min-w-[240px]">
+                <div className="flex-1">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-[10px] font-black uppercase text-[var(--text-muted)]">
+                      Total Progress
+                    </span>
+                    <span className="text-sm font-black text-purple-700 font-['JetBrains_Mono']">
+                      {Math.round(progress)}%
+                    </span>
+                  </div>
+                  <div className="h-2 bg-[var(--bg-active)] rounded-full overflow-hidden">
+                    <motion.div
+                      initial={{ width: 0 }}
+                      animate={{ width: `${progress}%` }}
+                      transition={{ duration: 1.5, ease: "easeOut" }}
+                      className="h-full bg-purple-700"
+                    />
+                  </div>
                 </div>
               </div>
             </div>
@@ -241,7 +268,21 @@ const RoadmapView = () => {
       </div>
 
       {/* Linear Track Area */}
-      <div className="max-w-7xl mx-auto">
+      <div className="max-w-7xl mx-auto px-4 sm:px-0">
+        {status?.status === "left" && (
+          <div className="mb-8 p-4 bg-amber-50 border border-amber-200 rounded-2xl flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-amber-100 rounded-xl">
+                <Zap className="w-5 h-5 text-amber-600" />
+              </div>
+              <div>
+                <p className="text-sm font-black text-amber-900 uppercase tracking-tight">Active Lockout: You left this path recently</p>
+                <p className="text-xs text-amber-700 font-medium">You can still continue this roadmap, but you must wait 24h before starting a different one.</p>
+              </div>
+            </div>
+          </div>
+        )}
+
         <div className="bg-[var(--bg-card)] rounded-sm sm:rounded-[2.5rem] border border-[var(--border-main)] border-x-0 sm:border-x shadow-2xl shadow-purple-900/5 p-5 sm:p-16 lg:p-24 overflow-x-auto overflow-y-visible scrollbar-hide">
           {isLoading ? (
             <div className="h-64 flex items-center justify-center">

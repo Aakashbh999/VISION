@@ -1,4 +1,4 @@
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient, keepPreviousData } from "@tanstack/react-query";
 import { getClub, getClubs, joinClub, leaveClub } from "../services/club";
 import { getItClubs } from "../services/public";
 
@@ -15,7 +15,7 @@ export const useClubs = (filters = {}) => {
   return useQuery({
     queryKey: ["clubs", filters],
     queryFn: () => getClubs(filters),
-    keepPreviousData: true,
+    placeholderData: keepPreviousData,
     staleTime: 5 * 60 * 1000,
   });
 };
@@ -46,7 +46,7 @@ export const useItClubs = (page = 1, limit = 9) => {
   return useQuery({
     queryKey: ["itClubs", page, limit],
     queryFn: () => getItClubs(page, limit),
-    keepPreviousData: true,
+    placeholderData: keepPreviousData,
     staleTime: 5 * 60 * 1000,
   });
 };

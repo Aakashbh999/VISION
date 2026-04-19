@@ -3,10 +3,46 @@ const router = express.Router();
 
 const adminController = require("../controllers/adminController");
 const resourceController = require("../controllers/resourceController");
+const adminRoadmapController = require("../controllers/adminRoadmapController");
 const { verifyJWT } = require("../middleware/authMiddleware");
 const { verifyAdmin } = require("../middleware/adminMiddleware");
 const { verifyModerator } = require("../middleware/moderatorMiddleware");
 const sanitizeInput = require("../middleware/sanitizeInput");
+const campusController = require("../controllers/campusController");
+
+/* ===============================
+   CAMPUS MANAGEMENT
+================================ */
+
+router.get(
+  "/admin/campuses",
+  verifyJWT,
+  verifyAdmin,
+  campusController.getAllCampuses
+);
+
+router.post(
+  "/admin/campuses",
+  verifyJWT,
+  verifyAdmin,
+  sanitizeInput,
+  campusController.createCampus
+);
+
+router.put(
+  "/admin/campuses/:campus_id",
+  verifyJWT,
+  verifyAdmin,
+  sanitizeInput,
+  campusController.updateCampus
+);
+
+router.delete(
+  "/admin/campuses/:campus_id",
+  verifyJWT,
+  verifyAdmin,
+  campusController.deleteCampus
+);
 
 /* ===============================
    STUDENT MANAGEMENT
@@ -48,6 +84,41 @@ router.patch(
   sanitizeInput,
   adminController.rejectStudent,
 );
+
+/* ===============================
+   REGISTRATION WHITELIST
+================================ */
+
+router.get(
+  "/admin/registration-whitelist",
+  verifyJWT,
+  verifyAdmin,
+  adminController.getRegistrationWhitelists,
+);
+
+router.post(
+  "/admin/registration-whitelist",
+  verifyJWT,
+  verifyAdmin,
+  sanitizeInput,
+  adminController.addRegistrationWhitelist,
+);
+
+router.put(
+  "/admin/registration-whitelist/:registration_number",
+  verifyJWT,
+  verifyAdmin,
+  sanitizeInput,
+  adminController.updateRegistrationWhitelist,
+);
+
+router.delete(
+  "/admin/registration-whitelist/:registration_number",
+  verifyJWT,
+  verifyAdmin,
+  adminController.deleteRegistrationWhitelist,
+);
+
 
 /* ===============================
    DISCUSSIONS
@@ -161,6 +232,94 @@ router.post(
   sanitizeInput,
   adminController.forceLogoutUser,
 );
+
+/* ===============================
+   ROADMAP MANAGEMENT (Admin)
+================================ */
+
+router.get(
+  "/admin/roadmaps",
+  verifyJWT,
+  verifyAdmin,
+  adminRoadmapController.getAllAdminRoadmaps,
+);
+
+router.get(
+  "/admin/roadmaps/:id",
+  verifyJWT,
+  verifyAdmin,
+  adminRoadmapController.getAdminRoadmapById,
+);
+
+router.post(
+  "/admin/roadmaps",
+  verifyJWT,
+  verifyAdmin,
+  sanitizeInput,
+  adminRoadmapController.createRoadmap,
+);
+
+router.put(
+  "/admin/roadmaps/:id",
+  verifyJWT,
+  verifyAdmin,
+  sanitizeInput,
+  adminRoadmapController.updateRoadmap,
+);
+
+router.delete(
+  "/admin/roadmaps/:id",
+  verifyJWT,
+  verifyAdmin,
+  adminRoadmapController.softDeleteRoadmap,
+);
+
+router.post(
+  "/admin/roadmaps/:roadmapId/steps",
+  verifyJWT,
+  verifyAdmin,
+  sanitizeInput,
+  adminRoadmapController.addStep,
+);
+
+router.put(
+  "/admin/roadmaps/steps/:stepId",
+  verifyJWT,
+  verifyAdmin,
+  sanitizeInput,
+  adminRoadmapController.updateStep,
+);
+
+router.delete(
+  "/admin/roadmaps/steps/:stepId",
+  verifyJWT,
+  verifyAdmin,
+  adminRoadmapController.softDeleteStep,
+);
+
+router.patch(
+  "/admin/roadmaps/steps/:stepId/reorder",
+  verifyJWT,
+  verifyAdmin,
+  sanitizeInput,
+  adminRoadmapController.reorderStep,
+);
+
+router.post(
+  "/admin/roadmaps/steps/:stepId/resources",
+  verifyJWT,
+  verifyAdmin,
+  sanitizeInput,
+  adminRoadmapController.addResourceToStep,
+);
+
+router.delete(
+  "/admin/roadmaps/steps/:stepId/resources/:resourceId",
+  verifyJWT,
+  verifyAdmin,
+  adminRoadmapController.removeResourceFromStep,
+);
+
 
 /* ===============================
    RESOURCE MODERATION (admin OR moderator)

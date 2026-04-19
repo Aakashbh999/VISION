@@ -11,7 +11,7 @@ import SurfaceCard, {
 } from "../../components/ui/SurfaceCard";
 import EmptyState from "../../components/ui/EmptyState";
 import ErrorState from "../../components/ui/ErrorState";
-import { BookOpen, ChevronRight, Search, Map } from "lucide-react";
+import { BookOpen, ChevronRight, Search, Map, CheckCircle2, Zap, Lock } from "lucide-react";
 
 const Roadmaps = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -27,6 +27,9 @@ const Roadmaps = () => {
 
   const { data, isLoading, error } = useRoadmaps(filters);
   const roadmapsList = Array.isArray(data) ? data : data?.roadmaps || [];
+
+  // Find if any roadmap is currently active
+  const hasActiveRoadmap = roadmapsList.some(r => r.enrolment_status === 'active');
 
   return (
     <div className="max-w-6xl mx-auto space-y-6 sm:space-y-8">
@@ -121,37 +124,91 @@ const Roadmaps = () => {
           </SurfaceCard>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-8 mt-4">
-            {roadmapsList.map((roadmap) => (
-              <SurfaceCard
-                key={roadmap.roadmap_id}
-                as={Link}
-                to={`/roadmaps/${roadmap.roadmap_id}`}
-                variant="interactive"
-                className="p-5 sm:p-8 hover:shadow-2xl group hover:-translate-y-2"
-              >
-                <CardHeader className="mb-4">
-                  <div className="w-14 h-14 rounded-2xl bg-(--bg-active) flex items-center justify-center text-(--text-muted) group-hover:bg-purple-600 group-hover:text-white transition-all">
-                    <BookOpen className="w-6 h-6" />
-                  </div>
-                </CardHeader>
-                <CardBody className="space-y-3">
-                  <CardTitle className="text-lg sm:text-xl text-(--text-main) group-hover:text-purple-600 transition-colors uppercase tracking-tight">
-                    {roadmap.title}
-                  </CardTitle>
-                  <p className="text-sm text-(--text-muted) line-clamp-2 font-medium leading-relaxed">
-                    {roadmap.description}
-                  </p>
-                </CardBody>
-                <CardFooter className="flex items-center justify-between pt-4 sm:pt-6">
-                  <span className="text-[10px] font-black px-3 py-1.5 rounded-full bg-(--bg-active) text-(--text-muted) uppercase tracking-widest">
-                    {roadmap.difficulty_level || "Beginner"}
-                  </span>
-                  <span className="text-purple-600 text-xs font-black flex items-center gap-1 uppercase tracking-widest opacity-0 group-hover:opacity-100 transition-all">
-                    Start Path <ChevronRight className="w-4 h-4" />
-                  </span>
-                </CardFooter>
-              </SurfaceCard>
-            ))}
+            {roadmapsList.map((roadmap) => {
+              const isActive = roadmap.enrolment_status === "active";
+              const isCompleted = roadmap.enrolment_status === "completed";
+              const isLeft = roadmap.enrolment_status === "left";
+              const isLocked = hasActiveRoadmap && !isActive;
+
+              return (
+                <SurfaceCard
+                  key={roadmap.roadmap_id}
+                  as={Link}
+                  to={`/roadmaps/${roadmap.roadmap_id}`}
+                  variant="interactive"
+                  className={`p-5 sm:p-8 hover:shadow-2xl group hover:-translate-y-2 relative overflow-hidden ${
+                    isLocked ? "opacity-75 grayscale-[0.5]" : ""
+                  }`}
+                >
+                  {isLocked && (
+                    <div className="absolute top-4 right-4 z-20 p-2 bg-slate-900/10 backdrop-blur-md rounded-xl text-slate-600">
+                      <Lock className="w-4 h-4" />
+                    </div>
+                  )}
+
+                  <CardHeader className="mb-4 relative">
+                    <div
+                      className={`w-14 h-14 rounded-2xl flex items-center justify-center transition-all ${
+                        isActive
+                          ? "bg-purple-600 text-white shadow-lg shadow-purple-500/30"
+                          : isCompleted
+                            ? "bg-emerald-100 text-emerald-600"
+                            : isLeft
+                              ? "bg-amber-100 text-amber-600"
+                              : "bg-(--bg-active) text-(--text-muted) group-hover:bg-purple-600 group-hover:text-white"
+                      }`}
+                    >
+                      {isCompleted ? (
+                        <CheckCircle2 className="w-6 h-6" />
+                      ) : (
+                        <BookOpen className="w-6 h-6" />
+                      )}
+                    </div>
+
+                    <div className="absolute top-0 right-0">
+                      {isActive && (
+                        <span className="flex items-center gap-1.5 px-3 py-1 bg-purple-600 text-white text-[10px] font-black uppercase tracking-widest rounded-full shadow-lg">
+                          <Zap className="w-3 h-3 fill-white" /> In Progress
+                        </span>
+                      )}
+                      {isCompleted && (
+                        <span className="flex items-center gap-1.5 px-3 py-1 bg-emerald-500 text-white text-[10px] font-black uppercase tracking-widest rounded-full shadow-lg">
+                          <CheckCircle2 className="w-3 h-3" /> Mastery
+                        </span>
+                      )}
+                      {isLeft && (
+                        <span className="flex items-center gap-1.5 px-3 py-1 bg-amber-500 text-white text-[10px] font-black uppercase tracking-widest rounded-full shadow-lg">
+                          <Lock className="w-3 h-3" /> Resumable
+                        </span>
+                      )}
+                    </div>
+                  </CardHeader>
+                  <CardBody className="space-y-3">
+                    <CardTitle
+                      className={`text-lg sm:text-xl transition-colors uppercase tracking-tight ${
+                        isActive || isCompleted
+                          ? "text-(--text-main)"
+                          : "text-(--text-main) group-hover:text-purple-600"
+                      }`}
+                    >
+                      {roadmap.title}
+                    </CardTitle>
+                    <p className="text-sm text-(--text-muted) line-clamp-2 font-medium leading-relaxed">
+                      {roadmap.description}
+                    </p>
+                  </CardBody>
+                  <CardFooter className="flex items-center justify-between pt-4 sm:pt-6">
+                    <span className="text-[10px] font-black px-3 py-1.5 rounded-full bg-(--bg-active) text-(--text-muted) uppercase tracking-widest">
+                      {roadmap.difficulty_level || "Beginner"}
+                    </span>
+                    <span className="text-purple-600 text-xs font-black flex items-center gap-1 uppercase tracking-widest opacity-0 group-hover:opacity-100 transition-all">
+                      {isActive ? "Continue Path" : isCompleted ? "Review Path" : "Start Path"}{" "}
+                      <ChevronRight className="w-4 h-4" />
+                    </span>
+                  </CardFooter>
+                </SurfaceCard>
+              );
+            })}
           </div>
         )}
       </div>

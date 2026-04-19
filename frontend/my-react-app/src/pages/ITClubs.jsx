@@ -1,9 +1,10 @@
-  import { useItClubs } from "../hooks/useClubHooks"; // adjust import path if needed
+import { useItClubs } from "../hooks/useClubHooks"; // adjust import path if needed
 import LoadingSpinner from "../components/ui/LoadingSpinner";
 import Pagination from "../components/ui/Pagination";
 import { MapPin, Users } from "lucide-react";
 import { useState } from "react";
 import Badge from "../components/ui/Badge";
+import SkillTags from "../components/ui/SkillTags";
 
 const ITClubs = () => {
   const [page, setPage] = useState(1);
@@ -63,13 +64,13 @@ const ITClubs = () => {
               </div>
 
               {club.specialty && (
-                <div className="flex flex-wrap gap-2 mt-2">
-                  {club.specialty.split(",").map((spec, i) => (
-                    <Badge key={i} variant="purple">
-                      {spec.trim()}
-                    </Badge>
-                  ))}
-                </div>
+                <SkillTags
+                  skills={club.specialty}
+                  badgeVariant="purple"
+                  badgeTone="soft"
+                  maxVisible={4}
+                  className="mt-2"
+                />
               )}
 
               {club.description && (

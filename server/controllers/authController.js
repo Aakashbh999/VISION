@@ -53,16 +53,21 @@ exports.register = catchAsync(async (req, res) => {
     password,
     full_name,
     university,
-    campus,
+    campus_id,
     program_id,
     semester,
     batch_year,
     semester_is_manual,
     tu_registration_no,
     career_scope,
+    date_of_birth,
   } = input;
 
   const normalizedFullName = full_name;
+
+  if (!req.file) {
+    throw createError(400, "Academic Certificate is required.");
+  }
 
   const client = await pool.connect();
 
@@ -111,20 +116,35 @@ exports.register = catchAsync(async (req, res) => {
       normalizedSemester = calculateSemesterFromBatch(normalizedBatchYear);
     }
 
-    const studentIdImageUrl = req.file?.path || null;
+    const studentIdImageUrl = req.file.path;
+
+    // Check if registration exists in the pre-verified whitelist
+    let studentStatus = "pending_review";
+    if (tu_registration_no) {
+      const whitelistHit = await client.query(
+        `SELECT 1 FROM portal.registration_no 
+         WHERE registration_number = $1 
+         AND batch_year = $2 
+         AND date_of_birth = $3`,
+        [tu_registration_no, normalizedBatchYear, date_of_birth],
+      );
+      if (whitelistHit.rows.length > 0) {
+        studentStatus = "approved";
+      }
+    }
 
     // 3. Insert into portal.users phase (atomic step)
     const portalInsert = await client.query(
       `INSERT INTO portal.users
-       (auth_user_id, full_name, university, campus, program_id, semester, batch_year, 
-        semester_is_manual, tu_registration_no, student_id_image_url, career_scope)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+       (auth_user_id, full_name, university, campus_id, program_id, semester, batch_year, 
+        semester_is_manual, tu_registration_no, student_id_image_url, career_scope, date_of_birth, student_status)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
        RETURNING user_id`,
       [
         authUserId,
         normalizedFullName,
         university || "TU",
-        campus,
+        campus_id ? parseInt(campus_id, 10) : null,
         program_id ? parseInt(program_id, 10) : null,
         normalizedSemester,
         normalizedBatchYear,
@@ -132,6 +152,8 @@ exports.register = catchAsync(async (req, res) => {
         tu_registration_no,
         studentIdImageUrl,
         career_scope,
+        date_of_birth,
+        studentStatus,
       ],
     );
 
@@ -261,7 +283,7 @@ exports.login = catchAsync(async (req, res) => {
       { email, reason: "user_not_found" },
       AuditStatus.FAILURE,
     );
-    throw createError(400, "Invalid credentials");
+    throw createError(400, "User does not exist");
   }
 
   const user = result.rows[0];

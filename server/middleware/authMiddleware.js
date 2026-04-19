@@ -36,7 +36,12 @@ exports.verifyJWT = async (req, res, next) => {
 
 // 🔐 Restrict Portal Access Until Approved
 exports.requireApprovedStudent = (req, res, next) => {
-  const { email_status, student_status } = req.user;
+  const { email_status, student_status, role, is_moderator } = req.user;
+
+  // Admins and Moderators bypass student-specific approval logic
+  if (role === "admin" || is_moderator) {
+    return next();
+  }
 
   if (email_status !== "verified") {
     return next(createError(403, "Email not verified"));

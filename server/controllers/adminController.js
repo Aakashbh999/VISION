@@ -51,10 +51,15 @@ exports.getPendingStudents = catchAsync(async (req, res) => {
         p.semester,
         p.tu_registration_no,
         p.student_status,
-        p.created_at
+        p.created_at,
+        p.date_of_birth,
+        p.batch_year,
+        p.student_id_image_url,
+        c.campus_name
       FROM portal.users p
       JOIN auth.users a ON p.auth_user_id = a.auth_user_id
       LEFT JOIN portal.programs pr ON p.program_id = pr.program_id
+      LEFT JOIN portal.campuses c ON p.campus_id = c.campus_id
       WHERE p.student_status = 'pending_review'
       ORDER BY p.created_at ASC
     `);
@@ -870,4 +875,116 @@ exports.resolveReportWithAction = catchAsync(async (req, res) => {
   });
 
   res.json({ message });
+});
+
+/* ===============================
+  Registration Whitelist Management
+ ================================ */
+
+exports.getRegistrationWhitelists = catchAsync(async (req, res) => {
+  const { batch_year, program } = req.query;
+  const { page, limit, offset } = parsePagination(req.query, {
+    defaultLimit: 20,
+    maxLimit: 100,
+  });
+
+  let whereClause = "WHERE 1=1";
+  const params = [];
+  
+  if (batch_year) {
+    params.push(parseInt(batch_year));
+    whereClause += ` AND batch_year = $${params.length}`;
+  }
+  
+  if (program) {
+    params.push(program);
+    whereClause += ` AND program = $${params.length}`;
+  }
+
+  const query = `
+    SELECT * FROM portal.registration_no 
+    ${whereClause} 
+    ORDER BY created_at DESC 
+    LIMIT $${params.length + 1} OFFSET $${params.length + 2}
+  `;
+  
+  const countQuery = `SELECT COUNT(*) FROM portal.registration_no ${whereClause}`;
+
+  const [result, countResult] = await Promise.all([
+    pool.query(query, [...params, limit, offset]),
+    pool.query(countQuery, params),
+  ]);
+
+  const total = parseInt(countResult.rows[0].count);
+
+  res.json({
+    success: true,
+    data: result.rows,
+    pagination: buildPaginationMeta({ total, page, limit }),
+  });
+});
+
+exports.addRegistrationWhitelist = catchAsync(async (req, res) => {
+  const { registration_number, student_name, date_of_birth, batch_year, program } = req.body;
+
+  const result = await pool.query(
+    `INSERT INTO portal.registration_no 
+     (registration_number, student_name, date_of_birth, batch_year, program)
+     VALUES ($1, $2, $3, $4, $5)
+     RETURNING *`,
+    [registration_number, student_name, date_of_birth, batch_year, program]
+  );
+
+  await logAdminEvent(req, AuditActions.ADMIN_CREATE_CONTENT, "registration_whitelist", registration_number);
+
+  res.status(201).json({
+    success: true,
+    data: result.rows[0],
+    message: "Registration added to whitelist"
+  });
+});
+
+exports.updateRegistrationWhitelist = catchAsync(async (req, res) => {
+  const { registration_number: originalRegNo } = req.params;
+  const { registration_number, student_name, date_of_birth, batch_year, program } = req.body;
+
+  const result = await pool.query(
+    `UPDATE portal.registration_no 
+     SET registration_number = $1, student_name = $2, date_of_birth = $3, batch_year = $4, program = $5
+     WHERE registration_number = $6
+     RETURNING *`,
+    [registration_number, student_name, date_of_birth, batch_year, program, originalRegNo]
+  );
+
+  if (result.rowCount === 0) {
+    throw createError(404, "Registration not found");
+  }
+
+  await logAdminEvent(req, AuditActions.ADMIN_UPDATE_CONTENT, "registration_whitelist", registration_number);
+
+  res.json({
+    success: true,
+    data: result.rows[0],
+    message: "Registration updated"
+  });
+});
+
+exports.deleteRegistrationWhitelist = catchAsync(async (req, res) => {
+  const { registration_number } = req.params;
+
+  const result = await pool.query(
+    "DELETE FROM portal.registration_no WHERE registration_number = $1 RETURNING *",
+    [registration_number]
+  );
+
+  if (result.rowCount === 0) {
+    throw createError(404, "Registration not found");
+  }
+
+  await logAdminEvent(req, AuditActions.ADMIN_DELETE_CONTENT, "registration_whitelist", registration_number);
+
+  res.json({
+    success: true,
+    message: "Registration removed from whitelist"
+  });
 });
