@@ -18,9 +18,9 @@ export const getStepResources = async (id, stepId) => {
   return response.data;
 };
 
-// Mark a step as completed
-export const completeStep = async (stepId) => {
-  const response = await api.post(`/roadmaps/steps/${stepId}/complete`);
+// Mark a step as completed with Proof of Work
+export const completeStep = async (stepId, data = {}) => {
+  const response = await api.post(`/roadmaps/steps/${stepId}/complete`, data);
   return response.data;
 };
 
@@ -33,5 +33,23 @@ export const getRoadmapPath = async (id) => {
 // Get progress percentage for a roadmap
 export const getRoadmapProgress = async (roadmapId) => {
   const response = await api.get(`/roadmaps/${roadmapId}/progress`);
+  return response.data;
+};
+
+// Track resource interaction
+export const trackStepResourceVisit = async (stepId, resourceId) => {
+  const response = await api.post(`/roadmaps/steps/${stepId}/resources/${resourceId}/visit`);
+  return response.data;
+};
+
+// Leave a roadmap (Anti-spam)
+export const leaveRoadmap = async (id) => {
+  const response = await api.post(`/roadmaps/${id}/leave`);
+  return response.data;
+};
+
+// Get enrolment status
+export const getRoadmapStatus = async (id) => {
+  const response = await api.get(`/roadmaps/${id}/status`);
   return response.data;
 };

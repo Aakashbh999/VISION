@@ -4,7 +4,7 @@ import { completeStep } from "../services/roadmap";
 export const useCompleteStep = (roadmapId) => {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: completeStep,
+    mutationFn: ({ stepId, data }) => completeStep(stepId, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["roadmap", roadmapId] });
       queryClient.invalidateQueries({ queryKey: ["dashboard"] }); // if dashboard shows progress

@@ -1,19 +1,13 @@
 import { useState } from "react";
 import { useMyPosts } from "../../hooks/useDiscussionHooks";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import LoadingSpinner from "../../components/ui/LoadingSpinner";
 import DeleteAction from "../../components/DeleteAction";
-import {
-  MessageCircle,
-  ThumbsUp,
-  ChevronLeft,
-  Edit,
-  Clock,
-} from "lucide-react";
-import Badge from "../../components/ui/Badge";
+import { ChevronLeft } from "lucide-react";
+import SimplePagination from "../../components/ui/SimplePagination";
+import DiscussionListItem from "../../components/portal/DiscussionListItem";
 
 const MyPosts = () => {
-  const navigate = useNavigate();
   const [page, setPage] = useState(1);
   const { data, isLoading, error } = useMyPosts(page, 20);
 
@@ -55,106 +49,28 @@ const MyPosts = () => {
           </div>
         ) : (
           discussions.map((disc) => (
-            <div
+            <DiscussionListItem
               key={disc.discussion_id}
-              className="relative block bg-[var(--bg-card)] rounded-sm sm:rounded-xl border border-[var(--border-main)] border-x-0 sm:border-x p-5 hover:shadow-md transition-shadow cursor-pointer"
-              onClick={() => navigate(`/discussions/${disc.discussion_id}`)}
-            >
-              <div className="flex items-start justify-between">
-                <div className="flex-1">
-                  <h2 className="text-base sm:text-lg font-semibold text-[var(--text-main)] mb-1">
-                    {disc.title}
-                  </h2>
-                  <p className="text-sm text-[var(--text-muted)] mb-2 line-clamp-2">
-                    {disc.content}
-                  </p>
-                  <div className="flex flex-wrap items-center gap-2 text-xs text-[var(--text-muted)]">
-                    <span>
-                      {new Date(disc.created_at).toLocaleDateString()}
-                    </span>
-                    {disc.tags?.slice(0, 2).map((tag) => (
-                      <Badge key={tag.tag_id} variant="purple">
-                        {tag.name}
-                      </Badge>
-                    ))}
-                    {disc.can_edit && (
-                      <Badge
-                        variant="green"
-                        className="flex items-center gap-1"
-                      >
-                        <Clock className="w-3 h-3" /> Editable
-                      </Badge>
-                    )}
-                  </div>
-                </div>
-
-                <div className="flex flex-col items-end gap-2 ml-4">
-                  <div className="flex items-center gap-3 text-sm text-[var(--text-muted)]">
-                    <span className="flex items-center gap-1">
-                      <ThumbsUp className="w-4 h-4" /> {disc.like_count || 0}
-                    </span>
-                    <span className="flex items-center gap-1">
-                      <MessageCircle className="w-4 h-4" />{" "}
-                      {disc.comment_count || 0}
-                    </span>
-                  </div>
-
-                  {/* ACTION BUTTONS WRAPPER */}
-                  <div
-                    className="flex items-center gap-2 mt-2"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                    }}
-                  >
-                    {disc.can_edit && (
-                      <Link
-                        to={`/discussions/${disc.discussion_id}/edit`}
-                        className="p-1.5 text-[var(--text-muted)] hover:text-purple-600 rounded bg-[var(--bg-active)] hover:bg-purple-50 transition-colors"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                        }}
-                      >
-                        <Edit className="w-4 h-4" />
-                      </Link>
-                    )}
-                    <DeleteAction
-                      targetType="discussion"
-                      targetId={disc.discussion_id}
-                      itemName={disc.title}
-                      buttonClassName="px-3 py-1.5 text-xs font-semibold text-red-600 border border-red-200 rounded bg-[var(--bg-card)] hover:bg-red-50 transition-colors"
-                      label={<span>Delete</span>}
-                    />
-                  </div>
-                </div>
-              </div>
-            </div>
+              discussion={disc}
+              actions={
+                <DeleteAction
+                  targetType="discussion"
+                  targetId={disc.discussion_id}
+                  itemName={disc.title}
+                  buttonClassName="px-3 py-1.5 text-xs font-semibold text-red-600 border border-red-200 rounded bg-[var(--bg-card)] hover:bg-red-50 transition-colors"
+                  label={<span>Delete</span>}
+                />
+              }
+            />
           ))
         )}
       </div>
 
-      {/* Pagination Controls */}
-      {pagination.totalPages > 1 && (
-        <div className="flex justify-center gap-2">
-          <button
-            onClick={() => setPage((p) => Math.max(1, p - 1))}
-            disabled={pagination.page <= 1}
-            className="px-4 py-2 border border-[var(--border-main)] rounded-lg disabled:opacity-50 hover:bg-[var(--bg-active)] transition-colors text-[var(--text-main)]"
-          >
-            Previous
-          </button>
-          <span className="px-4 py-2 text-[var(--text-muted)]">
-            Page {pagination.page} of {pagination.totalPages}
-          </span>
-          <button
-            onClick={() => setPage((p) => p + 1)}
-            disabled={pagination.page >= pagination.totalPages}
-            className="px-4 py-2 border border-[var(--border-main)] rounded-lg disabled:opacity-50 hover:bg-[var(--bg-active)] transition-colors text-[var(--text-main)]"
-          >
-            Next
-          </button>
-        </div>
-      )}
+      <SimplePagination
+        page={pagination.page}
+        totalPages={pagination.totalPages}
+        onPageChange={setPage}
+      />
     </div>
   );
 };

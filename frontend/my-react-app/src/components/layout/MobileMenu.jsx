@@ -67,6 +67,27 @@ const MobileMenu = ({ isOpen, onClose, variant, user }) => {
     { id: "profile", label: "Profile", href: "/profile" },
   ];
 
+  // Admin navigation items
+  const adminNavItems = [
+    { id: "admin-dashboard", label: "Admin Dashboard", href: "/admin/dashboard" },
+    { id: "pending-approvals", label: "Pending Approvals", href: "/admin/pending" },
+    { id: "students", label: "All Students", href: "/admin/students" },
+    { id: "reports", label: "Reports", href: "/admin/reports" },
+    { id: "roadmaps", label: "Roadmap Builder", href: "/admin/roadmaps" },
+  ];
+
+  if (authUser?.is_moderator || authUser?.role === "admin") {
+    // Insert resource queue if applicable
+    const index = adminNavItems.findIndex(i => i.id === "students");
+    if (index !== -1) {
+      adminNavItems.splice(index, 0, {
+        id: "pending-resources",
+        label: "Resource Queue",
+        href: "/admin/resources/pending",
+      });
+    }
+  }
+
   const publicLinks = [
     { label: "Home", href: "/" },
     { label: "IT Specializations", href: "/it-fields" },
@@ -92,7 +113,31 @@ const MobileMenu = ({ isOpen, onClose, variant, user }) => {
           <X className="w-5 h-5 text-[var(--text-muted)]" />
         </button>
 
-        {variant === "portal" && user ? (
+        {variant === "admin" && user ? (
+          // Admin mobile menu
+          <>
+            <nav className="space-y-4 mt-8">
+              {adminNavItems.map((item) => (
+                <Link
+                  key={item.id}
+                  to={item.href}
+                  onClick={onClose}
+                  className="flex items-center px-4 py-3 rounded-xl hover:bg-[var(--bg-active)] text-[var(--text-muted)] hover:text-blue-600 dark:hover:text-blue-300 hover:font-medium transition-all duration-300 w-full text-left"
+                >
+                  <span>{item.label}</span>
+                </Link>
+              ))}
+            </nav>
+            <div className="mt-8 pt-6 border-t border-[var(--border-main)]">
+              <button
+                onClick={handleLogoutWithConfirm}
+                className="block w-full text-center px-4 py-3 border border-[var(--border-main)] text-[var(--text-main)] hover:bg-[var(--bg-active)] rounded-lg font-medium"
+              >
+                Sign out
+              </button>
+            </div>
+          </>
+        ) : variant === "portal" && user ? (
           // Portal mobile menu
           <>
             <nav className="space-y-4 mt-8">

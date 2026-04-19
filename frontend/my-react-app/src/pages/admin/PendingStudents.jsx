@@ -9,10 +9,12 @@ import { Check, X, UserPlus, Clock, Inbox, ShieldCheck } from "lucide-react";
 import { showToast } from "../../utils/toast";
 import { useState } from "react";
 import AdminConfirmModal from "../../components/ui/AdminConfirmModal";
+import StudentReviewModal from "../../components/ui/StudentReviewModal";
 
 const PendingStudents = () => {
   const queryClient = useQueryClient();
   const [modalConfig, setModalConfig] = useState({ isOpen: false });
+  const [reviewStudent, setReviewStudent] = useState(null);
   const { data, isLoading, error } = useQuery({
     queryKey: ["pendingStudents"],
     queryFn: getPendingStudents,
@@ -149,24 +151,10 @@ const PendingStudents = () => {
                   <td className="px-6 py-4 text-right">
                     <div className="flex justify-end gap-2">
                       <button
-                        onClick={() =>
-                          handleApprove(student.user_id, student.full_name)
-                        }
-                        disabled={approveMutation.isPending}
-                        className="p-2 text-green-600 hover:bg-green-500/10 rounded-xl transition-all border border-transparent hover:border-green-500/20"
-                        title="Approve Student"
+                        onClick={() => setReviewStudent(student)}
+                        className="px-3 py-1.5 text-xs font-bold bg-blue-500/10 text-blue-600 hover:bg-blue-500/20 rounded-xl transition-all border border-transparent shadow-sm flex items-center gap-1.5"
                       >
-                        <Check className="w-5 h-5" />
-                      </button>
-                      <button
-                        onClick={() =>
-                          handleReject(student.user_id, student.full_name)
-                        }
-                        disabled={rejectMutation.isPending}
-                        className="p-2 text-red-500 hover:bg-red-500/10 rounded-xl transition-all border border-transparent hover:border-red-500/20"
-                        title="Reject Student"
-                      >
-                        <X className="w-5 h-5" />
+                       Review Details <ChevronRight className="w-3.5 h-3.5" />
                       </button>
                     </div>
                   </td>
@@ -180,6 +168,14 @@ const PendingStudents = () => {
         {...modalConfig}
         onCancel={() => setModalConfig({ isOpen: false })}
         isLoading={approveMutation.isPending || rejectMutation.isPending}
+      />
+      
+      <StudentReviewModal 
+        isOpen={!!reviewStudent}
+        student={reviewStudent}
+        onClose={() => setReviewStudent(null)}
+        onApprove={handleApprove}
+        onReject={handleReject}
       />
     </div>
   );

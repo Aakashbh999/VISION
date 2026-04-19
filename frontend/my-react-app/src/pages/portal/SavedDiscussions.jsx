@@ -3,10 +3,12 @@ import { useSavedDiscussions } from "../../hooks/useDiscussionHooks";
 import { Link } from "react-router-dom";
 import LoadingSpinner from "../../components/ui/LoadingSpinner";
 import ButtonLoader from "../../components/ui/ButtonLoader";
-import { MessageCircle, ThumbsUp, ChevronLeft, Bookmark } from "lucide-react";
+import { ChevronLeft, Bookmark } from "lucide-react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toggleSave } from "../../services/discussion";
 import { toast } from "react-toastify";
+import SimplePagination from "../../components/ui/SimplePagination";
+import DiscussionListItem from "../../components/portal/DiscussionListItem";
 
 const SavedDiscussions = () => {
   const [page, setPage] = useState(1);
@@ -19,16 +21,8 @@ const SavedDiscussions = () => {
       queryClient.invalidateQueries({ queryKey: ["saved-discussions"] });
       toast.success("Removed from saved");
     },
-    onError: () => {
-      toast.error("Failed to remove from saved");
-    },
+    onError: () => toast.error("Failed to remove from saved"),
   });
-
-  const handleUnsave = (discussionId, e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    unsaveMutation.mutate(discussionId);
-  };
 
   if (isLoading) return <LoadingSpinner />;
   if (error)
@@ -60,9 +54,7 @@ const SavedDiscussions = () => {
         {discussions.length === 0 ? (
           <div className="text-center py-12 bg-[var(--bg-card)] rounded-xl border border-[var(--border-main)] border-x-0 sm:border-x">
             <Bookmark className="w-12 h-12 mx-auto text-[var(--text-muted)] mb-4" />
-            <p className="text-[var(--text-muted)]">
-              No saved discussions yet.
-            </p>
+            <p className="text-[var(--text-muted)]">No saved discussions yet.</p>
             <p className="text-sm text-[var(--text-muted)] mt-1">
               Save discussions to read them later!
             </p>
@@ -75,82 +67,44 @@ const SavedDiscussions = () => {
           </div>
         ) : (
           discussions.map((disc) => (
-            <Link
+            <DiscussionListItem
               key={disc.discussion_id}
+              discussion={disc}
+              linkWrapper={true}
               to={`/discussions/${disc.discussion_id}`}
-              className="block bg-[var(--bg-card)] rounded-xl border border-[var(--border-main)] border-x-0 sm:border-x p-5 hover:shadow-md transition-shadow"
-            >
-              <div className="flex items-start justify-between">
-                <div className="flex-1">
-                  <h2 className="text-base sm:text-lg font-semibold text-[var(--text-main)] mb-1">
-                    {disc.title}
-                  </h2>
-                  <p className="text-sm text-[var(--text-muted)] mb-2 line-clamp-2">
-                    {disc.content}
-                  </p>
-                  <div className="flex items-center gap-4 text-xs text-[var(--text-muted)]">
-                    <span>by {disc.author}</span>
-                    <span>•</span>
-                    <span>
-                      {new Date(disc.created_at).toLocaleDateString()}
-                    </span>
-                    <span>•</span>
-                    <span className="text-yellow-600">
-                      Saved {new Date(disc.saved_at).toLocaleDateString()}
-                    </span>
-                  </div>
-                </div>
-                <div className="flex flex-col items-end gap-2 ml-4">
-                  <div className="flex items-center gap-3 text-sm text-[var(--text-muted)]">
-                    <span className="flex items-center gap-1">
-                      <ThumbsUp className="w-4 h-4" /> {disc.like_count || 0}
-                    </span>
-                    <span className="flex items-center gap-1">
-                      <MessageCircle className="w-4 h-4" />{" "}
-                      {disc.comment_count || 0}
-                    </span>
-                  </div>
-                  <button
-                    onClick={(e) => handleUnsave(disc.discussion_id, e)}
-                    disabled={unsaveMutation.isPending}
-                    className="p-1.5 text-yellow-500 hover:text-gray-500 rounded transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-                    title="Remove from saved"
-                  >
-                    {unsaveMutation.isPending ? (
-                      <ButtonLoader size={20} />
-                    ) : (
-                      <Bookmark className="w-5 h-5 fill-yellow-500" />
-                    )}
-                  </button>
-                </div>
-              </div>
-            </Link>
+              meta={
+                <span className="text-yellow-600">
+                  Saved {new Date(disc.saved_at).toLocaleDateString()}
+                </span>
+              }
+              actions={
+                <button
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    unsaveMutation.mutate(disc.discussion_id);
+                  }}
+                  disabled={unsaveMutation.isPending}
+                  className="p-1.5 text-yellow-500 hover:text-gray-500 rounded transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                  title="Remove from saved"
+                >
+                  {unsaveMutation.isPending ? (
+                    <ButtonLoader size={20} />
+                  ) : (
+                    <Bookmark className="w-5 h-5 fill-yellow-500" />
+                  )}
+                </button>
+              }
+            />
           ))
         )}
       </div>
 
-      {/* Pagination */}
-      {pagination.totalPages > 1 && (
-        <div className="flex justify-center gap-2">
-          <button
-            onClick={() => setPage((p) => Math.max(1, p - 1))}
-            disabled={pagination.page <= 1}
-            className="px-4 py-2 border border-[var(--border-main)] rounded-lg disabled:opacity-50 hover:bg-[var(--bg-active)] transition-colors text-[var(--text-main)]"
-          >
-            Previous
-          </button>
-          <span className="px-4 py-2 text-[var(--text-muted)]">
-            Page {pagination.page} of {pagination.totalPages}
-          </span>
-          <button
-            onClick={() => setPage((p) => p + 1)}
-            disabled={pagination.page >= pagination.totalPages}
-            className="px-4 py-2 border border-[var(--border-main)] rounded-lg disabled:opacity-50 hover:bg-[var(--bg-active)] transition-colors text-[var(--text-main)]"
-          >
-            Next
-          </button>
-        </div>
-      )}
+      <SimplePagination
+        page={pagination.page}
+        totalPages={pagination.totalPages}
+        onPageChange={setPage}
+      />
     </div>
   );
 };

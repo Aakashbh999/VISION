@@ -1,4 +1,4 @@
-import { httpDelete, httpGet, httpPatch, httpPost } from "./http";
+import { httpDelete, httpGet, httpPatch, httpPost, httpPut } from "./http";
 
 // Dashboard stats (Aggregated)
 export const getAdminDashboardStats = async () => {
@@ -76,4 +76,39 @@ export const resolveReportAction = async (reportId, action) => {
 
 export const examineReport = async (reportId) => {
   return httpGet(`/admin/reports/${reportId}/examine`);
+};
+
+// Registration Whitelist
+export const getRegistrationWhitelist = async (params) => {
+  return httpGet("/admin/registration-whitelist", params);
+};
+
+export const addRegistrationWhitelist = async (data) => {
+  return httpPost("/admin/registration-whitelist", data);
+};
+
+export const updateRegistrationWhitelist = async (regNo, data) => {
+  return httpPut(`/admin/registration-whitelist/${regNo}`, data);
+};
+
+export const deleteRegistrationWhitelist = async (regNo) => {
+  return httpDelete(`/admin/registration-whitelist/${regNo}`);
+};
+
+
+// Campus Management
+export const getAdminCampuses = async () => {
+  return httpGet("/admin/campuses");
+};
+
+export const createAdminCampus = async (data) => {
+  return httpPost("/admin/campuses", data);
+};
+
+export const updateAdminCampus = async (campusId, data) => {
+  return httpPut(`/admin/campuses/${campusId}`, data);
+};
+
+export const deleteAdminCampus = async (campusId) => {
+  return httpDelete(`/admin/campuses/${campusId}`);
 };

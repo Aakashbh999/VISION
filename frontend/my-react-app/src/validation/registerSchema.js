@@ -49,7 +49,7 @@ const currentYear = new Date().getFullYear();
 
 export const registerStep2Schema = z.object({
   university: z.string().trim().min(1, "University is required."),
-  campus: z.string().trim().min(2, "Campus is required."),
+  campus_id: z.coerce.number().int().positive("Please select a campus."),
   program_id: z.coerce.number().int().positive("Please select a program."),
   semester: z.coerce
     .number()
@@ -60,7 +60,11 @@ export const registerStep2Schema = z.object({
     .number()
     .int()
     .min(2000, "Batch year is invalid.")
-    .max(currentYear, "Batch year cannot be in the future."),
+    .max(2100, "Batch year cannot be in the future (B.S.)."),
   tu_registration_no: z.string().trim().min(3, "TU registration number is required."),
+  date_of_birth: z
+    .string()
+    .trim()
+    .regex(/^\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[012])$/, "Invalid date format. Use YYYY-MM-DD (B.S.)."),
   career_scope: z.array(z.string()).max(5, "You can select up to 5 interests."),
 });

@@ -198,12 +198,14 @@ exports.uploadResource = catchAsync(async (req, res) => {
   try {
     await client.query("BEGIN");
 
+    const finalStatus = (req.user.role === 'admin' && req.body.status === 'approved') ? 'approved' : 'pending';
+
     // Insert the resource row (no hashtags column on this deployment)
     const result = await client.query(
       `INSERT INTO portal.resources
            (title, description, resource_type, program_id, semester, degree_id, url,
             file_url, file_public_id, original_filename, status, created_by, created_at)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, 'pending', $11, NOW())
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, NOW())
          RETURNING *`,
       [
         normalizedTitle,
@@ -216,6 +218,7 @@ exports.uploadResource = catchAsync(async (req, res) => {
         fileUrl,
         filePublicId,
         originalFilename,
+        finalStatus,
         userId,
       ],
     );
@@ -255,7 +258,7 @@ exports.uploadResource = catchAsync(async (req, res) => {
 
     res.status(201).json({
       success: true,
-      message: "Resource submitted for review",
+      message: finalStatus === 'approved' ? "Resource created and approved" : "Resource submitted for review",
       data: result.rows[0],
     });
   } catch (error) {

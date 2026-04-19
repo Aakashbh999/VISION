@@ -3,6 +3,7 @@ import { useNavigate, Link } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { usePrograms } from "../hooks/usePrograms";
+import { useCampuses } from "../hooks/useCampuses";
 import { register as registerUser, login } from "../services/auth";
 import {
   Mail,
@@ -43,6 +44,8 @@ const Register = () => {
   const navigate = useNavigate();
   const { login: loginWithContext } = useAuth();
   const { data: programs, isLoading: programsLoading } = usePrograms();
+  const { data: campusesRes, isLoading: campusesLoading } = useCampuses();
+  const campuses = campusesRes?.data || [];
 
   const [step, setStep] = useState(1);
   const [formData, setFormData] = useState({
@@ -51,13 +54,13 @@ const Register = () => {
     confirmPassword: "",
     full_name: "",
     university: "TU",
-    campus: "",
+    campus_id: "",
     program_id: "",
     batch_year: "",
-    batch_date: "", // New field for calendar picker
     semester: "",
     semester_is_manual: false,
     tu_registration_no: "",
+    date_of_birth: "",
     career_scope: [],
   });
 
@@ -109,14 +112,43 @@ const Register = () => {
       return;
     }
 
-    // Special handling for batch date
-    if (name === "batch_date") {
-      const year = value ? value.split("-")[0] : "";
+    // Special handling for batch year
+    if (name === "batch_year") {
+      const sanitizedValue = value.replace(/[^0-9]/g, "");
       setFormData((prev) => ({
         ...prev,
-        batch_date: value,
-        batch_year: year,
+        batch_year: sanitizedValue,
         semester_is_manual: false, // Reset manual override when batch changes
+      }));
+      return;
+    }
+
+    // Special handling for date of birth (Auto format YYYY-MM-DD)
+    if (name === "date_of_birth") {
+      let val = value.replace(/\D/g, "");
+      if (val.length > 8) val = val.slice(0, 8);
+      
+      let formatted = val;
+      if (val.length > 6) {
+        formatted = `${val.slice(0, 4)}-${val.slice(4, 6)}-${val.slice(6)}`;
+      } else if (val.length > 4) {
+        formatted = `${val.slice(0, 4)}-${val.slice(4)}`;
+      }
+
+      setFormData((prev) => ({
+        ...prev,
+        date_of_birth: formatted,
+      }));
+      return;
+    }
+
+    // Special handling for registration number
+    if (name === "tu_registration_no") {
+      // Allow only numbers and hyphens, avoid consecutive hyphens
+      let sanitizedValue = value.replace(/[^0-9-]/g, "").replace(/-+/g, "-");
+      setFormData((prev) => ({
+        ...prev,
+        tu_registration_no: sanitizedValue,
       }));
       return;
     }
@@ -165,11 +197,12 @@ const Register = () => {
 
     const step2Validation = registerStep2Schema.safeParse({
       university: formData.university,
-      campus: formData.campus,
+      campus_id: formData.campus_id,
       program_id: formData.program_id,
       semester: formData.semester,
       batch_year: formData.batch_year,
       tu_registration_no: formData.tu_registration_no,
+      date_of_birth: formData.date_of_birth,
       career_scope: formData.career_scope,
     });
 
@@ -182,18 +215,25 @@ const Register = () => {
       return;
     }
 
+    if (!studentIdFile) {
+      setError("Academic Certificate is required.");
+      setLoading(false);
+      return;
+    }
+
     const finalPayload = new FormData();
     const normalizedFullName = normalizeFullName(formData.full_name);
     finalPayload.append("email", formData.email);
     finalPayload.append("password", formData.password);
     finalPayload.append("full_name", normalizedFullName);
     finalPayload.append("university", formData.university);
-    finalPayload.append("campus", formData.campus);
+    finalPayload.append("campus_id", formData.campus_id);
     finalPayload.append("program_id", formData.program_id);
     finalPayload.append("semester", formData.semester);
     finalPayload.append("batch_year", formData.batch_year);
     finalPayload.append("semester_is_manual", formData.semester_is_manual);
     finalPayload.append("tu_registration_no", formData.tu_registration_no);
+    finalPayload.append("date_of_birth", formData.date_of_birth);
     finalPayload.append("career_scope", formData.career_scope.join(", "));
 
     if (studentIdFile) {
@@ -220,7 +260,7 @@ const Register = () => {
     }
   };
 
-  if (programsLoading) return <LoadingSpinner />;
+  if (programsLoading || campusesLoading) return <LoadingSpinner />;
 
   return (
     <div className="max-w-2xl mx-auto py-12 px-4 sm:px-6">
@@ -414,17 +454,22 @@ const Register = () => {
                 <label className="text-[10px] font-black uppercase text-(--text-muted) tracking-widest mb-2 block">
                   Campus Name
                 </label>
-                <div className="relative group">
-                  <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-(--text-muted)" />
-                  <input
-                    type="text"
-                    name="campus"
+                <div className="relative">
+                  <School className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-(--text-muted)" />
+                  <select
+                    name="campus_id"
                     required
-                    value={formData.campus}
+                    value={formData.campus_id}
                     onChange={handleChange}
-                    className="w-full pl-12 pr-4 py-3.5 bg-(--bg-active) border border-(--border-main) rounded-2xl focus:bg-(--bg-card) focus:ring-4 focus:ring-purple-500/10 focus:border-purple-500 outline-none transition-all font-medium text-(--text-main)"
-                    placeholder="e.g. ASCOL, Birendra"
-                  />
+                    className="w-full pl-12 pr-4 py-3.5 bg-(--bg-active) border border-(--border-main) rounded-2xl focus:bg-(--bg-card) focus:ring-4 focus:ring-purple-500/10 focus:border-purple-500 outline-none transition-all font-bold text-(--text-main) appearance-none"
+                  >
+                    <option value="">Select Campus</option>
+                    {campuses.map((c) => (
+                      <option key={c.campus_id} value={c.campus_id}>
+                        {c.campus_name}
+                      </option>
+                    ))}
+                  </select>
                 </div>
               </div>
 
@@ -454,19 +499,21 @@ const Register = () => {
               <div className="grid grid-cols-12 gap-3">
                 <div className="col-span-7">
                   <label className="text-[10px] font-black uppercase text-(--text-muted) tracking-widest mb-2 block">
-                    Batch Enrollment
+                    Batch Enrollment (B.S.)
                   </label>
                   <div className="relative">
                     <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-(--text-muted) pointer-events-none" />
                     <input
-                      type="date"
-                      name="batch_date"
+                      type="text"
+                      inputMode="numeric"
+                      name="batch_year"
                       required
-                      max={new Date().toISOString().split("T")[0]}
-                      value={formData.batch_date}
+                      min="2000"
+                      max="2100"
+                      value={formData.batch_year}
                       onChange={handleChange}
-                      onKeyDown={(e) => e.preventDefault()}
-                      className="w-full pl-9 pr-3 py-3.5 bg-(--bg-active) border border-(--border-main) rounded-2xl focus:bg-(--bg-card) outline-none transition-all font-bold text-(--text-main) scheme-dark"
+                      className="w-full pl-9 pr-3 py-3.5 bg-(--bg-active) border border-(--border-main) rounded-2xl focus:bg-(--bg-card) outline-none transition-all font-bold text-(--text-main)"
+                      placeholder="e.g. 2080"
                     />
                   </div>
                 </div>
@@ -494,12 +541,32 @@ const Register = () => {
 
             <div>
               <label className="text-[10px] font-black uppercase text-(--text-muted) tracking-widest mb-2 block">
-                TU Registration Number
+                Date of Birth (B.S.)
+              </label>
+              <div className="relative group">
+                <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-(--text-muted)" />
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  name="date_of_birth"
+                  required
+                  placeholder="YYYY-MM-DD (e.g. 2058-05-12)"
+                  value={formData.date_of_birth}
+                  onChange={handleChange}
+                  className="w-full pl-12 pr-4 py-3.5 bg-(--bg-active) border border-(--border-main) rounded-2xl focus:bg-(--bg-card) focus:ring-4 focus:ring-purple-500/10 focus:border-purple-500 outline-none transition-all font-bold text-(--text-main)"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="text-[10px] font-black uppercase text-(--text-muted) tracking-widest mb-2 block">
+                Registration Number
               </label>
               <div className="relative group">
                 <FileText className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-(--text-muted)" />
                 <input
                   type="text"
+                  inputMode="numeric"
                   name="tu_registration_no"
                   required
                   value={formData.tu_registration_no}
@@ -548,7 +615,7 @@ const Register = () => {
 
             <div>
               <label className="text-[10px] font-black uppercase text-(--text-muted) tracking-widest mb-2 block">
-                Student ID Proof (Max 1MB)
+                Academic Certificate (Required, Max 1MB)
               </label>
               <div className="relative">
                 <input

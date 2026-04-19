@@ -1,5 +1,5 @@
 import { Link, useLocation } from "react-router-dom";
-import { LayoutDashboard, Users, Clock, FileText, LogOut } from "lucide-react";
+import { LayoutDashboard, Users, Clock, FileText, LogOut, ShieldAlert } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 import { motion } from "framer-motion";
 
@@ -26,7 +26,25 @@ const AdminSidebar = () => {
       icon: Users,
       href: "/admin/students",
     },
+    {
+      id: "whitelist",
+      label: "Reg. Whitelist",
+      icon: ShieldAlert,
+      href: "/admin/registration-whitelist",
+    },
     { id: "reports", label: "Reports", icon: FileText, href: "/admin/reports" },
+    {
+      id: "roadmaps",
+      label: "Roadmap Builder",
+      icon: FileText,
+      href: "/admin/roadmaps",
+    },
+    {
+      id: "campuses",
+      label: "Campuses",
+      icon: LayoutDashboard,
+      href: "/admin/campuses",
+    },
   ];
 
   if (user?.is_moderator || user?.role === "admin") {

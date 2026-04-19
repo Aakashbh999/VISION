@@ -19,6 +19,7 @@ export const httpGet = (url, params) => {
 
 export const httpPost = (url, payload) => withData(api.post(url, payload));
 export const httpPatch = (url, payload) => withData(api.patch(url, payload));
+export const httpPut = (url, payload) => withData(api.put(url, payload));
 export const httpDelete = (url, config) => withData(api.delete(url, config));
 
 export { buildQueryString };

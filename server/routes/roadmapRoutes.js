@@ -12,7 +12,6 @@ router.get(
   verifyJWT,
   roadmapController.getStepResources,
 );
-// Mark a step as completed
 router.post(
   "/steps/:stepId/complete",
   verifyJWT,
@@ -20,10 +19,21 @@ router.post(
   roadmapController.completeStep,
 );
 
+// Track resource interaction
+router.post(
+  "/steps/:stepId/resources/:resourceId/visit",
+  verifyJWT,
+  roadmapController.trackResourceVisit,
+);
+
 // Get roadmap path (subway map data)
 router.get("/:id/path", verifyJWT, roadmapController.getRoadmapPath);
 
 // Get progress for a roadmap
 router.get("/:id/progress", verifyJWT, roadmapController.getRoadmapProgress);
+
+// Enrolment & Anti-Spam
+router.get("/:id/status", verifyJWT, roadmapController.getEnrolmentStatus);
+router.post("/:id/leave", verifyJWT, roadmapController.leaveRoadmap);
 
 module.exports = router;
