@@ -237,7 +237,7 @@ const Register = () => {
     finalPayload.append("career_scope", formData.career_scope.join(", "));
 
     if (studentIdFile) {
-      finalPayload.append("student_id_image", studentIdFile);
+      finalPayload.append("academic_certificate", studentIdFile);
     }
 
     try {

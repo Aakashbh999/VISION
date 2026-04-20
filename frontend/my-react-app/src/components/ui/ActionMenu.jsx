@@ -1,4 +1,5 @@
 import { useState, useRef } from "react";
+import { Link } from "react-router-dom";
 import { MoreHorizontal } from "lucide-react";
 import { useClickOutside } from "../../hooks/useClickOutside";
 
@@ -42,9 +43,14 @@ const ActionMenu = ({
                   </div>
                 );
               }
+
+              const isLink = !!action.href;
+              const ActionComponent = isLink ? Link : "button";
+
               return (
-                <button
+                <ActionComponent
                   key={index}
+                  to={action.href}
                   onClick={() => {
                     action.onClick?.();
                     setIsOpen(false);
@@ -59,7 +65,7 @@ const ActionMenu = ({
                     <span className="w-4 h-4">{action.icon}</span>
                   )}
                   {action.label}
-                </button>
+                </ActionComponent>
               );
             })}
           </div>

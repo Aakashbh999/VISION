@@ -68,9 +68,9 @@ const StudentReviewModal = ({ isOpen, student, onClose, onApprove, onReject }) =
             <div className="space-y-4">
               <h3 className="text-sm font-black uppercase tracking-widest text-text-muted">Academic Certificate</h3>
               <div className="bg-bg-active/30 p-2 rounded-xl border border-border-main h-[400px] flex items-center justify-center overflow-hidden">
-                {student.student_id_image_url ? (
+                {student.academic_certificate_url ? (
                   <img 
-                    src={student.student_id_image_url} 
+                    src={student.academic_certificate_url} 
                     alt="Academic Certificate constraint" 
                     className="max-w-full max-h-full object-contain rounded-lg"
                   />

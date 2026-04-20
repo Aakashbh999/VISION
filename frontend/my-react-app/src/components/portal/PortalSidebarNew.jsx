@@ -54,12 +54,6 @@ const navItems = [
     icon: Globe,
     href: "/clubs",
   },
-  {
-    id: "manage",
-    label: "Manage",
-    icon: FolderOpen,
-    href: "/manage",
-  },
 ];
 
 const NavItem = ({ item, isCollapsed, depth = 0 }) => {

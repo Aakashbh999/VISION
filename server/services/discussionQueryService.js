@@ -9,8 +9,14 @@ const buildFilterConditions = (filters, startParamIndex = 1) => {
     paramIndex++;
   }
   if (filters.degree) {
-    conditions.push(`d.degree_id = $${paramIndex}`);
-    params.push(parseInt(filters.degree, 10));
+    const degreeId = parseInt(filters.degree, 10);
+    // Bridge logic: IDs 1-5 are shared between Degrees and Programs (CSIT, BIT, BCA, BE)
+    if (degreeId >= 1 && degreeId <= 5) {
+      conditions.push(`(d.degree_id = $${paramIndex} OR d.program_id = $${paramIndex})`);
+    } else {
+      conditions.push(`d.degree_id = $${paramIndex}`);
+    }
+    params.push(degreeId);
     paramIndex++;
   }
   if (filters.jobRole) {
@@ -19,8 +25,14 @@ const buildFilterConditions = (filters, startParamIndex = 1) => {
     paramIndex++;
   }
   if (filters.program) {
-    conditions.push(`d.program_id = $${paramIndex}`);
-    params.push(parseInt(filters.program, 10));
+    const programId = parseInt(filters.program, 10);
+    // Bridge logic: IDs 1-5 are shared between Degrees and Programs (CSIT, BIT, BCA, BE)
+    if (programId >= 1 && programId <= 5) {
+      conditions.push(`(d.program_id = $${paramIndex} OR d.degree_id = $${paramIndex})`);
+    } else {
+      conditions.push(`d.program_id = $${paramIndex}`);
+    }
+    params.push(programId);
     paramIndex++;
   }
   if (filters.tag) {

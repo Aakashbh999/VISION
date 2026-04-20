@@ -13,7 +13,8 @@ exports.getAllRoadmaps = catchAsync(async (req, res) => {
   let query = `
       SELECT 
         r.roadmap_id, r.title, r.description, r.difficulty_level,
-        (SELECT status FROM portal.user_roadmap_enrolments ure WHERE ure.roadmap_id = r.roadmap_id AND ure.user_id = $1) as enrolment_status
+        (SELECT status  FROM portal.user_roadmap_enrolments ure WHERE ure.roadmap_id = r.roadmap_id AND ure.user_id = $1) as enrolment_status,
+        (SELECT left_at FROM portal.user_roadmap_enrolments ure WHERE ure.roadmap_id = r.roadmap_id AND ure.user_id = $1) as left_at
       FROM portal.roadmaps r
       WHERE r.is_active = TRUE
     `;
@@ -61,27 +62,37 @@ exports.trackResourceVisit = catchAsync(async (req, res) => {
   const { stepId, resourceId } = req.params;
   const portalUserId = req.user.portal_user_id;
 
+  console.log(`[trackResourceVisit] User: ${portalUserId}, Step: ${stepId}, Resource: ${resourceId}`);
+
   const client = await pool.connect();
   try {
     await client.query("BEGIN");
 
-    // 0. Ensure Enrolment & Anti-Spam Check
+    // Check if the step exists and get its roadmap_id
     const roadmapRes = await client.query(
       `SELECT roadmap_id FROM portal.roadmap_steps WHERE step_id = $1`,
       [stepId],
     );
-    if (!roadmapRes.rows.length) throw createError(404, "Step not found");
+    if (!roadmapRes.rows.length) {
+      console.log(`[trackResourceVisit] Step ${stepId} not found`);
+      throw createError(404, "Step not found");
+    }
     const roadmapId = roadmapRes.rows[0].roadmap_id;
 
+    // Check active enrolment
     const enrolment = await client.query(
       `SELECT status, left_at FROM portal.user_roadmap_enrolments WHERE user_id = $1 AND roadmap_id = $2`,
       [portalUserId, roadmapId],
     );
 
     if (enrolment.rows.length) {
-      const { status } = enrolment.rows[0];
+      const { status, left_at } = enrolment.rows[0];
+      console.log(`[trackResourceVisit] Enrolment status: ${status}`);
       if (status === "left") {
-        // Re-activating the same roadmap is allowed immediately
+        const SAME_ROADMAP_LOCKOUT_MS = 4 * 24 * 60 * 60 * 1000;
+        if (left_at && (Date.now() - new Date(left_at).getTime()) < SAME_ROADMAP_LOCKOUT_MS) {
+          throw createError(400, "You must wait before re-joining this roadmap.");
+        }
         await client.query(
           `UPDATE portal.user_roadmap_enrolments SET status = 'active', last_activity_at = NOW() WHERE user_id = $1 AND roadmap_id = $2`,
           [portalUserId, roadmapId],
@@ -93,60 +104,20 @@ exports.trackResourceVisit = catchAsync(async (req, res) => {
         );
       }
     } else {
-      // NEW ENROLMENT: Check constraints
-      // Check for other active roadmap
-      const activeOther = await client.query(
-        `
-        SELECT r.title 
-        FROM portal.user_roadmap_enrolments ure
-        JOIN portal.roadmaps r ON r.roadmap_id = ure.roadmap_id
-        WHERE ure.user_id = $1 AND ure.status = 'active'
-        `,
-        [portalUserId],
-      );
-
-      if (activeOther.rows.length) {
-        throw createError(
-          400,
-          `You already have an active roadmap: "${activeOther.rows[0].title}". You must finish or leave it before starting a new one.`,
-        );
-      }
-
-      // Check for 24h lockout after leaving ANY roadmap
-      const recentLeft = await client.query(
-        `
-        SELECT left_at 
-        FROM portal.user_roadmap_enrolments 
-        WHERE user_id = $1 AND status = 'left' AND left_at > NOW() - INTERVAL '24 hours'
-        ORDER BY left_at DESC LIMIT 1
-        `,
-        [portalUserId],
-      );
-
-      if (recentLeft.rows.length) {
-        const leftAt = new Date(recentLeft.rows[0].left_at);
-        const unlocksAt = new Date(leftAt.getTime() + 24 * 60 * 60 * 1000);
-        const hoursLeft = Math.ceil((unlocksAt - Date.now()) / (1000 * 60 * 60));
-
-        throw createError(
-          400,
-          `Lockout Active: You recently left another roadmap. Please wait ~${hoursLeft} hours before starting a new one.`,
-        );
-      }
-
-      // Create new enrolment
-      await client.query(
-        `INSERT INTO portal.user_roadmap_enrolments (user_id, roadmap_id, status) VALUES ($1, $2, 'active')`,
-        [portalUserId, roadmapId],
-      );
+      console.log(`[trackResourceVisit] User not enrolled in roadmap ${roadmapId}`);
+      throw createError(403, "You must lock this roadmap before you can track progress.");
     }
 
     // 1. Record the interaction
+    console.log(`[trackResourceVisit] Recording view interaction`);
     await client.query(
       `
       INSERT INTO portal.user_resource_interactions (user_id, resource_id, interaction_type)
-      VALUES ($1, $2, 'view')
-      ON CONFLICT (user_id, resource_id, interaction_type) DO NOTHING
+      SELECT $1, $2, 'view'
+      WHERE NOT EXISTS (
+        SELECT 1 FROM portal.user_resource_interactions 
+        WHERE user_id = $1 AND resource_id = $2 AND interaction_type = 'view'
+      )
       `,
       [portalUserId, resourceId],
     );
@@ -155,16 +126,20 @@ exports.trackResourceVisit = catchAsync(async (req, res) => {
     await client.query(
       `
       INSERT INTO portal.user_roadmap_progress (user_id, step_id, first_viewed_at)
-      VALUES ($1, $2, NOW())
-      ON CONFLICT (user_id, step_id) 
-      DO UPDATE SET first_viewed_at = COALESCE(portal.user_roadmap_progress.first_viewed_at, EXCLUDED.first_viewed_at)
+      SELECT $1, $2, NOW()
+      WHERE NOT EXISTS (
+        SELECT 1 FROM portal.user_roadmap_progress 
+        WHERE user_id = $1 AND step_id = $2
+      )
       `,
       [portalUserId, stepId],
     );
 
     await client.query("COMMIT");
+    console.log(`[trackResourceVisit] Success`);
     res.json({ success: true, message: "Interaction tracked" });
   } catch (err) {
+    console.error(`[trackResourceVisit] Error:`, err);
     await client.query("ROLLBACK");
     throw err;
   } finally {
@@ -280,6 +255,31 @@ exports.completeStep = catchAsync(async (req, res) => {
     const { stepId } = req.params;
     const { submission_text, submission_link } = req.body;
     const portalUserId = req.user.portal_user_id;
+
+    // 0. Linear Progression Check
+    const stepMetadata = await client.query(
+      `SELECT roadmap_id, step_order FROM portal.roadmap_steps WHERE step_id = $1`,
+      [stepId],
+    );
+    if (!stepMetadata.rows.length) throw createError(404, "Step not found");
+    const { roadmap_id: roadmapId, step_order: currentOrder } = stepMetadata.rows[0];
+
+    const incompletePrevious = await client.query(
+      `
+      SELECT rs.title 
+      FROM portal.roadmap_steps rs
+      LEFT JOIN portal.user_roadmap_progress urp ON urp.step_id = rs.step_id AND urp.user_id = $1
+      WHERE rs.roadmap_id = $2 
+        AND rs.step_order < $3
+        AND (urp.is_completed IS NULL OR urp.is_completed = FALSE)
+      LIMIT 1
+      `,
+      [portalUserId, roadmapId, currentOrder],
+    );
+
+    if (incompletePrevious.rows.length) {
+      throw createError(400, `You must complete previous steps first. Incomplete: "${incompletePrevious.rows[0].title}"`);
+    }
 
     // 1. Verify requirements (All required resources visited + 24h lockout)
     const requirements = await client.query(
@@ -484,6 +484,7 @@ exports.getRoadmapPath = catchAsync(async (req, res) => {
         rs.step_order,
         rs.estimated_time,
         rs.prerequisite_step_id,
+        urp.first_viewed_at,
         COALESCE(urp.is_completed, FALSE) AS is_completed,
         COALESCE(urp.is_verified, FALSE) AS is_verified,
         COALESCE(
@@ -499,6 +500,10 @@ exports.getRoadmapPath = catchAsync(async (req, res) => {
                   SELECT COALESCE(ROUND(AVG(score)::numeric, 1), 0.0) 
                   FROM portal.resource_scores 
                   WHERE resource_id = r.resource_id
+                ),
+                'is_visited', EXISTS(
+                  SELECT 1 FROM portal.user_resource_interactions 
+                  WHERE user_id = $1 AND resource_id = r.resource_id AND interaction_type = 'view'
                 )
               )
             )
@@ -544,7 +549,7 @@ exports.leaveRoadmap = catchAsync(async (req, res) => {
     throw createError(400, "No active enrolment found for this roadmap.");
   }
 
-  res.json({ success: true, message: "You have left the roadmap. A 24h lockout applies for starting new roadmaps." });
+  res.json({ success: true, message: "You have left the roadmap. A 4-day cooldown applies before you can re-join this roadmap." });
 });
 
 /* =====================================================
@@ -561,3 +566,81 @@ exports.getEnrolmentStatus = catchAsync(async (req, res) => {
 
   res.json({ enrolment: result.rows[0] || null });
 });
+
+/* =====================================================
+   LOCK/JOIN ROADMAP (Manual Action)
+ ===================================================== */
+exports.lockRoadmap = catchAsync(async (req, res) => {
+  const { id: roadmapId } = req.params;
+  const portalUserId = req.user.portal_user_id;
+
+  console.log(`[lockRoadmap] User: ${portalUserId}, Roadmap: ${roadmapId}`);
+
+  const client = await pool.connect();
+  try {
+    await client.query("BEGIN");
+
+    // 1. Check if roadmap exists
+    const roadmap = await client.query(`SELECT title FROM portal.roadmaps WHERE roadmap_id = $1 AND is_active = TRUE`, [roadmapId]);
+    if (!roadmap.rows.length) {
+      console.log(`[lockRoadmap] Roadmap ${roadmapId} not found or inactive`);
+      throw createError(404, "Roadmap not found");
+    }
+
+    // 2. Check current enrolment
+    const enrolment = await client.query(
+      `SELECT status, left_at FROM portal.user_roadmap_enrolments WHERE user_id = $1 AND roadmap_id = $2`,
+      [portalUserId, roadmapId]
+    );
+
+    if (enrolment.rows.length) {
+      const { status, left_at } = enrolment.rows[0];
+      console.log(`[lockRoadmap] Existing enrolment status: ${status}`);
+      if (status === 'active') return res.json({ message: "Already locked and active." });
+      if (status === 'completed') throw createError(400, "You already completed this roadmap.");
+      
+      // Cooldown check for 'left'
+      if (status === 'left') {
+        const FOUR_DAYS_MS = 4 * 24 * 60 * 60 * 1000;
+        const now = Date.now();
+        const leftTime = new Date(left_at).getTime();
+        console.log(`[lockRoadmap] Checking cooldown: Left at ${left_at}, diff: ${now - leftTime}ms`);
+        if (left_at && (now - leftTime) < FOUR_DAYS_MS) {
+          throw createError(400, "You recently left this roadmap. Re-entry locked.");
+        }
+        await client.query(
+          `UPDATE portal.user_roadmap_enrolments SET status = 'active', last_activity_at = NOW() WHERE user_id = $1 AND roadmap_id = $2`,
+          [portalUserId, roadmapId]
+        );
+      }
+    } else {
+      // NEW ENROLMENT: Check for other active path
+      const activeOther = await client.query(
+        `SELECT r.title FROM portal.user_roadmap_enrolments ure 
+         JOIN portal.roadmaps r ON r.roadmap_id = ure.roadmap_id
+         WHERE ure.user_id = $1 AND ure.status = 'active'`,
+        [portalUserId]
+      );
+      if (activeOther.rows.length) {
+        console.log(`[lockRoadmap] Another active roadmap found: ${activeOther.rows[0].title}`);
+        throw createError(400, `Complete or leave "${activeOther.rows[0].title}" first.`);
+      }
+
+      console.log(`[lockRoadmap] Creating new active enrolment`);
+      await client.query(
+        `INSERT INTO portal.user_roadmap_enrolments (user_id, roadmap_id, status) VALUES ($1, $2, 'active')`,
+        [portalUserId, roadmapId]
+      );
+    }
+
+    await client.query("COMMIT");
+    res.json({ success: true, message: "Roadmap locked. You are now focused on this path." });
+  } catch (err) {
+    console.error(`[lockRoadmap] Error:`, err);
+    await client.query("ROLLBACK");
+    throw err;
+  } finally {
+    client.release();
+  }
+});
+

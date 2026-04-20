@@ -127,7 +127,7 @@ export const useDiscussionActions = ({ user, queryClient }) => {
   });
 
   const saveMutation = useMutation({
-    mutationFn: toggleSaveDiscussion,
+    mutationFn: ({ discussionId }) => toggleSaveDiscussion(discussionId),
     onMutate: async ({ discussionId, currentSaved = false }) => {
       setLoadingSave(discussionId);
       await queryClient.cancelQueries({ queryKey: ["discussions"] });

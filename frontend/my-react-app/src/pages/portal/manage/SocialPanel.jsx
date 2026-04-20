@@ -8,7 +8,7 @@ import {
   BadgeInfo,
   ChevronRight,
 } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { useQuery, keepPreviousData } from "@tanstack/react-query";
 import { useFollowUser } from "../../../hooks/useProfile";
 import LoadingSpinner from "../../../components/ui/LoadingSpinner";
@@ -21,7 +21,24 @@ import { formatDistanceToNow } from "date-fns";
 const SOCIAL_PAGE_SIZE = 8;
 
 const SocialPanel = () => {
-  const [socialTab, setSocialTab] = useState("followers");
+  const [searchParams, setSearchParams] = useSearchParams();
+  const initialSubTab = searchParams.get("sub") || "followers";
+  const [socialTab, setSocialTab] = useState(initialSubTab);
+
+  useEffect(() => {
+    const subFromUrl = searchParams.get("sub");
+    if (subFromUrl && subFromUrl !== socialTab) {
+      setSocialTab(subFromUrl);
+    }
+  }, [searchParams]);
+
+  const handleSocialTabChange = (newTab) => {
+    setSocialTab(newTab);
+    setSearchParams((prev) => {
+      prev.set("sub", newTab);
+      return prev;
+    });
+  };
   const [followersPage, setFollowersPage] = useState(1);
   const [followingPage, setFollowingPage] = useState(1);
   const [selectedUser, setSelectedUser] = useState(null);
@@ -104,7 +121,7 @@ const SocialPanel = () => {
         <SegmentedControl
           options={tabOptions}
           value={socialTab}
-          onChange={setSocialTab}
+          onChange={handleSocialTabChange}
           className="w-full lg:w-auto"
         />
       </div>

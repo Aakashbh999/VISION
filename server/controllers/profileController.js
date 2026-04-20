@@ -88,7 +88,12 @@ exports.getPublicProfile = catchAsync(async (req, res) => {
         u.reddit_url,
         u.twitter_url,
         u.github_url,
-        u.website_url
+        u.website_url,
+        u.campus,
+        u.university,
+        u.career_scope,
+        u.hide_member_since,
+        c_rel.campus_name
         ${
           viewerId
             ? `,
@@ -99,12 +104,13 @@ exports.getPublicProfile = catchAsync(async (req, res) => {
             : ", FALSE AS is_following"
         }
        FROM portal.users u
+       LEFT JOIN portal.campuses c_rel ON c_rel.campus_id = u.campus_id
        LEFT JOIN portal.programs p     ON p.program_id = u.program_id
        LEFT JOIN portal.user_stats us  ON us.user_id   = u.user_id
        LEFT JOIN portal.discussions d  ON d.user_id     = u.user_id AND d.deleted_at IS NULL AND d.is_deleted = FALSE
        LEFT JOIN portal.resources r    ON r.created_by = u.user_id AND r.deleted_at IS NULL
        WHERE u.user_id = $1 AND u.status = 'active'
-       GROUP BY u.user_id, u.last_seen_at, p.program_name, us.total_xp, us.current_level`,
+       GROUP BY u.user_id, u.last_seen_at, p.program_name, us.total_xp, us.current_level, u.hide_member_since, c_rel.campus_name`,
     viewerId ? [parsedUserId, viewerId] : [parsedUserId],
   );
 
@@ -164,15 +170,21 @@ exports.getOwnProfile = catchAsync(async (req, res) => {
         u.reddit_url,
         u.twitter_url,
         u.github_url,
-        u.website_url
+        u.website_url,
+        u.campus,
+        u.university,
+        u.career_scope,
+        u.hide_member_since,
+        c_rel.campus_name
        FROM portal.users u
        JOIN auth.users a               ON a.auth_user_id = u.auth_user_id
+       LEFT JOIN portal.campuses c_rel ON c_rel.campus_id = u.campus_id
        LEFT JOIN portal.programs p     ON p.program_id = u.program_id
        LEFT JOIN portal.user_stats us  ON us.user_id   = u.user_id
        LEFT JOIN portal.discussions d  ON d.user_id     = u.user_id AND d.deleted_at IS NULL AND d.is_deleted = FALSE
        LEFT JOIN portal.resources r    ON r.created_by = u.user_id AND r.deleted_at IS NULL
        WHERE u.user_id = $1
-       GROUP BY u.user_id, u.last_seen_at, a.email, a.email_status, p.program_name, us.total_xp, us.current_level`,
+       GROUP BY u.user_id, u.last_seen_at, a.email, a.email_status, p.program_name, us.total_xp, us.current_level, u.hide_member_since, c_rel.campus_name`,
     [userId],
   );
 
@@ -182,7 +194,7 @@ exports.getOwnProfile = catchAsync(async (req, res) => {
 
   const profile = normalizeAcademicProfile(result.rows[0]);
 
-  // Compute cooldown state for the owner
+  // Cooldown metadata for UI
   profile.profile_pic_cooldown_active = isCooldownActive(
     profile.last_profile_pic_update,
     PROFILE_PIC_COOLDOWN_DAYS,
@@ -199,6 +211,7 @@ exports.getOwnProfile = catchAsync(async (req, res) => {
 
   return successResponse(res, { ...profile, badges: badgesRes.rows });
 });
+
 
 /**
  * PATCH /api/profile/me  — Update editable profile fields in one request
@@ -220,11 +233,16 @@ exports.updateProfile = catchAsync(async (req, res) => {
     twitter_url,
     github_url,
     website_url,
+    campus,
+    university,
+    career_scope,
+    hide_member_since,
   } = req.body;
 
   const currentResult = await pool.query(
     `SELECT full_name, bio, program_id, semester, batch_year, semester_is_manual,
-              linkedin_url, facebook_url, instagram_url, youtube_url, reddit_url, twitter_url, github_url, website_url
+              linkedin_url, facebook_url, instagram_url, youtube_url, reddit_url, twitter_url, github_url, website_url,
+              campus, university, career_scope, hide_member_since
        FROM portal.users
        WHERE user_id = $1`,
     [userId],
@@ -270,6 +288,13 @@ exports.updateProfile = catchAsync(async (req, res) => {
   const nextGithub = github_url !== undefined ? github_url : current.github_url;
   const nextWebsite =
     website_url !== undefined ? website_url : current.website_url;
+  const nextCampus = campus !== undefined ? campus : current.campus;
+  const nextUniversity =
+    university !== undefined ? university : current.university;
+  const nextCareerScope =
+    career_scope !== undefined ? career_scope : current.career_scope;
+  const nextHideMemberSince =
+    hide_member_since !== undefined ? hide_member_since : current.hide_member_since;
 
   let nextSemester =
     semester !== undefined && semester !== null && semester !== ""
@@ -318,10 +343,15 @@ exports.updateProfile = catchAsync(async (req, res) => {
            reddit_url = $12,
            twitter_url = $13,
            github_url = $14,
-           website_url = $15
+           website_url = $15,
+           campus = $16,
+           university = $17,
+           career_scope = $18,
+           hide_member_since = $19
        WHERE user_id = $7
        RETURNING user_id, full_name, bio, program_id, semester, batch_year, semester_is_manual,
-                 linkedin_url, facebook_url, instagram_url, youtube_url, reddit_url, twitter_url, github_url, website_url`,
+                 linkedin_url, facebook_url, instagram_url, youtube_url, reddit_url, twitter_url, github_url, website_url,
+                 campus, university, career_scope, hide_member_since`,
     [
       nextFullName,
       nextBio,
@@ -338,6 +368,10 @@ exports.updateProfile = catchAsync(async (req, res) => {
       nextTwitter,
       nextGithub,
       nextWebsite,
+      nextCampus,
+      nextUniversity,
+      nextCareerScope,
+      nextHideMemberSince,
     ],
   );
 

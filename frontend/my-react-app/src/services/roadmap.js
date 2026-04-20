@@ -42,6 +42,12 @@ export const trackStepResourceVisit = async (stepId, resourceId) => {
   return response.data;
 };
 
+// Lock a roadmap (Manual Focus)
+export const lockRoadmap = async (id) => {
+  const response = await api.post(`/roadmaps/${id}/lock`);
+  return response.data;
+};
+
 // Leave a roadmap (Anti-spam)
 export const leaveRoadmap = async (id) => {
   const response = await api.post(`/roadmaps/${id}/leave`);

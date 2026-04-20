@@ -27,16 +27,21 @@ import SurfaceCard from "../../../components/ui/SurfaceCard";
 import EmptyState from "../../../components/ui/EmptyState";
 import ErrorState from "../../../components/ui/ErrorState";
 import Button from "../../../components/ui/Button";
+import { AcademicProgramFilter } from "../../../components/lib";
+import { useAuth } from "../../../context/AuthContext";
 
 const Groups = () => {
+  const { user } = useAuth();
   const [searchParams, setSearchParams] = useSearchParams();
   const [sort, setSort] = useState(searchParams.get("sort") || "latest");
   const [filters, setFilters] = useState({
     search: searchParams.get("search") || "",
     sort: searchParams.get("sort") || "latest",
-    degree: searchParams.get("degree") || "",
+    program: searchParams.has("program")
+      ? searchParams.get("program")
+      : (user?.program_id?.toString() || ""),
   });
-  const [degrees, setDegrees] = useState([]);
+  const [programs, setPrograms] = useState([]);
   const [displayGroups, setDisplayGroups] = useState([]);
   const navigate = useNavigate();
   const { data: stats } = useUserStats();
@@ -45,29 +50,29 @@ const Groups = () => {
   const canCreateGroup = userXP >= 500;
 
   useEffect(() => {
-    const fetchDegrees = async () => {
+    const fetchPrograms = async () => {
       try {
-        const res = await api.get("/discussions/degrees");
-        setDegrees(res.data || []);
+        const res = await api.get("/discussions/programs");
+        setPrograms(res.data || []);
       } catch (error) {
-        console.error("Failed to fetch degrees:", error);
+        console.error("Failed to fetch programs:", error);
       }
     };
-    fetchDegrees();
+    fetchPrograms();
   }, []);
 
   useEffect(() => {
     const params = new URLSearchParams();
     if (filters.search) params.set("search", filters.search);
     if (filters.sort !== "latest") params.set("sort", filters.sort);
-    if (filters.degree) params.set("degree", filters.degree);
+    if (filters.program) params.set("program", filters.program);
     setSearchParams(params);
   }, [filters, setSearchParams]);
 
   const { data, isLoading, isFetching, error } = useGroups({
     search: filters.search,
     sort: filters.sort,
-    degree: filters.degree,
+    program: filters.program,
   });
 
   const groupsList = useMemo(
@@ -191,23 +196,18 @@ const Groups = () => {
           </div>
 
           <div className="flex flex-wrap gap-2 items-center">
-            <select
-              value={filters.degree}
+            <AcademicProgramFilter
+              value={filters.program}
               disabled={isFetching}
               onChange={(e) => {
                 const val = e.target.value;
                 setSort(val === "" ? sort : sort);
-                setFilters((prev) => ({ ...prev, degree: val }));
+                setFilters((prev) => ({ ...prev, program: val }));
               }}
-              className="min-w-0 flex-1 sm:flex-none bg-[var(--bg-card)] border border-[var(--border-main)] rounded-2xl px-4 py-2 text-sm font-black text-[var(--text-main)] focus:outline-none focus:ring-4 focus:ring-purple-500/10 appearance-none cursor-pointer hover:border-purple-300 transition-all disabled:opacity-60 disabled:cursor-wait"
-            >
-              <option value="">All Branches</option>
-              {degrees.map((deg) => (
-                <option key={deg.id} value={deg.id}>
-                  {deg.name}
-                </option>
-              ))}
-            </select>
+              options={programs}
+              placeholder="All IT Programs"
+              className="w-auto border-[var(--border-main)] rounded-2xl px-4 py-2 text-sm font-black focus:ring-purple-500/10 hover:border-purple-300"
+            />
 
             <div className="flex flex-wrap gap-1 bg-[var(--bg-card)]/80 p-1 rounded-2xl border border-[var(--border-main)] shadow-sm">
               {[

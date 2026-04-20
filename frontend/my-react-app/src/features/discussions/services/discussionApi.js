@@ -16,3 +16,8 @@ export const getDiscussionDegrees = async () => {
   const response = await api.get("/discussions/degrees");
   return response.data || [];
 };
+
+export const getDiscussionPrograms = async () => {
+  const response = await api.get("/discussions/programs");
+  return response.data || [];
+};

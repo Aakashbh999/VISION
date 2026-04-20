@@ -122,27 +122,21 @@ exports.getSpecializations = catchAsync(async (req, res) => {
 /* ===============================
     GET DEGREES (Static)
   ================================ */
-const DEGREES = [
-  { id: 1, code: "BSc.CSIT", name: "Bachelor of Science in CSIT" },
-  { id: 2, code: "BCA", name: "Bachelor in Computer Applications" },
-  { id: 3, code: "BIT", name: "Bachelor in Information Technology" },
-  { id: 4, code: "BE Computer", name: "Bachelor of Engineering in Computer" },
-  { id: 5, code: "BE Software", name: "Bachelor of Engineering in Software" },
-  { id: 6, code: "BSc AI", name: "Bachelor of Science in AI" },
-  {
-    id: 7,
-    code: "BSc Data Science",
-    name: "Bachelor of Science in Data Science",
-  },
-  { id: 8, code: "BBA IT", name: "Bachelor of Business Administration in IT" },
-  { id: 9, code: "BSc Multimedia", name: "Bachelor of Science in Multimedia" },
-  { id: 10, code: "MCA", name: "Master of Computer Applications" },
-  { id: 11, code: "MSc IT", name: "Master of Science in IT" },
-  { id: 12, code: "MIT", name: "Master in Information Technology" },
-];
-
 exports.getDegrees = catchAsync(async (req, res) => {
-  res.json(DEGREES);
+  const result = await pool.query(
+    "SELECT id, degree_code as code, degree_code as name FROM portal.academic_degrees ORDER BY id ASC",
+  );
+  res.json(result.rows);
+});
+
+/* ===============================
+    GET PROGRAMS (Filter Data)
+  ================================ */
+exports.getPrograms = catchAsync(async (req, res) => {
+  const result = await pool.query(
+    "SELECT program_id as id, program_name as name FROM portal.programs ORDER BY program_id ASC",
+  );
+  res.json(result.rows);
 });
 
 /* ===============================
@@ -186,6 +180,9 @@ exports.createDiscussion = catchAsync(async (req, res) => {
     imagePublicId,
     imageCaption,
   } = req.body;
+
+  programId = programId || req.user.program_id;
+  degreeId = degreeId || req.user.academic_degree_id;
 
   // Validate required fields
   if (!title) {

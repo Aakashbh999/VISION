@@ -18,9 +18,12 @@ import {
   MapPin,
   Calendar,
   GraduationCap,
+  FolderOpen,
   Plus,
   X,
+  School,
 } from "lucide-react";
+import { Link } from "react-router-dom";
 import { RedditIcon } from "../utils/profileHelpers";
 import ActionMenu from "../../../components/ui/ActionMenu";
 
@@ -42,6 +45,7 @@ const ProfileHeaderCard = ({
   programName,
   handleEditCancel,
   handleSaveChanges,
+  isSavingProfile,
 }) => {
   const socialLinks = [
     {
@@ -116,6 +120,11 @@ const ProfileHeaderCard = ({
                   icon: <PencilLine className="w-4 h-4" />,
                   onClick: handleEditStart,
                 },
+                {
+                  label: "Manage Account",
+                  icon: <FolderOpen className="w-4 h-4" />,
+                  href: "/manage",
+                },
               ]}
             />
           </div>
@@ -134,9 +143,19 @@ const ProfileHeaderCard = ({
               <button
                 type="button"
                 onClick={handleSaveChanges}
-                className="inline-flex items-center gap-1 px-4 py-1.5 rounded-lg bg-purple-600 text-white font-bold hover:bg-purple-700 transition-all disabled:opacity-60"
+                disabled={isSavingProfile}
+                className="inline-flex items-center gap-2 px-5 py-2 rounded-xl bg-purple-600 text-white font-bold hover:bg-purple-700 transition-all disabled:opacity-60 shadow-lg shadow-purple-500/20"
               >
-                <Check className="w-4 h-4" /> Save
+                {isSavingProfile ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    Saving
+                  </>
+                ) : (
+                  <>
+                    <Check className="w-4 h-4" /> Save
+                  </>
+                )}
               </button>
             </div>
             {/* Banner upload overlay */}
@@ -250,10 +269,10 @@ const ProfileHeaderCard = ({
                     <Calendar className="w-4 h-4" /> Batch {profile.batch_year}
                   </span>
                 )}
-                {(profile.campus || profile.university) && (
+                {profile.university && (
                   <span className="flex items-center gap-1.5">
-                    <MapPin className="w-4 h-4" />{" "}
-                    {profile.campus || profile.university}
+                    <School className="w-4 h-4 text-(--text-muted)" />{" "}
+                    {profile.university}
                   </span>
                 )}
               </div>
@@ -333,9 +352,13 @@ const ProfileHeaderCard = ({
         </div>
 
         {/* Divider / Grid space */}
+        {/* Stats Grid */}
         <div className="mt-2 pt-6 border-t border-(--border-main) grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6 text-sm">
-          <div className="flex items-center gap-2.5 text-(--text-muted) bg-(--bg-active) p-3 rounded-2xl border border-(--border-main)">
-            <div className="w-8 h-8 rounded-lg bg-purple-50 flex items-center justify-center text-purple-600 shrink-0">
+          <Link 
+            to="/manage?tab=social&sub=followers"
+            className="flex items-center gap-2.5 text-(--text-muted) bg-(--bg-active) p-3 rounded-2xl border border-(--border-main) hover:bg-purple-500/5 hover:border-purple-500/30 transition-all group/stat"
+          >
+            <div className="w-8 h-8 rounded-lg bg-purple-50 flex items-center justify-center text-purple-600 shrink-0 group-hover/stat:scale-110 transition-transform">
               <Users className="w-4 h-4" />
             </div>
             <div className="flex flex-col min-w-0">
@@ -346,10 +369,13 @@ const ProfileHeaderCard = ({
                 Followers
               </span>
             </div>
-          </div>
+          </Link>
 
-          <div className="flex items-center gap-2.5 text-(--text-muted) bg-(--bg-active) p-3 rounded-2xl border border-(--border-main)">
-            <div className="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center text-blue-600 shrink-0">
+          <Link 
+            to="/manage?tab=social&sub=following"
+            className="flex items-center gap-2.5 text-(--text-muted) bg-(--bg-active) p-3 rounded-2xl border border-(--border-main) hover:bg-blue-500/5 hover:border-blue-500/30 transition-all group/stat"
+          >
+            <div className="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center text-blue-600 shrink-0 group-hover/stat:scale-110 transition-transform">
               <Users className="w-4 h-4" />
             </div>
             <div className="flex flex-col min-w-0">
@@ -360,10 +386,13 @@ const ProfileHeaderCard = ({
                 Following
               </span>
             </div>
-          </div>
+          </Link>
 
-          <div className="flex items-center gap-2.5 text-(--text-muted) bg-(--bg-active) p-3 rounded-2xl border border-(--border-main)">
-            <div className="w-8 h-8 rounded-lg bg-pink-50 flex items-center justify-center text-pink-600 shrink-0">
+          <Link 
+            to="/discussions/my-posts"
+            className="flex items-center gap-2.5 text-(--text-muted) bg-(--bg-active) p-3 rounded-2xl border border-(--border-main) hover:bg-pink-500/5 hover:border-pink-500/30 transition-all group/stat"
+          >
+            <div className="w-8 h-8 rounded-lg bg-pink-50 flex items-center justify-center text-pink-600 shrink-0 group-hover/stat:scale-110 transition-transform">
               <MessageSquare className="w-4 h-4" />
             </div>
             <div className="flex flex-col min-w-0">
@@ -374,10 +403,13 @@ const ProfileHeaderCard = ({
                 Discussions
               </span>
             </div>
-          </div>
+          </Link>
 
-          <div className="flex items-center gap-2.5 text-(--text-muted) bg-(--bg-active) p-3 rounded-2xl border border-(--border-main)">
-            <div className="w-8 h-8 rounded-lg bg-emerald-50 flex items-center justify-center text-emerald-600 shrink-0">
+          <Link 
+            to="/resources/my"
+            className="flex items-center gap-2.5 text-(--text-muted) bg-(--bg-active) p-3 rounded-2xl border border-(--border-main) hover:bg-emerald-500/5 hover:border-emerald-500/30 transition-all group/stat"
+          >
+            <div className="w-8 h-8 rounded-lg bg-emerald-50 flex items-center justify-center text-emerald-600 shrink-0 group-hover/stat:scale-110 transition-transform">
               <FileText className="w-4 h-4" />
             </div>
             <div className="flex flex-col min-w-0">
@@ -388,7 +420,7 @@ const ProfileHeaderCard = ({
                 Resources
               </span>
             </div>
-          </div>
+          </Link>
         </div>
       </div>
     </div>

@@ -18,4 +18,7 @@ router.get("/job-market/:slug", itController.getJobMarketBySlug);
 router.get("/it-clubs", itController.getItClubs);
 router.get("/it-clubs/:slug", itController.getItClubBySlug);
 
+// System Tags
+router.get("/tags/system", itController.getSystemTags);
+
 module.exports = router;

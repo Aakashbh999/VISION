@@ -55,6 +55,19 @@ const AcademicBackgroundCard = ({
             />
           </div>
 
+          <div className="space-y-3 sm:col-span-2">
+            <label className="text-xs text-[var(--text-muted)] uppercase tracking-widest font-black">
+              Studying at (Campus/University)
+            </label>
+            <input
+              value={profile.campus_name || profile.campus || profile.university || "Not specified"}
+              disabled
+              readOnly
+              title="Studying at cannot be changed after registration"
+              className="w-full px-4 py-3 rounded-sm sm:rounded-2xl border-2 border-[var(--border-main)] bg-[var(--bg-active)] opacity-70 cursor-not-allowed transition-all text-[var(--text-main)] font-bold shadow-sm"
+            />
+          </div>
+
           <div className="space-y-4 sm:col-span-2">
             <div className="flex items-center justify-between gap-4">
               <label className="text-xs text-[var(--text-muted)] uppercase tracking-widest font-black">
@@ -107,16 +120,32 @@ const AcademicBackgroundCard = ({
           </div>
 
           <div className="bg-[var(--bg-active)] p-6 rounded-sm sm:rounded-2xl border border-[var(--border-main)] sm:col-span-2">
-            <p className="text-[10px] text-[var(--text-muted)] uppercase tracking-widest font-black mb-2">
-              Member Since
-            </p>
-            <p className="text-base sm:text-lg font-bold text-[var(--text-main)] flex items-center gap-3">
-              <Calendar className="w-5 h-5 text-purple-600" />
-              {new Date(profile.created_at).toLocaleDateString("en-US", {
-                month: "long",
-                year: "numeric",
-              })}
-            </p>
+            <div className="flex items-center justify-between gap-4">
+              <div className="space-y-1">
+                <p className="text-[10px] text-[var(--text-muted)] uppercase tracking-widest font-black">
+                  Member Since
+                </p>
+                <p className="text-base sm:text-lg font-bold text-[var(--text-main)] flex items-center gap-3">
+                  <Calendar className="w-5 h-5 text-purple-600" />
+                  {new Date(profile.created_at).toLocaleDateString("en-US", {
+                    month: "long",
+                    year: "numeric",
+                  })}
+                </p>
+              </div>
+              <label className="inline-flex items-center gap-2.5 text-xs font-bold text-[var(--text-main)] cursor-pointer select-none">
+                <div className="relative inline-flex items-center">
+                  <input
+                    type="checkbox"
+                    className="sr-only peer"
+                    checked={draftProfile.hide_member_since}
+                    onChange={(e) => handleDraftChange("hide_member_since", e.target.checked)}
+                  />
+                  <div className="w-10 h-5 bg-slate-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-purple-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-[var(--border-main)] after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-purple-600"></div>
+                </div>
+                Hide from profile
+              </label>
+            </div>
           </div>
         </div>
       ) : (
@@ -137,6 +166,14 @@ const AcademicBackgroundCard = ({
               {profile.semester ? profile.semester : "Not specified"}
             </p>
           </div>
+          <div className="bg-[var(--bg-active)] p-4 sm:p-5 rounded-sm sm:rounded-2xl border border-[var(--border-main)] sm:col-span-2">
+            <p className="text-sm font-medium text-[var(--text-muted)] mb-1">
+              Studying at
+            </p>
+            <p className="text-lg font-bold text-[var(--text-main)]">
+              {profile.campus_name || profile.campus || profile.university || "Not specified"}
+            </p>
+          </div>
           <div className="bg-[var(--bg-active)] p-4 sm:p-5 rounded-sm sm:rounded-2xl border border-[var(--border-main)]">
             <p className="text-sm font-medium text-[var(--text-muted)] mb-1">
               Batch Year
@@ -145,18 +182,20 @@ const AcademicBackgroundCard = ({
               {profile.batch_year || "N/A"}
             </p>
           </div>
-          <div className="bg-[var(--bg-active)] p-4 sm:p-5 rounded-sm sm:rounded-2xl border border-[var(--border-main)]">
-            <p className="text-sm font-medium text-[var(--text-muted)] mb-1">
-              Member Since
-            </p>
-            <p className="text-lg font-bold text-[var(--text-main)] flex items-center gap-2">
-              <Calendar className="w-4 h-4 text-purple-600" />
-              {new Date(profile.created_at).toLocaleDateString("en-US", {
-                month: "long",
-                year: "numeric",
-              })}
-            </p>
-          </div>
+          {!profile.hide_member_since && (
+            <div className="bg-[var(--bg-active)] p-4 sm:p-5 rounded-sm sm:rounded-2xl border border-[var(--border-main)]">
+              <p className="text-sm font-medium text-[var(--text-muted)] mb-1">
+                Member Since
+              </p>
+              <p className="text-lg font-bold text-[var(--text-main)] flex items-center gap-2">
+                <Calendar className="w-4 h-4 text-purple-600" />
+                {new Date(profile.created_at).toLocaleDateString("en-US", {
+                  month: "long",
+                  year: "numeric",
+                })}
+              </p>
+            </div>
+          )}
         </div>
       )}
     </div>

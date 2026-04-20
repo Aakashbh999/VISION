@@ -54,7 +54,7 @@ exports.getPendingStudents = catchAsync(async (req, res) => {
         p.created_at,
         p.date_of_birth,
         p.batch_year,
-        p.student_id_image_url,
+        p.academic_certificate_url,
         c.campus_name
       FROM portal.users p
       JOIN auth.users a ON p.auth_user_id = a.auth_user_id

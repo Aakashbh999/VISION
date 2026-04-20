@@ -48,6 +48,7 @@ export { default as GradientText } from "./ui/GradientText";
 export { default as SkillTags } from "./ui/SkillTags";
 export { default as TagSelectorSection } from "./ui/TagSelectorSection";
 export { default as AcademicProgramCard } from "./ui/AcademicProgramCard";
+export { default as AcademicProgramFilter } from "./ui/AcademicProgramFilter";
 export { default as ClubCard } from "./ui/ClubCard";
 export { default as ITFieldCard } from "./ui/ITFieldCard";
 export { default as JobCard } from "./ui/JobCard";

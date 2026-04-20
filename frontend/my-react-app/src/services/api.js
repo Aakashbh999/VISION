@@ -7,7 +7,6 @@ const baseURL =
 
 const api = axios.create({
   baseURL: baseURL,
-  headers: { "Content-Type": "application/json" },
 });
 
 axiosRetry(api, {

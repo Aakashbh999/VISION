@@ -34,6 +34,7 @@ router.get("/:id/progress", verifyJWT, roadmapController.getRoadmapProgress);
 
 // Enrolment & Anti-Spam
 router.get("/:id/status", verifyJWT, roadmapController.getEnrolmentStatus);
+router.post("/:id/lock", verifyJWT, roadmapController.lockRoadmap);
 router.post("/:id/leave", verifyJWT, roadmapController.leaveRoadmap);
 
 module.exports = router;

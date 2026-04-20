@@ -17,7 +17,7 @@ const {
 // Public routes
 router.post(
   "/register",
-  upload.single("student_id_image"),
+  upload.single("academic_certificate"),
   sanitizeInput,
   validateBody(registerSchema),
   authController.register,

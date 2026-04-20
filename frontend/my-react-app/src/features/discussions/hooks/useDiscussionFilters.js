@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
+import { useAuth } from "../../../context/AuthContext";
 
 const parsePageParam = (value) => {
   const parsed = Number.parseInt(value, 10);
@@ -7,10 +8,13 @@ const parsePageParam = (value) => {
 };
 
 export const useDiscussionFilters = () => {
+  const { user } = useAuth();
   const [searchParams, setSearchParams] = useSearchParams();
   const [filters, setFilters] = useState({
     specialization: searchParams.get("specialization") || "",
-    degree: searchParams.get("degree") || "",
+    program: searchParams.has("program") 
+      ? searchParams.get("program") 
+      : (user?.program_id?.toString() || ""),
     tag: searchParams.get("tag") || "",
     sort: searchParams.get("sort") || "latest",
     search: searchParams.get("search") || "",

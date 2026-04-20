@@ -137,7 +137,8 @@ export default function VisionImageEditor({
       Object.entries(extraFields).forEach(([k, v]) => formData.append(k, v));
 
       onDone(formData);
-      setImageSrc(null); // reset cropper
+      // Removed setImageSrc(null) to prevent premature reset to the "Choose Image" screen.
+      // The parent component is responsible for closing the editor on success.
     } catch (err) {
       console.error(err);
       const msg = "Failed to process image.";
@@ -252,6 +253,14 @@ export default function VisionImageEditor({
           onZoomChange={setZoom}
           onCropComplete={onCropComplete}
         />
+        {(processing || isLoading) && (
+          <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-black/40 backdrop-blur-[2px]">
+            <div className="w-12 h-12 border-4 border-white/20 border-t-white rounded-full animate-spin mb-3" />
+            <p className="text-white font-bold text-sm tracking-widest uppercase">
+              Saving Image...
+            </p>
+          </div>
+        )}
       </div>
 
       {/* Footer controls */}

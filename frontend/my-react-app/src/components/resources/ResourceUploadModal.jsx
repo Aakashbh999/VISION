@@ -7,9 +7,10 @@ import {
   Lightbulb,
 } from "lucide-react";
 import { useUploadResource } from "../../hooks/useUploadResource";
-import { usePrograms } from "../../hooks/usePrograms";
 import TagSelectorSection from "../ui/TagSelectorSection";
 import { useSystemTags } from "../../hooks/useSystemTags";
+import { useDiscussionReferenceData } from "../../features/discussions/hooks/useDiscussionReferenceData";
+import { AcademicProgramFilter } from "../lib";
 import {
   addUniqueCappedTag,
   removeTag,
@@ -25,18 +26,16 @@ const ResourceUploadModal = ({ isOpen, onClose }) => {
     title: "",
     description: "",
     resource_type: "notes",
-    program_id: "",
     semester: "",
+    program_id: "",
     url: "",
     system_tags: [], // array of tag_id integers (max 5)
     custom_tags: [], // array of tag name strings (max 2)
   });
+  const { programs } = useDiscussionReferenceData();
   const [file, setFile] = useState(null);
   const [localError, setLocalError] = useState("");
   const [customTagInput, setCustomTagInput] = useState("");
-
-  const { data: programsData } = usePrograms();
-  const programs = programsData?.data || programsData || [];
   const uploadMutation = useUploadResource();
   const { systemTagOptions, isLoadingTags } = useSystemTags(isOpen);
 
@@ -100,8 +99,8 @@ const ResourceUploadModal = ({ isOpen, onClose }) => {
       title: "",
       description: "",
       resource_type: "notes",
-      program_id: "",
       semester: "",
+      program_id: "",
       url: "",
       system_tags: [],
       custom_tags: [],
@@ -136,9 +135,8 @@ const ResourceUploadModal = ({ isOpen, onClose }) => {
     submitData.append("description", formData.description);
     submitData.append("resource_type", formData.resource_type);
 
-    if (formData.program_id)
-      submitData.append("program_id", parseInt(formData.program_id));
     if (formData.semester) submitData.append("semester", formData.semester);
+    if (formData.program_id) submitData.append("program_id", formData.program_id);
 
     // Send tags in the new split format
     if (formData.system_tags.length > 0) {
@@ -238,7 +236,7 @@ const ResourceUploadModal = ({ isOpen, onClose }) => {
             />
 
             {/* ── Type / Program / Semester ─────────────────────── */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-(--text-main) mb-1">
                   Type *
@@ -258,25 +256,17 @@ const ResourceUploadModal = ({ isOpen, onClose }) => {
 
               <div>
                 <label className="block text-sm font-medium text-(--text-main) mb-1">
-                  Program (Optional)
+                  Program *
                 </label>
-                <select
+                <AcademicProgramFilter
                   name="program_id"
                   value={formData.program_id}
                   onChange={handleChange}
+                  options={programs}
+                  placeholder="Select Program"
+                  required
                   className="w-full px-4 py-2 border border-(--border-main) rounded-xl focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 outline-none transition-all bg-(--bg-main) text-(--text-main)"
-                >
-                  <option value="">All Programs</option>
-                  {Array.isArray(programs) &&
-                    programs.map((p) => (
-                      <option
-                        key={p.program_id || p.id}
-                        value={p.program_id || p.id}
-                      >
-                        {p.program_name || p.name}
-                      </option>
-                    ))}
-                </select>
+                />
               </div>
 
               <div>
