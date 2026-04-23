@@ -26,6 +26,7 @@ import { useRoadmapStatus } from "../../hooks/useRoadmapStatus";
 import StepDrawer from "../../components/portal/StepDrawer";
 import Button from "../../components/ui/Button";
 import LoadingSpinner from "../../components/ui/LoadingSpinner";
+import LoadingState from "../../components/ui/LoadingState";
 
 /**
  * Icon Mapper
@@ -64,9 +65,9 @@ const get4DayCooldown = (leftAt) => {
   const FOUR_DAYS_MS = 4 * 24 * 60 * 60 * 1000;
   const msLeft = FOUR_DAYS_MS - (Date.now() - new Date(leftAt).getTime());
   if (msLeft <= 0) return null;
-  const days  = Math.floor(msLeft / (1000 * 60 * 60 * 24));
+  const days = Math.floor(msLeft / (1000 * 60 * 60 * 24));
   const hours = Math.floor((msLeft % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-  const mins  = Math.floor((msLeft % (1000 * 60 * 60)) / (1000 * 60));
+  const mins = Math.floor((msLeft % (1000 * 60 * 60)) / (1000 * 60));
   if (days > 0) return `${days}d ${hours}h`;
   if (hours > 0) return `${hours}h ${mins}m`;
   return `${mins}m`;
@@ -85,7 +86,11 @@ const LeaveModal = ({ roadmapTitle, onConfirm, onCancel, isLeaving }) => (
             Leave this roadmap?
           </h3>
           <p className="text-sm text-[var(--text-muted)] mt-1 leading-relaxed">
-            You are about to leave <span className="font-bold text-[var(--text-main)]">"{roadmapTitle}"</span>.
+            You are about to leave{" "}
+            <span className="font-bold text-[var(--text-main)]">
+              "{roadmapTitle}"
+            </span>
+            .
           </p>
         </div>
       </div>
@@ -95,7 +100,10 @@ const LeaveModal = ({ roadmapTitle, onConfirm, onCancel, isLeaving }) => (
           ⚠ Warning — Read before leaving
         </p>
         <ul className="text-sm text-rose-700 dark:text-rose-300 space-y-1 list-disc list-inside font-medium">
-          <li>You <span className="font-black">cannot re-enter</span> this roadmap for <span className="font-black">4 days</span>.</li>
+          <li>
+            You <span className="font-black">cannot re-enter</span> this roadmap
+            for <span className="font-black">4 days</span>.
+          </li>
           <li>Your progress will be saved, but you'll be locked out.</li>
           <li>Other roadmaps will become available again after leaving.</li>
         </ul>
@@ -114,7 +122,15 @@ const LeaveModal = ({ roadmapTitle, onConfirm, onCancel, isLeaving }) => (
           disabled={isLeaving}
           className="flex-1 px-4 py-3 rounded-2xl bg-rose-600 text-white text-sm font-black hover:bg-rose-700 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
         >
-          {isLeaving ? <><LoadingSpinner size={14} inline /> Leaving... </> : <><LogOut className="w-4 h-4" /> Leave Roadmap</>}
+          {isLeaving ? (
+            <>
+              <LoadingSpinner size={14} inline /> Leaving...{" "}
+            </>
+          ) : (
+            <>
+              <LogOut className="w-4 h-4" /> Leave Roadmap
+            </>
+          )}
         </button>
       </div>
     </div>
@@ -129,7 +145,9 @@ const StationNode = ({ step, isActive, isLocked, onClick }) => {
   const Icon = getStepIcon(step.title);
 
   return (
-    <div className={`relative flex flex-col items-center group ${isLocked ? "pointer-events-none" : ""}`}>
+    <div
+      className={`relative flex flex-col items-center group ${isLocked ? "pointer-events-none" : ""}`}
+    >
       {/* Node Circle */}
       <motion.button
         whileHover={isLocked ? {} : { scale: 1.1 }}
@@ -180,7 +198,7 @@ const StationNode = ({ step, isActive, isLocked, onClick }) => {
         </AnimatePresence>
 
         {/* Locked Overlay */}
-        {(isLocked) && (
+        {isLocked && (
           <div className="absolute inset-0 bg-slate-900/5 rounded-full flex items-center justify-center">
             <Lock className="w-4 h-4 text-slate-400" />
           </div>
@@ -218,14 +236,9 @@ const StationNode = ({ step, isActive, isLocked, onClick }) => {
 const RoadmapView = () => {
   const { id } = useParams();
   const { data, isLoading, error } = useRoadmapPath(id);
-  const { 
-    status, 
-    leaveRoadmap, 
-    isLeaving, 
-    lockRoadmap, 
-    isLocking 
-  } = useRoadmapStatus(id);
-  
+  const { status, leaveRoadmap, isLeaving, lockRoadmap, isLocking } =
+    useRoadmapStatus(id);
+
   const completeStepMutation = useCompleteStep(id);
 
   const [selectedStep, setSelectedStep] = useState(null);
@@ -245,9 +258,9 @@ const RoadmapView = () => {
   const progress = steps.length > 0 ? (completedCount / steps.length) * 100 : 0;
 
   const isActiveRoadmap = status?.status === "active";
-  const isCompleted      = status?.status === "completed";
-  const cooldown         = get4DayCooldown(status?.left_at);
-  const isInCooldown     = status?.status === "left" && !!cooldown;
+  const isCompleted = status?.status === "completed";
+  const cooldown = get4DayCooldown(status?.left_at);
+  const isInCooldown = status?.status === "left" && !!cooldown;
 
   const handleStepClick = (step) => {
     setSelectedStep(step);
@@ -323,7 +336,6 @@ const RoadmapView = () => {
           </div>
           {!isLoading && (
             <div className="flex flex-col items-stretch sm:items-end gap-5 min-w-[280px]">
-              
               {/* ACTION AREA (LOCK/LEAVE) */}
               <div className="w-full sm:w-auto">
                 {/* LOCK BUTTON */}
@@ -353,7 +365,7 @@ const RoadmapView = () => {
                   </Button>
                 )}
               </div>
-              
+
               {/* PROGRESS CARD */}
               <div className="w-full bg-[var(--bg-card)] p-4 rounded-sm sm:rounded-2xl border border-[var(--border-main)] border-x-0 sm:border-x shadow-sm">
                 <div className="flex items-center justify-between mb-2">
@@ -387,8 +399,13 @@ const RoadmapView = () => {
                 <Clock className="w-6 h-6 text-amber-600" />
               </div>
               <div>
-                <p className="text-sm font-black text-amber-900 uppercase tracking-tight">Re-entry Cooldown Active</p>
-                <p className="text-xs text-amber-700 font-medium">You left this roadmap. It will unlock for re-entry in <span className="font-bold">{cooldown}</span>.</p>
+                <p className="text-sm font-black text-amber-900 uppercase tracking-tight">
+                  Re-entry Cooldown Active
+                </p>
+                <p className="text-xs text-amber-700 font-medium">
+                  You left this roadmap. It will unlock for re-entry in{" "}
+                  <span className="font-bold">{cooldown}</span>.
+                </p>
               </div>
             </div>
           </div>
@@ -397,7 +414,19 @@ const RoadmapView = () => {
         <div className="bg-[var(--bg-card)] rounded-sm sm:rounded-[2.5rem] border border-[var(--border-main)] border-x-0 sm:border-x shadow-2xl shadow-purple-900/5 p-5 sm:p-16 lg:p-24 overflow-x-auto overflow-y-visible scrollbar-hide">
           {isLoading ? (
             <div className="h-64 flex items-center justify-center">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-700" />
+              <LoadingState
+                variant="card"
+                count={3}
+                text="Loading roadmap..."
+              />
+            </div>
+          ) : completeStepMutation.isPending ? (
+            <div className="h-64 flex items-center justify-center">
+              <LoadingState
+                variant="card"
+                count={2}
+                text="Completing step..."
+              />
             </div>
           ) : (
             <div

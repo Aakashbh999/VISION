@@ -11,7 +11,17 @@ import SurfaceCard, {
 } from "../../components/ui/SurfaceCard";
 import EmptyState from "../../components/ui/EmptyState";
 import ErrorState from "../../components/ui/ErrorState";
-import { BookOpen, ChevronRight, Search, Map, CheckCircle2, Zap, Lock, Clock, AlertTriangle } from "lucide-react";
+import {
+  BookOpen,
+  ChevronRight,
+  Search,
+  Map,
+  CheckCircle2,
+  Zap,
+  Lock,
+  Clock,
+  AlertTriangle,
+} from "lucide-react";
 
 /** Returns a human-readable cooldown remaining string, or null if not in cooldown */
 const get4DayCooldown = (leftAt) => {
@@ -19,9 +29,9 @@ const get4DayCooldown = (leftAt) => {
   const FOUR_DAYS_MS = 4 * 24 * 60 * 60 * 1000;
   const msLeft = FOUR_DAYS_MS - (Date.now() - new Date(leftAt).getTime());
   if (msLeft <= 0) return null;
-  const days  = Math.floor(msLeft / (1000 * 60 * 60 * 24));
+  const days = Math.floor(msLeft / (1000 * 60 * 60 * 24));
   const hours = Math.floor((msLeft % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-  const mins  = Math.floor((msLeft % (1000 * 60 * 60)) / (1000 * 60));
+  const mins = Math.floor((msLeft % (1000 * 60 * 60)) / (1000 * 60));
   if (days > 0) return `${days}d ${hours}h`;
   if (hours > 0) return `${hours}h ${mins}m`;
   return `${mins}m`;
@@ -43,7 +53,7 @@ const Roadmaps = () => {
 
   // Tick every minute to refresh cooldown countdowns
   useEffect(() => {
-    const interval = setInterval(() => setTick(t => t + 1), 60_000);
+    const interval = setInterval(() => setTick((t) => t + 1), 60_000);
     return () => clearInterval(interval);
   }, []);
 
@@ -51,7 +61,9 @@ const Roadmaps = () => {
   const roadmapsList = Array.isArray(data) ? data : data?.roadmaps || [];
 
   // Find the active roadmap title for the lock tooltip
-  const activeRoadmap = roadmapsList.find(r => r.enrolment_status === 'active');
+  const activeRoadmap = roadmapsList.find(
+    (r) => r.enrolment_status === "active",
+  );
   const hasActiveRoadmap = !!activeRoadmap;
 
   return (
@@ -84,7 +96,12 @@ const Roadmaps = () => {
         <div className="flex items-center gap-3 px-5 py-3.5 bg-purple-500/10 dark:bg-purple-500/20 border border-purple-500/20 rounded-2xl">
           <Lock className="w-4 h-4 text-purple-600 dark:text-purple-400 flex-shrink-0" />
           <p className="text-sm font-bold text-purple-700 dark:text-purple-300">
-            <span className="font-black uppercase tracking-wide">Focus Mode Active</span> — You're enrolled in <span className="font-black">"{activeRoadmap.title}"</span>. Complete or leave it to start a new one.
+            <span className="font-black uppercase tracking-wide">
+              Focus Mode Active
+            </span>{" "}
+            — You're enrolled in{" "}
+            <span className="font-black">"{activeRoadmap.title}"</span>.
+            Complete or leave it to start a new one.
           </p>
         </div>
       )}
@@ -158,10 +175,10 @@ const Roadmaps = () => {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-8 mt-4">
             {roadmapsList.map((roadmap) => {
-              const isActive    = roadmap.enrolment_status === "active";
+              const isActive = roadmap.enrolment_status === "active";
               const isCompleted = roadmap.enrolment_status === "completed";
-              const isLeft      = roadmap.enrolment_status === "left";
-              const cooldown    = get4DayCooldown(roadmap.left_at);
+              const isLeft = roadmap.enrolment_status === "left";
+              const cooldown = get4DayCooldown(roadmap.left_at);
               const isInCooldown = isLeft && !!cooldown;
               // Locked = another roadmap is active AND this one is not that roadmap
               const isLocked = hasActiveRoadmap && !isActive && !isCompleted;
@@ -170,12 +187,18 @@ const Roadmaps = () => {
                 <>
                   {/* Lock overlay icon */}
                   {(isLocked || isInCooldown) && (
-                    <div className={`absolute top-4 right-4 z-20 p-2 backdrop-blur-md rounded-xl ${
-                      isInCooldown
-                        ? "bg-amber-500/15 text-amber-600 dark:text-amber-400"
-                        : "bg-slate-900/10 text-slate-500"
-                    }`}>
-                      {isInCooldown ? <Clock className="w-4 h-4" /> : <Lock className="w-4 h-4" />}
+                    <div
+                      className={`absolute top-4 right-4 z-20 p-2 backdrop-blur-md rounded-xl ${
+                        isInCooldown
+                          ? "bg-amber-500/15 text-amber-600 dark:text-amber-400"
+                          : "bg-slate-900/10 text-slate-500"
+                      }`}
+                    >
+                      {isInCooldown ? (
+                        <Clock className="w-4 h-4" />
+                      ) : (
+                        <Lock className="w-4 h-4" />
+                      )}
                     </div>
                   )}
 
@@ -193,13 +216,17 @@ const Roadmaps = () => {
                                 : "bg-(--bg-active) text-(--text-muted) group-hover:bg-purple-600 group-hover:text-white"
                       }`}
                     >
-                      {isCompleted ? <CheckCircle2 className="w-6 h-6" /> : <BookOpen className="w-6 h-6" />}
+                      {isCompleted ? (
+                        <CheckCircle2 className="w-6 h-6" />
+                      ) : (
+                        <BookOpen className="w-6 h-6" />
+                      )}
                     </div>
 
                     <div className="absolute top-0 right-0">
                       {isActive && (
                         <span className="flex items-center gap-1.5 px-3 py-1 bg-purple-600 text-white text-[10px] font-black uppercase tracking-widest rounded-full shadow-lg">
-                          <Zap className="w-3 h-3 fill-white" /> In Progress
+                          In Progress
                         </span>
                       )}
                       {isCompleted && (
@@ -255,7 +282,11 @@ const Roadmaps = () => {
                     </span>
                     {!isLocked && !isInCooldown && (
                       <span className="text-purple-600 text-xs font-black flex items-center gap-1 uppercase tracking-widest opacity-0 group-hover:opacity-100 transition-all">
-                        {isActive ? "Continue Path" : isCompleted ? "Review Path" : "Start Path"}{" "}
+                        {isActive
+                          ? "Continue Path"
+                          : isCompleted
+                            ? "Review Path"
+                            : "Start Path"}{" "}
                         <ChevronRight className="w-4 h-4" />
                       </span>
                     )}
@@ -269,11 +300,13 @@ const Roadmaps = () => {
                   <div key={roadmap.roadmap_id} className="relative">
                     <SurfaceCard
                       className="p-5 sm:p-8 relative overflow-hidden opacity-60 cursor-not-allowed select-none grayscale-[0.4]"
-                      onClick={() => setLockedTooltip(
-                        isInCooldown
-                          ? `You left this roadmap. Re-entry unlocks in ${cooldown}.`
-                          : `Complete or leave "${activeRoadmap?.title}" first.`
-                      )}
+                      onClick={() =>
+                        setLockedTooltip(
+                          isInCooldown
+                            ? `You left this roadmap. Re-entry unlocks in ${cooldown}.`
+                            : `Complete or leave "${activeRoadmap?.title}" first.`,
+                        )
+                      }
                     >
                       {cardContent}
                     </SurfaceCard>
