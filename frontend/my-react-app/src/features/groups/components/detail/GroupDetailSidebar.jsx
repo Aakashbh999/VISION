@@ -185,9 +185,9 @@ const GroupDetailSidebar = ({
               <>
                 <Link
                   to={`/groups/${id}/profile`}
-                  className="flex items-center gap-3 mx-4 mt-4 mb-2 p-3 rounded-sm sm:rounded-2xl border border-(--border-main) hover:border-purple-200 hover:bg-purple-50/50 transition-all group/glink"
+                  className="flex items-center gap-3 mx-4 mt-4 mb-2 p-3 rounded-sm sm:rounded-2xl border border-(--border-main) hover:border-purple-200 hover:bg-purple-50/50 transition-colors group/glink"
                 >
-                  <div className="w-10 h-10 rounded-xl bg-slate-900 flex items-center justify-center overflow-hidden shrink-0 shadow-sm group-hover/glink:ring-2 group-hover/glink:ring-purple-400 transition-all">
+                  <div className="w-10 h-10 rounded-xl bg-slate-900 flex items-center justify-center overflow-hidden shrink-0 shadow-sm group-hover/glink:ring-2 group-hover/glink:ring-purple-400 transition-colors">
                     {group.group_image ? (
                       <img
                         src={group.group_image}
@@ -263,7 +263,7 @@ const GroupDetailSidebar = ({
                           <Link
                             to={`/profile/${member.user_id}`}
                             key={member.user_id}
-                            className="flex items-center gap-3 p-2 hover:bg-(--bg-active) rounded-xl transition-all border border-transparent hover:border-(--border-main)"
+                            className="flex items-center gap-3 p-2 hover:bg-(--bg-active) rounded-xl transition-colors border border-transparent hover:border-(--border-main)"
                           >
                             <Avatar
                               src={member.profile_image}

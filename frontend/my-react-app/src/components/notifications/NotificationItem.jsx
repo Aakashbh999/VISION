@@ -12,7 +12,7 @@ import { formatNotificationMessage } from "../../utils/notificationRouting";
  */
 const NotificationItem = ({ notification: notif, onMarkRead, onDelete, onNavigate }) => (
   <div
-    className={`rounded-xl border p-4 flex items-start justify-between gap-4 cursor-pointer transition-all duration-150 hover:shadow-sm ${
+    className={`rounded-xl border p-4 flex items-start justify-between gap-4 cursor-pointer transition-colors duration-150 hover:shadow-sm ${
       notif.is_read
         ? "bg-[var(--bg-active)] border-[var(--border-main)] hover:bg-[var(--bg-main)]"
         : "bg-purple-50 dark:bg-purple-950/30 border-purple-200 dark:border-purple-800 hover:bg-purple-100/70 dark:hover:bg-purple-900/30"
@@ -49,7 +49,7 @@ const NotificationItem = ({ notification: notif, onMarkRead, onDelete, onNavigat
           className="text-purple-600 hover:text-purple-700 p-1 rounded-md hover:bg-purple-100 dark:hover:bg-purple-900/40"
           title="Mark as read"
         >
-          <CheckCircle2 className="w-4.5 h-4.5" />
+          <CheckCircle2 className="w-4.5 h-4.5 pointer-events-none" />
         </button>
       )}
       <button
@@ -61,7 +61,7 @@ const NotificationItem = ({ notification: notif, onMarkRead, onDelete, onNavigat
         className="text-[var(--text-muted)] hover:text-red-600 p-1 rounded-md hover:bg-red-50 dark:hover:bg-red-900/30"
         title="Delete notification"
       >
-        <Trash2 className="w-4.5 h-4.5" />
+        <Trash2 className="w-4.5 h-4.5 pointer-events-none" />
       </button>
     </div>
   </div>

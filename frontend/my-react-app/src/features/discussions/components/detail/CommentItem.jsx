@@ -80,13 +80,13 @@ const CommentItem = ({
                   handleCommentVote(comment.comment_id, 1, comment.user_vote)
                 }
                 disabled={commentVoteMutation?.isPending}
-                className={`p-1 rounded-md transition-all ${comment.user_vote === 1 ? "text-purple-600 bg-purple-50" : "text-[var(--text-muted)] hover:text-purple-500"} disabled:opacity-50 disabled:cursor-not-allowed`}
+                className={`p-1 rounded-md transition-colors ${comment.user_vote === 1 ? "text-purple-600 bg-purple-50" : "text-[var(--text-muted)] hover:text-purple-500"} disabled:opacity-50 disabled:cursor-not-allowed`}
               >
                 {commentVoteMutation?.isPending ? (
                   <ButtonLoader size={16} />
                 ) : (
                   <ArrowBigUp
-                    className={`w-4 h-4 ${comment.user_vote === 1 ? "fill-purple-600" : ""}`}
+                    className={`w-4 h-4 pointer-events-none ${comment.user_vote === 1 ? "fill-purple-600" : ""}`}
                   />
                 )}
               </button>
@@ -100,13 +100,13 @@ const CommentItem = ({
                   handleCommentVote(comment.comment_id, -1, comment.user_vote)
                 }
                 disabled={commentVoteMutation?.isPending}
-                className={`p-1 rounded-md transition-all ${comment.user_vote === -1 ? "text-red-600 bg-red-50" : "text-[var(--text-muted)] hover:text-red-500"} disabled:opacity-50 disabled:cursor-not-allowed`}
+                className={`p-1 rounded-md transition-colors ${comment.user_vote === -1 ? "text-red-600 bg-red-50" : "text-[var(--text-muted)] hover:text-red-500"} disabled:opacity-50 disabled:cursor-not-allowed`}
               >
                 {commentVoteMutation?.isPending ? (
                   <ButtonLoader size={16} />
                 ) : (
                   <ArrowBigDown
-                    className={`w-4 h-4 ${comment.user_vote === -1 ? "fill-red-600" : ""}`}
+                    className={`w-4 h-4 pointer-events-none ${comment.user_vote === -1 ? "fill-red-600" : ""}`}
                   />
                 )}
               </button>
@@ -114,9 +114,9 @@ const CommentItem = ({
 
             <button
               onClick={() => setReplyingTo(comment.comment_id)}
-              className="flex items-center gap-1.5 px-2 py-1 rounded-md text-[var(--text-muted)] hover:bg-[var(--bg-active)] hover:text-purple-600 transition-all"
+              className="flex items-center gap-1.5 px-2 py-1 rounded-md text-[var(--text-muted)] hover:bg-[var(--bg-active)] hover:text-purple-600 transition-colors"
             >
-              <Reply className="w-3.5 h-3.5" />
+              <Reply className="w-3.5 h-3.5 pointer-events-none" />
               <span className="text-[10px] font-black uppercase tracking-wider">
                 Reply
               </span>

@@ -5,7 +5,7 @@ import { useClickOutside } from "../../hooks/useClickOutside";
 
 const ActionMenu = ({
   actions = [],
-  trigger = <MoreHorizontal className="w-5 h-5" />,
+  trigger = <MoreHorizontal className="w-5 h-5 pointer-events-none" />,
   className = "",
   align = "right",
 }) => {
@@ -24,7 +24,7 @@ const ActionMenu = ({
     <div className={`relative inline-block ${className}`} ref={menuRef}>
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="p-1.5 rounded-lg text-[var(--text-muted)] hover:text-[var(--text-main)] hover:bg-[var(--bg-active)] transition-all duration-200"
+        className="p-1.5 rounded-lg text-[var(--text-muted)] hover:text-[var(--text-main)] hover:bg-[var(--bg-active)] transition-colors duration-200"
         aria-label="Actions"
       >
         {trigger}

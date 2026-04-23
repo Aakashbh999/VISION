@@ -144,7 +144,7 @@ const ProfileHeaderCard = ({
                 type="button"
                 onClick={handleSaveChanges}
                 disabled={isSavingProfile}
-                className="inline-flex items-center gap-2 px-5 py-2 rounded-xl bg-purple-600 text-white font-bold hover:bg-purple-700 transition-all disabled:opacity-60 shadow-lg shadow-purple-500/20"
+                className="inline-flex items-center gap-2 px-5 py-2 rounded-xl bg-purple-600 text-white font-bold hover:bg-purple-700 transition-colors disabled:opacity-60 shadow-lg shadow-purple-500/20"
               >
                 {isSavingProfile ? (
                   <>
@@ -289,9 +289,9 @@ const ProfileHeaderCard = ({
                       target="_blank"
                       rel="noopener noreferrer"
                       title={social.label}
-                      className={`p-2 rounded-full bg-(--bg-active) border border-(--border-main) shadow-sm transition-all hover:scale-110 active:scale-95 ${social.color}`}
+                      className={`p-2 rounded-full bg-(--bg-active) border border-(--border-main) shadow-sm transition-colors active:scale-95 ${social.color}`}
                     >
-                      <Icon className="w-4 h-4" />
+                      <Icon className="w-4 h-4 pointer-events-none" />
                     </a>
                   );
                 })}
@@ -356,10 +356,10 @@ const ProfileHeaderCard = ({
         <div className="mt-2 pt-6 border-t border-(--border-main) grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6 text-sm">
           <Link 
             to="/manage?tab=social&sub=followers"
-            className="flex items-center gap-2.5 text-(--text-muted) bg-(--bg-active) p-3 rounded-2xl border border-(--border-main) hover:bg-purple-500/5 hover:border-purple-500/30 transition-all group/stat"
+            className="flex items-center gap-2.5 text-(--text-muted) bg-(--bg-active) p-3 rounded-2xl border border-(--border-main) hover:bg-purple-500/5 hover:border-purple-500/30 transition-colors group/stat"
           >
             <div className="w-8 h-8 rounded-lg bg-purple-50 flex items-center justify-center text-purple-600 shrink-0 group-hover/stat:scale-110 transition-transform">
-              <Users className="w-4 h-4" />
+              <Users className="w-4 h-4 pointer-events-none" />
             </div>
             <div className="flex flex-col min-w-0">
               <span className="font-bold text-(--text-main) leading-none truncate">
@@ -373,10 +373,10 @@ const ProfileHeaderCard = ({
 
           <Link 
             to="/manage?tab=social&sub=following"
-            className="flex items-center gap-2.5 text-(--text-muted) bg-(--bg-active) p-3 rounded-2xl border border-(--border-main) hover:bg-blue-500/5 hover:border-blue-500/30 transition-all group/stat"
+            className="flex items-center gap-2.5 text-(--text-muted) bg-(--bg-active) p-3 rounded-2xl border border-(--border-main) hover:bg-blue-500/5 hover:border-blue-500/30 transition-colors group/stat"
           >
             <div className="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center text-blue-600 shrink-0 group-hover/stat:scale-110 transition-transform">
-              <Users className="w-4 h-4" />
+              <Users className="w-4 h-4 pointer-events-none" />
             </div>
             <div className="flex flex-col min-w-0">
               <span className="font-bold text-(--text-main) leading-none truncate">
@@ -390,10 +390,10 @@ const ProfileHeaderCard = ({
 
           <Link 
             to="/discussions/my-posts"
-            className="flex items-center gap-2.5 text-(--text-muted) bg-(--bg-active) p-3 rounded-2xl border border-(--border-main) hover:bg-pink-500/5 hover:border-pink-500/30 transition-all group/stat"
+            className="flex items-center gap-2.5 text-(--text-muted) bg-(--bg-active) p-3 rounded-2xl border border-(--border-main) hover:bg-pink-500/5 hover:border-pink-500/30 transition-colors group/stat"
           >
             <div className="w-8 h-8 rounded-lg bg-pink-50 flex items-center justify-center text-pink-600 shrink-0 group-hover/stat:scale-110 transition-transform">
-              <MessageSquare className="w-4 h-4" />
+              <MessageSquare className="w-4 h-4 pointer-events-none" />
             </div>
             <div className="flex flex-col min-w-0">
               <span className="font-bold text-(--text-main) leading-none truncate">
@@ -407,10 +407,10 @@ const ProfileHeaderCard = ({
 
           <Link 
             to="/resources/my"
-            className="flex items-center gap-2.5 text-(--text-muted) bg-(--bg-active) p-3 rounded-2xl border border-(--border-main) hover:bg-emerald-500/5 hover:border-emerald-500/30 transition-all group/stat"
+            className="flex items-center gap-2.5 text-(--text-muted) bg-(--bg-active) p-3 rounded-2xl border border-(--border-main) hover:bg-emerald-500/5 hover:border-emerald-500/30 transition-colors group/stat"
           >
             <div className="w-8 h-8 rounded-lg bg-emerald-50 flex items-center justify-center text-emerald-600 shrink-0 group-hover/stat:scale-110 transition-transform">
-              <FileText className="w-4 h-4" />
+              <FileText className="w-4 h-4 pointer-events-none" />
             </div>
             <div className="flex flex-col min-w-0">
               <span className="font-bold text-(--text-main) leading-none truncate">

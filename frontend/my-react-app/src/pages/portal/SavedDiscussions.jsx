@@ -85,13 +85,13 @@ const SavedDiscussions = () => {
                     unsaveMutation.mutate(disc.discussion_id);
                   }}
                   disabled={unsaveMutation.isPending}
-                  className="p-1.5 text-yellow-500 hover:text-gray-500 rounded transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="p-1.5 text-yellow-500 hover:text-gray-500 rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   title="Remove from saved"
                 >
                   {unsaveMutation.isPending ? (
                     <ButtonLoader size={20} />
                   ) : (
-                    <Bookmark className="w-5 h-5 fill-yellow-500" />
+                    <Bookmark className="w-5 h-5 fill-yellow-500 pointer-events-none" />
                   )}
                 </button>
               }

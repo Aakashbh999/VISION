@@ -77,7 +77,7 @@ const NavItem = ({ item, isCollapsed, depth = 0 }) => {
   };
 
   const linkClasses = `
-    flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 group relative
+    flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors duration-200 group relative
     ${
       isActive
         ? "bg-[var(--sidebar-active-bg)] text-purple-600 dark:text-purple-400 font-medium border-l-[3px] border-purple-500"
@@ -90,7 +90,7 @@ const NavItem = ({ item, isCollapsed, depth = 0 }) => {
     <>
       {Icon && (
         <Icon
-          className={`w-5 h-5 shrink-0 transition-colors ${
+          className={`w-5 h-5 shrink-0 pointer-events-none transition-colors ${
             isActive
               ? "text-purple-600"
               : "text-[var(--text-muted)] group-hover:text-purple-500"
@@ -190,9 +190,9 @@ const PortalSidebarNew = () => {
               closeMobile();
               setIsSearchOpen(true);
             }}
-            className="w-full flex items-center gap-2 pl-9 pr-3 py-2 bg-[var(--bg-active)] border border-[var(--border-main)] rounded-xl text-sm text-[var(--text-muted)] hover:bg-[var(--bg-card)] hover:border-purple-300 transition-all relative group"
+            className="w-full flex items-center gap-2 pl-9 pr-3 py-2 bg-[var(--bg-active)] border border-[var(--border-main)] rounded-xl text-sm text-[var(--text-muted)] hover:bg-[var(--bg-card)] hover:border-purple-300 transition-colors relative group"
           >
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--text-muted)] group-hover:text-purple-500 transition-colors" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--text-muted)] group-hover:text-purple-500 transition-colors pointer-events-none" />
             Quick search...
             <kbd className="ml-auto text-[10px] font-medium px-1.5 py-0.5 bg-[var(--bg-active)] border border-[var(--border-main)] rounded text-[var(--text-muted)]">
               ⌘K
