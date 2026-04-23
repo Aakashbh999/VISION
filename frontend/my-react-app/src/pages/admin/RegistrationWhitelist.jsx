@@ -80,6 +80,7 @@ const RegistrationWhitelist = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["registration-whitelist"] });
       showToast.success("Removed from whitelist");
+      setModalConfig({ isOpen: false });
     },
   });
 
@@ -95,10 +96,7 @@ const RegistrationWhitelist = () => {
       message: `Are you sure you want to remove registration ${regNo} from the automatic approval whitelist? Future registrations with this number will require manual approval.`,
       type: "danger",
       confirmText: "Remove Record",
-      onConfirm: () => {
-        deleteMutation.mutate(regNo);
-        setModalConfig({ isOpen: false });
-      },
+      onConfirm: () => deleteMutation.mutate(regNo),
     });
   };
 

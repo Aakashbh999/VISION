@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
 import { BookOpen, MessageSquare, Users } from "lucide-react";
 import SurfaceCard from "../../components/ui/SurfaceCard";
 import PageHeader from "../../components/ui/PageHeader";
@@ -14,7 +15,21 @@ const TABS = [
 ];
 
 const ManageContent = () => {
-  const [activeTab, setActiveTab] = useState("resources");
+  const [searchParams, setSearchParams] = useSearchParams();
+  const initialTab = searchParams.get("tab") || "resources";
+  const [activeTab, setActiveTab] = useState(initialTab);
+
+  useEffect(() => {
+    const tabFromUrl = searchParams.get("tab");
+    if (tabFromUrl && tabFromUrl !== activeTab) {
+      setActiveTab(tabFromUrl);
+    }
+  }, [searchParams]);
+
+  const handleTabChange = (tabValue) => {
+    setActiveTab(tabValue);
+    setSearchParams({ tab: tabValue });
+  };
 
   return (
     <div className="max-w-7xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
@@ -31,7 +46,7 @@ const ManageContent = () => {
           return (
             <button
               key={tab.value}
-              onClick={() => setActiveTab(tab.value)}
+              onClick={() => handleTabChange(tab.value)}
               className={`flex items-center gap-3 px-6 py-3 rounded-xl font-bold whitespace-nowrap transition-all ${
                 isActive
                   ? "bg-purple-50 text-purple-600 dark:bg-purple-950/30 dark:text-purple-400"

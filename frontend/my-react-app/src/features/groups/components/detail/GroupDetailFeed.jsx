@@ -244,11 +244,11 @@ const GroupDetailFeed = ({
                                         prev === post.post_id ? null : post.post_id,
                                       )
                                     }
-                                    className="w-7 h-7 rounded-full border border-(--border-main) bg-(--bg-card) text-(--text-muted) hover:text-(--text-main) hover:border-purple-300 flex items-center justify-center opacity-0 group-hover:opacity-100 focus:opacity-100 transition-all"
+                                    className="w-7 h-7 rounded-full border border-(--border-main) bg-(--bg-card) text-(--text-muted) hover:text-(--text-main) hover:border-purple-300 flex items-center justify-center opacity-0 group-hover:opacity-100 focus:opacity-100 transition-colors"
                                     aria-label="Message actions"
                                     title="Message actions"
                                   >
-                                    <MoreVertical className="w-4 h-4" />
+                                    <MoreVertical className="w-4 h-4 pointer-events-none" />
                                   </button>
                                   {activeMessageMenuId === post.post_id && (
                                     <div className="mt-2 w-28 rounded-xl border border-(--border-main) bg-(--bg-card) shadow-lg p-1 z-20">
@@ -303,10 +303,10 @@ const GroupDetailFeed = ({
                                       "this question",
                                     )
                                   }
-                                  className="text-(--text-muted) hover:text-red-500"
+                                  className="text-(--text-muted) hover:text-red-500 transition-colors"
                                   title="Delete question"
                                 >
-                                  <Trash2 className="w-4 h-4" />
+                                  <Trash2 className="w-4 h-4 pointer-events-none" />
                                 </button>
                               )}
                             </header>
@@ -331,10 +331,10 @@ const GroupDetailFeed = ({
                                             "this answer",
                                           )
                                         }
-                                        className="text-(--text-muted) hover:text-red-500"
+                                        className="text-(--text-muted) hover:text-red-500 transition-colors"
                                         title="Delete answer"
                                       >
-                                        <Trash2 className="w-4 h-4" />
+                                        <Trash2 className="w-4 h-4 pointer-events-none" />
                                       </button>
                                     )}
                                     {isAdmin && !answerIsEditing && (
@@ -346,10 +346,10 @@ const GroupDetailFeed = ({
                                             answer.content,
                                           )
                                         }
-                                        className="text-(--text-muted) hover:text-blue-500"
+                                        className="text-(--text-muted) hover:text-blue-500 transition-colors"
                                         title="Edit answer"
                                       >
-                                        <Pencil className="w-4 h-4" />
+                                        <Pencil className="w-4 h-4 pointer-events-none" />
                                       </button>
                                     )}
                                   </div>
@@ -461,9 +461,9 @@ const GroupDetailFeed = ({
                                     href={post.file_url}
                                     target="_blank"
                                     rel="noreferrer"
-                                    className="inline-flex items-center gap-2 text-sm text-purple-600 hover:underline"
+                                    className="inline-flex items-center gap-2 text-sm text-purple-600 hover:underline transition-colors"
                                   >
-                                    <Download className="w-4 h-4" />
+                                    <Download className="w-4 h-4 pointer-events-none" />
                                     {post.file_name || "Download resource"}
                                   </a>
                                   {isAdmin && (
@@ -476,10 +476,10 @@ const GroupDetailFeed = ({
                                           "this resource",
                                         )
                                       }
-                                      className="text-(--text-muted) hover:text-red-500"
+                                      className="text-(--text-muted) hover:text-red-500 transition-colors"
                                       title="Delete resource"
                                     >
-                                      <Trash2 className="w-4 h-4" />
+                                      <Trash2 className="w-4 h-4 pointer-events-none" />
                                     </button>
                                   )}
                                 </div>

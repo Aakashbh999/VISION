@@ -65,10 +65,10 @@ const DiscussionListItem = ({
       >
         <div className="flex items-center gap-3 text-sm text-[var(--text-muted)]">
           <span className="flex items-center gap-1">
-            <ThumbsUp className="w-4 h-4" /> {disc.like_count || 0}
+            <ThumbsUp className="w-4 h-4 pointer-events-none" /> {disc.like_count || 0}
           </span>
           <span className="flex items-center gap-1">
-            <MessageCircle className="w-4 h-4" /> {disc.comment_count || 0}
+            <MessageCircle className="w-4 h-4 pointer-events-none" /> {disc.comment_count || 0}
           </span>
         </div>
 
@@ -79,7 +79,7 @@ const DiscussionListItem = ({
               className="p-1.5 text-[var(--text-muted)] hover:text-purple-600 rounded bg-[var(--bg-active)] hover:bg-purple-50 transition-colors"
               onClick={(e) => e.stopPropagation()}
             >
-              <Edit className="w-4 h-4" />
+              <Edit className="w-4 h-4 pointer-events-none" />
             </Link>
           )}
 

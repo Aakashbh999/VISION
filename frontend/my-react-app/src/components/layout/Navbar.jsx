@@ -89,7 +89,7 @@ const Navbar = ({ onMobileMenuToggle, variant, user }) => {
           className="lg:hidden p-2 rounded-lg hover:bg-[var(--bg-active)] transition-colors duration-300 mr-2"
           aria-label="Toggle menu"
         >
-          <Menu className="w-6 h-6 text-[var(--text-main)]" />
+          <Menu className="w-6 h-6 text-[var(--text-main)] pointer-events-none" />
         </button>
         <Link to={homeLink} className="relative">
           <Logo className="h-10 hover:opacity-80 transition-opacity" />
@@ -110,7 +110,7 @@ const Navbar = ({ onMobileMenuToggle, variant, user }) => {
                 onClick={() => setResourcesDropdownOpen(!resourcesDropdownOpen)}
                 className="flex items-center gap-1 text-[var(--text-main)] hover:text-purple-600 transition-colors font-medium"
               >
-                Explore <ChevronDown className="w-4 h-4" />
+                Explore <ChevronDown className="w-4 h-4 pointer-events-none" />
               </button>
               {resourcesDropdownOpen && (
                 <div className="absolute right-0 mt-2 w-48 bg-[var(--bg-card)] rounded-xl shadow-lg border border-[var(--border-main)] py-2 z-50">
@@ -137,7 +137,7 @@ const Navbar = ({ onMobileMenuToggle, variant, user }) => {
                 aria-label="Open notifications"
                 aria-expanded={notificationsOpen}
               >
-                <Bell className="w-5 h-5 text-[var(--text-main)]" />
+                <Bell className="w-5 h-5 text-[var(--text-main)] pointer-events-none" />
                 {unreadCount > 0 && (
                   <span className="absolute top-1 right-1 w-4 h-4 bg-red-500 text-white text-xs flex items-center justify-center rounded-full">
                     {unreadCount > 9 ? "9+" : unreadCount}
@@ -158,7 +158,7 @@ const Navbar = ({ onMobileMenuToggle, variant, user }) => {
                 aria-label="User menu"
               >
                 <div className="w-8 h-8 rounded-full bg-gradient-to-br from-purple-500 to-purple-700 flex items-center justify-center text-white">
-                  <User className="w-4 h-4" />
+                  <User className="w-4 h-4 pointer-events-none" />
                 </div>
               </button>
               {profileMenuOpen && (
@@ -250,7 +250,7 @@ const Navbar = ({ onMobileMenuToggle, variant, user }) => {
               <>
                 <Link
                   to="/login"
-                  className="text-[var(--text-main)] hover:text-purple-600 font-medium transition-all duration-300 hover:scale-105 px-3 py-1.5 rounded-lg hover:bg-[var(--bg-active)]"
+                  className="text-[var(--text-main)] hover:text-purple-600 font-medium transition-colors duration-200 px-3 py-1.5 rounded-lg hover:bg-[var(--bg-active)]"
                 >
                   Login
                 </Link>

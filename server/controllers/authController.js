@@ -116,7 +116,7 @@ exports.register = catchAsync(async (req, res) => {
       normalizedSemester = calculateSemesterFromBatch(normalizedBatchYear);
     }
 
-    const studentIdImageUrl = req.file.path;
+    const academicCertificateUrl = req.file.path;
 
     // Check if registration exists in the pre-verified whitelist
     let studentStatus = "pending_review";
@@ -137,7 +137,7 @@ exports.register = catchAsync(async (req, res) => {
     const portalInsert = await client.query(
       `INSERT INTO portal.users
        (auth_user_id, full_name, university, campus_id, program_id, semester, batch_year, 
-        semester_is_manual, tu_registration_no, student_id_image_url, career_scope, date_of_birth, student_status)
+        semester_is_manual, tu_registration_no, academic_certificate_url, career_scope, date_of_birth, student_status)
        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
        RETURNING user_id`,
       [
@@ -150,7 +150,7 @@ exports.register = catchAsync(async (req, res) => {
         normalizedBatchYear,
         normalizedManualSemester,
         tu_registration_no,
-        studentIdImageUrl,
+        academicCertificateUrl,
         career_scope,
         date_of_birth,
         studentStatus,
@@ -244,7 +244,7 @@ exports.register = catchAsync(async (req, res) => {
     // Specific handling for DB unique constraint violations
     if (err.code === "23505") {
       if (err.detail.includes("tu_registration_no")) {
-        err.message = "TU Registration Number already in use.";
+        err.message = "Registration Number already in use.";
         err.statusCode = 400;
       } else if (err.detail.includes("email")) {
         err.message = "Email already registered.";

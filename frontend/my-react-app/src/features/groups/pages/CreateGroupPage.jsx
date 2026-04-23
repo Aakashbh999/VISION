@@ -385,13 +385,22 @@ const CreateGroupPage = () => {
                   </button>
                   <button
                     onClick={handleSubmit}
-                    disabled={mutation.isLoading}
+                    disabled={mutation.isPending}
                     className="flex-[2] relative overflow-hidden group py-3.5 sm:py-4 bg-purple-600 text-white font-black rounded-2xl shadow-xl shadow-purple-500/30 hover:shadow-purple-500/50 transition-all active:scale-[0.98]"
                   >
                     <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
                     <div className="flex items-center justify-center gap-2">
-                      <Rocket className="w-5 h-5" />
-                      {mutation.isLoading ? "COMMENCING..." : "ACTIVATE NODE"}
+                      {mutation.isPending ? (
+                        <>
+                          <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                          COMMENCING...
+                        </>
+                      ) : (
+                        <>
+                          <Rocket className="w-5 h-5" />
+                          ACTIVATE NODE
+                        </>
+                      )}
                     </div>
                   </button>
                 </div>

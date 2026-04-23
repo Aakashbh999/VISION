@@ -5,7 +5,7 @@ import {
   rejectStudent,
 } from "../../services/admin";
 import LoadingSpinner from "../../components/ui/LoadingSpinner";
-import { Check, X, UserPlus, Clock, Inbox, ShieldCheck } from "lucide-react";
+import { Check, X, UserPlus, Clock, Inbox, ShieldCheck, ChevronRight } from "lucide-react";
 import { showToast } from "../../utils/toast";
 import { useState } from "react";
 import AdminConfirmModal from "../../components/ui/AdminConfirmModal";
@@ -25,6 +25,7 @@ const PendingStudents = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["pendingStudents"] });
       showToast.success("Student approved");
+      setModalConfig({ isOpen: false });
     },
     onError: (err) => showToast.error("Failed to approve student"),
   });
@@ -34,6 +35,7 @@ const PendingStudents = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["pendingStudents"] });
       showToast.success("Student registration rejected");
+      setModalConfig({ isOpen: false });
     },
     onError: (err) => showToast.error("Failed to reject student"),
   });
@@ -47,7 +49,6 @@ const PendingStudents = () => {
       confirmText: "Approve Registration",
       onConfirm: () => {
         approveMutation.mutate(userId);
-        setModalConfig({ isOpen: false });
       },
     });
   };
@@ -61,7 +62,6 @@ const PendingStudents = () => {
       confirmText: "Reject Student",
       onConfirm: () => {
         rejectMutation.mutate(userId);
-        setModalConfig({ isOpen: false });
       },
     });
   };

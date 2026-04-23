@@ -11,8 +11,9 @@ import {
 // Forcing a fresh build by refactoring imports.
 
 // Hooks & Context
+import { useAuth } from "../../context/AuthContext";
 import { useResources } from "../../hooks/useResources";
-import { usePrograms } from "../../hooks/usePrograms";
+import { useDiscussionReferenceData } from "../../features/discussions/hooks/useDiscussionReferenceData";
 import { FilterProvider, useFilters } from "../../context/LibraryFilterContext";
 
 // Components
@@ -24,6 +25,7 @@ import SurfaceCard from "../../components/ui/SurfaceCard";
 import EmptyState from "../../components/ui/EmptyState";
 import ErrorState from "../../components/ui/ErrorState";
 import Button from "../../components/ui/Button";
+import { AcademicProgramFilter } from "../../components/lib";
 
 const ResourcesContent = () => {
   const { filters, updateFilter, resetFilters } = useFilters();
@@ -31,9 +33,7 @@ const ResourcesContent = () => {
 
   // Data Fetching
   const { data: resourcesData, isLoading, error } = useResources(filters);
-  const { data: programsData } = usePrograms();
-
-  const programs = programsData?.data || programsData || [];
+  const { programs } = useDiscussionReferenceData();
 
   const handleFilterChange = (e) => {
     const { name, value } = e.target;
@@ -150,7 +150,7 @@ const ResourcesContent = () => {
           </div>
 
           {(filters.search ||
-            filters.program_id ||
+            filters.degree_id ||
             filters.resource_type ||
             filters.semester) && (
             <button
@@ -162,19 +162,21 @@ const ResourcesContent = () => {
           )}
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          <UniversalSearch
-            placeholder="Search by topic..."
-            initialValue={filters.search}
-            onSearch={(val) => updateFilter("search", val)}
-            isLoading={isLoading}
-          />
+        <div className="flex flex-col md:flex-row flex-wrap items-center gap-3 sm:gap-4">
+          <div className="w-full md:w-auto md:flex-1 min-w-[200px]">
+            <UniversalSearch
+              placeholder="Search by topic..."
+              initialValue={filters.search}
+              onSearch={(val) => updateFilter("search", val)}
+              isLoading={isLoading}
+            />
+          </div>
 
           <select
             name="resource_type"
             value={filters.resource_type}
             onChange={handleFilterChange}
-            className="w-full px-4 py-3 bg-[var(--bg-active)] border border-transparent focus:border-purple-200 focus:bg-[var(--bg-card)] rounded-xl text-sm font-bold outline-none transition-all text-[var(--text-main)]"
+            className="w-full md:w-auto px-4 py-3 bg-[var(--bg-active)] border border-transparent focus:border-purple-200 focus:bg-[var(--bg-card)] rounded-xl text-sm font-bold outline-none transition-all text-[var(--text-main)] cursor-pointer"
           >
             <option value="">All Formats</option>
             <option value="notes">Lecture Notes</option>
@@ -184,25 +186,23 @@ const ResourcesContent = () => {
             <option value="image">Images</option>
           </select>
 
-          <select
+          <AcademicProgramFilter
             name="program_id"
             value={filters.program_id}
-            onChange={handleFilterChange}
-            className="w-full px-4 py-3 bg-[var(--bg-active)] border border-transparent focus:border-purple-200 focus:bg-[var(--bg-card)] rounded-xl text-sm font-bold outline-none transition-all text-[var(--text-main)]"
-          >
-            <option value="">All Programs</option>
-            {programs.map((p) => (
-              <option key={p.id || p.program_id} value={p.id || p.program_id}>
-                {p.program_name || p.name}
-              </option>
-            ))}
-          </select>
+            onChange={(e) => {
+              updateFilter("program_id", e.target.value);
+              updateFilter("page", 1);
+            }}
+            options={programs}
+            placeholder="All IT Programs"
+            className="w-full md:w-auto min-w-[160px]"
+          />
 
           <select
             name="semester"
             value={filters.semester}
             onChange={handleFilterChange}
-            className="w-full px-4 py-3 bg-[var(--bg-active)] border border-transparent focus:border-purple-200 focus:bg-[var(--bg-card)] rounded-xl text-sm font-bold outline-none transition-all text-[var(--text-main)]"
+            className="w-full md:w-auto px-4 py-3 bg-[var(--bg-active)] border border-transparent focus:border-purple-200 focus:bg-[var(--bg-card)] rounded-xl text-sm font-bold outline-none transition-all text-[var(--text-main)] cursor-pointer"
           >
             <option value="">All Semesters</option>
             {Array.from({ length: 8 }, (_, index) => index + 1).map(
@@ -288,6 +288,7 @@ const ResourcesContent = () => {
 };
 
 const Resources = () => {
+  const { user } = useAuth();
   const [searchParams] = useSearchParams();
 
   // Initialize filters from URL search params on mount to avoid double-fetching
@@ -298,9 +299,10 @@ const Resources = () => {
         searchParams.get("resource_type") === "link"
           ? ""
           : searchParams.get("resource_type") || "",
-      program_id: searchParams.get("program_id") || "",
       semester: searchParams.get("semester") || "",
-      degree_id: searchParams.get("degree_id") || "",
+      program_id: searchParams.has("program_id")
+        ? searchParams.get("program_id")
+        : (user?.program_id?.toString() || ""),
       view: searchParams.get("view") || "all",
       page: parseInt(searchParams.get("page"), 10) || 1,
       limit: 12,

@@ -176,3 +176,12 @@ export const useFollowUser = () => {
     },
   });
 };
+
+// Fetch system tags
+export const useSystemTags = () => {
+  return useQuery({
+    queryKey: ["tags", "system"],
+    queryFn: profileService.getSystemTags,
+    staleTime: 60 * 60 * 1000, // They don't change often
+  });
+};

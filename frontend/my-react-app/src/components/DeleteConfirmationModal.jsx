@@ -206,14 +206,17 @@ export default function DeleteConfirmationModal({
               disabled={
                 isPending || (isCustom && customReason.trim().length < 10)
               }
-              className="flex-[1.5] py-3 bg-red-600 hover:bg-red-700 disabled:bg-[var(--bg-active)] disabled:text-[var(--text-muted)] text-white font-bold text-sm uppercase tracking-widest rounded-xl transition-all flex items-center justify-center gap-2 max-w-[180px]"
+              className={`flex-[1.5] py-3 bg-red-600 hover:bg-red-700 disabled:bg-[var(--bg-active)] disabled:text-[var(--text-muted)] text-white font-bold text-sm uppercase tracking-widest rounded-xl transition-all flex items-center justify-center gap-2 max-w-[180px] shadow-lg ${isPending ? "scale-[0.98] opacity-90" : "hover:shadow-red-500/20 shadow-black/5"}`}
             >
               {isPending ? (
-                <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                <>
+                  <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  <span>Deleting...</span>
+                </>
               ) : (
                 <>
                   <Trash2 className="w-4 h-4" />
-                  Delete Item
+                  <span>Delete Item</span>
                 </>
               )}
             </button>

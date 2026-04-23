@@ -217,3 +217,22 @@ exports.getItClubs = catchAsync(async (req, res) => {
 exports.getItClubBySlug = catchAsync(async (req, res) =>
   fetchBySlug(req, res, "it_clubs", "IT Club"),
 );
+
+/* ============================================
+   TAGS
+ ============================================ */
+
+// GET /api/tags/system
+exports.getSystemTags = catchAsync(async (req, res) => {
+  const result = await pool.query(
+    `SELECT tag_id, name, slug 
+     FROM portal.tags 
+     WHERE tag_type = 'system' 
+     ORDER BY name ASC`
+  );
+  
+  res.json({
+    success: true,
+    data: result.rows
+  });
+});

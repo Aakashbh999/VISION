@@ -121,7 +121,7 @@ const DiscussionDetailContainer = () => {
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.8, y: 20 }}
             onClick={scrollToTop}
-            className="fixed bottom-8 right-8 p-4 bg-purple-600 text-white rounded-full shadow-2xl hover:bg-purple-700 transition-all z-50 group"
+            className="fixed bottom-8 right-8 p-4 bg-purple-600 text-white rounded-full shadow-2xl hover:bg-purple-700 transition-colors z-50 group"
           >
             <ArrowUp className="w-6 h-6 group-hover:-translate-y-1 transition-transform" />
           </motion.button>

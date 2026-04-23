@@ -21,6 +21,7 @@ router.get("/", optionalJWT, ctrl.getAllDiscussions);
 router.get("/tags", ctrl.getAllTags);
 router.get("/specializations", ctrl.getSpecializations);
 router.get("/degrees", ctrl.getDegrees);
+router.get("/programs", ctrl.getPrograms);
 router.get("/trending", ctrl.getTrendingDiscussions);
 
 // Protected routes - must come before /:id

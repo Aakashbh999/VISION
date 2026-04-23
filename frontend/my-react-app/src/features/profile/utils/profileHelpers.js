@@ -29,4 +29,8 @@ export const buildDraftProfile = (profile) => ({
   twitter_url: profile?.twitter_url || "",
   github_url: profile?.github_url || "",
   website_url: profile?.website_url || "",
+  campus: profile?.campus || "",
+  university: profile?.university || "",
+  career_scope: profile?.career_scope || "",
+  hide_member_since: Boolean(profile?.hide_member_since),
 });

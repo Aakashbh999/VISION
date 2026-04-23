@@ -39,6 +39,8 @@ const ProfilePage = () => {
     handleAvatarDone,
     handleBannerDone,
     handleFollowToggle,
+    systemTags,
+    isTagsLoading,
   } = useProfilePageState();
 
   if (isLoading) {
@@ -80,6 +82,7 @@ const ProfilePage = () => {
         programName={programName}
         handleEditCancel={handleEditCancel}
         handleSaveChanges={handleSaveChanges}
+        isSavingProfile={isSavingProfile}
       />
 
       <ProfileImageEditors
@@ -104,6 +107,7 @@ const ProfilePage = () => {
             currentBioWords={currentBioWords}
             handleDraftChange={handleDraftChange}
             maxBioWords={MAX_BIO_WORDS}
+            systemTags={systemTags}
           />
 
           <AcademicBackgroundCard

@@ -20,7 +20,7 @@ const DiscussionsContainer = () => {
   const queryClient = useQueryClient();
   const { user } = useAuth();
   const { filters, updateFilter } = useDiscussionFilters();
-  const { degrees } = useDiscussionReferenceData();
+  const { programs } = useDiscussionReferenceData();
   const { data, isLoading, error } = useDiscussions(filters);
   const {
     loadingLike,
@@ -49,7 +49,7 @@ const DiscussionsContainer = () => {
       <DiscussionsHeader
         user={user}
         filters={filters}
-        degrees={degrees}
+        programs={programs}
         isLoading={isLoading}
         showFilters={showFilters}
         onToggleFilters={() => setShowFilters((prev) => !prev)}

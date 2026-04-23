@@ -201,19 +201,19 @@ const DiscussionPostCard = ({
             {Number(discussion.like_count || 0)}
           </div>
           <button className="flex items-center gap-2 text-xs font-black text-[var(--text-main)] bg-[var(--bg-card)] border border-[var(--border-main)] px-4 py-2 rounded-full">
-            <MessageSquare className="w-4 h-4 text-purple-600" />
+            <MessageSquare className="w-4 h-4 text-purple-600 pointer-events-none" />
             {comments?.length || 0} Comments
           </button>
           <button
             onClick={() => toggleSaveMutation.mutate()}
             disabled={toggleSaveMutation.isPending}
-            className={`p-2.5 rounded-full transition-all ${discussion.user_saved ? "text-amber-500 bg-amber-50" : "text-[var(--text-muted)] hover:bg-[var(--bg-active)] border border-[var(--border-main)]"}`}
+            className={`p-2.5 rounded-full transition-colors ${discussion.user_saved ? "text-amber-500 bg-amber-50" : "text-[var(--text-muted)] hover:bg-[var(--bg-active)] border border-[var(--border-main)]"}`}
           >
             {toggleSaveMutation.isPending ? (
               <Loader2 className="w-4 h-4 animate-spin" />
             ) : (
               <Bookmark
-                className={`w-4 h-4 ${discussion.user_saved ? "fill-amber-500" : ""}`}
+                className={`w-4 h-4 pointer-events-none ${discussion.user_saved ? "fill-amber-500" : ""}`}
               />
             )}
           </button>

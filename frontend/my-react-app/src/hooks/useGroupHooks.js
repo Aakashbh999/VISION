@@ -34,6 +34,7 @@ export const useGroups = (filters = {}) => {
       filters.search || "",
       filters.sort || "latest",
       filters.degree || "",
+      filters.program || "",
     ],
     queryFn: () => getGroups(filters),
     staleTime: 0,

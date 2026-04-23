@@ -11,13 +11,39 @@ import SurfaceCard, {
 } from "../../components/ui/SurfaceCard";
 import EmptyState from "../../components/ui/EmptyState";
 import ErrorState from "../../components/ui/ErrorState";
-import { BookOpen, ChevronRight, Search, Map, CheckCircle2, Zap, Lock } from "lucide-react";
+import {
+  BookOpen,
+  ChevronRight,
+  Search,
+  Map,
+  CheckCircle2,
+  Zap,
+  Lock,
+  Clock,
+  AlertTriangle,
+} from "lucide-react";
+
+/** Returns a human-readable cooldown remaining string, or null if not in cooldown */
+const get4DayCooldown = (leftAt) => {
+  if (!leftAt) return null;
+  const FOUR_DAYS_MS = 4 * 24 * 60 * 60 * 1000;
+  const msLeft = FOUR_DAYS_MS - (Date.now() - new Date(leftAt).getTime());
+  if (msLeft <= 0) return null;
+  const days = Math.floor(msLeft / (1000 * 60 * 60 * 24));
+  const hours = Math.floor((msLeft % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+  const mins = Math.floor((msLeft % (1000 * 60 * 60)) / (1000 * 60));
+  if (days > 0) return `${days}d ${hours}h`;
+  if (hours > 0) return `${hours}h ${mins}m`;
+  return `${mins}m`;
+};
 
 const Roadmaps = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const [filters, setFilters] = useState({
     search: searchParams.get("search") || "",
   });
+  const [lockedTooltip, setLockedTooltip] = useState(null);
+  const [tick, setTick] = useState(0);
 
   useEffect(() => {
     const params = new URLSearchParams();
@@ -25,11 +51,20 @@ const Roadmaps = () => {
     setSearchParams(params);
   }, [filters, setSearchParams]);
 
+  // Tick every minute to refresh cooldown countdowns
+  useEffect(() => {
+    const interval = setInterval(() => setTick((t) => t + 1), 60_000);
+    return () => clearInterval(interval);
+  }, []);
+
   const { data, isLoading, error } = useRoadmaps(filters);
   const roadmapsList = Array.isArray(data) ? data : data?.roadmaps || [];
 
-  // Find if any roadmap is currently active
-  const hasActiveRoadmap = roadmapsList.some(r => r.enrolment_status === 'active');
+  // Find the active roadmap title for the lock tooltip
+  const activeRoadmap = roadmapsList.find(
+    (r) => r.enrolment_status === "active",
+  );
+  const hasActiveRoadmap = !!activeRoadmap;
 
   return (
     <div className="max-w-6xl mx-auto space-y-6 sm:space-y-8">
@@ -55,6 +90,21 @@ const Roadmaps = () => {
           />
         </div>
       </div>
+
+      {/* Focus Lock Banner */}
+      {hasActiveRoadmap && (
+        <div className="flex items-center gap-3 px-5 py-3.5 bg-purple-500/10 dark:bg-purple-500/20 border border-purple-500/20 rounded-2xl">
+          <Lock className="w-4 h-4 text-purple-600 dark:text-purple-400 flex-shrink-0" />
+          <p className="text-sm font-bold text-purple-700 dark:text-purple-300">
+            <span className="font-black uppercase tracking-wide">
+              Focus Mode Active
+            </span>{" "}
+            — You're enrolled in{" "}
+            <span className="font-black">"{activeRoadmap.title}"</span>.
+            Complete or leave it to start a new one.
+          </p>
+        </div>
+      )}
 
       <div className="min-h-[400px]">
         {isLoading ? (
@@ -128,21 +178,27 @@ const Roadmaps = () => {
               const isActive = roadmap.enrolment_status === "active";
               const isCompleted = roadmap.enrolment_status === "completed";
               const isLeft = roadmap.enrolment_status === "left";
-              const isLocked = hasActiveRoadmap && !isActive;
+              const cooldown = get4DayCooldown(roadmap.left_at);
+              const isInCooldown = isLeft && !!cooldown;
+              // Locked = another roadmap is active AND this one is not that roadmap
+              const isLocked = hasActiveRoadmap && !isActive && !isCompleted;
 
-              return (
-                <SurfaceCard
-                  key={roadmap.roadmap_id}
-                  as={Link}
-                  to={`/roadmaps/${roadmap.roadmap_id}`}
-                  variant="interactive"
-                  className={`p-5 sm:p-8 hover:shadow-2xl group hover:-translate-y-2 relative overflow-hidden ${
-                    isLocked ? "opacity-75 grayscale-[0.5]" : ""
-                  }`}
-                >
-                  {isLocked && (
-                    <div className="absolute top-4 right-4 z-20 p-2 bg-slate-900/10 backdrop-blur-md rounded-xl text-slate-600">
-                      <Lock className="w-4 h-4" />
+              const cardContent = (
+                <>
+                  {/* Lock overlay icon */}
+                  {(isLocked || isInCooldown) && (
+                    <div
+                      className={`absolute top-4 right-4 z-20 p-2 backdrop-blur-md rounded-xl ${
+                        isInCooldown
+                          ? "bg-amber-500/15 text-amber-600 dark:text-amber-400"
+                          : "bg-slate-900/10 text-slate-500"
+                      }`}
+                    >
+                      {isInCooldown ? (
+                        <Clock className="w-4 h-4" />
+                      ) : (
+                        <Lock className="w-4 h-4" />
+                      )}
                     </div>
                   )}
 
@@ -153,9 +209,11 @@ const Roadmaps = () => {
                           ? "bg-purple-600 text-white shadow-lg shadow-purple-500/30"
                           : isCompleted
                             ? "bg-emerald-100 text-emerald-600"
-                            : isLeft
+                            : isInCooldown
                               ? "bg-amber-100 text-amber-600"
-                              : "bg-(--bg-active) text-(--text-muted) group-hover:bg-purple-600 group-hover:text-white"
+                              : isLocked
+                                ? "bg-slate-100 text-slate-400 dark:bg-slate-800 dark:text-slate-500"
+                                : "bg-(--bg-active) text-(--text-muted) group-hover:bg-purple-600 group-hover:text-white"
                       }`}
                     >
                       {isCompleted ? (
@@ -168,7 +226,7 @@ const Roadmaps = () => {
                     <div className="absolute top-0 right-0">
                       {isActive && (
                         <span className="flex items-center gap-1.5 px-3 py-1 bg-purple-600 text-white text-[10px] font-black uppercase tracking-widest rounded-full shadow-lg">
-                          <Zap className="w-3 h-3 fill-white" /> In Progress
+                          In Progress
                         </span>
                       )}
                       {isCompleted && (
@@ -176,19 +234,27 @@ const Roadmaps = () => {
                           <CheckCircle2 className="w-3 h-3" /> Mastery
                         </span>
                       )}
-                      {isLeft && (
+                      {isInCooldown && (
                         <span className="flex items-center gap-1.5 px-3 py-1 bg-amber-500 text-white text-[10px] font-black uppercase tracking-widest rounded-full shadow-lg">
-                          <Lock className="w-3 h-3" /> Resumable
+                          <Clock className="w-3 h-3" /> {cooldown}
+                        </span>
+                      )}
+                      {isLocked && !isInCooldown && (
+                        <span className="flex items-center gap-1.5 px-3 py-1 bg-slate-500 text-white text-[10px] font-black uppercase tracking-widest rounded-full shadow-lg">
+                          <Lock className="w-3 h-3" /> Locked
                         </span>
                       )}
                     </div>
                   </CardHeader>
+
                   <CardBody className="space-y-3">
                     <CardTitle
                       className={`text-lg sm:text-xl transition-colors uppercase tracking-tight ${
-                        isActive || isCompleted
-                          ? "text-(--text-main)"
-                          : "text-(--text-main) group-hover:text-purple-600"
+                        isLocked || isInCooldown
+                          ? "text-[var(--text-muted)]"
+                          : isActive || isCompleted
+                            ? "text-(--text-main)"
+                            : "text-(--text-main) group-hover:text-purple-600"
                       }`}
                     >
                       {roadmap.title}
@@ -196,16 +262,76 @@ const Roadmaps = () => {
                     <p className="text-sm text-(--text-muted) line-clamp-2 font-medium leading-relaxed">
                       {roadmap.description}
                     </p>
+                    {isInCooldown && (
+                      <p className="text-xs font-bold text-amber-600 dark:text-amber-400 flex items-center gap-1.5">
+                        <AlertTriangle className="w-3.5 h-3.5" />
+                        Re-entry locked for {cooldown}
+                      </p>
+                    )}
+                    {isLocked && !isInCooldown && (
+                      <p className="text-xs font-bold text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
+                        <Lock className="w-3.5 h-3.5" />
+                        Finish your active roadmap first
+                      </p>
+                    )}
                   </CardBody>
+
                   <CardFooter className="flex items-center justify-between pt-4 sm:pt-6">
                     <span className="text-[10px] font-black px-3 py-1.5 rounded-full bg-(--bg-active) text-(--text-muted) uppercase tracking-widest">
                       {roadmap.difficulty_level || "Beginner"}
                     </span>
-                    <span className="text-purple-600 text-xs font-black flex items-center gap-1 uppercase tracking-widest opacity-0 group-hover:opacity-100 transition-all">
-                      {isActive ? "Continue Path" : isCompleted ? "Review Path" : "Start Path"}{" "}
-                      <ChevronRight className="w-4 h-4" />
-                    </span>
+                    {!isLocked && !isInCooldown && (
+                      <span className="text-purple-600 text-xs font-black flex items-center gap-1 uppercase tracking-widest opacity-0 group-hover:opacity-100 transition-all">
+                        {isActive
+                          ? "Continue Path"
+                          : isCompleted
+                            ? "Review Path"
+                            : "Start Path"}{" "}
+                        <ChevronRight className="w-4 h-4" />
+                      </span>
+                    )}
                   </CardFooter>
+                </>
+              );
+
+              // Locked/cooldown cards: render as div that shows a tooltip on click
+              if (isLocked || isInCooldown) {
+                return (
+                  <div key={roadmap.roadmap_id} className="relative">
+                    <SurfaceCard
+                      className="p-5 sm:p-8 relative overflow-hidden opacity-60 cursor-not-allowed select-none grayscale-[0.4]"
+                      onClick={() =>
+                        setLockedTooltip(
+                          isInCooldown
+                            ? `You left this roadmap. Re-entry unlocks in ${cooldown}.`
+                            : `Complete or leave "${activeRoadmap?.title}" first.`,
+                        )
+                      }
+                    >
+                      {cardContent}
+                    </SurfaceCard>
+                    {/* Inline toast under the card */}
+                    {lockedTooltip && (
+                      <div
+                        className="mt-2 px-4 py-2.5 bg-slate-900 text-white text-xs font-bold rounded-xl shadow-lg cursor-pointer"
+                        onClick={() => setLockedTooltip(null)}
+                      >
+                        {lockedTooltip}
+                      </div>
+                    )}
+                  </div>
+                );
+              }
+
+              return (
+                <SurfaceCard
+                  key={roadmap.roadmap_id}
+                  as={Link}
+                  to={`/roadmaps/${roadmap.roadmap_id}`}
+                  variant="interactive"
+                  className="p-5 sm:p-8 hover:shadow-2xl group hover:-translate-y-2 relative overflow-hidden"
+                >
+                  {cardContent}
                 </SurfaceCard>
               );
             })}

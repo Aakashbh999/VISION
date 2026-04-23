@@ -10,6 +10,7 @@ import {
   useRemoveProfileImage,
   useRemoveProfileBanner,
   useFollowUser,
+  useSystemTags,
 } from "../../../hooks/useProfile";
 import { usePrograms } from "../../../hooks/usePrograms";
 import { showToast } from "../../../utils/toast";
@@ -53,6 +54,7 @@ export const useProfilePageState = () => {
   const removeAvatarMut = useRemoveProfileImage();
   const removeBannerMut = useRemoveProfileBanner();
   const followMut = useFollowUser();
+  const { data: systemTags = [], isLoading: isTagsLoading } = useSystemTags();
 
   const [isEditMode, setIsEditMode] = useState(false);
   const [draftProfile, setDraftProfile] = useState(buildDraftProfile(null));
@@ -226,6 +228,8 @@ export const useProfilePageState = () => {
     handleAvatarDone,
     handleBannerDone,
     handleFollowToggle,
+    systemTags,
+    isTagsLoading,
     MAX_BIO_WORDS,
   };
 };

@@ -2,12 +2,13 @@ import { Link } from "react-router-dom";
 import { BookmarkCheck, Filter } from "lucide-react";
 import UniversalSearch from "../../../components/ui/UniversalSearch";
 import ForYouBadge from "./ForYouBadge";
+import { AcademicProgramFilter } from "../../../components/lib";
 
 /**
  * Props:
  * - user: authenticated user object (or null)
  * - filters: current discussions filters
- * - degrees: degree options list
+ * - programs: program options list
  * - isLoading: discussions loading state
  * - showFilters: filter panel toggle flag
  * - onToggleFilters: callback to toggle filters row
@@ -16,7 +17,7 @@ import ForYouBadge from "./ForYouBadge";
 const DiscussionsHeader = ({
   user,
   filters,
-  degrees,
+  programs,
   isLoading,
   showFilters,
   onToggleFilters,
@@ -59,18 +60,14 @@ const DiscussionsHeader = ({
           >
             <Filter className="w-4 h-4" /> Filters
           </button>
-          <select
-            value={filters.degree}
-            onChange={(event) => onUpdateFilter("degree", event.target.value)}
-            className="text-xs font-bold text-[var(--text-muted)] bg-transparent cursor-pointer border border-[var(--border-main)] rounded px-2 py-1 focus:outline-none focus:border-purple-500"
-          >
-            <option value="">All Degrees</option>
-            {degrees.map((degree) => (
-              <option key={degree.id} value={degree.id}>
-                {degree.name}
-              </option>
-            ))}
-          </select>
+          
+          <AcademicProgramFilter 
+            value={filters.program}
+            onChange={(event) => onUpdateFilter("program", event.target.value)}
+            options={programs}
+            placeholder="All IT Programs"
+            className="text-xs py-1.5 px-3 w-auto rounded-lg"
+          />
           <div className="flex bg-[var(--bg-active)] rounded-lg p-0.5 border border-[var(--border-main)] sm:ml-auto">
             {["latest", "popular", "recommended"].map((s) => (
               <button

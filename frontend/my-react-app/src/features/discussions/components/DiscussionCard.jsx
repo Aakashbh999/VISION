@@ -34,8 +34,12 @@ const DiscussionCard = ({
   };
   const [expanded, setExpanded] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
-  const [optimisticVote, setOptimisticVote] = useState(Number(disc.user_vote || 0));
-  const [optimisticSaved, setOptimisticSaved] = useState(Boolean(disc.user_saved));
+  const [optimisticVote, setOptimisticVote] = useState(
+    Number(disc.user_vote || 0),
+  );
+  const [optimisticSaved, setOptimisticSaved] = useState(
+    Boolean(disc.user_saved),
+  );
   const [optimisticCommentCount, setOptimisticCommentCount] = useState(
     Number(disc.comment_count || 0),
   );
@@ -105,13 +109,20 @@ const DiscussionCard = ({
     return [];
   }, [disc.tags, disc.tag_name, disc.specialization_name]);
 
-  const visibleTags = normalizedTags.slice(0, 2);
-  const remainingTagsCount = Math.max(0, normalizedTags.length - visibleTags.length);
+  const [showAllTags, setShowAllTags] = useState(false);
+  const visibleTags = showAllTags ? normalizedTags : normalizedTags.slice(0, 2);
+  const remainingTagsCount = Math.max(
+    0,
+    normalizedTags.length - visibleTags.length,
+  );
   const authorProfileId = normalizeProfileId(
     disc.author_id ?? disc.user_id ?? disc.portal_user_id,
   );
   const authorImage =
-    disc.author_avatar || disc.author_profile_image || disc.profile_image || null;
+    disc.author_avatar ||
+    disc.author_profile_image ||
+    disc.profile_image ||
+    null;
 
   const fullBody = disc.content || "";
   const shouldShowReadMore = fullBody.length > 200;
@@ -210,9 +221,9 @@ const DiscussionCard = ({
             aria-label="Open post options"
             aria-expanded={menuOpen}
             onClick={() => setMenuOpen((open) => !open)}
-            className="w-11 h-11 inline-flex items-center justify-center rounded-xl text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-slate-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-500 active:scale-95 transition"
+            className="w-11 h-11 inline-flex items-center justify-center rounded-xl text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-slate-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-500 active:scale-95 transition-colors"
           >
-            <MoreHorizontal className="w-5 h-5 opacity-70 hover:opacity-100" />
+            <MoreHorizontal className="w-5 h-5 opacity-70 pointer-events-none" />
           </button>
 
           {menuOpen ? (
@@ -290,10 +301,25 @@ const DiscussionCard = ({
                 #{tag}
               </Badge>
             ))}
-            {remainingTagsCount > 0 ? (
-              <Badge color="gray" size="xs">
-                +{remainingTagsCount}
-              </Badge>
+            {!showAllTags && normalizedTags.length > 2 ? (
+              <button
+                type="button"
+                className="text-xs bg-gray-100 dark:bg-slate-800 px-2 py-1 rounded-full text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-slate-700 transition-colors border border-gray-200 dark:border-slate-700 font-semibold"
+                onClick={() => setShowAllTags(true)}
+                aria-label={`Show all tags (${normalizedTags.length})`}
+              >
+                +{normalizedTags.length - 2}
+              </button>
+            ) : null}
+            {showAllTags && normalizedTags.length > 2 ? (
+              <button
+                type="button"
+                className="text-xs bg-gray-100 dark:bg-slate-800 px-2 py-1 rounded-full text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-slate-700 transition-colors border border-gray-200 dark:border-slate-700 font-semibold"
+                onClick={() => setShowAllTags(false)}
+                aria-label="Show less tags"
+              >
+                Show less
+              </button>
             ) : null}
           </div>
         ) : null}
@@ -305,7 +331,7 @@ const DiscussionCard = ({
           aria-label="Like post"
           disabled={loadingLike === disc.discussion_id}
           onClick={handleLikeClick}
-          className={`min-h-11 px-3 rounded-xl inline-flex items-center gap-2 text-sm font-medium transition focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-500 active:scale-95 ${
+          className={`min-h-11 px-3 rounded-xl inline-flex items-center gap-2 text-sm font-medium transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-500 active:scale-95 ${
             isLiked
               ? "text-purple-700 bg-purple-100 dark:bg-purple-900/40"
               : "text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-slate-800"
@@ -314,16 +340,16 @@ const DiscussionCard = ({
           {loadingLike === disc.discussion_id ? (
             <Loader2 className="w-4 h-4 animate-spin" />
           ) : (
-            <ThumbsUp className={`w-4 h-4 ${isLiked ? "fill-current" : ""}`} />
+            <ThumbsUp className={`w-4 h-4 pointer-events-none ${isLiked ? "fill-current" : ""}`} />
           )}
-           {likeCount > 0 ? `${likeCount}` : ""}
+          {likeCount > 0 ? `${likeCount}` : ""}
         </button>
 
         <Link
           to={`/discussions/${disc.discussion_id}`}
-          className="min-h-11 px-3 rounded-xl inline-flex items-center gap-2 text-sm font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-slate-800 transition focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-500"
+          className="min-h-11 px-3 rounded-xl inline-flex items-center gap-2 text-sm font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-slate-800 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-500"
         >
-          <MessageSquare className="w-4 h-4 opacity-70" />
+          <MessageSquare className="w-4 h-4 opacity-70 pointer-events-none" />
           {optimisticCommentCount}
         </Link>
 
@@ -332,7 +358,7 @@ const DiscussionCard = ({
           aria-label="Save post"
           disabled={loadingSave === disc.discussion_id}
           onClick={handleSaveClick}
-          className={`min-h-11 px-3 rounded-xl inline-flex items-center gap-2 text-sm font-medium transition focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-500 active:scale-95 ${
+          className={`min-h-11 px-3 rounded-xl inline-flex items-center gap-2 text-sm font-medium transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-500 active:scale-95 ${
             isSaved
               ? "text-amber-700 bg-amber-100 dark:bg-amber-900/30"
               : "text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-slate-800"
@@ -341,7 +367,7 @@ const DiscussionCard = ({
           {loadingSave === disc.discussion_id ? (
             <Loader2 className="w-4 h-4 animate-spin" />
           ) : (
-            <Bookmark className={`w-4 h-4 ${isSaved ? "fill-current" : ""}`} />
+            <Bookmark className={`w-4 h-4 pointer-events-none ${isSaved ? "fill-current" : ""}`} />
           )}
           Save
         </button>
@@ -349,14 +375,15 @@ const DiscussionCard = ({
         <button
           type="button"
           aria-label="Share post"
-          onClick={(event) => handleShare(event, disc.discussion_id, disc.title)}
-          className="min-h-11 px-3 rounded-xl inline-flex items-center gap-2 text-sm font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-slate-800 transition focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-500 active:scale-95"
+          onClick={(event) =>
+            handleShare(event, disc.discussion_id, disc.title)
+          }
+          className="min-h-11 px-3 rounded-xl inline-flex items-center gap-2 text-sm font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-slate-800 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-500 active:scale-95"
         >
-          <Share2 className="w-4 h-4 opacity-70" />
+          <Share2 className="w-4 h-4 opacity-70 pointer-events-none" />
           Share
         </button>
       </div>
-
     </SurfaceCard>
   );
 };

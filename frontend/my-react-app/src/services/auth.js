@@ -12,8 +12,12 @@ export const login = async (email, password) => {
 };
 
 export const register = async (userData) => {
-  const response = await api.post("/auth/register", userData);
-  return response.data; // might return { message: "..." }
+  const response = await api.post("/auth/register", userData, {
+    headers: {
+      "Content-Type": "multipart/form-data",
+    },
+  });
+  return response.data;
 };
 
 export const getUserProfile = async () => {

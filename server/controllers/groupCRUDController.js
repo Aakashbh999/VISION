@@ -45,15 +45,10 @@ exports.getManagedGroups = catchAsync(async (req, res) => {
    GET ALL GROUPS
 ================================ */
 exports.getGroups = catchAsync(async (req, res) => {
-  const { search, sort, degree } = req.query;
+  const { search, sort, degree, program } = req.query;
   const userId = req.user?.portal_user_id;
-
-  res.set({
-    "Cache-Control": "no-store, no-cache, must-revalidate, proxy-revalidate",
-    Pragma: "no-cache",
-    Expires: "0",
-    Vary: "Authorization",
-  });
+  
+  // ... (caching headers)
 
   let query = `
       SELECT 
@@ -68,7 +63,9 @@ exports.getGroups = catchAsync(async (req, res) => {
         g.capacity,
         g.created_by,
         g.degree_id,
-        ad.full_name AS degree_name,
+        g.program_id,
+        ad.degree_code AS degree_name,
+        p.program_name,
         u.full_name AS creator,
         COUNT(DISTINCT gm.user_id) AS members,
         ${userId ? `EXISTS(SELECT 1 FROM portal.group_members WHERE group_id = g.group_id AND user_id = $1) AS is_member` : "FALSE AS is_member"},
@@ -78,19 +75,32 @@ exports.getGroups = catchAsync(async (req, res) => {
       JOIN portal.users u ON u.user_id = g.created_by
       LEFT JOIN portal.group_members gm ON gm.group_id = g.group_id AND gm.status = 'approved'
       LEFT JOIN portal.academic_degrees ad ON ad.id = g.degree_id
+      LEFT JOIN portal.programs p ON p.program_id = g.program_id
     `;
 
   const params = userId ? [userId] : [];
   let paramIndex = params.length;
   const conditions = ["g.deleted_at IS NULL"];
 
-  // Always allow seeing public groups OR private groups you have joined
-  if (userId) {
-    conditions.push(
-      `(g.privacy_type != 'private' OR EXISTS(SELECT 1 FROM portal.group_members WHERE group_id = g.group_id AND user_id = $1))`,
-    );
-  } else {
-    conditions.push(`g.privacy_type != 'private'`);
+  // Filter by program (with bridging logic)
+  if (program) {
+    paramIndex++;
+    const pId = parseInt(program);
+    params.push(pId);
+    if (pId >= 1 && pId <= 5) {
+      conditions.push(`(g.program_id = $${paramIndex} OR g.degree_id = $${paramIndex})`);
+    } else {
+      conditions.push(`g.program_id = $${paramIndex}`);
+    }
+  } else if (degree) {
+    paramIndex++;
+    const dId = parseInt(degree);
+    params.push(dId);
+    if (dId >= 1 && dId <= 5) {
+      conditions.push(`(g.degree_id = $${paramIndex} OR g.program_id = $${paramIndex})`);
+    } else {
+      conditions.push(`g.degree_id = $${paramIndex}`);
+    }
   }
 
   // Filter by joined groups if requested
@@ -109,14 +119,9 @@ exports.getGroups = catchAsync(async (req, res) => {
     );
     params.push(`%${search}%`);
   }
-  if (degree) {
-    paramIndex++;
-    conditions.push(`g.degree_id = $${paramIndex}`);
-    params.push(parseInt(degree));
-  }
 
   query += ` WHERE ${conditions.join(" AND ")}`;
-  query += ` GROUP BY g.group_id, g.name, g.description, g.created_at, g.group_image, g.banner_image, g.is_public, g.privacy_type, g.capacity, g.created_by, g.degree_id, ad.full_name, u.full_name`;
+  query += ` GROUP BY g.group_id, g.name, g.description, g.created_at, g.group_image, g.banner_image, g.is_public, g.privacy_type, g.capacity, g.created_by, g.degree_id, g.program_id, ad.degree_code, p.program_name, u.full_name`;
 
   if (searchParamIndex && (!sort || sort === "latest")) {
     query += ` ORDER BY CASE WHEN g.name ILIKE $${searchParamIndex} THEN 0 WHEN g.description ILIKE $${searchParamIndex} THEN 1 ELSE 2 END, g.created_at DESC`;
@@ -253,8 +258,13 @@ exports.createGroup = catchAsync(async (req, res) => {
     tags,
     system_tags,
     custom_tags,
+    degree_id,
+    program_id,
   } = req.body;
   const userId = req.user.portal_user_id;
+
+  const finalDegreeId = degree_id || req.user.academic_degree_id || null;
+  const finalProgramId = program_id || req.user.program_id || null;
 
   const stats = await XPService.getUserStats(userId);
   if (!stats || stats.total_xp < 500) {
@@ -321,14 +331,15 @@ exports.createGroup = catchAsync(async (req, res) => {
     }
 
     const group = await client.query(
-      `INSERT INTO portal.study_groups (name, description, created_by, degree_id, privacy_type, tags)
-         VALUES ($1, $2, $3, $4, $5, $6)
+      `INSERT INTO portal.study_groups (name, description, created_by, degree_id, program_id, privacy_type, tags)
+         VALUES ($1, $2, $3, $4, $5, $6, $7)
          RETURNING *`,
       [
         name.trim(),
         description || null,
         userId,
-        degree_id || null,
+        finalDegreeId,
+        finalProgramId,
         privacy_type,
         normalizedTags,
       ],

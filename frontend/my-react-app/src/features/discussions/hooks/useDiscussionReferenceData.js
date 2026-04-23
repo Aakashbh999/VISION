@@ -1,14 +1,14 @@
 import { useEffect, useState } from "react";
-import { getDiscussionDegrees } from "../services/discussionApi";
+import { getDiscussionPrograms } from "../services/discussionApi";
 
 export const useDiscussionReferenceData = () => {
-  const [degrees, setDegrees] = useState([]);
+  const [programs, setPrograms] = useState([]);
 
   useEffect(() => {
     const fetchReferenceData = async () => {
       try {
-        const data = await getDiscussionDegrees();
-        setDegrees(data);
+        const data = await getDiscussionPrograms();
+        setPrograms(data);
       } catch (error) {
         console.error("Failed to fetch reference data:", error);
       }
@@ -17,5 +17,5 @@ export const useDiscussionReferenceData = () => {
     fetchReferenceData();
   }, []);
 
-  return { degrees };
+  return { programs };
 };

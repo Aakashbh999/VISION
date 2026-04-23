@@ -80,6 +80,12 @@ const profileService = {
     });
     return response.data;
   },
+  
+  // Get authoritative system tags
+  getSystemTags: async () => {
+    const response = await api.get("/tags/system");
+    return response.data;
+  },
 };
 
 export default profileService;

@@ -140,7 +140,7 @@ exports.uploadResource = catchAsync(async (req, res) => {
     return errorResponse(res, "Description is too long", 400);
   }
 
-  const parsedSemester = finalSemester
+  let parsedSemester = finalSemester
     ? Number.parseInt(finalSemester, 10)
     : null;
   if (
@@ -152,13 +152,17 @@ exports.uploadResource = catchAsync(async (req, res) => {
     return errorResponse(res, "Semester must be between 1 and 8", 400);
   }
 
+  // Fallback to user registration defaults if not provided
+  const resolvedProgramId = program_id || req.user.program_id;
+  const resolvedDegreeId = degree_id || req.user.academic_degree_id;
+
   const parsedProgramId =
-    program_id !== undefined && program_id !== null && program_id !== ""
-      ? Number.parseInt(program_id, 10)
+    resolvedProgramId !== undefined && resolvedProgramId !== null && resolvedProgramId !== ""
+      ? Number.parseInt(resolvedProgramId, 10)
       : null;
   const parsedDegreeId =
-    degree_id !== undefined && degree_id !== null && degree_id !== ""
-      ? Number.parseInt(degree_id, 10)
+    resolvedDegreeId !== undefined && resolvedDegreeId !== null && resolvedDegreeId !== ""
+      ? Number.parseInt(resolvedDegreeId, 10)
       : null;
 
   if (program_id && !Number.isInteger(parsedProgramId)) {
@@ -310,8 +314,14 @@ exports.getResources = catchAsync(async (req, res) => {
   ];
 
   if (program_id) {
-    params.push(parseInt(program_id));
-    conditions.push(`r.program_id = $${params.length}`);
+    const pId = parseInt(program_id);
+    params.push(pId);
+    // Bridging logic for core programs (IDs 1-5)
+    if (pId >= 1 && pId <= 5) {
+      conditions.push(`(r.program_id = $${params.length} OR r.degree_id = $${params.length})`);
+    } else {
+      conditions.push(`r.program_id = $${params.length}`);
+    }
   }
   if (semester) {
     params.push(semester);
@@ -379,7 +389,7 @@ exports.getResources = catchAsync(async (req, res) => {
          r.*,
          u.user_id AS uploader_id,
          u.full_name AS uploader_name,
-         ad.full_name AS degree_name,
+         ad.degree_code AS degree_name,
          p.program_name${selectAdditions}
        FROM portal.resources r
        LEFT JOIN portal.users u ON u.user_id = r.created_by
@@ -443,7 +453,7 @@ exports.getMyResources = catchAsync(async (req, res) => {
          r.*,
          u.user_id AS uploader_id,
          u.full_name AS uploader_name,
-         ad.full_name AS degree_name,
+         ad.degree_code AS degree_name,
          p.program_name
        FROM portal.resources r
        LEFT JOIN portal.users u ON u.user_id = r.created_by
@@ -483,7 +493,7 @@ exports.getPendingResources = catchAsync(async (req, res) => {
            u.user_id AS uploader_id,
            u.full_name AS uploader_name,
            a.email    AS uploader_email,
-           ad.full_name AS degree_name,
+           ad.degree_code AS degree_name,
            p.program_name
          FROM portal.resources r
          JOIN portal.users u   ON u.user_id   = r.created_by
