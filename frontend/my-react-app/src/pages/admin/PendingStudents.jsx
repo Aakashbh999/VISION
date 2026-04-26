@@ -5,11 +5,12 @@ import {
   rejectStudent,
 } from "../../services/admin";
 import LoadingSpinner from "../../components/ui/LoadingSpinner";
-import { Check, X, UserPlus, Clock, Inbox, ShieldCheck, ChevronRight } from "lucide-react";
+import { Check, X, UserPlus, Clock, Inbox, ShieldCheck, ChevronRight, Search } from "lucide-react";
 import { showToast } from "../../utils/toast";
 import { useState } from "react";
 import AdminConfirmModal from "../../components/ui/AdminConfirmModal";
 import StudentReviewModal from "../../components/ui/StudentReviewModal";
+import AdminTable from "../../components/admin_ui/AdminTable";
 
 const PendingStudents = () => {
   const queryClient = useQueryClient();
@@ -31,7 +32,7 @@ const PendingStudents = () => {
   });
 
   const rejectMutation = useMutation({
-    mutationFn: rejectStudent,
+    mutationFn: ({ userId, reason }) => rejectStudent(userId, reason),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["pendingStudents"] });
       showToast.success("Student registration rejected");
@@ -57,11 +58,13 @@ const PendingStudents = () => {
     setModalConfig({
       isOpen: true,
       title: "Reject Registration",
-      message: `Are you sure you want to reject the application from ${name}? They will be notified of the decision.`,
+      message: `Are you sure you want to reject the application from ${name}? Provide a reason so they know how to fix their application.`,
       type: "danger",
       confirmText: "Reject Student",
-      onConfirm: () => {
-        rejectMutation.mutate(userId);
+      showInput: true,
+      placeholder: "e.g., Uploaded certificate is blurred or invalid.",
+      onConfirm: (reason) => {
+        rejectMutation.mutate({ userId, reason });
       },
     });
   };
@@ -75,6 +78,46 @@ const PendingStudents = () => {
     );
 
   const students = data?.data || [];
+
+  const columns = [
+    {
+      header: "Student Info",
+      render: (row) => (
+        <div className="flex flex-col">
+          <span className="font-bold text-text-main">{row.full_name}</span>
+          <span className="text-xs text-text-muted">{row.email}</span>
+        </div>
+      )
+    },
+    {
+      header: "Academic Details",
+      render: (row) => (
+        <div className="flex flex-col">
+          <span className="font-medium text-text-main">{row.program_name}</span>
+          <span className="text-xs text-text-muted">Semester: {row.semester}</span>
+        </div>
+      )
+    },
+    {
+      header: "Registration",
+      render: (row) => (
+        <code className="text-xs font-mono bg-bg-active px-2 py-1 rounded text-text-muted border border-border-main">
+          {row.tu_registration_no}
+        </code>
+      )
+    },
+    {
+      header: "Details",
+      render: (row) => (
+        <button
+          onClick={() => setReviewStudent(row)}
+          className="px-3 py-1.5 text-xs font-bold bg-blue-500/10 text-blue-600 hover:bg-blue-500/20 rounded-xl transition-all border border-transparent shadow-sm flex items-center gap-1.5"
+        >
+          Review <ChevronRight className="w-3.5 h-3.5" />
+        </button>
+      )
+    }
+  ];
 
   return (
     <div className="space-y-6">
@@ -99,70 +142,12 @@ const PendingStudents = () => {
           </p>
         </div>
       ) : (
-        <div className="bg-bg-card rounded-2xl border border-border-main overflow-hidden shadow-sm">
-          <table className="min-w-full divide-y divide-border-main">
-            <thead className="bg-bg-active/50">
-              <tr>
-                <th className="px-6 py-4 text-left text-xs font-bold text-text-muted uppercase tracking-wider">
-                  Student Info
-                </th>
-                <th className="px-6 py-4 text-left text-xs font-bold text-text-muted uppercase tracking-wider">
-                  Academic Details
-                </th>
-                <th className="px-6 py-4 text-left text-xs font-bold text-text-muted uppercase tracking-wider">
-                  Registration
-                </th>
-                <th className="px-6 py-4 text-right text-xs font-bold text-text-muted uppercase tracking-wider">
-                  Actions
-                </th>
-              </tr>
-            </thead>
-            <tbody className="bg-bg-card divide-y divide-border-main">
-              {students.map((student) => (
-                <tr
-                  key={student.user_id}
-                  className="hover:bg-bg-active/30 transition-colors"
-                >
-                  <td className="px-6 py-4">
-                    <div className="flex flex-col">
-                      <span className="text-sm font-bold text-text-main">
-                        {student.full_name}
-                      </span>
-                      <span className="text-xs text-text-muted">
-                        {student.email}
-                      </span>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4">
-                    <div className="flex flex-col">
-                      <span className="text-sm font-medium text-text-main">
-                        {student.program_name}
-                      </span>
-                      <span className="text-xs text-text-muted">
-                        Semester: {student.semester}
-                      </span>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <code className="text-xs font-mono bg-bg-active px-2 py-1 rounded text-text-muted border border-border-main">
-                      {student.tu_registration_no}
-                    </code>
-                  </td>
-                  <td className="px-6 py-4 text-right">
-                    <div className="flex justify-end gap-2">
-                      <button
-                        onClick={() => setReviewStudent(student)}
-                        className="px-3 py-1.5 text-xs font-bold bg-blue-500/10 text-blue-600 hover:bg-blue-500/20 rounded-xl transition-all border border-transparent shadow-sm flex items-center gap-1.5"
-                      >
-                       Review Details <ChevronRight className="w-3.5 h-3.5" />
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        <AdminTable
+          columns={columns}
+          data={students}
+          isLoading={isLoading}
+          searchPlaceholder="Search pending applications..."
+        />
       )}
       <AdminConfirmModal
         {...modalConfig}

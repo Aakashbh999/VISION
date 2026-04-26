@@ -9,6 +9,7 @@ const { verifyAdmin } = require("../middleware/adminMiddleware");
 const { verifyModerator } = require("../middleware/moderatorMiddleware");
 const sanitizeInput = require("../middleware/sanitizeInput");
 const campusController = require("../controllers/campusController");
+const adminReferenceController = require("../controllers/adminReferenceController");
 
 /* ===============================
    CAMPUS MANAGEMENT
@@ -382,5 +383,45 @@ router.get(
   verifyAdmin,
   adminController.examineReportContent,
 );
+
+/* ===============================
+   REFERENCE DATA MANAGEMENT
+================================ */
+
+// IT Fields
+router.get("/admin/reference/it-fields", verifyJWT, verifyAdmin, adminReferenceController.itFields.getAll);
+router.post("/admin/reference/it-fields", verifyJWT, verifyAdmin, sanitizeInput, adminReferenceController.itFields.create);
+router.put("/admin/reference/it-fields/:id", verifyJWT, verifyAdmin, sanitizeInput, adminReferenceController.itFields.update);
+router.delete("/admin/reference/it-fields/:id", verifyJWT, verifyAdmin, adminReferenceController.itFields.delete);
+
+// Academic Degrees
+router.get("/admin/reference/academic-degrees", verifyJWT, verifyAdmin, adminReferenceController.academicDegrees.getAll);
+router.post("/admin/reference/academic-degrees", verifyJWT, verifyAdmin, sanitizeInput, adminReferenceController.academicDegrees.create);
+router.put("/admin/reference/academic-degrees/:id", verifyJWT, verifyAdmin, sanitizeInput, adminReferenceController.academicDegrees.update);
+router.delete("/admin/reference/academic-degrees/:id", verifyJWT, verifyAdmin, adminReferenceController.academicDegrees.delete);
+
+// Job Market Insights
+router.get("/admin/reference/job-market", verifyJWT, verifyAdmin, adminReferenceController.jobMarketInsights.getAll);
+router.post("/admin/reference/job-market", verifyJWT, verifyAdmin, sanitizeInput, adminReferenceController.jobMarketInsights.create);
+router.put("/admin/reference/job-market/:id", verifyJWT, verifyAdmin, sanitizeInput, adminReferenceController.jobMarketInsights.update);
+router.delete("/admin/reference/job-market/:id", verifyJWT, verifyAdmin, adminReferenceController.jobMarketInsights.delete);
+
+// IT Clubs
+router.get("/admin/reference/it-clubs", verifyJWT, verifyAdmin, adminReferenceController.itClubs.getAll);
+router.post("/admin/reference/it-clubs", verifyJWT, verifyAdmin, sanitizeInput, adminReferenceController.itClubs.create);
+router.put("/admin/reference/it-clubs/:id", verifyJWT, verifyAdmin, sanitizeInput, adminReferenceController.itClubs.update);
+router.delete("/admin/reference/it-clubs/:id", verifyJWT, verifyAdmin, adminReferenceController.itClubs.delete);
+
+// Programs
+router.get("/admin/reference/programs", verifyJWT, verifyAdmin, adminReferenceController.programs.getAll);
+router.post("/admin/reference/programs", verifyJWT, verifyAdmin, sanitizeInput, adminReferenceController.programs.create);
+router.put("/admin/reference/programs/:id", verifyJWT, verifyAdmin, sanitizeInput, adminReferenceController.programs.update);
+router.delete("/admin/reference/programs/:id", verifyJWT, verifyAdmin, adminReferenceController.programs.delete);
+
+// Tags
+router.get("/admin/reference/tags", verifyJWT, verifyAdmin, adminReferenceController.tags.getAll);
+router.post("/admin/reference/tags", verifyJWT, verifyAdmin, sanitizeInput, adminReferenceController.tags.create);
+router.put("/admin/reference/tags/:id", verifyJWT, verifyAdmin, sanitizeInput, adminReferenceController.tags.update);
+router.delete("/admin/reference/tags/:id", verifyJWT, verifyAdmin, adminReferenceController.tags.delete);
 
 module.exports = router;

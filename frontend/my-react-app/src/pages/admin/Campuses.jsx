@@ -8,10 +8,11 @@ import {
 } from "../../services/admin";
 import { toast } from "react-toastify";
 import { 
-  Plus, Edit, Trash2, MapPin, School, Mail, CheckCircle, XCircle 
+  Plus, Edit, Trash2, MapPin, School, Mail, CheckCircle, XCircle, Search 
 } from "lucide-react";
 import LoadingSpinner from "../../components/ui/LoadingSpinner";
 import AdminConfirmModal from "../../components/ui/AdminConfirmModal";
+import AdminTable from "../../components/admin_ui/AdminTable";
 
 const Campuses = () => {
   const queryClient = useQueryClient();
@@ -109,6 +110,50 @@ const Campuses = () => {
 
   const campuses = data?.data || [];
 
+  const columns = [
+    {
+      header: "Campus Info",
+      render: (row) => (
+        <div className="flex flex-col">
+          <span className="font-bold text-text-main">{row.campus_name}</span>
+          <span className="text-xs text-text-muted flex items-center gap-1 mt-1">
+            <MapPin className="w-3 h-3" /> {row.location}
+          </span>
+        </div>
+      )
+    },
+    {
+      header: "University",
+      render: (row) => (
+        <div className="flex items-center gap-2">
+          <School className="w-4 h-4 text-text-muted" />
+          {row.affiliated_university}
+        </div>
+      )
+    },
+    {
+      header: "Contact",
+      render: (row) => row.contact_email ? (
+        <a href={`mailto:${row.contact_email}`} className="text-purple-600 hover:underline">
+          {row.contact_email}
+        </a>
+      ) : "-"
+    },
+    {
+      header: "Status",
+      render: (row) => (
+        <span className={`px-2.5 py-1 rounded-full text-xs font-bold flex items-center w-fit gap-1.5 border ${
+          row.is_active 
+            ? "bg-green-500/10 text-green-500 border-green-500/20" 
+            : "bg-text-muted/10 text-text-muted border-text-muted/20"
+        }`}>
+          {row.is_active ? <CheckCircle className="w-3.5 h-3.5" /> : <XCircle className="w-3.5 h-3.5" />}
+          {row.is_active ? "Active" : "Inactive"}
+        </span>
+      )
+    }
+  ];
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center text-left">
@@ -124,80 +169,15 @@ const Campuses = () => {
         </button>
       </div>
 
-      <div className="bg-bg-card rounded-2xl border border-border-main overflow-hidden shadow-sm">
-        <table className="min-w-full divide-y divide-border-main text-left">
-          <thead className="bg-bg-active/50">
-            <tr>
-              <th className="px-6 py-4 text-xs font-bold text-text-muted uppercase">Campus Info</th>
-              <th className="px-6 py-4 text-xs font-bold text-text-muted uppercase">University</th>
-              <th className="px-6 py-4 text-xs font-bold text-text-muted uppercase">Contact</th>
-              <th className="px-6 py-4 text-xs font-bold text-text-muted uppercase">Status</th>
-              <th className="px-6 py-4 text-right text-xs font-bold text-text-muted uppercase">Actions</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-border-main">
-            {campuses.map(campus => (
-              <tr key={campus.campus_id} className="hover:bg-bg-active/30 transition-colors">
-                <td className="px-6 py-4">
-                  <div className="flex flex-col">
-                    <span className="text-sm font-bold text-text-main">{campus.campus_name}</span>
-                    <span className="text-xs text-text-muted flex items-center gap-1 mt-1">
-                      <MapPin className="w-3 h-3" /> {campus.location}
-                    </span>
-                  </div>
-                </td>
-                <td className="px-6 py-4">
-                  <div className="text-sm text-text-main flex items-center gap-2">
-                    <School className="w-4 h-4 text-text-muted" />
-                    {campus.affiliated_university}
-                  </div>
-                </td>
-                <td className="px-6 py-4 text-sm text-text-muted">
-                  {campus.contact_email ? (
-                    <a href={`mailto:${campus.contact_email}`} className="text-purple-600 hover:underline">{campus.contact_email}</a>
-                  ) : "-"}
-                </td>
-                <td className="px-6 py-4">
-                  {campus.is_active ? (
-                    <span className="px-2.5 py-1 bg-green-500/10 text-green-500 border border-green-500/20 rounded-full text-xs font-bold flex items-center w-fit gap-1.5 transition-colors">
-                      <CheckCircle className="w-3.5 h-3.5" /> Active
-                    </span>
-                  ) : (
-                    <span className="px-2.5 py-1 bg-text-muted/10 text-text-muted border border-text-muted/20 rounded-full text-xs font-bold flex items-center w-fit gap-1.5 transition-colors">
-                      <XCircle className="w-3.5 h-3.5" /> Inactive
-                    </span>
-                  )}
-                </td>
-                <td className="px-6 py-4 text-right">
-                  <div className="flex justify-end gap-2">
-                    <button
-                      onClick={() => handleOpenModal(campus)}
-                      className="p-2 text-text-muted hover:text-blue-600 hover:bg-blue-500/10 rounded-xl transition-all"
-                      title="Edit Campus"
-                    >
-                      <Edit className="w-4 h-4" />
-                    </button>
-                    <button
-                      onClick={() => confirmDelete(campus)}
-                      className="p-2 text-text-muted hover:text-red-500 hover:bg-red-500/10 rounded-xl transition-all"
-                      title="Delete Campus"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
-                  </div>
-                </td>
-              </tr>
-            ))}
-            {campuses.length === 0 && (
-              <tr>
-                <td colSpan="5" className="px-6 py-12 text-center text-text-muted">
-                  No campuses registered. Added campuses will appear here.
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
-      </div>
+      <AdminTable
+        columns={columns}
+        data={campuses}
+        isLoading={isLoading}
+        error={error}
+        onEdit={handleOpenModal}
+        onDelete={confirmDelete}
+        searchPlaceholder="Search campuses..."
+      />
 
       {isModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">

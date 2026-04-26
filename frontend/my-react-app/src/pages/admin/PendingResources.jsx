@@ -12,6 +12,7 @@ import AdminConfirmModal from "../../components/ui/AdminConfirmModal";
 
 const PendingResources = () => {
   const [page, setPage] = useState(1);
+  const [searchTerm, setSearchTerm] = useState("");
   const [modalConfig, setModalConfig] = useState({ isOpen: false });
   const { data, isLoading, error } = usePendingResources(page, 12);
   const approveMutation = useApproveResource();
@@ -69,6 +70,18 @@ const PendingResources = () => {
     });
   };
 
+  const resources = data?.resources || [];
+  const filteredResources = resources.filter(res => {
+    if (!searchTerm) return true;
+    const term = searchTerm.toLowerCase();
+    return (
+      res.title?.toLowerCase().includes(term) ||
+      res.author_name?.toLowerCase().includes(term) ||
+      res.category_name?.toLowerCase().includes(term) ||
+      res.description?.toLowerCase().includes(term)
+    );
+  });
+
   return (
     <div className="p-6 max-w-7xl mx-auto pb-20 space-y-8">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
@@ -84,9 +97,21 @@ const PendingResources = () => {
           </p>
         </div>
         
-        <div className="flex items-center gap-2 text-xs font-bold text-text-muted bg-bg-card border border-border-main px-4 py-2 rounded-xl shadow-sm">
-          <Clock className="w-4 h-4 text-purple-500" />
-          {data?.resources?.length || 0} ITEMS WAITING
+        <div className="flex flex-col sm:flex-row items-center gap-4">
+          <div className="relative w-full sm:w-64">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-text-muted" />
+            <input
+              type="text"
+              placeholder="Search in pipeline..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full pl-10 pr-4 py-2 bg-bg-card border border-border-main rounded-xl text-sm focus:border-purple-500 outline-none transition-colors shadow-sm"
+            />
+          </div>
+          <div className="flex items-center gap-2 text-xs font-bold text-text-muted bg-bg-card border border-border-main px-4 py-2 rounded-xl shadow-sm">
+            <Clock className="w-4 h-4 text-purple-500" />
+            {data?.resources?.length || 0} ITEMS WAITING
+          </div>
         </div>
       </div>
 
@@ -105,16 +130,22 @@ const PendingResources = () => {
       ) : (
         <div className="space-y-10">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {data?.resources?.map((resource) => (
-              <div key={resource.resource_id} className="group relative">
-                <ResourceCard
-                  resource={resource}
-                  isModeratorView={true}
-                  onApprove={handleApprove}
-                  onReject={handleReject}
-                />
+            {filteredResources.length === 0 ? (
+              <div className="col-span-full py-12 text-center text-text-muted italic">
+                No resources match your search on this page.
               </div>
-            ))}
+            ) : (
+              filteredResources.map((resource) => (
+                <div key={resource.resource_id} className="group relative">
+                  <ResourceCard
+                    resource={resource}
+                    isModeratorView={true}
+                    onApprove={handleApprove}
+                    onReject={handleReject}
+                  />
+                </div>
+              ))
+            )}
           </div>
 
           {data?.totalPages > 1 && (

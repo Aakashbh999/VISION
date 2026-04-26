@@ -20,8 +20,10 @@ exports.getMe = catchAsync(async (req, res) => {
         p.is_suspended,
         p.reputation_points,
         p.is_moderator,
+        p.profile_image,
         ${buildPresenceSelect("p")},
         p.academic_degree_id,
+        p.rejection_reason,
         pr.program_name
        FROM auth.users a
        LEFT JOIN portal.users p 

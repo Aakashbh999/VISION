@@ -82,8 +82,8 @@ const OnboardingModal = ({ isOpen, onClose, club }) => {
               exit={{ opacity: 0, x: -20 }}
               className="space-y-6"
             >
-              <div className="p-4 rounded-2xl bg-purple-50 border border-purple-100 flex gap-4">
-                <div className="w-10 h-10 rounded-xl bg-white flex items-center justify-center text-purple-600 font-black shrink-0 shadow-sm">
+              <div className="p-4 rounded-2xl bg-purple-50 dark:bg-purple-900/20 border border-purple-100 dark:border-purple-800/50 flex gap-4">
+                <div className="w-10 h-10 rounded-xl bg-white dark:bg-bg-active flex items-center justify-center text-purple-600 dark:text-purple-400 font-black shrink-0 shadow-sm">
                   1
                 </div>
                 <div>
@@ -111,8 +111,8 @@ const OnboardingModal = ({ isOpen, onClose, club }) => {
               exit={{ opacity: 0, x: -20 }}
               className="space-y-6"
             >
-              <div className="p-4 rounded-2xl bg-amber-50 border border-amber-100 flex gap-4">
-                <div className="w-10 h-10 rounded-xl bg-white flex items-center justify-center text-amber-600 font-black shrink-0 shadow-sm">
+              <div className="p-4 rounded-2xl bg-amber-50 dark:bg-amber-900/20 border border-amber-100 dark:border-amber-800/50 flex gap-4">
+                <div className="w-10 h-10 rounded-xl bg-white dark:bg-bg-active flex items-center justify-center text-amber-600 dark:text-amber-400 font-black shrink-0 shadow-sm">
                   2
                 </div>
                 <div>
@@ -149,7 +149,7 @@ const OnboardingModal = ({ isOpen, onClose, club }) => {
               exit={{ opacity: 0, x: -20 }}
               className="space-y-6 text-center"
             >
-              <div className="w-20 h-20 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-4">
+              <div className="w-20 h-20 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 rounded-full flex items-center justify-center mx-auto mb-4">
                 <Check className="w-10 h-10" />
               </div>
               <h3 className="text-lg sm:text-xl font-black text-[var(--text-main)]">
@@ -212,49 +212,49 @@ const ClubDetailPage = () => {
       key: "email",
       icon: Mail,
       label: "Email",
-      color: "text-purple-600 bg-purple-50 hover:bg-purple-100",
+      color: "text-purple-600 dark:text-purple-400 bg-purple-50 dark:bg-purple-900/20 hover:bg-purple-100 dark:hover:bg-purple-900/30",
       url: parsedContact?.email ? `mailto:${parsedContact.email}` : null,
     },
     {
       key: "website",
       icon: Globe,
       label: "Website",
-      color: "text-slate-700 bg-slate-100 hover:bg-slate-200",
+      color: "text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700",
       url: club.website_url || parsedContact?.website,
     },
     {
       key: "facebook",
       icon: Facebook,
       label: "Facebook",
-      color: "text-blue-600 bg-blue-50 hover:bg-blue-100",
+      color: "text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20 hover:bg-blue-100 dark:hover:bg-blue-900/30",
       url: club.facebook_url || parsedContact?.facebook,
     },
     {
       key: "linkedin",
       icon: Linkedin,
       label: "LinkedIn",
-      color: "text-blue-700 bg-blue-50 hover:bg-blue-100",
+      color: "text-blue-700 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20 hover:bg-blue-100 dark:hover:bg-blue-900/30",
       url: club.linkedin_url || parsedContact?.linkedin,
     },
     {
       key: "discord",
       icon: MessageCircle,
       label: "Discord",
-      color: "text-indigo-600 bg-indigo-50 hover:bg-indigo-100",
+      color: "text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-900/20 hover:bg-indigo-100 dark:hover:bg-indigo-900/30",
       url: club.discord_url || parsedContact?.discord,
     },
     {
       key: "github",
       icon: Github,
       label: "GitHub",
-      color: "text-slate-800 bg-slate-100 hover:bg-slate-200",
+      color: "text-slate-800 dark:text-slate-200 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700",
       url: club.github_url || parsedContact?.github,
     },
     {
       key: "reddit",
       icon: RedditIcon,
       label: "Reddit",
-      color: "text-orange-600 bg-orange-50 hover:bg-orange-100",
+      color: "text-orange-600 dark:text-orange-400 bg-orange-50 dark:bg-orange-900/20 hover:bg-orange-100 dark:hover:bg-orange-900/30",
       url: club.reddit_url || parsedContact?.reddit,
     },
   ].filter((link) => link.url);
@@ -309,7 +309,7 @@ const ClubDetailPage = () => {
           <div className="absolute bottom-6 left-6 right-6 z-20 flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
             <div className="flex flex-col sm:flex-row sm:items-end gap-3 sm:gap-5">
               <div className="w-20 h-20 sm:w-32 sm:h-32 rounded-[1.2rem] sm:rounded-[1.5rem] bg-[var(--bg-card)] p-1.5 shadow-2xl relative z-10 sm:-mb-2">
-                <div className="w-full h-full rounded-[1rem] sm:rounded-[1.2rem] bg-purple-50 flex items-center justify-center text-purple-600 font-black text-2xl sm:text-3xl lg:text-4xl overflow-hidden border border-purple-100">
+                <div className="w-full h-full rounded-[1rem] sm:rounded-[1.2rem] bg-purple-50 dark:bg-purple-900/20 flex items-center justify-center text-purple-600 dark:text-purple-400 font-black text-2xl sm:text-3xl lg:text-4xl overflow-hidden border border-purple-100 dark:border-purple-800/50">
                   {club.logo_url ? (
                     <img
                       src={club.logo_url}
@@ -374,7 +374,7 @@ const ClubDetailPage = () => {
             </h3>
             <div className="space-y-1">
               <div className="flex items-start gap-4 p-3 rounded-2xl hover:bg-[var(--bg-active)] transition-colors">
-                <div className="w-10 h-10 rounded-xl bg-purple-50 flex items-center justify-center text-purple-600 shrink-0">
+                <div className="w-10 h-10 rounded-xl bg-purple-50 dark:bg-purple-900/20 flex items-center justify-center text-purple-600 dark:text-purple-400 shrink-0">
                   <MapPin className="w-5 h-5" />
                 </div>
                 <div className="min-w-0">
@@ -391,7 +391,7 @@ const ClubDetailPage = () => {
               </div>
 
               <div className="flex items-start gap-4 p-3 rounded-2xl hover:bg-[var(--bg-active)] transition-colors">
-                <div className="w-10 h-10 rounded-xl bg-emerald-50 flex items-center justify-center text-emerald-600 shrink-0">
+                <div className="w-10 h-10 rounded-xl bg-emerald-50 dark:bg-emerald-900/20 flex items-center justify-center text-emerald-600 dark:text-emerald-400 shrink-0">
                   <Tag className="w-5 h-5" />
                 </div>
                 <div>
@@ -406,7 +406,7 @@ const ClubDetailPage = () => {
 
               {club.founded_year && (
                 <div className="flex items-start gap-4 p-3 rounded-2xl hover:bg-[var(--bg-active)] transition-colors">
-                  <div className="w-10 h-10 rounded-xl bg-rose-50 flex items-center justify-center text-rose-600 shrink-0">
+                  <div className="w-10 h-10 rounded-xl bg-rose-50 dark:bg-rose-900/20 flex items-center justify-center text-rose-600 dark:text-rose-400 shrink-0">
                     <Calendar className="w-5 h-5" />
                   </div>
                   <div>

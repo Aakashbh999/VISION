@@ -14,6 +14,7 @@ import {
   Command,
 } from "lucide-react";
 import SearchModal, { useSearchModal } from "../ui/SearchModal";
+import Avatar from "../ui/Avatar";
 import { useAuth } from "../../context/AuthContext";
 import { useSidebar } from "../../hooks/useSidebar";
 import { useUnreadCount } from "../../hooks/useUnreadCount";
@@ -41,7 +42,7 @@ const routeLabels = {
   "my-posts": "My Posts",
 };
 
-const Breadcrumb = () => {
+const Breadcrumb = ({ dark }) => {
   const location = useLocation();
   const pathSegments = location.pathname.split("/").filter(Boolean);
 
@@ -60,16 +61,16 @@ const Breadcrumb = () => {
       {breadcrumbs.map((crumb, index) => (
         <div key={crumb.path} className="flex items-center">
           {index > 0 && (
-            <ChevronRight className="w-4 h-4 mx-2 text-[var(--text-muted)]" />
+            <ChevronRight className={`w-4 h-4 mx-2 ${dark ? "text-slate-500" : "text-[var(--text-muted)]"}`} />
           )}
           {crumb.isLast ? (
-            <span className="text-[var(--text-main)] font-medium">
+            <span className={`${dark ? "text-white" : "text-[var(--text-main)]"} font-medium`}>
               {crumb.label}
             </span>
           ) : (
             <Link
               to={crumb.path}
-              className="text-[var(--text-muted)] hover:text-purple-600 transition-colors"
+              className={`${dark ? "text-slate-400 hover:text-purple-300" : "text-[var(--text-muted)] hover:text-purple-600"} transition-colors`}
             >
               {crumb.label}
             </Link>
@@ -96,6 +97,7 @@ const TopNavBar = () => {
 
   const profileRef = useRef(null);
   const exploreRef = useRef(null);
+  const notificationsButtonRef = useRef(null);
 
   useClickOutside(profileRef, () => {
     setProfileMenuOpen(false);
@@ -130,16 +132,16 @@ const TopNavBar = () => {
   };
 
   return (
-    <header className="fixed top-0 left-0 right-0 h-16 bg-[var(--bg-main)]/95 backdrop-blur-sm border-b border-[var(--border-main)] z-40 flex items-center justify-between px-4 lg:px-6 transition-colors duration-300">
+    <header className="fixed top-0 left-0 right-0 h-16 bg-[var(--bg-main)]/95 backdrop-blur-md border-b border-[var(--border-main)] z-40 flex items-center justify-between px-4 transition-all duration-300">
       {/* Left section: Menu toggle + Logo + Breadcrumb */}
       <div className="flex items-center gap-3">
         {/* Mobile menu toggle */}
         <button
           onClick={toggle}
-          className="p-2 rounded-lg hover:bg-[var(--bg-active)] transition-colors"
+          className="p-2 rounded-lg bg-[#0f0a1f] text-white shadow-lg shadow-purple-900/20 hover:bg-purple-900 transition-all duration-300"
           aria-label="Toggle sidebar"
         >
-          <Menu className="w-5 h-5 text-[var(--text-main)]" />
+          <Menu className="w-5 h-5" />
         </button>
 
         {/* Logo – height manually controlled by you */}
@@ -158,7 +160,7 @@ const TopNavBar = () => {
         {/* Universal Search Button */}
         <button
           onClick={searchModal.open}
-          className="flex items-center gap-2 px-3 py-1.5 text-[var(--text-muted)] hover:text-[var(--text-main)] hover:bg-[var(--bg-active)] rounded-lg border border-[var(--border-main)] transition-colors"
+          className="flex items-center gap-2 px-3 py-1.5 text-[var(--text-muted)] hover:text-[var(--text-main)] hover:bg-purple-600/10 dark:hover:bg-purple-500/20 rounded-lg border border-[var(--border-main)] transition-colors"
           aria-label="Search (Ctrl+K)"
         >
           <Search className="w-4 h-4" />
@@ -172,7 +174,7 @@ const TopNavBar = () => {
         <div className="relative hidden lg:block" ref={exploreRef}>
           <button
             onClick={() => setExploreDropdownOpen(!exploreDropdownOpen)}
-            className="flex items-center gap-1 px-3 py-2 text-[var(--text-main)] hover:text-purple-600 hover:bg-[var(--bg-active)] rounded-lg transition-colors font-medium text-sm"
+            className="flex items-center gap-1 px-3 py-2 text-[var(--text-main)] hover:text-purple-600 hover:bg-purple-600/5 rounded-lg transition-colors font-medium text-sm"
           >
             Explore
             <ChevronDown className="w-4 h-4" />
@@ -203,9 +205,10 @@ const TopNavBar = () => {
         {/* Notifications */}
         <div className="relative">
           <button
+            ref={notificationsButtonRef}
             type="button"
             onClick={handleNotificationsToggle}
-            className="relative p-2 rounded-lg hover:bg-[var(--bg-active)] transition-colors"
+            className="relative p-2 rounded-lg hover:bg-purple-600/10 dark:hover:bg-purple-500/20 transition-colors"
             aria-label="Open notifications"
             aria-expanded={notificationsOpen}
           >
@@ -219,6 +222,7 @@ const TopNavBar = () => {
           <NotificationsPopup
             isOpen={notificationsOpen}
             onClose={() => setNotificationsOpen(false)}
+            toggleRef={notificationsButtonRef}
           />
         </div>
 
@@ -226,12 +230,15 @@ const TopNavBar = () => {
         <div className="relative" ref={profileRef}>
           <button
             onClick={() => setProfileMenuOpen(!profileMenuOpen)}
-            className="flex items-center gap-2 p-1.5 rounded-lg hover:bg-[var(--bg-active)] transition-colors"
+            className="flex items-center gap-2 p-1.5 rounded-lg hover:bg-purple-600/10 dark:hover:bg-purple-500/20 transition-colors"
             aria-label="User menu"
           >
-            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-purple-500 to-purple-700 flex items-center justify-center text-white shadow-sm">
-              <User className="w-4 h-4" />
-            </div>
+            <Avatar
+              src={user?.profile_image}
+              name={user?.full_name || "Student"}
+              size="sm"
+              className="shadow-sm border-purple-200"
+            />
           </button>
 
           {profileMenuOpen && (

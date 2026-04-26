@@ -1,5 +1,6 @@
 import { useState, useRef } from "react";
 import { Menu, ChevronDown, Bell, User, LogOut } from "lucide-react";
+import Avatar from "../ui/Avatar";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import { useUnreadCount } from "../../hooks/useUnreadCount";
@@ -22,6 +23,7 @@ const Navbar = ({ onMobileMenuToggle, variant, user }) => {
 
   const profileRef = useRef(null);
   const resourcesRef = useRef(null);
+  const notificationsButtonRef = useRef(null);
 
   useClickOutside(profileRef, () => {
     setProfileMenuOpen(false);
@@ -69,11 +71,7 @@ const Navbar = ({ onMobileMenuToggle, variant, user }) => {
   const handleNotificationsToggle = () => {
     setNotificationsOpen((open) => {
       const nextOpen = !open;
-      if (
-        nextOpen &&
-        unreadCount > 0 &&
-        !markAllReadMut.isPending
-      ) {
+      if (nextOpen && unreadCount > 0 && !markAllReadMut.isPending) {
         markAllReadMut.mutate();
       }
       return nextOpen;
@@ -81,44 +79,44 @@ const Navbar = ({ onMobileMenuToggle, variant, user }) => {
   };
 
   return (
-    <header className="fixed top-0 left-0 right-0 h-16 bg-[var(--bg-main)]/90 backdrop-blur-sm border-b border-[var(--border-main)] z-50 flex items-center justify-between px-4 sm:px-6 lg:px-8 shadow-sm transition-colors duration-300">
+    <header className="fixed top-0 left-0 right-0 h-16 bg-(--bg-main)/90 backdrop-blur-sm border-b border-(--border-main) z-50 flex items-center justify-between px-4 shadow-sm transition-colors duration-300">
       {/* Left: logo + mobile menu button */}
       <div className="flex items-center gap-2">
-        <button
-          onClick={onMobileMenuToggle}
-          className="lg:hidden p-2 rounded-lg hover:bg-[var(--bg-active)] transition-colors duration-300 mr-2"
-          aria-label="Toggle menu"
-        >
-          <Menu className="w-6 h-6 text-[var(--text-main)] pointer-events-none" />
-        </button>
-        <Link to={homeLink} className="relative">
-          <Logo className="h-10 hover:opacity-80 transition-opacity" />
-        </Link>
-      </div>
+  <button
+    onClick={onMobileMenuToggle}
+    className={`${variant === "admin" ? "flex" : "lg:hidden"} p-2 rounded-lg text-white shadow-lg shadow-purple-900/20 transition-all duration-300 mr-2`}
+    style={{ backgroundColor: '#0f0a1f' }}
+    aria-label="Toggle menu"
+  >
+    <Menu className="w-5 h-5 pointer-events-none" />
+  </button>
+  <Link to={homeLink} className="relative">
+    <Logo className="h-10 hover:opacity-80 transition-opacity" />
+  </Link>
+</div>
 
       {/* Right side: all items together */}
       <div className="flex items-center gap-4">
         {/* Theme Toggle – always visible */}
         <ThemeToggle />
 
-        {variant === "portal" && user ? (
-          // Portal variant: explore dropdown, notification bell, user menu
+        {authUser ? (
           <>
             {/* Explore dropdown – hidden on mobile */}
             <div className="relative hidden sm:block" ref={resourcesRef}>
               <button
                 onClick={() => setResourcesDropdownOpen(!resourcesDropdownOpen)}
-                className="flex items-center gap-1 text-[var(--text-main)] hover:text-purple-600 transition-colors font-medium"
+                className="flex items-center gap-1 text-(--text-main) hover:text-purple-600 transition-colors font-medium"
               >
                 Explore <ChevronDown className="w-4 h-4 pointer-events-none" />
               </button>
               {resourcesDropdownOpen && (
-                <div className="absolute right-0 mt-2 w-48 bg-[var(--bg-card)] rounded-xl shadow-lg border border-[var(--border-main)] py-2 z-50">
+                <div className="absolute right-0 mt-2 w-48 bg-(--bg-card) rounded-xl shadow-lg border border-(--border-main) py-2 z-50">
                   {publicLinks.map((link) => (
                     <Link
                       key={link.href}
                       to={link.href}
-                      className="block px-4 py-2 text-sm text-[var(--text-main)] hover:bg-[var(--bg-active)]"
+                      className="block px-4 py-2 text-sm text-(--text-main) hover:bg-(--bg-active)"
                       onClick={() => setResourcesDropdownOpen(false)}
                     >
                       {link.label}
@@ -131,13 +129,14 @@ const Navbar = ({ onMobileMenuToggle, variant, user }) => {
             {/* Notification bell */}
             <div className="relative">
               <button
+                ref={notificationsButtonRef}
                 type="button"
                 onClick={handleNotificationsToggle}
-                className="relative p-2 rounded-full hover:bg-[var(--bg-active)] transition-colors"
+                className="relative p-2 rounded-full hover:bg-(--bg-active) transition-colors"
                 aria-label="Open notifications"
                 aria-expanded={notificationsOpen}
               >
-                <Bell className="w-5 h-5 text-[var(--text-main)] pointer-events-none" />
+                <Bell className="w-5 h-5 text-(--text-main) pointer-events-none" />
                 {unreadCount > 0 && (
                   <span className="absolute top-1 right-1 w-4 h-4 bg-red-500 text-white text-xs flex items-center justify-center rounded-full">
                     {unreadCount > 9 ? "9+" : unreadCount}
@@ -147,6 +146,7 @@ const Navbar = ({ onMobileMenuToggle, variant, user }) => {
               <NotificationsPopup
                 isOpen={notificationsOpen}
                 onClose={() => setNotificationsOpen(false)}
+                toggleRef={notificationsButtonRef}
               />
             </div>
 
@@ -154,23 +154,26 @@ const Navbar = ({ onMobileMenuToggle, variant, user }) => {
             <div className="relative" ref={profileRef}>
               <button
                 onClick={() => setProfileMenuOpen(!profileMenuOpen)}
-                className="flex items-center gap-2 p-2 rounded-full hover:bg-[var(--bg-active)] transition-colors"
+                className="flex items-center gap-2 p-2 rounded-full hover:bg-(--bg-active) transition-colors"
                 aria-label="User menu"
               >
-                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-purple-500 to-purple-700 flex items-center justify-center text-white">
-                  <User className="w-4 h-4 pointer-events-none" />
-                </div>
+                <Avatar
+                  src={authUser?.profile_image}
+                  name={authUser?.full_name || "Student"}
+                  size="sm"
+                  className="shadow"
+                />
               </button>
               {profileMenuOpen && (
-                <div className="absolute right-0 mt-2 w-56 bg-[var(--bg-card)] rounded-xl shadow-lg border border-[var(--border-main)] py-2 z-50">
+                <div className="absolute right-0 mt-2 w-56 bg-(--bg-card) rounded-xl shadow-lg border border-(--border-main) py-2 z-50">
                   {!showLogoutConfirm ? (
                     <>
-                      <div className="px-4 py-3 border-b border-[var(--border-main)] flex items-center justify-between">
+                      <div className="px-4 py-3 border-b border-(--border-main) flex items-center justify-between">
                         <div className="flex flex-col">
-                          <span className="text-sm font-semibold text-[var(--text-main)]">
+                          <span className="text-sm font-semibold text-(--text-main)">
                             {authUser?.full_name || "Student"}
                           </span>
-                          <span className="text-xs text-[var(--text-muted)]">
+                          <span className="text-xs text-(--text-muted)">
                             {authUser?.reputation_points || 0} Rep Points
                           </span>
                         </div>
@@ -182,21 +185,21 @@ const Navbar = ({ onMobileMenuToggle, variant, user }) => {
                       </div>
                       <Link
                         to="/profile"
-                        className="block px-4 py-2 text-sm text-[var(--text-main)] hover:bg-[var(--bg-active)]"
+                        className="block px-4 py-2 text-sm text-(--text-main) hover:bg-(--bg-active)"
                         onClick={() => setProfileMenuOpen(false)}
                       >
                         Profile
                       </Link>
                       <button
                         onClick={() => setShowLogoutConfirm(true)}
-                        className="block w-full text-left px-4 py-2 text-sm text-[var(--text-main)] hover:bg-[var(--bg-active)]"
+                        className="block w-full text-left px-4 py-2 text-sm text-(--text-main) hover:bg-(--bg-active)"
                       >
                         Logout
                       </button>
                     </>
                   ) : (
                     <>
-                      <div className="px-4 py-3 text-sm text-[var(--text-main)] border-b border-[var(--border-main)]">
+                      <div className="px-4 py-3 text-sm text-(--text-main) border-b border-(--border-main)">
                         Are you sure you want to logout?
                       </div>
                       <div className="flex items-center justify-between p-2 gap-2">
@@ -205,7 +208,7 @@ const Navbar = ({ onMobileMenuToggle, variant, user }) => {
                             setShowLogoutConfirm(false);
                             setProfileMenuOpen(false);
                           }}
-                          className="flex-1 px-3 py-1.5 text-sm border border-[var(--border-main)] rounded-lg hover:bg-[var(--bg-active)] transition-colors"
+                          className="flex-1 px-3 py-1.5 text-sm border border-(--border-main) rounded-lg hover:bg-(--bg-active) transition-colors"
                         >
                           Cancel
                         </button>
@@ -241,7 +244,7 @@ const Navbar = ({ onMobileMenuToggle, variant, user }) => {
                 )}
                 <button
                   onClick={handleLogoutWithConfirm}
-                  className="px-4 py-2 rounded-lg border border-[var(--border-main)] text-[var(--text-main)] hover:bg-[var(--bg-active)] transition-colors"
+                  className="px-4 py-2 rounded-lg border border-(--border-main) text-(--text-main) hover:bg-(--bg-active) transition-colors"
                 >
                   Sign out
                 </button>
@@ -250,7 +253,7 @@ const Navbar = ({ onMobileMenuToggle, variant, user }) => {
               <>
                 <Link
                   to="/login"
-                  className="text-[var(--text-main)] hover:text-purple-600 font-medium transition-colors duration-200 px-3 py-1.5 rounded-lg hover:bg-[var(--bg-active)]"
+                  className="text-(--text-main) hover:text-purple-600 font-medium transition-colors duration-200 px-3 py-1.5 rounded-lg hover:bg-(--bg-active)"
                 >
                   Login
                 </Link>

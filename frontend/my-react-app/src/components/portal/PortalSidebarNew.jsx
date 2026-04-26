@@ -80,7 +80,7 @@ const NavItem = ({ item, isCollapsed, depth = 0 }) => {
     flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors duration-200 group relative
     ${
       isActive
-        ? "bg-[var(--sidebar-active-bg)] text-purple-600 dark:text-purple-400 font-medium border-l-[3px] border-purple-500"
+        ? "text-purple-600 dark:text-purple-400 font-semibold border-l-[3px] border-purple-500"
         : "text-[var(--text-muted)] hover:bg-[var(--sidebar-hover-bg)] hover:text-purple-600 dark:hover:text-purple-400 border-l-[3px] border-transparent"
     }
     ${depth > 0 ? "ml-6 text-sm" : ""}
