@@ -13,6 +13,7 @@ import {
   UserX,
   Trash2,
   ShieldAlert,
+  Search
 } from "lucide-react";
 import { showToast } from "../../utils/toast";
 import AdminConfirmModal from "../../components/ui/AdminConfirmModal";
@@ -21,6 +22,7 @@ import { useAuth } from "../../context/AuthContext";
 const StudentsList = () => {
   const [status, setStatus] = useState("approved");
   const [page, setPage] = useState(1);
+  const [searchTerm, setSearchTerm] = useState("");
   const [modalConfig, setModalConfig] = useState({ isOpen: false });
   const queryClient = useQueryClient();
   const { user } = useAuth();
@@ -110,6 +112,17 @@ const StudentsList = () => {
   const students = data?.data || [];
   const pagination = data?.pagination || { totalPages: 1 };
 
+  const filteredStudents = students.filter(s => {
+    if (!searchTerm) return true;
+    const term = searchTerm.toLowerCase();
+    return (
+      s.full_name?.toLowerCase().includes(term) ||
+      s.email?.toLowerCase().includes(term) ||
+      s.tu_registration_no?.toLowerCase().includes(term) ||
+      s.program_name?.toLowerCase().includes(term)
+    );
+  });
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center text-left">
@@ -119,23 +132,36 @@ const StudentsList = () => {
         </div>
       </div>
 
-      <div className="flex overflow-x-auto pb-2 gap-2">
-        {["approved", "pending_review", "rejected", "suspended"].map((s) => (
-          <button
-            key={s}
-            onClick={() => {
-              setStatus(s);
-              setPage(1);
-            }}
-            className={`px-5 py-2 rounded-xl text-sm font-semibold whitespace-nowrap transition-all ${
-              status === s
-                ? "bg-purple-600 text-white shadow-lg shadow-purple-500/20"
-                : "bg-bg-card border border-border-main text-text-muted hover:border-purple-500 hover:text-purple-600"
-            }`}
-          >
-            {s.replace("_", " ")}
-          </button>
-        ))}
+      <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
+        <div className="flex overflow-x-auto pb-2 gap-2 flex-1">
+          {["approved", "pending_review", "rejected", "suspended"].map((s) => (
+            <button
+              key={s}
+              onClick={() => {
+                setStatus(s);
+                setPage(1);
+              }}
+              className={`px-5 py-2 rounded-xl text-sm font-semibold whitespace-nowrap transition-all ${
+                status === s
+                  ? "bg-purple-600 text-white shadow-lg shadow-purple-500/20"
+                  : "bg-bg-card border border-border-main text-text-muted hover:border-purple-500 hover:text-purple-600"
+              }`}
+            >
+              {s.replace("_", " ")}
+            </button>
+          ))}
+        </div>
+
+        <div className="relative w-full sm:w-64">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-text-muted" />
+          <input
+            type="text"
+            placeholder="Search this page..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full pl-10 pr-4 py-2 bg-bg-card border border-border-main rounded-xl text-sm focus:border-purple-500 outline-none transition-colors shadow-sm"
+          />
+        </div>
       </div>
 
       <div className="bg-bg-card rounded-2xl border border-border-main overflow-hidden shadow-sm">
@@ -154,17 +180,16 @@ const StudentsList = () => {
             </tr>
           </thead>
           <tbody className="bg-bg-card divide-y divide-border-main">
-            {students.length === 0 ? (
+            {filteredStudents.length === 0 ? (
               <tr>
                 <td
                   colSpan="3"
                   className="px-6 py-12 text-center text-text-muted font-medium"
                 >
-                  No students found in this category.
+                  {searchTerm ? "No students match your search on this page." : "No students found in this category."}
                 </td>
               </tr>
-            ) : (
-              students.map((student) => (
+            ) : filteredStudents.map((student) => (
                 <tr
                   key={student.user_id}
                   className="hover:bg-bg-active/30 transition-colors"
@@ -257,8 +282,7 @@ const StudentsList = () => {
                     )}
                   </td>
                 </tr>
-              ))
-            )}
+              ))}
           </tbody>
         </table>
       </div>

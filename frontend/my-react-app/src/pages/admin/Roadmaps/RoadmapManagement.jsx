@@ -1,11 +1,12 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
-import { FileText, Plus, Edit, Trash2, Eye, EyeOff } from "lucide-react";
+import { FileText, Plus, Edit, Trash2, Eye, EyeOff, Search } from "lucide-react";
 import { toast } from "react-toastify";
 import { getAdminRoadmaps, deleteRoadmap } from "../../../services/adminRoadmap";
 import LoadingSpinner from "../../../components/ui/LoadingSpinner";
 import RoadmapFormModal from "./Components/RoadmapFormModal";
+import AdminTable from "../../../components/admin_ui/AdminTable";
 
 const RoadmapManagement = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -45,6 +46,52 @@ const RoadmapManagement = () => {
     }
   };
 
+  const columns = [
+    {
+      header: "Title",
+      render: (row) => (
+        <div>
+          <p className="font-bold text-[var(--text-main)]">{row.title}</p>
+          <p className="text-xs text-[var(--text-muted)] mt-0.5">{row.slug}</p>
+        </div>
+      )
+    },
+    {
+      header: "Difficulty",
+      render: (row) => (
+        <span className="capitalize">{row.difficulty_level || "N/A"}</span>
+      )
+    },
+    {
+      header: "Status",
+      render: (row) => (
+        <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold border ${
+          row.is_active 
+            ? "bg-green-50 text-green-700 border-green-200 dark:bg-green-950/30 dark:text-green-400 dark:border-green-800"
+            : "bg-gray-50 text-gray-600 border-gray-200 dark:bg-gray-800/50 dark:text-gray-400 dark:border-gray-700"
+        }`}>
+          {row.is_active ? <Eye className="w-3.5 h-3.5" /> : <EyeOff className="w-3.5 h-3.5" />}
+          {row.is_active ? "Active" : "Hidden"}
+        </span>
+      )
+    },
+    {
+      header: "Steps",
+      accessor: "step_count"
+    },
+    {
+      header: "Builder",
+      render: (row) => (
+        <Link
+          to={`/admin/roadmaps/${row.roadmap_id}/builder`}
+          className="px-3 py-1.5 bg-blue-50 text-blue-600 border border-blue-200 hover:bg-blue-100 dark:bg-blue-950/30 dark:border-blue-900 dark:text-blue-400 rounded-lg text-sm font-bold transition-colors"
+        >
+          Open Builder
+        </Link>
+      )
+    }
+  ];
+
   if (isLoading) return <LoadingSpinner />;
 
   return (
@@ -67,81 +114,14 @@ const RoadmapManagement = () => {
         </button>
       </div>
 
-      <div className="bg-[var(--bg-card)] border border-[var(--border-main)] rounded-2xl overflow-hidden shadow-sm">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left">
-            <thead>
-              <tr className="border-b border-[var(--border-main)] bg-[var(--bg-active)]/50">
-                <th className="p-4 font-bold text-[var(--text-muted)] text-sm tracking-wider uppercase">Title</th>
-                <th className="p-4 font-bold text-[var(--text-muted)] text-sm tracking-wider uppercase">Difficulty</th>
-                <th className="p-4 font-bold text-[var(--text-muted)] text-sm tracking-wider uppercase text-center">Status</th>
-                <th className="p-4 font-bold text-[var(--text-muted)] text-sm tracking-wider uppercase text-center">Steps</th>
-                <th className="p-4 font-bold text-[var(--text-muted)] text-sm tracking-wider uppercase text-right">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-[var(--border-main)]">
-              {roadmaps.length === 0 ? (
-                <tr>
-                  <td colSpan="5" className="p-8 text-center text-[var(--text-muted)]">
-                    <FileText className="w-12 h-12 mx-auto mb-3 opacity-20" />
-                    No roadmaps found. Create your first one!
-                  </td>
-                </tr>
-              ) : (
-                roadmaps.map((r) => (
-                  <tr key={r.roadmap_id} className="hover:bg-[var(--bg-active)]/30 transition-colors">
-                    <td className="p-4">
-                      <p className="font-bold text-[var(--text-main)]">{r.title}</p>
-                      <p className="text-xs text-[var(--text-muted)] mt-0.5">{r.slug}</p>
-                    </td>
-                    <td className="p-4 text-sm text-[var(--text-muted)] capitalize">
-                      {r.difficulty_level || "N/A"}
-                    </td>
-                    <td className="p-4 text-center">
-                      <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold border ${
-                        r.is_active 
-                          ? "bg-green-50 text-green-700 border-green-200 dark:bg-green-950/30 dark:text-green-400 dark:border-green-800"
-                          : "bg-gray-50 text-gray-600 border-gray-200 dark:bg-gray-800/50 dark:text-gray-400 dark:border-gray-700"
-                      }`}>
-                        {r.is_active ? <Eye className="w-3.5 h-3.5" /> : <EyeOff className="w-3.5 h-3.5" />}
-                        {r.is_active ? "Active" : "Hidden"}
-                      </span>
-                    </td>
-                    <td className="p-4 text-center font-semibold text-[var(--text-main)]">
-                      {r.step_count}
-                    </td>
-                    <td className="p-4">
-                      <div className="flex items-center justify-end gap-2">
-                        <Link
-                          to={`/admin/roadmaps/${r.roadmap_id}/builder`}
-                          className="px-3 py-1.5 bg-blue-50 text-blue-600 border border-blue-200 hover:bg-blue-100 dark:bg-blue-950/30 dark:border-blue-900 dark:text-blue-400 rounded-lg text-sm font-bold transition-colors"
-                        >
-                          Builder
-                        </Link>
-                        <button
-                          onClick={() => handleEdit(r)}
-                          className="p-1.5 text-[var(--text-muted)] hover:text-purple-600 rounded-md hover:bg-purple-50 dark:hover:bg-purple-900/30 transition-colors"
-                          title="Edit Roadmap Details"
-                        >
-                          <Edit className="w-4 h-4" />
-                        </button>
-                        <button
-                          onClick={() => handleDelete(r.roadmap_id)}
-                          className="p-1.5 text-[var(--text-muted)] hover:text-red-600 rounded-md hover:bg-red-50 dark:hover:bg-red-900/30 transition-colors"
-                          disabled={deleteMut.isPending}
-                          title="Delete Roadmap"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
-      </div>
+      <AdminTable
+        columns={columns}
+        data={roadmaps}
+        isLoading={isLoading}
+        onEdit={handleEdit}
+        onDelete={(r) => handleDelete(r.roadmap_id)}
+        searchPlaceholder="Search roadmaps..."
+      />
 
       {isModalOpen && (
         <RoadmapFormModal

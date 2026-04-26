@@ -19,6 +19,7 @@ import { motion } from "framer-motion";
 
 const AdminLogs = () => {
   const [page, setPage] = useState(1);
+  const [searchTerm, setSearchTerm] = useState("");
   const limit = 20;
 
   const { data, isLoading, error } = useQuery({
@@ -31,6 +32,18 @@ const AdminLogs = () => {
 
   const logs = data?.data || [];
   const pagination = data?.pagination || { totalPages: 1 };
+
+  const filteredLogs = logs.filter(log => {
+    if (!searchTerm) return true;
+    const term = searchTerm.toLowerCase();
+    return (
+      log.admin_name?.toLowerCase().includes(term) ||
+      log.action_type?.toLowerCase().includes(term) ||
+      log.target_type?.toLowerCase().includes(term) ||
+      String(log.target_id).toLowerCase().includes(term) ||
+      String(log.log_id).toLowerCase().includes(term)
+    );
+  });
 
   const getActionIcon = (action) => {
     switch (action) {
@@ -69,9 +82,21 @@ const AdminLogs = () => {
           </p>
         </div>
         
-        <div className="px-5 py-2.5 bg-bg-card border border-border-main rounded-2xl shadow-sm text-xs font-bold text-text-muted uppercase tracking-widest flex items-center gap-2">
-            <ShieldCheck className="w-4 h-4 text-emerald-500" />
-            Immutable Integrity Active
+        <div className="flex flex-col sm:flex-row items-center gap-4">
+          <div className="relative w-full sm:w-64">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-text-muted" />
+            <input
+              type="text"
+              placeholder="Filter these logs..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full pl-10 pr-4 py-2 bg-bg-card border border-border-main rounded-xl text-sm focus:border-purple-500 outline-none transition-colors shadow-sm"
+            />
+          </div>
+          <div className="px-5 py-2.5 bg-bg-card border border-border-main rounded-2xl shadow-sm text-xs font-bold text-text-muted uppercase tracking-widest flex items-center gap-2">
+              <ShieldCheck className="w-4 h-4 text-emerald-500" />
+              Immutable Integrity Active
+          </div>
         </div>
       </div>
 
@@ -89,14 +114,13 @@ const AdminLogs = () => {
               </tr>
             </thead>
             <tbody className="divide-y divide-border-main/50">
-              {logs.length === 0 ? (
+              {filteredLogs.length === 0 ? (
                 <tr>
                     <td colSpan="5" className="px-6 py-20 text-center text-text-muted font-medium italic">
-                        No audit logs available for this period.
+                        {searchTerm ? "No logs matching your search on this page." : "No audit logs available for this period."}
                     </td>
                 </tr>
-              ) : (
-                logs.map((log, idx) => (
+              ) : filteredLogs.map((log, idx) => (
                   <motion.tr 
                     key={log.log_id}
                     initial={{ opacity: 0, y: 5 }}
@@ -139,7 +163,7 @@ const AdminLogs = () => {
                     </td>
                   </motion.tr>
                 ))
-              )}
+              }
             </tbody>
           </table>
         </div>

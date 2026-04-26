@@ -24,6 +24,7 @@ import {
 import { showToast } from "../../utils/toast";
 import AdminConfirmModal from "../../components/ui/AdminConfirmModal";
 import Button from "../../components/ui/Button";
+import AdminTable from "../../components/admin_ui/AdminTable";
 
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -111,6 +112,39 @@ const RegistrationWhitelist = () => {
   const records = data?.data || [];
   const pagination = data?.pagination || { totalPages: 1 };
 
+  const columns = [
+    {
+      header: "Student Info",
+      render: (row) => (
+        <div className="flex flex-col">
+          <span className="text-sm font-bold text-text-main">{row.student_name}</span>
+          <span className="text-[10px] text-text-muted font-medium uppercase tracking-wider">DOB: {row.date_of_birth}</span>
+        </div>
+      )
+    },
+    {
+      header: "Registration No.",
+      render: (row) => (
+        <code className="px-2 py-1 bg-purple-500/5 border border-purple-500/10 rounded text-purple-600 dark:text-purple-400 font-mono text-xs font-bold">
+          {row.registration_number}
+        </code>
+      )
+    },
+    {
+      header: "Academic Context",
+      render: (row) => (
+        <div className="flex items-center gap-2">
+          <span className="px-2 py-0.5 bg-blue-500/5 text-blue-600 dark:text-blue-400 text-[10px] font-black rounded border border-blue-500/10 uppercase">
+            {row.program}
+          </span>
+          <span className="text-[10px] font-bold text-text-muted whitespace-nowrap">
+            Batch {row.batch_year}
+          </span>
+        </div>
+      )
+    }
+  ];
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -194,73 +228,14 @@ const RegistrationWhitelist = () => {
       </div>
 
       {/* Table */}
-      <div className="bg-bg-card rounded-2xl border border-border-main overflow-hidden shadow-sm">
-        <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-border-main">
-            <thead className="bg-bg-active/30">
-              <tr>
-                <th className="px-6 py-4 text-left text-[10px] font-black text-text-muted uppercase tracking-widest">Student Info</th>
-                <th className="px-6 py-4 text-left text-[10px] font-black text-text-muted uppercase tracking-widest">Registration No.</th>
-                <th className="px-6 py-4 text-left text-[10px] font-black text-text-muted uppercase tracking-widest">Academic Context</th>
-                <th className="px-6 py-4 text-right text-[10px] font-black text-text-muted uppercase tracking-widest">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-border-main">
-              {records.length === 0 ? (
-                <tr>
-                  <td colSpan="4" className="px-6 py-12 text-center text-text-muted font-medium italic">
-                    No verified records found matching criteria.
-                  </td>
-                </tr>
-              ) : (
-                records.map((record) => (
-                  <tr key={record.registration_number} className="hover:bg-bg-active/20 transition-colors">
-                    <td className="px-6 py-4 text-left">
-                      <div className="flex flex-col">
-                        <span className="text-sm font-bold text-text-main">{record.student_name}</span>
-                        <span className="text-[10px] text-text-muted font-medium">DOB (B.S.): {record.date_of_birth}</span>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 text-left">
-                      <code className="px-2 py-1 bg-purple-500/5 border border-purple-500/10 rounded text-purple-600 dark:text-purple-400 font-mono text-xs font-bold">
-                        {record.registration_number}
-                      </code>
-                    </td>
-                    <td className="px-6 py-4 text-left">
-                      <div className="flex items-center gap-2">
-                        <span className="px-2 py-0.5 bg-blue-500/5 text-blue-600 dark:text-blue-400 text-[10px] font-black rounded border border-blue-500/10 uppercase">
-                          {record.program}
-                        </span>
-                        <span className="text-[10px] font-bold text-text-muted">
-                          Batch {record.batch_year}
-                        </span>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 text-right">
-                      <div className="flex justify-end gap-2">
-                        <button
-                          onClick={() => handleOpenForm(record)}
-                          className="p-2 text-text-muted hover:text-blue-500 hover:bg-blue-500/10 rounded-lg transition-all"
-                          title="Edit Record"
-                        >
-                          <Edit2 className="w-4 h-4" />
-                        </button>
-                        <button
-                          onClick={() => handleDelete(record.registration_number)}
-                          className="p-2 text-text-muted hover:text-red-500 hover:bg-red-500/10 rounded-lg transition-all"
-                          title="Delete Record"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
-      </div>
+      <AdminTable
+        columns={columns}
+        data={records}
+        isLoading={isLoading}
+        onEdit={handleOpenForm}
+        onDelete={(row) => handleDelete(row.registration_number)}
+        searchPlaceholder="Search this page..."
+      />
 
       {/* Pagination */}
       {pagination.totalPages > 1 && (

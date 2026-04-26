@@ -106,6 +106,16 @@ const buildRankedFeedQuery = ({ config, includeBreakdown = false }) => {
           $6::text <> 'for-you' OR 
           af.action_type NOT IN ('group_join_approved', 'group_joined', 'user_followed', 'completed_step')
         )
+        -- Privacy: Hide all messages from groups unless user is an approved member
+        AND (
+          sg.group_id IS NULL
+          OR EXISTS (
+            SELECT 1 FROM portal.group_members gm
+            WHERE gm.group_id = sg.group_id
+              AND gm.user_id = viewer.user_id
+              AND gm.status = 'approved'
+          )
+        )
     ),
     scored AS (
       SELECT

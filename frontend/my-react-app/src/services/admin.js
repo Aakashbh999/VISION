@@ -26,8 +26,8 @@ export const approveStudent = async (userId) => {
 };
 
 // Reject student
-export const rejectStudent = async (userId) => {
-  return httpPatch(`/admin/reject/${userId}`);
+export const rejectStudent = async (userId, reason = null) => {
+  return httpPatch(`/admin/reject/${userId}`, { reason });
 };
 
 // Suspend student
@@ -112,3 +112,18 @@ export const updateAdminCampus = async (campusId, data) => {
 export const deleteAdminCampus = async (campusId) => {
   return httpDelete(`/admin/campuses/${campusId}`);
 };
+
+// Reference Data Management Generator
+const createReferenceApi = (endpoint) => ({
+  getAll: () => httpGet(`/admin/reference/${endpoint}`),
+  create: (data) => httpPost(`/admin/reference/${endpoint}`, data),
+  update: (id, data) => httpPut(`/admin/reference/${endpoint}/${id}`, data),
+  delete: (id) => httpDelete(`/admin/reference/${endpoint}/${id}`)
+});
+
+export const itFieldsApi = createReferenceApi("it-fields");
+export const academicDegreesApi = createReferenceApi("academic-degrees");
+export const jobMarketApi = createReferenceApi("job-market");
+export const itClubsApi = createReferenceApi("it-clubs");
+export const programsApi = createReferenceApi("programs");
+export const tagsApi = createReferenceApi("tags");

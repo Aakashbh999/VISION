@@ -23,14 +23,14 @@ const logModerationAction = (adminId, actionType, targetType, targetId) =>
     [adminId, actionType, targetType, targetId],
   );
 
-const updateStudentStatus = async (userId, nextStatus, errorMessage) => {
+const updateStudentStatus = async (userId, nextStatus, errorMessage, reason = null) => {
   const result = await pool.query(
     `UPDATE portal.users
-      SET student_status = $2
+      SET student_status = $2, rejection_reason = $3
       WHERE user_id = $1
       AND student_status != $2
       RETURNING user_id`,
-    [userId, nextStatus],
+    [userId, nextStatus, reason],
   );
 
   if (result.rowCount === 0) {
@@ -152,9 +152,10 @@ exports.approveStudent = catchAsync(async (req, res) => {
  ================================ */
 exports.rejectStudent = catchAsync(async (req, res) => {
   const { user_id } = req.params;
+  const { reason } = req.body;
   const adminId = req.user.portal_user_id;
 
-  await updateStudentStatus(user_id, "rejected", "Already rejected or not found");
+  await updateStudentStatus(user_id, "rejected", "Already rejected or not found", reason);
   await logModerationAction(adminId, "reject", "user", user_id);
 
   res.json({ message: "Student rejected successfully" });

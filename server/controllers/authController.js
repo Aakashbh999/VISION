@@ -512,7 +512,7 @@ exports.forgotPassword = catchAsync(async (req, res) => {
   // Store HASHED token in DB (never store raw token)
   await pool.query(
     `INSERT INTO auth.password_reset_tokens
-       (auth_user_id, token_hash, expires_at)
+       (auth_user_id, token, expires_at)
        VALUES ($1, $2, NOW() + INTERVAL '1 hour')`,
     [authUserId, tokenHash],
   );
@@ -557,7 +557,7 @@ exports.resetPassword = catchAsync(async (req, res) => {
 
   const tokenResult = await pool.query(
     `SELECT * FROM auth.password_reset_tokens
-       WHERE token_hash = $1
+       WHERE token = $1
        AND expires_at > NOW()`,
     [tokenHash],
   );

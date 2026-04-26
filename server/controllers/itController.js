@@ -49,6 +49,7 @@ const fetchPaginatedData = async (req, res, tableName, orderColumn = "id") => {
   const dataQuery = `
       SELECT ${columns}
       FROM portal.${tableName}
+      WHERE is_public = true
       ORDER BY ${orderColumn} ASC
       LIMIT $1 OFFSET $2
     `;
@@ -56,6 +57,7 @@ const fetchPaginatedData = async (req, res, tableName, orderColumn = "id") => {
   const countQuery = `
       SELECT COUNT(*)
       FROM portal.${tableName}
+      WHERE is_public = true
     `;
 
   const [dataResult, countResult] = await Promise.all([
@@ -90,7 +92,7 @@ const fetchBySlug = async (req, res, tableName, labelName) => {
   const query = `
       SELECT ${columns}
       FROM portal.${tableName}
-      WHERE slug = $1
+      WHERE slug = $1 AND is_public = true
       LIMIT 1
     `;
 
@@ -155,7 +157,7 @@ exports.getItClubs = catchAsync(async (req, res) => {
   const { search, specialty, institution } = req.query;
   const columns = COLUMNS.it_clubs;
 
-  let whereClauses = [];
+  let whereClauses = ["is_public = true"];
   let values = [];
   let i = 1;
 

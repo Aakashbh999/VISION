@@ -14,13 +14,15 @@ import {
   markNotificationRead,
 } from "../../services/notifications";
 
-const NotificationsPopup = ({ isOpen, onClose }) => {
+const NotificationsPopup = ({ isOpen, onClose, toggleRef }) => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const panelRef = useRef(null);
 
-  useClickOutside(panelRef, () => {
+  useClickOutside(panelRef, (event) => {
     if (!isOpen) return;
+    // Don't close if we clicked the toggle button (it has its own toggle logic)
+    if (toggleRef?.current?.contains(event.target)) return;
     onClose();
   });
 
@@ -82,7 +84,7 @@ const NotificationsPopup = ({ isOpen, onClose }) => {
   return (
     <div
       ref={panelRef}
-      className="absolute top-12 z-50 left-1/2 -translate-x-1/2 sm:left-auto sm:right-0 sm:translate-x-0 w-[min(94vw,560px)] rounded-2xl border border-[var(--border-main)] bg-[var(--bg-card)] shadow-2xl"
+      className="fixed inset-x-4 top-20 max-h-[80vh] sm:absolute sm:top-full sm:mt-2 sm:inset-auto sm:right-0 sm:w-[480px] sm:max-h-[70vh] z-50 rounded-2xl border border-[var(--border-main)] bg-[var(--bg-card)] shadow-2xl flex flex-col"
       role="dialog"
       aria-label="Notifications popup"
     >
@@ -119,7 +121,7 @@ const NotificationsPopup = ({ isOpen, onClose }) => {
         </div>
       </div>
 
-      <div className="max-h-[70vh] overflow-y-auto p-4">
+      <div className="flex-1 overflow-y-auto p-4 min-h-0">
         {isLoading ? (
           <p className="py-10 text-center text-sm text-[var(--text-muted)]">
             Loading notifications...

@@ -68,3 +68,19 @@ export const registerStep2Schema = z.object({
     .regex(/^\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[012])$/, "Invalid date format. Use YYYY-MM-DD (B.S.)."),
   career_scope: z.array(z.string()).max(5, "You can select up to 5 interests."),
 });
+
+export const forgotPasswordSchema = z.object({
+  email: z.string().trim().email("Please enter a valid email address."),
+});
+
+export const resetPasswordSchema = z.object({
+  token: z.string().min(1, "Reset token is required."),
+  newPassword: z
+    .string()
+    .min(rules.password.minLength, rules.password.minLengthMessage)
+    .refine(
+      (value) =>
+        /[A-Z]/.test(value) && /[a-z]/.test(value) && /[0-9]/.test(value),
+      { message: rules.password.complexityMessage },
+    ),
+});
