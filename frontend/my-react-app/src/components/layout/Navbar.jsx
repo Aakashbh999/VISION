@@ -102,29 +102,31 @@ const Navbar = ({ onMobileMenuToggle, variant, user }) => {
 
         {authUser ? (
           <>
-            {/* Explore dropdown – hidden on mobile */}
-            <div className="relative hidden sm:block" ref={resourcesRef}>
-              <button
-                onClick={() => setResourcesDropdownOpen(!resourcesDropdownOpen)}
-                className="flex items-center gap-1 text-(--text-main) hover:text-purple-600 transition-colors font-medium"
-              >
-                Explore <ChevronDown className="w-4 h-4 pointer-events-none" />
-              </button>
-              {resourcesDropdownOpen && (
-                <div className="absolute right-0 mt-2 w-48 bg-(--bg-card) rounded-xl shadow-lg border border-(--border-main) py-2 z-50">
-                  {publicLinks.map((link) => (
-                    <Link
-                      key={link.href}
-                      to={link.href}
-                      className="block px-4 py-2 text-sm text-(--text-main) hover:bg-(--bg-active)"
-                      onClick={() => setResourcesDropdownOpen(false)}
-                    >
-                      {link.label}
-                    </Link>
-                  ))}
-                </div>
-              )}
-            </div>
+            {/* Explore dropdown – hidden on mobile and in admin portal */}
+            {variant !== "admin" && (
+              <div className="relative hidden sm:block" ref={resourcesRef}>
+                <button
+                  onClick={() => setResourcesDropdownOpen(!resourcesDropdownOpen)}
+                  className="flex items-center gap-1 text-(--text-main) hover:text-purple-600 transition-colors font-medium"
+                >
+                  Explore <ChevronDown className="w-4 h-4 pointer-events-none" />
+                </button>
+                {resourcesDropdownOpen && (
+                  <div className="absolute right-0 mt-2 w-48 bg-(--bg-card) rounded-xl shadow-lg border border-(--border-main) py-2 z-50">
+                    {publicLinks.map((link) => (
+                      <Link
+                        key={link.href}
+                        to={link.href}
+                        className="block px-4 py-2 text-sm text-(--text-main) hover:bg-(--bg-active)"
+                        onClick={() => setResourcesDropdownOpen(false)}
+                      >
+                        {link.label}
+                      </Link>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
 
             {/* Notification bell */}
             <div className="relative">
@@ -183,13 +185,15 @@ const Navbar = ({ onMobileMenuToggle, variant, user }) => {
                           </span>
                         )}
                       </div>
-                      <Link
-                        to="/profile"
-                        className="block px-4 py-2 text-sm text-(--text-main) hover:bg-(--bg-active)"
-                        onClick={() => setProfileMenuOpen(false)}
-                      >
-                        Profile
-                      </Link>
+                      {authUser?.role !== "admin" && (
+                        <Link
+                          to="/profile"
+                          className="block px-4 py-2 text-sm text-(--text-main) hover:bg-(--bg-active)"
+                          onClick={() => setProfileMenuOpen(false)}
+                        >
+                          Profile
+                        </Link>
+                      )}
                       <button
                         onClick={() => setShowLogoutConfirm(true)}
                         className="block w-full text-left px-4 py-2 text-sm text-(--text-main) hover:bg-(--bg-active)"

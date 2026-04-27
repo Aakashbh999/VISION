@@ -354,77 +354,95 @@ const ProfileHeaderCard = ({
         {/* Divider / Grid space */}
         {/* Stats Grid */}
         <div className="mt-2 pt-6 border-t border-(--border-main) grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6 text-sm">
-          <Link 
+          <StatBox
+            isOwner={isOwner}
             to="/manage?tab=social&sub=followers"
-            className="flex items-center gap-2.5 text-(--text-muted) bg-(--bg-active) p-3 rounded-2xl border border-(--border-main) hover:bg-purple-500/5 hover:border-purple-500/30 transition-colors group/stat"
-          >
-            <div className="w-8 h-8 rounded-lg bg-purple-50 flex items-center justify-center text-purple-600 shrink-0 group-hover/stat:scale-110 transition-transform">
-              <Users className="w-4 h-4 pointer-events-none" />
-            </div>
-            <div className="flex flex-col min-w-0">
-              <span className="font-bold text-(--text-main) leading-none truncate">
-                {profile.followers_count || 0}
-              </span>
-              <span className="text-[10px] uppercase tracking-wider text-(--text-muted) font-bold mt-1 truncate">
-                Followers
-              </span>
-            </div>
-          </Link>
+            icon={Users}
+            count={profile.followers_count}
+            label="Followers"
+            colorBg="bg-purple-50"
+            colorText="text-purple-600"
+            hoverClass="hover:bg-purple-500/5 hover:border-purple-500/30"
+          />
 
-          <Link 
+          <StatBox
+            isOwner={isOwner}
             to="/manage?tab=social&sub=following"
-            className="flex items-center gap-2.5 text-(--text-muted) bg-(--bg-active) p-3 rounded-2xl border border-(--border-main) hover:bg-blue-500/5 hover:border-blue-500/30 transition-colors group/stat"
-          >
-            <div className="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center text-blue-600 shrink-0 group-hover/stat:scale-110 transition-transform">
-              <Users className="w-4 h-4 pointer-events-none" />
-            </div>
-            <div className="flex flex-col min-w-0">
-              <span className="font-bold text-(--text-main) leading-none truncate">
-                {profile.following_count || 0}
-              </span>
-              <span className="text-[10px] uppercase tracking-wider text-(--text-muted) font-bold mt-1 truncate">
-                Following
-              </span>
-            </div>
-          </Link>
+            icon={Users}
+            count={profile.following_count}
+            label="Following"
+            colorBg="bg-blue-50"
+            colorText="text-blue-600"
+            hoverClass="hover:bg-blue-500/5 hover:border-blue-500/30"
+          />
 
-          <Link 
+          <StatBox
+            isOwner={isOwner}
             to="/discussions/my-posts"
-            className="flex items-center gap-2.5 text-(--text-muted) bg-(--bg-active) p-3 rounded-2xl border border-(--border-main) hover:bg-pink-500/5 hover:border-pink-500/30 transition-colors group/stat"
-          >
-            <div className="w-8 h-8 rounded-lg bg-pink-50 flex items-center justify-center text-pink-600 shrink-0 group-hover/stat:scale-110 transition-transform">
-              <MessageSquare className="w-4 h-4 pointer-events-none" />
-            </div>
-            <div className="flex flex-col min-w-0">
-              <span className="font-bold text-(--text-main) leading-none truncate">
-                {profile.discussion_count || 0}
-              </span>
-              <span className="text-[10px] uppercase tracking-wider text-(--text-muted) font-bold mt-1 truncate">
-                Discussions
-              </span>
-            </div>
-          </Link>
+            icon={MessageSquare}
+            count={profile.discussion_count}
+            label="Discussions"
+            colorBg="bg-pink-50"
+            colorText="text-pink-600"
+            hoverClass="hover:bg-pink-500/5 hover:border-pink-500/30"
+          />
 
-          <Link 
+          <StatBox
+            isOwner={isOwner}
             to="/resources/my"
-            className="flex items-center gap-2.5 text-(--text-muted) bg-(--bg-active) p-3 rounded-2xl border border-(--border-main) hover:bg-emerald-500/5 hover:border-emerald-500/30 transition-colors group/stat"
-          >
-            <div className="w-8 h-8 rounded-lg bg-emerald-50 flex items-center justify-center text-emerald-600 shrink-0 group-hover/stat:scale-110 transition-transform">
-              <FileText className="w-4 h-4 pointer-events-none" />
-            </div>
-            <div className="flex flex-col min-w-0">
-              <span className="font-bold text-(--text-main) leading-none truncate">
-                {profile.resource_count || 0}
-              </span>
-              <span className="text-[10px] uppercase tracking-wider text-(--text-muted) font-bold mt-1 truncate">
-                Resources
-              </span>
-            </div>
-          </Link>
+            icon={FileText}
+            count={profile.resource_count}
+            label="Resources"
+            colorBg="bg-emerald-50"
+            colorText="text-emerald-600"
+            hoverClass="hover:bg-emerald-500/5 hover:border-emerald-500/30"
+          />
         </div>
       </div>
     </div>
   );
+};
+
+const StatBox = ({
+  isOwner,
+  to,
+  icon: Icon,
+  count,
+  label,
+  colorBg,
+  colorText,
+  hoverClass,
+}) => {
+  const content = (
+    <>
+      <div
+        className={`w-8 h-8 rounded-lg ${colorBg} flex items-center justify-center ${colorText} shrink-0 ${isOwner ? "group-hover/stat:scale-110 transition-transform" : ""}`}
+      >
+        <Icon className="w-4 h-4 pointer-events-none" />
+      </div>
+      <div className="flex flex-col min-w-0 text-left">
+        <span className="font-bold text-(--text-main) leading-none truncate">
+          {count || 0}
+        </span>
+        <span className="text-[10px] uppercase tracking-wider text-(--text-muted) font-bold mt-1 truncate">
+          {label}
+        </span>
+      </div>
+    </>
+  );
+
+  const baseClasses =
+    "flex items-center gap-2.5 text-(--text-muted) bg-(--bg-active) p-3 rounded-2xl border border-(--border-main) group/stat transition-all";
+
+  if (isOwner) {
+    return (
+      <Link to={to} className={`${baseClasses} ${hoverClass}`}>
+        {content}
+      </Link>
+    );
+  }
+
+  return <div className={baseClasses}>{content}</div>;
 };
 
 export default ProfileHeaderCard;

@@ -61,10 +61,14 @@ const Breadcrumb = ({ dark }) => {
       {breadcrumbs.map((crumb, index) => (
         <div key={crumb.path} className="flex items-center">
           {index > 0 && (
-            <ChevronRight className={`w-4 h-4 mx-2 ${dark ? "text-slate-500" : "text-[var(--text-muted)]"}`} />
+            <ChevronRight
+              className={`w-4 h-4 mx-2 ${dark ? "text-slate-500" : "text-[var(--text-muted)]"}`}
+            />
           )}
           {crumb.isLast ? (
-            <span className={`${dark ? "text-white" : "text-[var(--text-main)]"} font-medium`}>
+            <span
+              className={`${dark ? "text-white" : "text-[var(--text-main)]"} font-medium`}
+            >
               {crumb.label}
             </span>
           ) : (
@@ -120,11 +124,7 @@ const TopNavBar = () => {
   const handleNotificationsToggle = () => {
     setNotificationsOpen((open) => {
       const nextOpen = !open;
-      if (
-        nextOpen &&
-        unreadCount > 0 &&
-        !markAllReadMut.isPending
-      ) {
+      if (nextOpen && unreadCount > 0 && !markAllReadMut.isPending) {
         markAllReadMut.mutate();
       }
       return nextOpen;
@@ -272,14 +272,16 @@ const TopNavBar = () => {
                   </div>
 
                   {/* Menu items */}
-                  <Link
-                    to="/profile"
-                    className="flex items-center gap-2 px-4 py-2.5 text-sm text-[var(--text-main)] hover:bg-[var(--bg-active)]"
-                    onClick={() => setProfileMenuOpen(false)}
-                  >
-                    <User className="w-4 h-4 text-[var(--text-muted)]" />
-                    Profile
-                  </Link>
+                  {user?.role !== "admin" && (
+                    <Link
+                      to="/profile"
+                      className="flex items-center gap-2 px-4 py-2.5 text-sm text-[var(--text-main)] hover:bg-[var(--bg-active)]"
+                      onClick={() => setProfileMenuOpen(false)}
+                    >
+                      <User className="w-4 h-4 text-[var(--text-muted)]" />
+                      Profile
+                    </Link>
+                  )}
                   <button
                     onClick={() => setShowLogoutConfirm(true)}
                     className="flex items-center gap-2 w-full px-4 py-2.5 text-sm text-[var(--text-main)] hover:bg-[var(--bg-active)]"
