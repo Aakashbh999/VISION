@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   getRegistrationWhitelist,
@@ -29,25 +30,49 @@ import AdminTable from "../../components/admin_ui/AdminTable";
 import { motion, AnimatePresence } from "framer-motion";
 
 const RegistrationWhitelist = () => {
+  // Local state for modal and editing record (must be above useEffect)
+  const [isFormModalOpen, setIsFormModalOpen] = useState(false);
+  const [editingRecord, setEditingRecord] = useState(null);
+  // Local state for date of birth input formatting in form modal
+  const [formDateOfBirth, setFormDateOfBirth] = useState("");
+
+  // When editing, sync the editing record's DOB into the input
+  useEffect(() => {
+    if (isFormModalOpen) {
+      setFormDateOfBirth(editingRecord?.date_of_birth || "");
+    }
+  }, [isFormModalOpen, editingRecord]);
+
+  // Handler for auto-formatting date of birth as YYYY-MM-DD
+  const handleDateOfBirthChange = (e) => {
+    let value = e.target.value.replace(/\D/g, "");
+    if (value.length > 8) value = value.slice(0, 8);
+    let formatted = value;
+    if (value.length > 6) {
+      formatted = `${value.slice(0, 4)}-${value.slice(4, 6)}-${value.slice(6)}`;
+    } else if (value.length > 4) {
+      formatted = `${value.slice(0, 4)}-${value.slice(4)}`;
+    }
+    setFormDateOfBirth(formatted);
+  };
   const [page, setPage] = useState(1);
   const [batchYear, setBatchYear] = useState("");
   const [program, setProgram] = useState("");
   const [modalConfig, setModalConfig] = useState({ isOpen: false });
-  const [isFormModalOpen, setIsFormModalOpen] = useState(false);
-  const [editingRecord, setEditingRecord] = useState(null);
-  
+
   const queryClient = useQueryClient();
   const { data: programsData } = usePrograms();
   const programs = programsData || [];
 
   const { data, isLoading, error } = useQuery({
     queryKey: ["registration-whitelist", page, batchYear, program],
-    queryFn: () => getRegistrationWhitelist({ 
-      page, 
-      limit: 10, 
-      batch_year: batchYear || undefined, 
-      program: program || undefined 
-    }),
+    queryFn: () =>
+      getRegistrationWhitelist({
+        page,
+        limit: 10,
+        batch_year: batchYear || undefined,
+        program: program || undefined,
+      }),
   });
 
   const addMutation = useMutation({
@@ -60,7 +85,7 @@ const RegistrationWhitelist = () => {
     },
     onError: (err) => {
       showToast.error(err.response?.data?.error || "Failed to add student");
-    }
+    },
   });
 
   const updateMutation = useMutation({
@@ -73,7 +98,7 @@ const RegistrationWhitelist = () => {
     },
     onError: (err) => {
       showToast.error(err.response?.data?.error || "Failed to update record");
-    }
+    },
   });
 
   const deleteMutation = useMutation({
@@ -117,10 +142,14 @@ const RegistrationWhitelist = () => {
       header: "Student Info",
       render: (row) => (
         <div className="flex flex-col">
-          <span className="text-sm font-bold text-text-main">{row.student_name}</span>
-          <span className="text-[10px] text-text-muted font-medium uppercase tracking-wider">DOB: {row.date_of_birth}</span>
+          <span className="text-sm font-bold text-text-main">
+            {row.student_name}
+          </span>
+          <span className="text-[10px] text-text-muted font-medium uppercase tracking-wider">
+            DOB: {row.date_of_birth}
+          </span>
         </div>
-      )
+      ),
     },
     {
       header: "Registration No.",
@@ -128,7 +157,7 @@ const RegistrationWhitelist = () => {
         <code className="px-2 py-1 bg-purple-500/5 border border-purple-500/10 rounded text-purple-600 dark:text-purple-400 font-mono text-xs font-bold">
           {row.registration_number}
         </code>
-      )
+      ),
     },
     {
       header: "Academic Context",
@@ -141,8 +170,8 @@ const RegistrationWhitelist = () => {
             Batch {row.batch_year}
           </span>
         </div>
-      )
-    }
+      ),
+    },
   ];
 
   return (
@@ -175,7 +204,9 @@ const RegistrationWhitelist = () => {
       {/* Filters */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 bg-bg-card p-4 rounded-2xl border border-border-main shadow-sm">
         <div className="space-y-1.5 text-left">
-          <label className="text-[10px] font-black uppercase text-text-muted tracking-widest px-1">Batch Year</label>
+          <label className="text-[10px] font-black uppercase text-text-muted tracking-widest px-1">
+            Batch Year
+          </label>
           <div className="relative">
             <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-text-muted" />
             <input
@@ -192,7 +223,9 @@ const RegistrationWhitelist = () => {
         </div>
 
         <div className="space-y-1.5 text-left">
-          <label className="text-[10px] font-black uppercase text-text-muted tracking-widest px-1">Program</label>
+          <label className="text-[10px] font-black uppercase text-text-muted tracking-widest px-1">
+            Program
+          </label>
           <div className="relative">
             <GraduationCap className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-text-muted" />
             <select
@@ -214,7 +247,7 @@ const RegistrationWhitelist = () => {
         </div>
 
         <div className="sm:col-span-2 flex items-end">
-          <button 
+          <button
             onClick={() => {
               setBatchYear("");
               setProgram("");
@@ -240,19 +273,21 @@ const RegistrationWhitelist = () => {
       {/* Pagination */}
       {pagination.totalPages > 1 && (
         <div className="flex justify-center gap-2 mt-8">
-          {Array.from({ length: pagination.totalPages }, (_, i) => i + 1).map((p) => (
-            <button
-              key={p}
-              onClick={() => setPage(p)}
-              className={`w-10 h-10 rounded-xl font-bold transition-all ${
-                page === p
-                  ? "bg-purple-600 text-white shadow-lg shadow-purple-500/20"
-                  : "bg-bg-card border border-border-main text-text-muted hover:bg-bg-active"
-              }`}
-            >
-              {p}
-            </button>
-          ))}
+          {Array.from({ length: pagination.totalPages }, (_, i) => i + 1).map(
+            (p) => (
+              <button
+                key={p}
+                onClick={() => setPage(p)}
+                className={`w-10 h-10 rounded-xl font-bold transition-all ${
+                  page === p
+                    ? "bg-purple-600 text-white shadow-lg shadow-purple-500/20"
+                    : "bg-bg-card border border-border-main text-text-muted hover:bg-bg-active"
+                }`}
+              >
+                {p}
+              </button>
+            ),
+          )}
         </div>
       )}
 
@@ -285,13 +320,18 @@ const RegistrationWhitelist = () => {
                 </button>
               </div>
 
-              <form 
+              <form
                 onSubmit={(e) => {
                   e.preventDefault();
                   const formData = new FormData(e.target);
                   const payload = Object.fromEntries(formData.entries());
+                  // Overwrite date_of_birth with formatted state value
+                  payload.date_of_birth = formDateOfBirth;
                   if (editingRecord) {
-                    updateMutation.mutate({ regNo: editingRecord.registration_number, data: payload });
+                    updateMutation.mutate({
+                      regNo: editingRecord.registration_number,
+                      data: payload,
+                    });
                   } else {
                     addMutation.mutate(payload);
                   }
@@ -299,20 +339,26 @@ const RegistrationWhitelist = () => {
                 className="space-y-4 text-left"
               >
                 <div className="space-y-1.5">
-                  <label className="text-[10px] font-black uppercase text-text-muted tracking-widest px-1">Registration Number</label>
+                  <label className="text-[10px] font-black uppercase text-text-muted tracking-widest px-1">
+                    Registration Number
+                  </label>
                   <input
                     name="registration_number"
                     defaultValue={editingRecord?.registration_number || ""}
                     required
                     inputMode="numeric"
-                    onInput={(e) => { e.target.value = e.target.value.replace(/[^0-9-]/g, ""); }}
+                    onInput={(e) => {
+                      e.target.value = e.target.value.replace(/[^0-9-]/g, "");
+                    }}
                     placeholder="e.g. 5-2-37-123-2020"
                     className="w-full px-4 py-3 bg-bg-active border border-border-main rounded-2xl focus:border-purple-500 outline-none text-sm font-bold transition-all"
                   />
                 </div>
 
                 <div className="space-y-1.5">
-                  <label className="text-[10px] font-black uppercase text-text-muted tracking-widest px-1">Student Full Name</label>
+                  <label className="text-[10px] font-black uppercase text-text-muted tracking-widest px-1">
+                    Student Full Name
+                  </label>
                   <input
                     name="student_name"
                     defaultValue={editingRecord?.student_name || ""}
@@ -324,20 +370,24 @@ const RegistrationWhitelist = () => {
 
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-1.5">
-                    <label className="text-[10px] font-black uppercase text-text-muted tracking-widest px-1">Date of Birth (B.S.)</label>
+                    <label className="text-[10px] font-black uppercase text-text-muted tracking-widest px-1">
+                      Date of Birth (B.S.)
+                    </label>
                     <input
                       name="date_of_birth"
                       type="text"
                       inputMode="numeric"
-                      defaultValue={editingRecord?.date_of_birth || ""}
                       required
                       placeholder="YYYY-MM-DD"
                       className="w-full px-4 py-3 bg-bg-active border border-border-main rounded-2xl focus:border-purple-500 outline-none text-sm font-bold transition-all"
-                      onInput={(e) => { e.target.value = e.target.value.replace(/[^0-9-]/g, ""); }}
+                      value={formDateOfBirth}
+                      onChange={handleDateOfBirthChange}
                     />
                   </div>
                   <div className="space-y-1.5">
-                    <label className="text-[10px] font-black uppercase text-text-muted tracking-widest px-1">Batch (B.S.)</label>
+                    <label className="text-[10px] font-black uppercase text-text-muted tracking-widest px-1">
+                      Batch (B.S.)
+                    </label>
                     <input
                       name="batch_year"
                       type="text"
@@ -346,13 +396,17 @@ const RegistrationWhitelist = () => {
                       required
                       placeholder="e.g. 2058"
                       className="w-full px-4 py-3 bg-bg-active border border-border-main rounded-2xl focus:border-purple-500 outline-none text-sm font-bold transition-all"
-                      onInput={(e) => { e.target.value = e.target.value.replace(/[^0-9]/g, ""); }}
+                      onInput={(e) => {
+                        e.target.value = e.target.value.replace(/[^0-9]/g, "");
+                      }}
                     />
                   </div>
                 </div>
 
                 <div className="space-y-1.5">
-                  <label className="text-[10px] font-black uppercase text-text-muted tracking-widest px-1">Program</label>
+                  <label className="text-[10px] font-black uppercase text-text-muted tracking-widest px-1">
+                    Program
+                  </label>
                   <select
                     name="program"
                     defaultValue={editingRecord?.program || ""}
@@ -381,7 +435,9 @@ const RegistrationWhitelist = () => {
                     type="submit"
                     variant="shiny"
                     className="flex-1 rounded-2xl"
-                    isLoading={addMutation.isPending || updateMutation.isPending}
+                    isLoading={
+                      addMutation.isPending || updateMutation.isPending
+                    }
                   >
                     {editingRecord ? "Save Changes" : "Confirm Record"}
                   </Button>

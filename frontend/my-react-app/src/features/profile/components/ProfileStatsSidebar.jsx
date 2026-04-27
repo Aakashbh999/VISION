@@ -17,7 +17,7 @@ const ProfileStatsSidebar = ({ profile, isOwner }) => {
   return (
     <div className="space-y-12">
       {/* VISIONXP Card */}
-      <div className="bg-[var(--bg-card)] bg-opacity-80 backdrop-blur-2xl rounded-3xl shadow-sm border border-[var(--border-main)] relative overflow-hidden group transition-all hover:shadow-md">
+      <div className={`bg-[var(--bg-card)] bg-opacity-80 backdrop-blur-2xl rounded-3xl shadow-sm border border-[var(--border-main)] relative overflow-hidden group transition-all ${isOwner ? "hover:shadow-md" : ""}`}>
         
         {/* Subtle Purple Glass Glow Background */}
         <div className="absolute inset-0 bg-gradient-to-br from-purple-500/5 to-indigo-500/5 dark:from-purple-500/10 dark:to-indigo-500/10 pointer-events-none"></div>
@@ -59,7 +59,7 @@ const ProfileStatsSidebar = ({ profile, isOwner }) => {
           </div>
 
           <div className="grid grid-cols-2 gap-4">
-            <div className="bg-[var(--bg-active)]/50 backdrop-blur-md rounded-2xl p-5 text-center border border-[var(--border-main)] hover:bg-[var(--bg-active)] transition-all shadow-sm">
+            <div className={`bg-[var(--bg-active)]/50 backdrop-blur-md rounded-2xl p-5 text-center border border-[var(--border-main)] ${isOwner ? "hover:bg-[var(--bg-active)] shadow-sm" : ""} transition-all`}>
               <p className="text-3xl font-black text-[var(--text-main)]">
                 {current_level}
               </p>
@@ -67,7 +67,7 @@ const ProfileStatsSidebar = ({ profile, isOwner }) => {
                 Member Level
               </p>
             </div>
-            <div className="bg-[var(--bg-active)]/50 backdrop-blur-md rounded-2xl p-5 text-center border border-[var(--border-main)] hover:bg-[var(--bg-active)] transition-all shadow-sm">
+            <div className={`bg-[var(--bg-active)]/50 backdrop-blur-md rounded-2xl p-5 text-center border border-[var(--border-main)] ${isOwner ? "hover:bg-[var(--bg-active)] shadow-sm" : ""} transition-all`}>
               <p className="text-3xl font-black text-[var(--text-main)]">
                 {profile?.reputation_points || 0}
               </p>

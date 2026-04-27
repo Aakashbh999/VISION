@@ -152,6 +152,11 @@ const portalRoutes = [
   { path: "/feed", element: <Feed /> },
   { path: "/manage", element: <ManageContent /> },
   { path: "/profile/:userId", element: <Profile /> },
+  { path: "/it-fields", element: <ITFields /> },
+  { path: "/academic-guide", element: <AcademicGuide /> },
+  { path: "/it-jobs", element: <ITJobs /> },
+  { path: "/it-clubs", element: <ITClubs /> },
+  { path: "/career-paths", element: <CareerPaths /> },
 ];
 
 // Loading spinner for auth loading state
@@ -295,6 +300,11 @@ function AppContent() {
     "/manage",
     "/profile",
     "/feed",
+    "/it-fields",
+    "/academic-guide",
+    "/it-jobs",
+    "/it-clubs",
+    "/career-paths",
   ];
 
   const isPortalRoute = portalPaths.some(

@@ -226,7 +226,7 @@ const Roadmaps = () => {
                     <div className="absolute top-0 right-0">
                       {isActive && (
                         <span className="flex items-center gap-1.5 px-3 py-1 bg-purple-600 text-white text-[10px] font-black uppercase tracking-widest rounded-full shadow-lg">
-                          In Progress
+                           In Progress
                         </span>
                       )}
                       {isCompleted && (

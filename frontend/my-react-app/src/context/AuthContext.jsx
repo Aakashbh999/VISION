@@ -35,8 +35,8 @@ export const AuthProvider = ({ children }) => {
     localStorage.removeItem("token");
     localStorage.removeItem("refreshToken");
 
-    // Clear cached profile immediately so UI reflects logged-out state without reload.
-    queryClient.removeQueries({ queryKey: ["me"] });
+    // Clear all cached data immediately so no data leaks between sessions.
+    queryClient.clear();
 
     setToken(null);
     setRefreshToken(null);
