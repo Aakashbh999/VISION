@@ -22,7 +22,7 @@ const SegmentedControl = ({
 
   return (
     <div
-      className={`flex bg-[var(--bg-active)] rounded-2xl p-1 border border-[var(--border-main)] ${className}`}
+      className={`flex bg-[var(--bg-active)] rounded-2xl p-1 ${className}`}
     >
       {options.map((opt) => {
         const Icon = opt.icon;
@@ -34,7 +34,7 @@ const SegmentedControl = ({
             onClick={() => onChange(opt.value)}
             className={`flex-1 flex items-center justify-center gap-2 ${sizeStyles[size]} rounded-xl font-bold transition-all whitespace-nowrap ${
               isActive
-                ? "bg-[var(--bg-card)] text-purple-500 border border-[var(--border-main)] shadow-sm"
+                ? "bg-[var(--bg-card)] text-purple-500 shadow-sm"
                 : "text-[var(--text-muted)] hover:text-[var(--text-main)]"
             }`}
           >

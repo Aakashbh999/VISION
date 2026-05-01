@@ -6,7 +6,6 @@ import AboutMeCard from "../components/AboutMeCard";
 import AcademicBackgroundCard from "../components/AcademicBackgroundCard";
 import ProfileImageEditors from "../components/ProfileImageEditors";
 import ProfileAvatarModal from "../components/ProfileAvatarModal";
-import ProfileEditActionBar from "../components/ProfileEditActionBar";
 
 const ProfilePage = () => {
   const {

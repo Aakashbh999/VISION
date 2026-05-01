@@ -4,6 +4,7 @@ import { academicDegreesApi } from "../../../services/admin";
 import { toast } from "react-toastify";
 import AdminTable from "../../../components/admin_ui/AdminTable";
 import AdminConfirmModal from "../../../components/ui/AdminConfirmModal";
+import Button from "../../../components/ui/Button";
 import { Plus, CheckCircle, XCircle, AlertTriangle, X, Eye } from "lucide-react";
 
 const AcademicDegrees = () => {
@@ -458,10 +459,10 @@ const AcademicDegrees = () => {
 
               {/* Submit Area */}
               <div className="flex justify-end gap-3 sticky bottom-0 bg-bg-card pt-4 border-t border-border-main -mx-6 px-6 -mb-6 pb-6">
-                <button type="button" onClick={() => setIsModalOpen(false)} className="px-5 py-2.5 text-sm font-bold text-text-muted hover:bg-bg-active rounded-xl transition-colors">Cancel</button>
-                <button type="submit" disabled={createMutation.isPending || updateMutation.isPending} className="px-5 py-2.5 text-sm font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-xl transition-all shadow-lg shadow-blue-500/20">
+                <Button type="button" variant="secondary" onClick={() => setIsModalOpen(false)} className="rounded-xl">Cancel</Button>
+                <Button type="submit" variant="shiny" isLoading={createMutation.isPending || updateMutation.isPending} className="rounded-xl">
                   {editingItem ? "Update Degree" : "Save Degree"}
-                </button>
+                </Button>
               </div>
             </form>
           </div>

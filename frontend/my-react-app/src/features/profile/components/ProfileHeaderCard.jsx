@@ -26,6 +26,7 @@ import {
 import { Link } from "react-router-dom";
 import { RedditIcon } from "../utils/profileHelpers";
 import ActionMenu from "../../../components/ui/ActionMenu";
+import Button from "../../../components/ui/Button";
 
 const ProfileHeaderCard = ({
   profile,
@@ -133,30 +134,25 @@ const ProfileHeaderCard = ({
           <>
             {/* Save/Cancel buttons top left */}
             <div className="absolute top-4 left-4 z-20 flex gap-2">
-              <button
+              <Button
                 type="button"
+                variant="secondary"
+                size="sm"
                 onClick={handleEditCancel}
-                className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-[var(--bg-active)] text-[var(--text-main)] font-bold hover:bg-[var(--border-main)] transition-colors"
+                className="rounded-lg"
               >
                 <X className="w-4 h-4" /> Cancel
-              </button>
-              <button
+              </Button>
+              <Button
                 type="button"
+                variant="shiny"
+                size="sm"
                 onClick={handleSaveChanges}
-                disabled={isSavingProfile}
-                className="inline-flex items-center gap-2 px-5 py-2 rounded-xl bg-purple-600 text-white font-bold hover:bg-purple-700 transition-colors disabled:opacity-60 shadow-lg shadow-purple-500/20"
+                isLoading={isSavingProfile}
+                className="px-5 py-2 rounded-xl"
               >
-                {isSavingProfile ? (
-                  <>
-                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                    Saving
-                  </>
-                ) : (
-                  <>
-                    <Check className="w-4 h-4" /> Save
-                  </>
-                )}
-              </button>
+                <Check className="w-4 h-4" /> Save
+              </Button>
             </div>
             {/* Banner upload overlay */}
             <div className="absolute inset-0 bg-black/35 flex items-center justify-center opacity-0 group-hover/banner:opacity-100 transition-opacity">
@@ -306,20 +302,22 @@ const ProfileHeaderCard = ({
                     className="relative w-full sm:w-auto"
                     ref={followDropdownRef}
                   >
-                    <button
+                    <Button
+                      variant="secondary"
                       onClick={() => setFollowDropdownOpen((open) => !open)}
-                      disabled={followMut.isPending}
-                      className="w-full sm:w-auto flex items-center justify-center gap-1.5 px-5 py-2.5 rounded-lg font-bold bg-[#e4e6eb] dark:bg-[#3a3b3c] text-slate-900 dark:text-gray-100 hover:bg-[#d8dadf] dark:hover:bg-[#4e4f50] transition-all text-[15px] disabled:opacity-50"
+                      isLoading={followMut.isPending}
+                      className="w-full sm:w-auto bg-[#e4e6eb] dark:bg-[#3a3b3c] text-slate-900 dark:text-gray-100 hover:bg-[#d8dadf] dark:hover:bg-[#4e4f50] text-[15px]"
                     >
                       <Check className="w-4 h-4" />
                       Following
                       <ChevronDown
                         className={`w-4 h-4 ml-0.5 transition-transform ${followDropdownOpen ? "rotate-180" : ""}`}
                       />
-                    </button>
+                    </Button>
                     {followDropdownOpen && (
                       <div className="absolute right-0 mt-2 w-full sm:w-40 bg-(--bg-card) rounded-xl shadow-lg border border-(--border-main) py-1 z-50">
-                        <button
+                        <Button
+                          variant="ghost"
                           onClick={() => {
                             setFollowDropdownOpen(false);
                             if (!profileUserId) return;
@@ -328,24 +326,27 @@ const ProfileHeaderCard = ({
                               isFollowing: true,
                             });
                           }}
-                          disabled={followMut.isPending || !profileUserId}
-                          className="w-full flex items-center gap-2 px-4 py-2.5 text-sm font-semibold text-red-600 hover:bg-red-50 transition-colors disabled:opacity-50"
+                          isLoading={followMut.isPending}
+                          disabled={!profileUserId}
+                          className="w-full flex items-center justify-start gap-2 px-4 py-2.5 text-sm font-semibold text-red-600 hover:bg-red-50"
                         >
                           <UserMinus className="w-4 h-4" />
                           Unfollow
-                        </button>
+                        </Button>
                       </div>
                     )}
                   </div>
                 ) : (
-                  <button
+                  <Button
                     onClick={handleFollowToggle}
-                    disabled={followMut.isPending || !profileUserId}
-                    className="w-full sm:w-auto px-6 py-2.5 rounded-lg font-bold bg-blue-600 text-white hover:bg-blue-700 transition-all shadow-sm disabled:opacity-50 flex items-center justify-center gap-2 text-[15px]"
+                    isLoading={followMut.isPending}
+                    disabled={!profileUserId}
+                    variant="shiny"
+                    className="w-full sm:w-auto px-6 py-2.5 text-[15px]"
                   >
                     <Plus className="w-4 h-4" />
-                    {followMut.isPending ? "..." : "Follow"}
-                  </button>
+                    Follow
+                  </Button>
                 ))}
             </div>
           </div>

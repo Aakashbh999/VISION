@@ -13,6 +13,7 @@ import {
 import LoadingSpinner from "../../components/ui/LoadingSpinner";
 import AdminConfirmModal from "../../components/ui/AdminConfirmModal";
 import AdminTable from "../../components/admin_ui/AdminTable";
+import Button from "../../components/ui/Button";
 
 const Campuses = () => {
   const queryClient = useQueryClient();
@@ -250,20 +251,22 @@ const Campuses = () => {
               </div>
 
               <div className="flex justify-end gap-3 mt-6 pt-4 border-t border-border-main">
-                <button
+                <Button
                   type="button"
+                  variant="secondary"
                   onClick={() => setIsModalOpen(false)}
-                  className="px-4 py-2 text-sm font-bold text-text-muted hover:bg-bg-active rounded-xl"
+                  className="rounded-xl"
                 >
                   Cancel
-                </button>
-                <button
+                </Button>
+                <Button
                   type="submit"
-                  disabled={createMutation.isPending || updateMutation.isPending}
-                  className="px-4 py-2 text-sm font-bold text-white bg-purple-600 hover:bg-purple-700 rounded-xl"
+                  variant="shiny"
+                  isLoading={createMutation.isPending || updateMutation.isPending}
+                  className="rounded-xl"
                 >
                   {editingCampus ? "Update Campus" : "Save Campus"}
-                </button>
+                </Button>
               </div>
             </form>
           </div>

@@ -97,7 +97,7 @@ const SocialPanel = () => {
     if (user.is_mutual) return "Friends";
     if (socialTab === "followers")
       return user.is_following ? "Following back" : "Follows you";
-    return "You follow this user";
+    return null;
   };
 
   const tabOptions = [
@@ -175,9 +175,11 @@ const SocialPanel = () => {
                             </span>
                           )}
                         </div>
-                        <p className="text-sm text-[var(--text-muted)] truncate">
-                          {subtitle}
-                        </p>
+                        {subtitle && (
+                          <p className="text-sm text-[var(--text-muted)] truncate">
+                            {subtitle}
+                          </p>
+                        )}
                         <p className="text-xs text-[var(--text-muted)] mt-1">
                           Followed{" "}
                           {formatDistanceToNow(new Date(user.followed_at), {
@@ -254,9 +256,11 @@ const SocialPanel = () => {
                   <h3 className="text-lg font-black text-[var(--text-main)] truncate">
                     {selectedUser.full_name}
                   </h3>
-                  <p className="text-sm text-[var(--text-muted)] mt-1">
-                    {getUserSubtitle(selectedUser)}
-                  </p>
+                  {getUserSubtitle(selectedUser) && (
+                    <p className="text-sm text-[var(--text-muted)] mt-1">
+                      {getUserSubtitle(selectedUser)}
+                    </p>
+                  )}
                 </div>
               </div>
 

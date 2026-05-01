@@ -1,8 +1,8 @@
 import { httpGet, httpPatch } from "./http";
 
 // Get pending resources for moderation
-export const getPendingResources = async (page = 1, limit = 10) => {
-  return httpGet("/admin/resources/pending", { page, limit });
+export const getPendingResources = async (page = 1, limit = 10, search = "") => {
+  return httpGet("/admin/resources/pending", { page, limit, search });
 };
 
 // Approve a resource

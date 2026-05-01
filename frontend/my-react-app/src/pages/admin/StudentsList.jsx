@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   getStudentsByStatus,
@@ -13,51 +14,82 @@ import {
   UserX,
   Trash2,
   ShieldAlert,
-  Search
+  Search,
+  Loader2
 } from "lucide-react";
 import { showToast } from "../../utils/toast";
 import AdminConfirmModal from "../../components/ui/AdminConfirmModal";
 import { useAuth } from "../../context/AuthContext";
+import useDebounce from "../../hooks/useDebounce";
 
 const StudentsList = () => {
-  const [status, setStatus] = useState("approved");
-  const [page, setPage] = useState(1);
-  const [searchTerm, setSearchTerm] = useState("");
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [status, setStatus] = useState(searchParams.get("status") || "approved");
+  const [page, setPage] = useState(parseInt(searchParams.get("page")) || 1);
+  const [searchTerm, setSearchTerm] = useState(searchParams.get("search") || "");
+  const debouncedSearchTerm = useDebounce(searchTerm, 500);
   const [modalConfig, setModalConfig] = useState({ isOpen: false });
   const queryClient = useQueryClient();
   const { user } = useAuth();
 
-  const { data, isLoading, error } = useQuery({
-    queryKey: ["students", status, page],
-    queryFn: () => getStudentsByStatus(status, page),
+  // Sync state to URL
+  useEffect(() => {
+    const params = { status, page: page.toString() };
+    if (debouncedSearchTerm) params.search = debouncedSearchTerm;
+    setSearchParams(params, { replace: true });
+  }, [status, page, debouncedSearchTerm, setSearchParams]);
+
+  // Reset page when search changes
+  useEffect(() => {
+    setPage(1);
+  }, [debouncedSearchTerm, status]);
+
+  const { data, isLoading, isFetching, error } = useQuery({
+    queryKey: ["students", status, page, debouncedSearchTerm],
+    queryFn: () => getStudentsByStatus(status, page, 10, debouncedSearchTerm),
+    keepPreviousData: true,
   });
 
   const suspendMutation = useMutation({
     mutationFn: suspendStudent,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["students", status, page] });
+      queryClient.invalidateQueries({ queryKey: ["students"] });
       showToast.success("Student suspended");
+      setModalConfig({ isOpen: false });
     },
+    onError: (err) => {
+      showToast.error(err.response?.data?.message || "Suspension failed");
+    }
   });
 
   const reactivateMutation = useMutation({
     mutationFn: reactivateStudent,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["students", status, page] });
+      queryClient.invalidateQueries({ queryKey: ["students"] });
       showToast.success("Student reactivated");
+      setModalConfig({ isOpen: false });
     },
+    onError: (err) => {
+      showToast.error(err.response?.data?.message || "Reactivation failed");
+    }
   });
 
   const deleteMutation = useMutation({
     mutationFn: permanentlyDeleteUser,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["students", status, page] });
+      queryClient.invalidateQueries({ queryKey: ["students"] });
       showToast.success("User permanently deleted");
+      setModalConfig({ isOpen: false });
     },
     onError: (err) => {
       showToast.error(err.response?.data?.message || "Deletion failed");
     },
   });
+
+  const isMutationPending =
+    suspendMutation.isPending ||
+    reactivateMutation.isPending ||
+    deleteMutation.isPending;
 
   const handleDelete = (userId, name) => {
     setModalConfig({
@@ -68,7 +100,6 @@ const StudentsList = () => {
       confirmText: "Delete Account",
       onConfirm: () => {
         deleteMutation.mutate(userId);
-        setModalConfig({ isOpen: false });
       },
     });
   };
@@ -82,7 +113,6 @@ const StudentsList = () => {
       confirmText: "Suspend",
       onConfirm: () => {
         suspendMutation.mutate(userId);
-        setModalConfig({ isOpen: false });
       },
     });
   };
@@ -96,12 +126,10 @@ const StudentsList = () => {
       confirmText: "Reactivate",
       onConfirm: () => {
         reactivateMutation.mutate(userId);
-        setModalConfig({ isOpen: false });
       },
     });
   };
 
-  if (isLoading) return <LoadingSpinner />;
   if (error)
     return (
       <div className="p-8 text-red-500 font-medium">
@@ -111,17 +139,6 @@ const StudentsList = () => {
 
   const students = data?.data || [];
   const pagination = data?.pagination || { totalPages: 1 };
-
-  const filteredStudents = students.filter(s => {
-    if (!searchTerm) return true;
-    const term = searchTerm.toLowerCase();
-    return (
-      s.full_name?.toLowerCase().includes(term) ||
-      s.email?.toLowerCase().includes(term) ||
-      s.tu_registration_no?.toLowerCase().includes(term) ||
-      s.program_name?.toLowerCase().includes(term)
-    );
-  });
 
   return (
     <div className="space-y-6">
@@ -156,22 +173,27 @@ const StudentsList = () => {
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-text-muted" />
           <input
             type="text"
-            placeholder="Search this page..."
+            placeholder="Search across all pages..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="w-full pl-10 pr-4 py-2 bg-bg-card border border-border-main rounded-xl text-sm focus:border-purple-500 outline-none transition-colors shadow-sm"
           />
+          {(isLoading || isFetching) && (
+            <div className="absolute right-3 top-1/2 -translate-y-1/2">
+              <Loader2 className="w-4 h-4 text-purple-500 animate-spin" />
+            </div>
+          )}
         </div>
       </div>
 
       <div className="bg-bg-card rounded-2xl border border-border-main overflow-hidden shadow-sm">
-        <table className="min-w-full divide-y divide-border-main">
+        <table className="min-w-full divide-y divide-border-main text-left">
           <thead className="bg-bg-active/50">
             <tr>
-              <th className="px-6 py-4 text-left text-xs font-bold text-text-muted uppercase tracking-wider">
+              <th className="px-6 py-4 text-xs font-bold text-text-muted uppercase tracking-wider">
                 Student Profile
               </th>
-              <th className="px-6 py-4 text-left text-xs font-bold text-text-muted uppercase tracking-wider">
+              <th className="px-6 py-4 text-xs font-bold text-text-muted uppercase tracking-wider">
                 Status
               </th>
               <th className="px-6 py-4 text-right text-xs font-bold text-text-muted uppercase tracking-wider">
@@ -180,16 +202,22 @@ const StudentsList = () => {
             </tr>
           </thead>
           <tbody className="bg-bg-card divide-y divide-border-main">
-            {filteredStudents.length === 0 ? (
+            {isLoading ? (
+               <tr>
+                 <td colSpan="3" className="px-6 py-12">
+                   <LoadingSpinner />
+                 </td>
+               </tr>
+            ) : students.length === 0 ? (
               <tr>
                 <td
                   colSpan="3"
                   className="px-6 py-12 text-center text-text-muted font-medium"
                 >
-                  {searchTerm ? "No students match your search on this page." : "No students found in this category."}
+                  {searchTerm ? "No students found matching your search." : "No students found in this category."}
                 </td>
               </tr>
-            ) : filteredStudents.map((student) => (
+            ) : students.map((student) => (
                 <tr
                   key={student.user_id}
                   className="hover:bg-bg-active/30 transition-colors"
@@ -250,7 +278,8 @@ const StudentsList = () => {
                                 student.full_name,
                               )
                             }
-                            className="flex items-center gap-1.5 text-xs font-bold text-green-600 hover:text-green-800 transition-colors"
+                            disabled={isMutationPending}
+                            className="flex items-center gap-1.5 text-xs font-bold text-green-600 hover:text-green-800 transition-colors disabled:opacity-50 disabled:cursor-wait"
                           >
                             <UserCheck className="w-4 h-4" /> Reactivate
                           </button>
@@ -259,7 +288,8 @@ const StudentsList = () => {
                             onClick={() =>
                               handleSuspend(student.user_id, student.full_name)
                             }
-                            className="flex items-center gap-1.5 text-xs font-bold text-orange-600 hover:text-orange-800 transition-colors"
+                            disabled={isMutationPending}
+                            className="flex items-center gap-1.5 text-xs font-bold text-orange-600 hover:text-orange-800 transition-colors disabled:opacity-50 disabled:cursor-wait"
                           >
                             <AlertCircle className="w-4 h-4" /> Suspend
                           </button>
@@ -269,7 +299,8 @@ const StudentsList = () => {
                           onClick={() =>
                             handleDelete(student.user_id, student.full_name)
                           }
-                          className="p-2 text-text-muted hover:text-red-600 hover:bg-red-500/10 rounded-lg transition-all"
+                          disabled={isMutationPending}
+                          className="p-2 text-text-muted hover:text-red-600 hover:bg-red-500/10 rounded-lg transition-all disabled:opacity-50 disabled:cursor-wait"
                           title="Permanently Delete Account"
                         >
                           <Trash2 className="w-4 h-4" />

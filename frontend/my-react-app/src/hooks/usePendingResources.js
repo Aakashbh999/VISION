@@ -6,10 +6,10 @@ import {
 } from "../services/moderator";
 import { toast } from "react-toastify";
 
-export const usePendingResources = (page = 1, limit = 10) => {
+export const usePendingResources = (page = 1, limit = 10, search = "") => {
   return useQuery({
-    queryKey: ["pending-resources", page, limit],
-    queryFn: () => getPendingResources(page, limit),
+    queryKey: ["pending-resources", page, limit, search],
+    queryFn: () => getPendingResources(page, limit, search),
   });
 };
 

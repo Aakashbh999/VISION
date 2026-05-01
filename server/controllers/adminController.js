@@ -80,21 +80,30 @@ exports.getPendingStudents = catchAsync(async (req, res) => {
    GET Students By Status
  ================================ */
 exports.getStudentsByStatus = catchAsync(async (req, res) => {
-  const status = req.query.status;
+  const { status, search } = req.query;
   const { page, limit, offset } = parsePagination(req.query, {
     defaultLimit: 10,
     maxLimit: 50,
   });
 
-  let whereClause = "";
+  const conditions = [];
   const values = [];
 
   if (status === "suspended") {
-    whereClause = "WHERE p.is_suspended = TRUE";
+    conditions.push("p.is_suspended = TRUE");
   } else if (status) {
-    whereClause = "WHERE p.student_status = $1 AND p.is_suspended = FALSE";
+    conditions.push(`p.student_status = $${values.length + 1} AND p.is_suspended = FALSE`);
     values.push(status);
   }
+
+  if (search) {
+    conditions.push(
+      `(p.full_name ILIKE $${values.length + 1} OR p.tu_registration_no ILIKE $${values.length + 1})`,
+    );
+    values.push(`%${search}%`);
+  }
+
+  const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(" AND ")}` : "";
 
   const query = `
       SELECT 
@@ -216,10 +225,23 @@ exports.deleteDiscussion = catchAsync(async (req, res) => {
   GET ALL REPORTS
  ================================ */
 exports.getReports = catchAsync(async (req, res) => {
+  const { search } = req.query;
   const { page, limit, offset } = parsePagination(req.query, {
     defaultLimit: 10,
     maxLimit: 50,
   });
+
+  const conditions = ["r.status = 'open'"];
+  const params = [];
+
+  if (search) {
+    conditions.push(
+      `(r.reason ILIKE $${params.length + 1} OR r.target_type ILIKE $${params.length + 1} OR CAST(r.target_id AS TEXT) ILIKE $${params.length + 1})`,
+    );
+    params.push(`%${search}%`);
+  }
+
+  const whereClause = `WHERE ${conditions.join(" AND ")}`;
 
   const [reportsResult, totalResult] = await Promise.all([
     pool.query(
@@ -227,13 +249,13 @@ exports.getReports = catchAsync(async (req, res) => {
         SELECT r.*, u.full_name as reporter_name
         FROM portal.reports r
         LEFT JOIN portal.users u ON r.reporter_user_id = u.user_id
-        WHERE r.status = 'open'
+        ${whereClause}
         ORDER BY r.created_at DESC
-        LIMIT $1 OFFSET $2
+        LIMIT $${params.length + 1} OFFSET $${params.length + 2}
         `,
-      [limit, offset],
+      [...params, limit, offset],
     ),
-    pool.query(`SELECT COUNT(*) FROM portal.reports WHERE status = 'open'`),
+    pool.query(`SELECT COUNT(*) FROM portal.reports r ${whereClause}`, params),
   ]);
 
   const total = parseInt(totalResult.rows[0].count);
@@ -883,7 +905,7 @@ exports.resolveReportWithAction = catchAsync(async (req, res) => {
  ================================ */
 
 exports.getRegistrationWhitelists = catchAsync(async (req, res) => {
-  const { batch_year, program } = req.query;
+  const { batch_year, program, search } = req.query;
   const { page, limit, offset } = parsePagination(req.query, {
     defaultLimit: 20,
     maxLimit: 100,
@@ -900,6 +922,11 @@ exports.getRegistrationWhitelists = catchAsync(async (req, res) => {
   if (program) {
     params.push(program);
     whereClause += ` AND program = $${params.length}`;
+  }
+
+  if (search) {
+    params.push(`%${search}%`);
+    whereClause += ` AND (student_name ILIKE $${params.length} OR registration_number ILIKE $${params.length})`;
   }
 
   const query = `

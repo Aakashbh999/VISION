@@ -4,6 +4,7 @@ import { itClubsApi } from "../../../services/admin";
 import { toast } from "react-toastify";
 import AdminTable from "../../../components/admin_ui/AdminTable";
 import AdminConfirmModal from "../../../components/ui/AdminConfirmModal";
+import Button from "../../../components/ui/Button";
 import { Plus, CheckCircle, XCircle } from "lucide-react";
 
 const ItClubs = () => {
@@ -216,10 +217,10 @@ const ItClubs = () => {
               </div>
 
               <div className="flex justify-end gap-3 mt-6 pt-4 border-t border-border-main">
-                <button type="button" onClick={() => setIsModalOpen(false)} className="px-4 py-2 text-sm font-bold text-text-muted hover:bg-bg-active rounded-xl">Cancel</button>
-                <button type="submit" disabled={createMutation.isPending || updateMutation.isPending} className="px-4 py-2 text-sm font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-xl">
-                  {editingItem ? "Update" : "Save"}
-                </button>
+                <Button type="button" variant="secondary" onClick={() => setIsModalOpen(false)} className="rounded-xl">Cancel</Button>
+                <Button type="submit" variant="shiny" isLoading={createMutation.isPending || updateMutation.isPending} className="rounded-xl">
+                  {editingItem ? "Update Club" : "Save Club"}
+                </Button>
               </div>
             </form>
           </div>
