@@ -1,6 +1,7 @@
-import { useState } from "react";
-import { useEffect } from "react";
+import { useState, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import useDebounce from "../../hooks/useDebounce";
 import {
   getRegistrationWhitelist,
   addRegistrationWhitelist,
@@ -28,7 +29,6 @@ import Button from "../../components/ui/Button";
 import AdminTable from "../../components/admin_ui/AdminTable";
 
 import { motion, AnimatePresence } from "framer-motion";
-
 const RegistrationWhitelist = () => {
   // Local state for modal and editing record (must be above useEffect)
   const [isFormModalOpen, setIsFormModalOpen] = useState(false);
@@ -55,24 +55,45 @@ const RegistrationWhitelist = () => {
     }
     setFormDateOfBirth(formatted);
   };
-  const [page, setPage] = useState(1);
-  const [batchYear, setBatchYear] = useState("");
-  const [program, setProgram] = useState("");
+
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  const [page, setPage] = useState(parseInt(searchParams.get("page")) || 1);
+  const [batchYear, setBatchYear] = useState(searchParams.get("batch_year") || "");
+  const [program, setProgram] = useState(searchParams.get("program") || "");
+  const [searchTerm, setSearchTerm] = useState(searchParams.get("search") || "");
+  const debouncedSearchTerm = useDebounce(searchTerm, 500);
   const [modalConfig, setModalConfig] = useState({ isOpen: false });
+
+  // Sync state to URL
+  useEffect(() => {
+    const params = { page: page.toString() };
+    if (batchYear) params.batch_year = batchYear;
+    if (program) params.program = program;
+    if (debouncedSearchTerm) params.search = debouncedSearchTerm;
+    setSearchParams(params, { replace: true });
+  }, [page, batchYear, program, debouncedSearchTerm, setSearchParams]);
+
+  // Reset page when search or filters change
+  useEffect(() => {
+    setPage(1);
+  }, [debouncedSearchTerm, batchYear, program]);
 
   const queryClient = useQueryClient();
   const { data: programsData } = usePrograms();
   const programs = programsData || [];
 
-  const { data, isLoading, error } = useQuery({
-    queryKey: ["registration-whitelist", page, batchYear, program],
+  const { data, isLoading, isFetching, error } = useQuery({
+    queryKey: ["registration-whitelist", page, batchYear, program, debouncedSearchTerm],
     queryFn: () =>
       getRegistrationWhitelist({
         page,
         limit: 10,
         batch_year: batchYear || undefined,
         program: program || undefined,
+        search: debouncedSearchTerm || undefined,
       }),
+    keepPreviousData: true,
   });
 
   const addMutation = useMutation({
@@ -126,7 +147,6 @@ const RegistrationWhitelist = () => {
     });
   };
 
-  if (isLoading) return <LoadingSpinner />;
   if (error)
     return (
       <div className="p-8 text-red-500 font-medium">
@@ -136,6 +156,7 @@ const RegistrationWhitelist = () => {
 
   const records = data?.data || [];
   const pagination = data?.pagination || { totalPages: 1 };
+
 
   const columns = [
     {
@@ -264,10 +285,13 @@ const RegistrationWhitelist = () => {
       <AdminTable
         columns={columns}
         data={records}
-        isLoading={isLoading}
+        isLoading={isLoading || isFetching}
         onEdit={handleOpenForm}
         onDelete={(row) => handleDelete(row.registration_number)}
-        searchPlaceholder="Search this page..."
+        onSearchChange={setSearchTerm}
+        value={searchTerm}
+        searchPlaceholder="Search across all pages..."
+        emptyMessage={searchTerm ? "No records found matching your search." : "No records found."}
       />
 
       {/* Pagination */}

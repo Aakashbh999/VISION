@@ -43,6 +43,7 @@ import RedirectIfAuthenticated from "./components/RedirectIfAuthenticated";
 import CareerPaths from "./pages/CareerPaths";
 import PendingAccessMessage from "./components/portal/PendingAccessMessage";
 import ModeratorRoute from "./components/ModeratorRoute";
+import LoadingSpinner from "./components/ui/LoadingSpinner";
 
 // Admin pages — kept static as they are low‑traffic, role‑gated pages
 import AdminDashboard from "./pages/admin/Dashboard";
@@ -159,24 +160,12 @@ const portalRoutes = [
   { path: "/career-paths", element: <CareerPaths /> },
 ];
 
-// Loading spinner for auth loading state
-const LoadingSpinner = () => (
-  <div className="min-h-screen flex items-center justify-center bg-bg-main">
-    <div className="flex flex-col items-center gap-3">
-      <div className="animate-spin rounded-full h-10 w-10 border-2 border-purple-200 border-t-purple-600" />
-      <p className="text-sm text-text-muted">Loading...</p>
-    </div>
-  </div>
-);
-
 // Suspense fallback for lazy portal pages
 const PageLoader = () => (
-  <div className="min-h-[60vh] flex items-center justify-center">
-    <div className="flex flex-col items-center gap-3">
-      <div className="animate-spin rounded-full h-8 w-8 border-2 border-purple-200 border-t-purple-600" />
-      <p className="text-xs text-text-muted font-medium uppercase tracking-widest">Loading page...</p>
-    </div>
-  </div>
+  <LoadingSpinner
+    size="sm"
+    className="min-h-[60vh] py-0"
+  />
 );
 
 // Helper components for PublicLayout
@@ -285,7 +274,7 @@ function AppContent() {
   const { user, isLoading, isAuthenticated } = useAuth();
 
   if (isLoading) {
-    return <LoadingSpinner />;
+    return <LoadingSpinner className="min-h-screen bg-bg-main py-0" />;
   }
 
   // Define portal paths (true portal pages)

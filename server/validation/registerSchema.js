@@ -64,9 +64,9 @@ const registerSchema = z.object({
   ),
   semester_is_manual: z.preprocess(toBoolean, z.boolean().optional()),
   tu_registration_no: z
-    .string()
+    .string({ required_error: "TU registration number is required." })
     .trim()
-    .optional()
+    .min(1, "TU registration number is required.")
     .transform((value) => (value ? value : null)),
   date_of_birth: z
     .string()

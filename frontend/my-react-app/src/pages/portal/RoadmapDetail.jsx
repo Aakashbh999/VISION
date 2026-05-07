@@ -147,13 +147,18 @@ const RoadmapDetail = () => {
   
   // A step is "locked" if it's not the next available one and the roadmap is active
   const isStepLocked = (index) => {
+    if (isCompleted) return false; // If completed, everything is unlocked
     if (index === 0) return false; // First step is always unlocked
     if (firstIncompleteIndex === -1) return false; // All completed
     return index > firstIncompleteIndex;
   };
 
   const handleComplete = (stepId) => {
-    completeStepMutation.mutate(stepId);
+    completeStepMutation.mutate(stepId, {
+      onSuccess: () => {
+        setTimeout(() => window.location.reload(), 1000);
+      }
+    });
   };
 
   return (

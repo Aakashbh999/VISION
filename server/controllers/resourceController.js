@@ -260,10 +260,26 @@ exports.uploadResource = catchAsync(async (req, res) => {
 
     await client.query("COMMIT");
 
+    // Fetch the full resource data with joined fields to return to the frontend
+    const fullResource = await pool.query(
+      `SELECT 
+         r.*,
+         u.user_id AS uploader_id,
+         u.full_name AS uploader_name,
+         ad.degree_code AS degree_name,
+         p.program_name
+       FROM portal.resources r
+       LEFT JOIN portal.users u ON u.user_id = r.created_by
+       LEFT JOIN portal.academic_degrees ad ON ad.id = r.degree_id
+       LEFT JOIN portal.programs p ON p.program_id = r.program_id
+       WHERE r.resource_id = $1`,
+      [resourceId]
+    );
+
     res.status(201).json({
       success: true,
       message: finalStatus === 'approved' ? "Resource created and approved" : "Resource submitted for review",
-      data: result.rows[0],
+      data: fullResource.rows[0],
     });
   } catch (error) {
     await client.query("ROLLBACK");
@@ -481,10 +497,23 @@ exports.getMyResources = catchAsync(async (req, res) => {
  * GET /api/admin/resources/pending
  */
 exports.getPendingResources = catchAsync(async (req, res) => {
+  const { search } = req.query;
   const { page: pageNum, limit: limitNum, offset } = parsePagination(req.query, {
     defaultLimit: 10,
     maxLimit: 50,
   });
+
+  const conditions = ["r.status = 'pending'", "r.deleted_at IS NULL"];
+  const params = [];
+
+  if (search) {
+    conditions.push(
+      `(r.title ILIKE $${params.length + 1} OR r.description ILIKE $${params.length + 1} OR u.full_name ILIKE $${params.length + 1})`,
+    );
+    params.push(`%${search}%`);
+  }
+
+  const whereClause = `WHERE ${conditions.join(" AND ")}`;
 
   const [dataResult, countResult] = await Promise.all([
     pool.query(
@@ -500,13 +529,16 @@ exports.getPendingResources = catchAsync(async (req, res) => {
          JOIN auth.users a     ON a.auth_user_id = u.auth_user_id
          LEFT JOIN portal.academic_degrees ad ON ad.id = r.degree_id
          LEFT JOIN portal.programs p          ON p.program_id = r.program_id
-         WHERE r.status = 'pending' AND r.deleted_at IS NULL
+         ${whereClause}
          ORDER BY r.created_at ASC
-         LIMIT $1 OFFSET $2`,
-      [limitNum, offset],
+         LIMIT $${params.length + 1} OFFSET $${params.length + 2}`,
+      [...params, limitNum, offset],
     ),
     pool.query(
-      `SELECT COUNT(*) FROM portal.resources WHERE status = 'pending' AND deleted_at IS NULL`,
+      `SELECT COUNT(*) FROM portal.resources r 
+       JOIN portal.users u ON u.user_id = r.created_by
+       ${whereClause}`,
+      params,
     ),
   ]);
 

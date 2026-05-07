@@ -23,6 +23,7 @@ import Cropper from "react-easy-crop";
 import "react-easy-crop/react-easy-crop.css";
 import { X, ZoomIn, ZoomOut, Check, Upload } from "lucide-react";
 import { showToast } from "../utils/toast";
+import Button from "./ui/Button";
 
 const MAX_BYTES = 1 * 1024 * 1024; // 1 MB
 
@@ -184,19 +185,20 @@ export default function VisionImageEditor({
             />
 
             <div className="flex items-center justify-end gap-3 pt-1">
-              <button
+              <Button
+                variant="secondary"
                 onClick={handleCancel}
-                className="px-4 py-2 rounded-lg text-sm font-semibold text-[var(--text-muted)] hover:bg-[var(--bg-active)] transition-colors"
+                className="rounded-lg"
               >
                 Cancel
-              </button>
-              <button
+              </Button>
+              <Button
                 onClick={() => fileInputRef.current?.click()}
-                className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-purple-600 hover:bg-purple-700 text-white text-sm font-semibold transition-colors"
+                className="rounded-lg"
               >
                 <Upload className="w-4 h-4" />
                 Choose Image
-              </button>
+              </Button>
             </div>
           </div>
         </div>
@@ -282,29 +284,21 @@ export default function VisionImageEditor({
 
         {/* Confirm / Cancel */}
         <div className="flex gap-3 shrink-0">
-          <button
+          <Button
+            variant="outline"
             onClick={handleCancel}
-            className="px-5 py-2.5 rounded-xl text-sm font-bold text-white/70 hover:text-white border border-white/20 hover:border-white/40 transition-colors"
+            className="text-white/70 hover:text-white border-white/20 hover:border-white/40"
           >
             Cancel
-          </button>
-          <button
+          </Button>
+          <Button
             onClick={handleConfirm}
-            disabled={processing || isLoading}
-            className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold bg-purple-600 hover:bg-purple-700 text-white transition-colors disabled:opacity-50"
+            isLoading={processing || isLoading}
+            className="bg-purple-600 hover:bg-purple-700 text-white"
           >
-            {processing || isLoading ? (
-              <>
-                <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                Saving...
-              </>
-            ) : (
-              <>
-                <Check className="w-4 h-4" />
-                Apply
-              </>
-            )}
-          </button>
+            <Check className="w-4 h-4" />
+            Apply
+          </Button>
         </div>
       </div>
     </div>

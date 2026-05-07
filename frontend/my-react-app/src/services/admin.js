@@ -16,8 +16,8 @@ export const getPendingStudents = async () => {
 };
 
 // Get students by status (approved, pending_review, rejected, suspended)
-export const getStudentsByStatus = async (status, page = 1, limit = 10) => {
-  return httpGet("/admin/students", { status, page, limit });
+export const getStudentsByStatus = async (status, page = 1, limit = 10, search = "") => {
+  return httpGet("/admin/students", { status, page, limit, search });
 };
 
 // Approve student
@@ -41,8 +41,8 @@ export const reactivateStudent = async (userId) => {
 };
 
 // Get open reports (with pagination)
-export const getReports = async (page = 1, limit = 10) => {
-  return httpGet("/admin/reports", { page, limit });
+export const getReports = async (page = 1, limit = 10, search = "") => {
+  return httpGet("/admin/reports", { page, limit, search });
 };
 
 // Close a report

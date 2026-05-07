@@ -6,7 +6,7 @@ import AboutMeCard from "../components/AboutMeCard";
 import AcademicBackgroundCard from "../components/AcademicBackgroundCard";
 import ProfileImageEditors from "../components/ProfileImageEditors";
 import ProfileAvatarModal from "../components/ProfileAvatarModal";
-import ProfileEditActionBar from "../components/ProfileEditActionBar";
+import LoadingSpinner from "../../../components/ui/LoadingSpinner";
 
 const ProfilePage = () => {
   const {
@@ -44,14 +44,7 @@ const ProfilePage = () => {
   } = useProfilePageState();
 
   if (isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="flex flex-col items-center gap-3">
-          <div className="animate-spin rounded-full h-10 w-10 border-2 border-purple-200 border-t-purple-600"></div>
-          <p className="text-sm text-(--text-muted)">Loading profile...</p>
-        </div>
-      </div>
-    );
+    return <LoadingSpinner label="Synchronizing your vision profile..." className="min-h-screen" />;
   }
 
   if (!profile) {

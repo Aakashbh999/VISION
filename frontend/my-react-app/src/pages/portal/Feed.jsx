@@ -143,9 +143,6 @@ const Feed = () => {
         {isLoading && page === 1 ? (
           <SurfaceCard className="py-20 flex flex-col items-center justify-center gap-4">
             <LoadingSpinner />
-            <p className="text-xs font-black uppercase tracking-widest text-(--text-muted) animate-pulse">
-              Curating your feed...
-            </p>
           </SurfaceCard>
         ) : error ? (
           <ErrorState
@@ -180,12 +177,7 @@ const Feed = () => {
             className="pt-12 pb-24 flex flex-col items-center gap-4"
           >
             {isFetching ? (
-              <div className="flex flex-col items-center gap-2">
-                <Loader2 className="w-6 h-6 text-purple-600 animate-spin" />
-                <span className="text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-slate-300">
-                  Loading more...
-                </span>
-              </div>
+              <LoadingSpinner size="sm" inline />
             ) : (
               <Button
                 onClick={() => setPage((prev) => prev + 1)}

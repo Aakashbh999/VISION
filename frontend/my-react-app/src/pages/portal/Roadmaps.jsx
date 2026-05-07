@@ -108,12 +108,7 @@ const Roadmaps = () => {
 
       <div className="min-h-[400px]">
         {isLoading ? (
-          <SurfaceCard className="flex flex-col items-center justify-center py-16 sm:py-24">
-            <LoadingSpinner />
-            <p className="mt-4 text-xs font-black text-[var(--text-muted)] uppercase tracking-widest">
-              Mapping your future...
-            </p>
-          </SurfaceCard>
+          <LoadingSpinner className="py-24" />
         ) : error ? (
           <ErrorState
             title="Roadmaps unavailable"

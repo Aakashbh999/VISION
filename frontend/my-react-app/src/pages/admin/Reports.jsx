@@ -1,5 +1,7 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import useDebounce from "../../hooks/useDebounce";
 import {
   getReports,
   resolveReportAction,
@@ -18,6 +20,7 @@ import {
   MessageSquare,
   FileText,
   Search,
+  Loader2,
 } from "lucide-react";
 import { showToast } from "../../utils/toast";
 import AdminConfirmModal from "../../components/ui/AdminConfirmModal";
@@ -163,15 +166,30 @@ const ExaminationModal = ({ isOpen, onClose, reportId }) => {
 };
 
 const Reports = () => {
-  const [page, setPage] = useState(1);
-  const [searchTerm, setSearchTerm] = useState("");
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [page, setPage] = useState(parseInt(searchParams.get("page")) || 1);
+  const [searchTerm, setSearchTerm] = useState(searchParams.get("search") || "");
+  const debouncedSearchTerm = useDebounce(searchTerm, 500);
   const [modalConfig, setModalConfig] = useState({ isOpen: false });
   const [examineId, setExamineId] = useState(null);
   const queryClient = useQueryClient();
 
-  const { data, isLoading, error } = useQuery({
-    queryKey: ["reports", page],
-    queryFn: () => getReports(page),
+  // Sync state to URL
+  useEffect(() => {
+    const params = { page: page.toString() };
+    if (debouncedSearchTerm) params.search = debouncedSearchTerm;
+    setSearchParams(params, { replace: true });
+  }, [page, debouncedSearchTerm, setSearchParams]);
+
+  // Reset page when search changes
+  useEffect(() => {
+    setPage(1);
+  }, [debouncedSearchTerm]);
+
+  const { data, isLoading, isFetching, error } = useQuery({
+    queryKey: ["reports", page, debouncedSearchTerm],
+    queryFn: () => getReports(page, 10, debouncedSearchTerm),
+    keepPreviousData: true,
   });
 
   const resolveMutation = useMutation({
@@ -185,23 +203,12 @@ const Reports = () => {
     },
   });
 
-  if (isLoading) return <LoadingSpinner />;
   if (error)
     return <div className="p-8 text-red-500">Failed to load reports</div>;
 
   const reports = data?.data || [];
   const pagination = data?.pagination || { totalPages: 1 };
 
-  const filteredReports = reports.filter(report => {
-    if (!searchTerm) return true;
-    const term = searchTerm.toLowerCase();
-    return (
-      report.reason?.toLowerCase().includes(term) ||
-      report.target_type?.toLowerCase().includes(term) ||
-      String(report.target_id).toLowerCase().includes(term) ||
-      String(report.reporter_user_id).toLowerCase().includes(term)
-    );
-  });
 
   const handleAction = (reportId, action) => {
     let title = "";
@@ -237,7 +244,6 @@ const Reports = () => {
       confirmText,
       onConfirm: () => {
         resolveMutation.mutate({ reportId, action });
-        setModalConfig({ isOpen: false });
       },
     });
   };
@@ -256,11 +262,16 @@ const Reports = () => {
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-text-muted" />
           <input
             type="text"
-            placeholder="Search this page..."
+            placeholder="Search across all pages..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="w-full pl-10 pr-4 py-2 bg-bg-card border border-border-main rounded-xl text-sm focus:border-rose-500 outline-none transition-colors shadow-sm"
           />
+          {(isLoading || isFetching) && (
+            <div className="absolute right-3 top-1/2 -translate-y-1/2">
+              <Loader2 className="w-4 h-4 text-rose-500 animate-spin" />
+            </div>
+          )}
         </div>
       </div>
 
@@ -291,13 +302,19 @@ const Reports = () => {
               </tr>
             </thead>
             <tbody className="bg-bg-card divide-y divide-border-main">
-              {filteredReports.length === 0 ? (
+              {isLoading ? (
                 <tr>
-                  <td colSpan="3" className="px-6 py-12 text-center text-text-muted italic">
-                    {searchTerm ? "No reports match your search on this page." : "No reports found."}
+                  <td colSpan="3" className="px-6 py-12">
+                    <LoadingSpinner />
                   </td>
                 </tr>
-              ) : filteredReports.map((report) => (
+              ) : reports.length === 0 ? (
+                <tr>
+                  <td colSpan="3" className="px-6 py-12 text-center text-text-muted italic">
+                    {searchTerm ? "No reports found matching your search." : "No reports found."}
+                  </td>
+                </tr>
+              ) : reports.map((report) => (
                 <tr
                   key={report.report_id}
                   className="hover:bg-bg-active/30 transition-colors"

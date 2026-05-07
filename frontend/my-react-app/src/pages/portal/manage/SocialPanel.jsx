@@ -95,9 +95,8 @@ const SocialPanel = () => {
 
   const getUserSubtitle = (user) => {
     if (user.is_mutual) return "Friends";
-    if (socialTab === "followers")
-      return user.is_following ? "Following back" : "Follows you";
-    return "You follow this user";
+    if (socialTab === "followers") return "Follows you";
+    return "Following";
   };
 
   const tabOptions = [
@@ -175,9 +174,11 @@ const SocialPanel = () => {
                             </span>
                           )}
                         </div>
-                        <p className="text-sm text-[var(--text-muted)] truncate">
-                          {subtitle}
-                        </p>
+                        {subtitle && (
+                          <p className="text-sm text-[var(--text-muted)] truncate">
+                            {subtitle}
+                          </p>
+                        )}
                         <p className="text-xs text-[var(--text-muted)] mt-1">
                           Followed{" "}
                           {formatDistanceToNow(new Date(user.followed_at), {
@@ -223,7 +224,7 @@ const SocialPanel = () => {
           {/* Loading overlay */}
           {(activeQuery.isFetching || activeQuery.isLoading) && (
             <div className="absolute inset-0 flex justify-center items-center bg-[var(--bg-active)]/50 backdrop-blur-sm rounded-3xl z-10">
-              <LoadingSpinner />
+              <LoadingSpinner size="sm" />
             </div>
           )}
 
@@ -254,9 +255,11 @@ const SocialPanel = () => {
                   <h3 className="text-lg font-black text-[var(--text-main)] truncate">
                     {selectedUser.full_name}
                   </h3>
-                  <p className="text-sm text-[var(--text-muted)] mt-1">
-                    {getUserSubtitle(selectedUser)}
-                  </p>
+                  {getUserSubtitle(selectedUser) && (
+                    <p className="text-sm text-[var(--text-muted)] mt-1">
+                      {getUserSubtitle(selectedUser)}
+                    </p>
+                  )}
                 </div>
               </div>
 

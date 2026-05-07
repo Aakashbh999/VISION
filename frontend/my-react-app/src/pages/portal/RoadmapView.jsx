@@ -123,9 +123,7 @@ const LeaveModal = ({ roadmapTitle, onConfirm, onCancel, isLeaving }) => (
           className="flex-1 px-4 py-3 rounded-2xl bg-rose-600 text-white text-sm font-black hover:bg-rose-700 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
         >
           {isLeaving ? (
-            <>
-              <LoadingSpinner size={14} inline /> Leaving...{" "}
-            </>
+              <LoadingSpinner size={14} inline />
           ) : (
             <>
               <LogOut className="w-4 h-4" /> Leave Roadmap
@@ -289,6 +287,8 @@ const RoadmapView = () => {
           });
         }
       }
+      // Auto-reload after a short delay to ensure everything is in sync
+      setTimeout(() => window.location.reload(), 2000);
     } catch (error) {
       console.error("Completion failed:", error);
     }
@@ -417,7 +417,6 @@ const RoadmapView = () => {
               <LoadingState
                 variant="card"
                 count={3}
-                text="Loading roadmap..."
               />
             </div>
           ) : completeStepMutation.isPending ? (
@@ -425,7 +424,6 @@ const RoadmapView = () => {
               <LoadingState
                 variant="card"
                 count={2}
-                text="Completing step..."
               />
             </div>
           ) : (
@@ -476,7 +474,7 @@ const RoadmapView = () => {
                     index={i}
                     totalSteps={steps.length}
                     isActive={i === completedCount && isActiveRoadmap}
-                    isLocked={i > completedCount || !isActiveRoadmap}
+                    isLocked={!isCompleted && (i > completedCount || !isActiveRoadmap)}
                     onClick={handleStepClick}
                   />
                 ))}

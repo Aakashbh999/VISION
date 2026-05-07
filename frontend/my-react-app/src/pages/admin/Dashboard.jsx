@@ -108,7 +108,9 @@ const Dashboard = () => {
     queryFn: () => getModerationLogs(1, 5),
   });
 
-  if (statsLoading || logsLoading) return <LoadingSpinner />;
+  if (statsLoading || logsLoading) {
+    return <LoadingSpinner className="min-h-[80vh]" />;
+  }
 
   const stats = statsData || {};
   const users = stats.users || {};

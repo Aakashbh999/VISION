@@ -17,14 +17,9 @@ const specialtiesList = [
   "All", "Web", "AI", "Cyber", "Cloud", "Data", "Robotics", "Open Source",
 ];
 
-const containerVariants = {
-  hidden: { opacity: 0 },
-  visible: { opacity: 1, transition: { staggerChildren: 0.1 } },
-};
-const itemVariants = {
-  hidden: { y: 20, opacity: 0 },
-  visible: { y: 0, opacity: 1, transition: { type: "spring", stiffness: 100, damping: 15 } },
-};
+// Grid animation constants
+const GRID_ANIMATION_DELAY = 0.05;
+const GRID_ANIMATION_DURATION = 0.4;
 
 const Clubs = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -158,20 +153,24 @@ const Clubs = () => {
             </SurfaceCard>
           </motion.div>
         ) : (
-          <motion.div
-            key={`clubs-page-${currentPage}`}
-            variants={containerVariants}
-            initial="hidden"
-            animate="visible"
-            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6"
-          >
-            {clubs.map((club) => (
-              <motion.div key={club.id} variants={itemVariants} className="group h-full">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+            {clubs.map((club, index) => (
+              <motion.div
+                key={club.id}
+                initial={{ opacity: 0, y: 15 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{
+                  duration: GRID_ANIMATION_DURATION,
+                  delay: (index % 9) * GRID_ANIMATION_DELAY,
+                  ease: "easeOut",
+                }}
+                className="group h-full"
+              >
                 <SurfaceCard
                   to={`/clubs/${club.slug}`}
                   as={Link}
                   variant="interactive"
-                  className="relative h-full border-x-0 sm:border-x rounded-[2.5rem] p-5 sm:p-6 hover:shadow-[0_20px_40px_-15px_rgba(124,58,237,0.15)] hover:border-purple-500/45 transition-all duration-300 flex flex-col overflow-hidden"
+                  className="relative h-full border-x-0 sm:border-x rounded-[2.5rem] p-5 sm:p-6 hover:shadow-[0_20px_40px_-15px_rgba(124,58,237,0.15)] hover:border-purple-500/45 transition-[box-shadow,border-color] duration-300 flex flex-col overflow-hidden"
                 >
                   <div className="flex items-start gap-4">
                     <ClubAvatarLogo
@@ -211,7 +210,7 @@ const Clubs = () => {
                 </SurfaceCard>
               </motion.div>
             ))}
-          </motion.div>
+          </div>
         )}
       </div>
 
