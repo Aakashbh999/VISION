@@ -100,8 +100,19 @@ exports.getPublicProfile = catchAsync(async (req, res) => {
         EXISTS(
           SELECT 1 FROM portal.user_followers
           WHERE follower_id = $2 AND following_id = u.user_id
-        ) AS is_following`
-            : ", FALSE AS is_following"
+        ) AS is_following,
+        (
+          EXISTS(
+            SELECT 1 FROM portal.user_followers
+            WHERE follower_id = $2 AND following_id = u.user_id
+          )
+          AND
+          EXISTS(
+            SELECT 1 FROM portal.user_followers
+            WHERE follower_id = u.user_id AND following_id = $2
+          )
+        ) AS is_mutual`
+            : ", FALSE AS is_following, FALSE AS is_mutual"
         }
        FROM portal.users u
        LEFT JOIN portal.campuses c_rel ON c_rel.campus_id = u.campus_id
@@ -659,9 +670,16 @@ exports.getFollowers = catchAsync(async (req, res) => {
               SELECT 1 FROM portal.user_followers
               WHERE follower_id = $2 AND following_id = u.user_id
             ) AS is_following,
-            EXISTS(
-              SELECT 1 FROM portal.user_followers
-              WHERE follower_id = u.user_id AND following_id = $2
+            (
+              EXISTS(
+                SELECT 1 FROM portal.user_followers
+                WHERE follower_id = $2 AND following_id = u.user_id
+              )
+              AND
+              EXISTS(
+                SELECT 1 FROM portal.user_followers
+                WHERE follower_id = u.user_id AND following_id = $2
+              )
             ) AS is_mutual
          FROM portal.user_followers uf
          JOIN portal.users u ON u.user_id = uf.follower_id
@@ -710,10 +728,20 @@ exports.getFollowing = catchAsync(async (req, res) => {
             u.full_name,
             u.profile_image,
             uf.followed_at,
-            TRUE AS is_following,
             EXISTS(
               SELECT 1 FROM portal.user_followers
-              WHERE follower_id = u.user_id AND following_id = $2
+              WHERE follower_id = $2 AND following_id = u.user_id
+            ) AS is_following,
+            (
+              EXISTS(
+                SELECT 1 FROM portal.user_followers
+                WHERE follower_id = $2 AND following_id = u.user_id
+              )
+              AND
+              EXISTS(
+                SELECT 1 FROM portal.user_followers
+                WHERE follower_id = u.user_id AND following_id = $2
+              )
             ) AS is_mutual
          FROM portal.user_followers uf
          JOIN portal.users u ON u.user_id = uf.following_id

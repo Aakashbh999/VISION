@@ -1,6 +1,7 @@
 import { motion } from "framer-motion";
 import SkeletonCard from "./SkeletonCard";
 import SkeletonList from "./SkeletonList";
+import LoadingSpinner from "./LoadingSpinner";
 
 /**
  * Improved Loading State Component
@@ -11,30 +12,10 @@ import SkeletonList from "./SkeletonList";
  * - count: Number of skeleton items to show
  * - text: Optional loading message text
  */
-const LoadingState = ({ variant = "card", count = 3, text = null }) => {
+const LoadingState = ({ variant = "card", count = 3 }) => {
   // Spinner variant (original behavior)
   if (variant === "spinner") {
-    return (
-      <div className="flex flex-col items-center justify-center py-20">
-        <motion.div
-          animate={{ rotate: 360 }}
-          transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
-          className="w-12 h-12 border-4 border-purple-200 dark:border-purple-900 border-t-purple-600 rounded-full"
-          aria-busy="true"
-          aria-label="Loading"
-        />
-        {text && (
-          <motion.p
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.3 }}
-            className="mt-4 text-sm font-bold text-[var(--text-muted)] uppercase tracking-widest"
-          >
-            {text}
-          </motion.p>
-        )}
-      </div>
-    );
+    return <LoadingSpinner />;
   }
 
   // Skeleton variants

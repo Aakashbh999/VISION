@@ -55,7 +55,13 @@ exports.getPendingStudents = catchAsync(async (req, res) => {
         p.date_of_birth,
         p.batch_year,
         p.academic_certificate_url,
-        c.campus_name
+        c.campus_name,
+        EXISTS(
+          SELECT 1 FROM portal.registration_no rn
+          WHERE rn.registration_number = p.tu_registration_no
+          AND rn.batch_year = p.batch_year
+          AND rn.date_of_birth = p.date_of_birth
+        ) AS is_whitelisted
       FROM portal.users p
       JOIN auth.users a ON p.auth_user_id = a.auth_user_id
       LEFT JOIN portal.programs pr ON p.program_id = pr.program_id

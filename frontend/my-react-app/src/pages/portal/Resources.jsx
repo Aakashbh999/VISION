@@ -218,9 +218,7 @@ const ResourcesContent = () => {
 
       {/* Content Results */}
       {isLoading ? (
-        <SurfaceCard className="py-16 sm:py-24 flex justify-center">
-          <LoadingSpinner size="lg" />
-        </SurfaceCard>
+        <LoadingSpinner size="lg" className="py-24" />
       ) : error ? (
         <ErrorState
           title="Resource library unavailable"
@@ -272,7 +270,7 @@ const ResourcesContent = () => {
           )}
         </SurfaceCard>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-6 sm:gap-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
           {resourcesData.data.map((resource) => (
             <ResourceCard key={resource.resource_id} resource={resource} />
           ))}

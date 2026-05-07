@@ -95,9 +95,8 @@ const SocialPanel = () => {
 
   const getUserSubtitle = (user) => {
     if (user.is_mutual) return "Friends";
-    if (socialTab === "followers")
-      return user.is_following ? "Following back" : "Follows you";
-    return null;
+    if (socialTab === "followers") return "Follows you";
+    return "Following";
   };
 
   const tabOptions = [
@@ -225,7 +224,7 @@ const SocialPanel = () => {
           {/* Loading overlay */}
           {(activeQuery.isFetching || activeQuery.isLoading) && (
             <div className="absolute inset-0 flex justify-center items-center bg-[var(--bg-active)]/50 backdrop-blur-sm rounded-3xl z-10">
-              <LoadingSpinner />
+              <LoadingSpinner size="sm" />
             </div>
           )}
 

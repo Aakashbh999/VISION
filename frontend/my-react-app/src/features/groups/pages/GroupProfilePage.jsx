@@ -33,6 +33,7 @@ import {
   MoreHorizontal,
 } from "lucide-react";
 import { motion as Motion } from "framer-motion";
+import LoadingSpinner from "../../../components/ui/LoadingSpinner";
 
 // ─────────────────────────────────────────────
 //  Permission levels
@@ -196,16 +197,7 @@ export default function GroupProfilePage() {
 
   // ── Loading / Error states ──────────────────
   if (groupLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="flex flex-col items-center gap-3">
-          <div className="animate-spin rounded-full h-10 w-10 border-2 border-purple-200 border-t-purple-600" />
-          <p className="text-sm text-[var(--text-muted)]">
-            Loading group profile...
-          </p>
-        </div>
-      </div>
-    );
+    return <LoadingSpinner label="Accessing circle workspace..." className="min-h-screen" />;
   }
 
   if (groupError || !group) {

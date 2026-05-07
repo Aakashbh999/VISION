@@ -31,6 +31,8 @@ export const useRoadmapStatus = (id) => {
     onSuccess: (data) => {
       toast.success(data.message || "Roadmap locked.");
       queryClient.invalidateQueries({ queryKey: ["roadmap-status", id] });
+      queryClient.invalidateQueries({ queryKey: ["roadmap-path", id] });
+      queryClient.invalidateQueries({ queryKey: ["roadmap", id] });
       queryClient.invalidateQueries({ queryKey: ["roadmaps"] });
     },
     onError: (error) => {

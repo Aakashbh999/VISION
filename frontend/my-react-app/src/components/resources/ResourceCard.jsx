@@ -13,6 +13,7 @@ import {
   Eye,
   X,
   FileType,
+  GraduationCap,
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { formatDistanceToNow } from "date-fns";
@@ -154,7 +155,12 @@ const ResourceCard = ({
     created_at,
     rejection_reason,
     original_filename,
+    created_by,
   } = resource;
+
+  // Robust field resolution with fallbacks for newly uploaded or mismatched records
+  const uploaderId = uploader_id || created_by;
+  const uploaderName = uploader_name || "Unknown User";
 
   const resourceLink = resource_type === "link" ? url : file_url;
   const statusConfig = getStatusConfig(status);
@@ -326,38 +332,52 @@ const ResourceCard = ({
           <div className="mt-auto space-y-2">
             <div className="flex flex-wrap gap-2">
               {program_name && (
-                <span className="inline-flex items-center gap-1 text-xs text-[var(--text-muted)] bg-[var(--bg-active)] px-2 py-1 rounded border border-[var(--border-main)]">
-                  <User className="w-3 h-3" /> {program_name}
+                <span className="inline-flex items-center gap-1 text-[10px] font-bold text-[var(--text-muted)] bg-[var(--bg-active)] px-2 py-1 rounded-md border border-[var(--border-main)] uppercase tracking-tight">
+                  <GraduationCap className="w-3 h-3 text-purple-500" /> {program_name}
                 </span>
               )}
               {semester && (
-                <span className="inline-flex items-center gap-1 text-xs text-[var(--text-muted)] bg-[var(--bg-active)] px-2 py-1 rounded border border-[var(--border-main)]">
-                  <Calendar className="w-3 h-3" /> Sem {semester}
+                <span className="inline-flex items-center gap-1 text-[10px] font-bold text-[var(--text-muted)] bg-[var(--bg-active)] px-2 py-1 rounded-md border border-[var(--border-main)] uppercase tracking-tight">
+                  <Calendar className="w-3 h-3 text-purple-500" /> Sem {semester}
                 </span>
               )}
             </div>
-            <div className="flex items-center justify-between text-xs text-[var(--text-muted)] mt-2">
-              {uploader_id ? (
-                <Link
-                  to={`/profile/${uploader_id}`}
-                  className="flex items-center gap-1 hover:text-purple-600 transition-colors"
-                  title="View profile"
-                >
-                  <User className="w-3 h-3" />
-                  <span className="font-medium">
-                    {uploader_name || "Unknown"}
-                  </span>
-                </Link>
-              ) : (
-                <span className="flex items-center gap-1">
-                  <User className="w-3 h-3" />
-                  {uploader_name || "Unknown"}
+            <div className="flex items-end justify-between mt-4 pt-3 border-t border-[var(--border-main)]/50 gap-4">
+              <div className="flex flex-col min-w-0 flex-1">
+                <span className="text-[10px] font-black text-[var(--text-muted)] uppercase tracking-widest mb-1">
+                  Uploaded By
                 </span>
-              )}
-              <span className="flex items-center gap-1">
-                <Clock className="w-3 h-3" />
-                {formatDistanceToNow(new Date(created_at), { addSuffix: true })}
-              </span>
+                {uploaderId ? (
+                  <Link
+                    to={`/profile/${uploaderId}`}
+                    className="flex items-center gap-2 text-xs font-bold text-[var(--text-main)] hover:text-purple-600 transition-all group/uploader min-w-0"
+                    title={`View ${uploaderName}'s profile`}
+                  >
+                    <div className="w-6 h-6 rounded-full bg-purple-100 flex items-center justify-center group-hover/uploader:bg-purple-600 transition-colors flex-shrink-0">
+                      <User className="w-3.5 h-3.5 text-purple-600 group-hover/uploader:text-white" />
+                    </div>
+                    <span className="truncate">
+                      {uploaderName}
+                    </span>
+                  </Link>
+                ) : (
+                  <div className="flex items-center gap-2 text-xs font-bold text-[var(--text-muted)] min-w-0">
+                    <User className="w-3.5 h-3.5" />
+                    <span className="truncate">{uploaderName}</span>
+                  </div>
+                )}
+              </div>
+              <div className="flex flex-col items-end flex-shrink-0">
+                <span className="text-[10px] font-black text-[var(--text-muted)] uppercase tracking-widest mb-1">
+                  Shared
+                </span>
+                <span className="flex items-center gap-1.5 text-xs font-medium text-[var(--text-muted)] whitespace-nowrap">
+                  <Clock className="w-3.5 h-3.5 text-purple-400" />
+                  {formatDistanceToNow(new Date(created_at), {
+                    addSuffix: true,
+                  })}
+                </span>
+              </div>
             </div>
           </div>
         </div>

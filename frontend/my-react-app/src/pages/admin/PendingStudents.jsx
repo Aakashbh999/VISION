@@ -101,9 +101,16 @@ const PendingStudents = () => {
     {
       header: "Registration",
       render: (row) => (
-        <code className="text-xs font-mono bg-bg-active px-2 py-1 rounded text-text-muted border border-border-main">
-          {row.tu_registration_no}
-        </code>
+        <div className="flex flex-col gap-1">
+          <code className="text-xs font-mono bg-bg-active px-2 py-1 rounded text-text-muted border border-border-main w-fit">
+            {row.tu_registration_no}
+          </code>
+          {row.is_whitelisted && (
+            <span className="flex items-center gap-1 text-[10px] font-bold text-green-600 bg-green-500/10 px-1.5 py-0.5 rounded-full border border-green-500/20 w-fit">
+              <ShieldCheck className="w-3 h-3" /> Whitelist Match
+            </span>
+          )}
+        </div>
       )
     },
     {

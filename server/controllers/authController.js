@@ -118,20 +118,8 @@ exports.register = catchAsync(async (req, res) => {
 
     const academicCertificateUrl = req.file.path;
 
-    // Check if registration exists in the pre-verified whitelist
-    let studentStatus = "pending_review";
-    if (tu_registration_no) {
-      const whitelistHit = await client.query(
-        `SELECT 1 FROM portal.registration_no 
-         WHERE registration_number = $1 
-         AND batch_year = $2 
-         AND date_of_birth = $3`,
-        [tu_registration_no, normalizedBatchYear, date_of_birth],
-      );
-      if (whitelistHit.rows.length > 0) {
-        studentStatus = "approved";
-      }
-    }
+    // All users start as pending_review for manual admin verification
+    const studentStatus = "pending_review";
 
     // 3. Insert into portal.users phase (atomic step)
     const portalInsert = await client.query(

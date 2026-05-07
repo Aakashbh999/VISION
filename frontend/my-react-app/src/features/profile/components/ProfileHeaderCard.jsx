@@ -238,6 +238,11 @@ const ProfileHeaderCard = ({
                       Moderator
                     </span>
                   )}
+                  {profile.is_mutual && (
+                    <span className="px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest bg-purple-500/15 text-purple-500 border border-purple-500/30">
+                      Friends
+                    </span>
+                  )}
                 </h1>
               )}
 
