@@ -10,6 +10,7 @@ import {
   AlertTriangle,
   Maximize2,
   Image as ImageIcon,
+  Rocket,
 } from "lucide-react";
 import { toast } from "react-toastify";
 import ActionMenu from "../../../../components/ui/ActionMenu";
@@ -25,7 +26,10 @@ const DiscussionPostCard = ({
   isImageLoading,
   setIsImageLoading,
   setLightbox,
+  onLike,
+  isVoting,
   toggleSaveMutation,
+  boostMutation,
   onOpenReport,
 }) => {
   const normalizeProfileId = (value) => {
@@ -46,6 +50,8 @@ const DiscussionPostCard = ({
   const isDiscussionOwner =
     String(authorProfileId || "") ===
     String(user?.portal_user_id || user?.user_id || "");
+
+  const isBoosted = discussion.is_boosted && new Date(discussion.boosted_until) > new Date();
 
   return (
     <motion.div
@@ -77,7 +83,9 @@ const DiscussionPostCard = ({
                       .replace(/\s+/g, "")}
                   </span>
                   <span className="opacity-50">•</span>
-                  <span>{new Date(discussion.created_at).toLocaleDateString()}</span>
+                  <span>
+                    {new Date(discussion.created_at).toLocaleDateString()}
+                  </span>
                 </div>
               </div>
             </Link>
@@ -100,18 +108,29 @@ const DiscussionPostCard = ({
                       .replace(/\s+/g, "")}
                   </span>
                   <span className="opacity-50">•</span>
-                  <span>{new Date(discussion.created_at).toLocaleDateString()}</span>
+                  <span>
+                    {new Date(discussion.created_at).toLocaleDateString()}
+                  </span>
                 </div>
               </div>
             </div>
           )}
-
         </div>
 
         <div className="flex justify-between items-start mb-6">
-          <h1 className="text-lg sm:text-2xl md:text-3xl font-black text-[var(--text-main)] tracking-tight">
-            {discussion.title}
-          </h1>
+          <div className="flex flex-col gap-2 min-w-0">
+            {isBoosted && isDiscussionOwner && (
+              <div className="flex">
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-50 dark:bg-amber-900/30 border border-amber-200 dark:border-amber-700/50 text-[10px] font-black uppercase tracking-widest text-amber-600 dark:text-amber-400">
+                  <Rocket className="w-3 h-3 fill-current" />
+                  Post Boosted (Visible to you)
+                </span>
+              </div>
+            )}
+            <h1 className="text-lg sm:text-2xl md:text-3xl font-black text-[var(--text-main)] tracking-tight">
+              {discussion.title}
+            </h1>
+          </div>
           <ActionMenu
             actions={[
               {
@@ -119,37 +138,27 @@ const DiscussionPostCard = ({
                 icon: <Share2 className="w-4 h-4" />,
                 onClick: () => {
                   navigator.clipboard.writeText(window.location.href);
-                  toast.success("Link copied!");
                 },
               },
-              ...(isDiscussionOwner
+              ...(isDiscussionOwner && !isBoosted
                 ? [
                     {
-                      label: "Manage Post",
-                      icon: <Edit className="w-4 h-4" />,
-                      onClick: () => navigate(`/portal/discussions/${id}/edit`),
-                    },
-                    {
-                      render: () => (
-                        <DeleteAction
-                          targetType="discussion"
-                          targetId={id}
-                          label="Delete Post"
-                          iconClassName="w-4 h-4"
-                          buttonClassName="w-full flex items-center gap-3 px-4 py-2.5 text-xs font-black uppercase tracking-widest text-red-600 hover:bg-red-50 transition-colors duration-150"
-                          onDeleted={() => navigate("/discussions")}
-                        />
+                      label: "Boost Post (50 Rep)",
+                      icon: boostMutation?.isPending ? (
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                      ) : (
+                        <Rocket className="w-4 h-4 text-amber-500" />
                       ),
+                      onClick: () => {
+                        if ((user?.reputation_points || 0) < 50) {
+                          toast.error("You need 50 reputation points to boost");
+                          return;
+                        }
+                        boostMutation.mutate(discussion.discussion_id);
+                      },
                     },
                   ]
-                : [
-                    {
-                      label: "Report",
-                      icon: <AlertTriangle className="w-4 h-4" />,
-                      onClick: () => onOpenReport(id, "discussion"),
-                      variant: "danger",
-                    },
-                  ]),
+                : []),
             ]}
           />
         </div>
@@ -187,19 +196,25 @@ const DiscussionPostCard = ({
         </div>
 
         <div className="flex items-center gap-2 border-t border-[var(--border-main)] pt-6">
-          <div
-            className={`flex items-center gap-2 text-xs font-black px-4 py-2 rounded-full border ${
+          <button
+            onClick={() => onLike(1)}
+            disabled={isVoting}
+            className={`flex items-center gap-2 text-xs font-black px-4 py-2 rounded-full border transition-all active:scale-95 ${
               Number(discussion.user_vote || 0) === 1
                 ? "text-purple-700 bg-purple-50 border-purple-200 dark:bg-purple-900/30 dark:border-purple-700/50"
-                : "text-[var(--text-main)] bg-[var(--bg-card)] border-[var(--border-main)]"
-            }`}
+                : "text-[var(--text-main)] bg-[var(--bg-card)] border-[var(--border-main)] hover:bg-[var(--bg-active)]"
+            } ${isVoting ? "opacity-50 pointer-events-none" : ""}`}
             aria-label="Likes"
           >
-            <ThumbsUp
-              className={`w-4 h-4 ${Number(discussion.user_vote || 0) === 1 ? "fill-current text-purple-600" : "text-purple-600"}`}
-            />
+            {isVoting ? (
+              <Loader2 className="w-4 h-4 animate-spin text-purple-600" />
+            ) : (
+              <ThumbsUp
+                className={`w-4 h-4 ${Number(discussion.user_vote || 0) === 1 ? "fill-current text-purple-600" : "text-purple-600"}`}
+              />
+            )}
             {Number(discussion.like_count || 0)}
-          </div>
+          </button>
           <button className="flex items-center gap-2 text-xs font-black text-[var(--text-main)] bg-[var(--bg-card)] border border-[var(--border-main)] px-4 py-2 rounded-full">
             <MessageSquare className="w-4 h-4 text-purple-600 pointer-events-none" />
             {comments?.length || 0} Comments

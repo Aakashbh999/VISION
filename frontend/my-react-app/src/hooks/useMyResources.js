@@ -17,12 +17,12 @@ export const useSoftDeleteResource = () => {
     mutationFn: ({ resourceId, reason }) =>
       softDeleteResource(resourceId, reason),
     onSuccess: (data) => {
-      toast.success(data?.message || "Resource deleted.");
+      toast.success(data?.message || "Resource deleted successfully");
       queryClient.invalidateQueries({ queryKey: ["my-resources"] });
     },
     onError: (error) => {
       toast.error(
-        error.response?.data?.message || "Failed to delete resource.",
+        error.response?.data?.message || "Server Failure. Failed to delete resource.",
       );
     },
   });

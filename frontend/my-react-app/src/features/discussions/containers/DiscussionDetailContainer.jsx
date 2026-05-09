@@ -33,8 +33,11 @@ const DiscussionDetailContainer = () => {
     setLightbox,
     showBackToTop,
     addCommentMutation,
+    voteMutation,
     commentVoteMutation,
     toggleSaveMutation,
+    boostMutation,
+    handleVote,
     handleCommentVote,
     handleReplySubmit,
     handleCommentSubmit,
@@ -91,7 +94,10 @@ const DiscussionDetailContainer = () => {
         isImageLoading={isImageLoading}
         setIsImageLoading={setIsImageLoading}
         setLightbox={setLightbox}
+        onLike={handleVote}
+        isVoting={voteMutation.isPending}
         toggleSaveMutation={toggleSaveMutation}
+        boostMutation={boostMutation}
         onOpenReport={handleOpenReport}
       />
 

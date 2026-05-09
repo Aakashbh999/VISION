@@ -222,7 +222,7 @@ export const useDiscussionActions = ({ user, queryClient }) => {
         if (error.name !== "AbortError") {
           try {
             await navigator.clipboard.writeText(url);
-            toast.success("Link copied to clipboard!");
+
           } catch {
             toast.error("Failed to share");
           }
@@ -233,7 +233,7 @@ export const useDiscussionActions = ({ user, queryClient }) => {
 
     try {
       await navigator.clipboard.writeText(url);
-      toast.success("Link copied to clipboard!");
+
     } catch (error) {
       console.error(error);
       toast.error("Failed to copy link");

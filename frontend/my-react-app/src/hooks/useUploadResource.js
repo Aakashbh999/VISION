@@ -11,9 +11,7 @@ const getUploadErrorMessage = (error) => {
 
   if (data?.error) return data.error;
   if (data?.message) return data.message;
-  if (error?.message) return error.message;
-
-  return "Failed to upload resource";
+  return "Server Failure. Please try again later.";
 };
 
 export const useUploadResource = () => {

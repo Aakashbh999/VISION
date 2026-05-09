@@ -31,8 +31,8 @@ export const formatNotificationMessage = (notification) => {
         : `${actor} approved your resource`;
     case "resource_rejected":
       return resourceTitle
-        ? `${actor} reviewed your resource "${resourceTitle}"`
-        : `${actor} reviewed your resource`;
+        ? `Your resource "${resourceTitle}" was rejected`
+        : `Your resource was rejected`;
     case "group_joined":
       return groupName
         ? `${actor} joined your group "${groupName}"`
@@ -46,9 +46,13 @@ export const resolveNotificationPath = (notification) => {
   if (notification.route_path) return notification.route_path;
 
   const targetType =
-    notification.target_type || notification.related_type || notification.reference_type;
+    notification.target_type ||
+    notification.related_type ||
+    notification.reference_type;
   const targetId =
-    notification.target_id || notification.related_id || notification.reference_id;
+    notification.target_id ||
+    notification.related_id ||
+    notification.reference_id;
 
   if (targetType === "comment") {
     const discussionId =
@@ -76,7 +80,8 @@ export const resolveNotificationPath = (notification) => {
     return `/profile/${targetId}`;
   }
 
-  const discussionId = notification.discussion_id || notification.comment_discussion_id;
+  const discussionId =
+    notification.discussion_id || notification.comment_discussion_id;
   if (discussionId) {
     if (notification.comment_id) {
       return `/discussions/${discussionId}#comment-${notification.comment_id}`;
@@ -84,8 +89,13 @@ export const resolveNotificationPath = (notification) => {
     return `/discussions/${discussionId}`;
   }
 
-  if (notification.type === "comment" || notification.type === "like" || notification.type === "comment_like") {
-    const discussionTarget = notification.reference_id || notification.related_id;
+  if (
+    notification.type === "comment" ||
+    notification.type === "like" ||
+    notification.type === "comment_like"
+  ) {
+    const discussionTarget =
+      notification.reference_id || notification.related_id;
     if (discussionTarget) return `/discussions/${discussionTarget}`;
   }
 

@@ -384,7 +384,7 @@ const ProfileHeaderCard = ({
 
           <StatBox
             isOwner={isOwner}
-            to="/discussions/my-posts"
+            to="/manage?tab=discussions"
             icon={MessageSquare}
             count={profile.discussion_count}
             label="Discussions"

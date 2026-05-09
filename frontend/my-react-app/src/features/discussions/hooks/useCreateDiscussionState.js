@@ -53,7 +53,6 @@ export const useCreateDiscussionState = () => {
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["discussions"] });
       queryClient.invalidateQueries({ queryKey: ["userStats"] });
-      toast.success("Post published!");
       navigate(`/discussions/${data.discussion_id}`);
     },
     onError: (error) => {

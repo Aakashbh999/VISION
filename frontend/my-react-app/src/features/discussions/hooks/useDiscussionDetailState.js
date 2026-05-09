@@ -8,6 +8,7 @@ import {
   useVote,
   useCommentVote,
   useToggleSave,
+  useBoostDiscussion,
 } from "../../../hooks/useDiscussionHooks";
 import { useAuth } from "../../../context/AuthContext";
 import { createReport } from "../../../services/report";
@@ -42,6 +43,7 @@ export const useDiscussionDetailState = () => {
   const voteMutation = useVote(id);
   const commentVoteMutation = useCommentVote(id);
   const toggleSaveMutation = useToggleSave(id);
+  const boostMutation = useBoostDiscussion();
 
   useEffect(() => {
     if (user?.current_level > lastLevel) {
@@ -130,7 +132,7 @@ export const useDiscussionDetailState = () => {
       await createReport(reportModal.targetType, reportModal.targetId, reason);
       return true;
     } catch (error) {
-      toast.error("Report failed");
+      toast.error("Failed to submit report. Please try again later.");
       throw error;
     } finally {
       setIsReporting(false);
@@ -165,6 +167,7 @@ export const useDiscussionDetailState = () => {
     voteMutation,
     commentVoteMutation,
     toggleSaveMutation,
+    boostMutation,
     handleVote,
     handleCommentVote,
     handleReplySubmit,

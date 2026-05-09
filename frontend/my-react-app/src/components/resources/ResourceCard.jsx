@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   FileText,
   Link as LinkIcon,
@@ -139,6 +140,7 @@ const ResourceCard = ({
   onDelete,
 }) => {
   const [showPreview, setShowPreview] = useState(false);
+  const [showRejectionModal, setShowRejectionModal] = useState(false);
 
   const {
     resource_id,
@@ -158,7 +160,6 @@ const ResourceCard = ({
     created_by,
   } = resource;
 
-  // Robust field resolution with fallbacks for newly uploaded or mismatched records
   const uploaderId = uploader_id || created_by;
   const uploaderName = uploader_name || "Unknown User";
 
@@ -178,6 +179,40 @@ const ResourceCard = ({
 
   return (
     <>
+      {/* Rejection Reason Modal */}
+      <AnimatePresence>
+        {showRejectionModal && (
+          <div 
+            className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
+            onClick={() => setShowRejectionModal(false)}
+          >
+            <motion.div 
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              className="bg-white rounded-2xl p-6 max-w-sm w-full shadow-2xl border border-red-100"
+              onClick={e => e.stopPropagation()}
+            >
+              <div className="flex items-center gap-3 mb-4 text-red-600">
+                <div className="p-2 bg-red-50 rounded-lg">
+                  <AlertCircle className="w-5 h-5" />
+                </div>
+                <h3 className="font-bold text-lg">Rejection Reason</h3>
+              </div>
+              <p className="text-gray-600 text-sm italic mb-6 leading-relaxed bg-red-50/50 p-4 rounded-xl border border-red-50">
+                "{rejection_reason}"
+              </p>
+              <button 
+                onClick={() => setShowRejectionModal(false)}
+                className="w-full py-3 bg-gray-900 text-white rounded-xl font-bold text-sm hover:bg-gray-800 transition-colors"
+              >
+                Close
+              </button>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
       {/* Preview Modal */}
       {showPreview && file_url && (
         <div
@@ -253,7 +288,7 @@ const ResourceCard = ({
         {/* Image Thumbnail Preview */}
         {hasImagePreview && thumbnailUrl ? (
           <div
-            className="relative h-40 bg-[var(--bg-active)] overflow-hidden cursor-pointer"
+            className="relative h-32 bg-[var(--bg-active)] overflow-hidden cursor-pointer"
             onClick={() => setShowPreview(true)}
           >
             <img
@@ -274,7 +309,7 @@ const ResourceCard = ({
           </div>
         ) : (
           <div
-            className="relative h-40 bg-[var(--bg-active)] border-b border-[var(--border-main)] flex flex-col items-center justify-center gap-2 cursor-pointer group/preview"
+            className="relative h-32 bg-[var(--bg-active)] border-b border-[var(--border-main)] flex flex-col items-center justify-center gap-2 cursor-pointer group/preview"
             onClick={() => setShowPreview(true)}
           >
             <div className="p-3 bg-[var(--bg-card)] rounded-xl shadow-sm border border-[var(--border-main)] text-purple-600 group-hover/preview:scale-110 transition-transform duration-300">
@@ -296,9 +331,9 @@ const ResourceCard = ({
           </div>
         )}
 
-        <div className="p-4 sm:p-5 flex-1 flex flex-col">
+        <div className="p-3 sm:p-4 flex-1 flex flex-col">
           {/* Header: Type and Status */}
-          <div className="flex justify-between items-start mb-4">
+          <div className="flex justify-between items-start mb-3">
             <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-purple-50 text-purple-600 text-xs font-semibold capitalize border border-purple-100">
               {getResourceIcon(resource_type)}
               {resource_type}
@@ -314,18 +349,22 @@ const ResourceCard = ({
           </div>
 
           {/* Title & Description */}
-          <h3 className="font-bold text-[var(--text-main)] text-lg mb-2 line-clamp-2">
+          <h3 className="font-bold text-[var(--text-main)] text-base mb-1.5 line-clamp-1">
             {title}
           </h3>
-          <p className="text-[var(--text-muted)] text-sm mb-4 line-clamp-3 flex-1">
+          <p className="text-[var(--text-muted)] text-xs mb-3 line-clamp-2 flex-1">
             {description || "No description provided."}
           </p>
 
-          {/* Rejection Reason if any */}
+          {/* Rejection Note Button */}
           {status === "rejected" && rejection_reason && (
-            <div className="mt-2 text-xs text-red-600 bg-red-50 p-2 rounded-lg border border-red-100 mb-4">
-              <span className="font-semibold">Reason:</span> {rejection_reason}
-            </div>
+            <button 
+              onClick={() => setShowRejectionModal(true)}
+              className="mt-2 mb-4 w-full flex items-center justify-center gap-2 px-3 py-2 bg-red-50 text-red-600 border border-red-100 rounded-lg text-xs font-bold hover:bg-red-100 transition-colors"
+            >
+              <AlertCircle className="w-3.5 h-3.5" />
+              View Rejection Note
+            </button>
           )}
 
           {/* Meta info */}
@@ -333,18 +372,20 @@ const ResourceCard = ({
             <div className="flex flex-wrap gap-2">
               {program_name && (
                 <span className="inline-flex items-center gap-1 text-[10px] font-bold text-[var(--text-muted)] bg-[var(--bg-active)] px-2 py-1 rounded-md border border-[var(--border-main)] uppercase tracking-tight">
-                  <GraduationCap className="w-3 h-3 text-purple-500" /> {program_name}
+                  <GraduationCap className="w-3 h-3 text-purple-500" />{" "}
+                  {program_name}
                 </span>
               )}
               {semester && (
                 <span className="inline-flex items-center gap-1 text-[10px] font-bold text-[var(--text-muted)] bg-[var(--bg-active)] px-2 py-1 rounded-md border border-[var(--border-main)] uppercase tracking-tight">
-                  <Calendar className="w-3 h-3 text-purple-500" /> Sem {semester}
+                  <Calendar className="w-3 h-3 text-purple-500" /> Sem{" "}
+                  {semester}
                 </span>
               )}
             </div>
-            <div className="flex items-end justify-between mt-4 pt-3 border-t border-[var(--border-main)]/50 gap-4">
+            <div className="flex items-end justify-between mt-3 pt-2 border-t border-[var(--border-main)]/50 gap-4">
               <div className="flex flex-col min-w-0 flex-1">
-                <span className="text-[10px] font-black text-[var(--text-muted)] uppercase tracking-widest mb-1">
+                <span className="text-[9px] font-black text-[var(--text-muted)] uppercase tracking-widest mb-0.5">
                   Uploaded By
                 </span>
                 {uploaderId ? (
@@ -356,9 +397,7 @@ const ResourceCard = ({
                     <div className="w-6 h-6 rounded-full bg-purple-100 flex items-center justify-center group-hover/uploader:bg-purple-600 transition-colors flex-shrink-0">
                       <User className="w-3.5 h-3.5 text-purple-600 group-hover/uploader:text-white" />
                     </div>
-                    <span className="truncate">
-                      {uploaderName}
-                    </span>
+                    <span className="truncate">{uploaderName}</span>
                   </Link>
                 ) : (
                   <div className="flex items-center gap-2 text-xs font-bold text-[var(--text-muted)] min-w-0">
