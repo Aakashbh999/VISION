@@ -128,7 +128,6 @@ export const useDeleteDiscussion = () => {
   return useMutation({
     mutationFn: (discussionId) => deleteDiscussion(discussionId),
     onSuccess: () => {
-      toast.success("Post archived");
       queryClient.invalidateQueries({ queryKey: ["discussions"] });
       queryClient.invalidateQueries({ queryKey: ["my-posts"] });
     },

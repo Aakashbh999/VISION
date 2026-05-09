@@ -6,11 +6,17 @@ import {
   MoreHorizontal,
   Share2,
   ThumbsUp,
+  Rocket,
 } from "lucide-react";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, memo } from "react";
 import Avatar from "../../../components/ui/Avatar";
 import Badge from "../../../components/ui/Badge";
 import SurfaceCard from "../../../components/ui/SurfaceCard";
+import { useAuth } from "../../../context/AuthContext";
+import { useDeleteDiscussion, useBoostDiscussion } from "../../../hooks/useDiscussionHooks";
+import { useNavigate } from "react-router-dom";
+import DeleteAction from "../../../components/DeleteAction";
+import { Edit } from "lucide-react";
 
 /**
  * Props:
@@ -19,13 +25,15 @@ import SurfaceCard from "../../../components/ui/SurfaceCard";
  * - loadingLike/loadingSave: per-discussion loading ids
  * - onImageClick: callback for lightbox open
  */
-const DiscussionCard = ({
+const DiscussionCard = memo(({
   disc,
   handleLike,
   handleSave,
   handleShare,
   loadingLike,
   loadingSave,
+  isMenuOpen,
+  onToggleMenu,
 }) => {
   const normalizeProfileId = (value) => {
     if (value === null || value === undefined) return null;
@@ -33,7 +41,7 @@ const DiscussionCard = ({
     return /^\d+$/.test(normalized) ? normalized : null;
   };
   const [expanded, setExpanded] = useState(false);
-  const [menuOpen, setMenuOpen] = useState(false);
+  // menuOpen state removed, using isMenuOpen prop instead
   const [optimisticVote, setOptimisticVote] = useState(
     Number(disc.user_vote || 0),
   );
@@ -43,6 +51,10 @@ const DiscussionCard = ({
   const [optimisticCommentCount, setOptimisticCommentCount] = useState(
     Number(disc.comment_count || 0),
   );
+  const { user } = useAuth();
+  const navigate = useNavigate();
+  const deleteMutation = useDeleteDiscussion();
+  const boostMutation = useBoostDiscussion();
 
   const menuButtonRef = useRef(null);
   const menuRef = useRef(null);
@@ -54,11 +66,11 @@ const DiscussionCard = ({
   }, [disc.user_vote, disc.user_saved, disc.comment_count]);
 
   useEffect(() => {
-    if (!menuOpen) return undefined;
+    if (!isMenuOpen) return undefined;
     const onKeyDown = (event) => {
       if (event.key === "Escape") {
         event.preventDefault();
-        setMenuOpen(false);
+        onToggleMenu(); // Close via toggle
         menuButtonRef.current?.focus();
         return;
       }
@@ -83,7 +95,7 @@ const DiscussionCard = ({
 
     document.addEventListener("keydown", onKeyDown);
     return () => document.removeEventListener("keydown", onKeyDown);
-  }, [menuOpen]);
+  }, [isMenuOpen]);
 
   const normalizedTags = useMemo(() => {
     if (Array.isArray(disc.tags)) {
@@ -123,6 +135,7 @@ const DiscussionCard = ({
     disc.author_profile_image ||
     disc.profile_image ||
     null;
+  const isAuthor = user && String(user.portal_user_id) === String(authorProfileId);
 
   const fullBody = disc.content || "";
   const shouldShowReadMore = fullBody.length > 200;
@@ -136,6 +149,7 @@ const DiscussionCard = ({
   );
   const isLiked = optimisticVote === 1;
   const isSaved = optimisticSaved;
+  const isBoosted = disc.is_boosted && new Date(disc.boosted_until) > new Date();
 
   const handleLikeClick = async (event) => {
     const previousVote = optimisticVote;
@@ -218,15 +232,19 @@ const DiscussionCard = ({
           <button
             ref={menuButtonRef}
             type="button"
+            data-menu-button="true"
             aria-label="Open post options"
-            aria-expanded={menuOpen}
-            onClick={() => setMenuOpen((open) => !open)}
+            aria-expanded={isMenuOpen}
+            onClick={(e) => {
+              e.stopPropagation();
+              onToggleMenu();
+            }}
             className="w-11 h-11 inline-flex items-center justify-center rounded-xl text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-slate-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-500 active:scale-95 transition-colors"
           >
             <MoreHorizontal className="w-5 h-5 opacity-70 pointer-events-none" />
           </button>
 
-          {menuOpen ? (
+          {isMenuOpen ? (
             <div
               ref={menuRef}
               role="menu"
@@ -236,7 +254,7 @@ const DiscussionCard = ({
                 to={`/discussions/${disc.discussion_id}`}
                 role="menuitem"
                 className="w-full text-left px-3 py-2 rounded-lg text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-slate-800 block"
-                onClick={() => setMenuOpen(false)}
+                onClick={() => onToggleMenu()}
               >
                 View post
               </Link>
@@ -248,11 +266,31 @@ const DiscussionCard = ({
                   await navigator.clipboard.writeText(
                     `${window.location.origin}/discussions/${disc.discussion_id}`,
                   );
-                  setMenuOpen(false);
+                  onToggleMenu();
                 }}
               >
                 Copy link
               </button>
+              {isAuthor && !isBoosted && (
+                <button
+                  type="button"
+                  role="menuitem"
+                  className="w-full text-left px-3 py-2 rounded-lg text-sm text-amber-600 dark:text-amber-400 font-bold hover:bg-amber-50 dark:hover:bg-amber-900/20 flex items-center gap-2"
+                  onClick={() => {
+                    if ((user?.reputation_points || 0) < 50) {
+                      import("react-toastify").then(({ toast }) =>
+                        toast.error("You need 50 reputation points to boost"),
+                      );
+                      return;
+                    }
+                    onToggleMenu();
+                    boostMutation.mutate(disc.discussion_id);
+                  }}
+                >
+                  <Rocket className="w-4 h-4" />
+                  Boost (50 Rep)
+                </button>
+              )}
             </div>
           ) : null}
         </div>
@@ -260,6 +298,14 @@ const DiscussionCard = ({
 
       <div className="mt-4">
         <Link to={`/discussions/${disc.discussion_id}`} className="block">
+          {isBoosted && isAuthor && (
+            <div className="flex mb-2">
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-50 dark:bg-amber-900/30 border border-amber-200 dark:border-amber-700/50 text-[9px] font-black uppercase tracking-wider text-amber-600 dark:text-amber-400">
+                <Rocket className="w-2.5 h-2.5 fill-current" />
+                Boosted
+              </span>
+            </div>
+          )}
           <h2 className="text-base sm:text-lg font-bold text-gray-900 dark:text-gray-100 line-clamp-2 sm:line-clamp-3">
             {disc.title}
           </h2>
@@ -386,6 +432,6 @@ const DiscussionCard = ({
       </div>
     </SurfaceCard>
   );
-};
+});
 
 export default DiscussionCard;

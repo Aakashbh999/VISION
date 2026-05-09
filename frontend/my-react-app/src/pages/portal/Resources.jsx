@@ -300,7 +300,7 @@ const Resources = () => {
       semester: searchParams.get("semester") || "",
       program_id: searchParams.has("program_id")
         ? searchParams.get("program_id")
-        : (user?.program_id?.toString() || ""),
+        : user?.program_id?.toString() || "",
       view: searchParams.get("view") || "all",
       page: parseInt(searchParams.get("page"), 10) || 1,
       limit: 12,

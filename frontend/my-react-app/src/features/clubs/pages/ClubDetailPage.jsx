@@ -2,14 +2,13 @@ import { useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { useClub } from "../../../hooks/useClubHooks";
 import LoadingSpinner from "../../../components/ui/LoadingSpinner";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import {
   ChevronLeft,
   MapPin,
   Tag,
   Mail,
   Globe,
-  ExternalLink,
   Facebook,
   Linkedin,
   Github,
@@ -18,9 +17,6 @@ import {
   Check,
   Calendar,
   Building2,
-  Users,
-  X,
-  ArrowRight,
 } from "lucide-react";
 
 const RedditIcon = (props) => (
@@ -29,156 +25,12 @@ const RedditIcon = (props) => (
   </svg>
 );
 
-const OnboardingModal = ({ isOpen, onClose, club }) => {
-  const [step, setStep] = useState(1);
 
-  if (!isOpen) return null;
-
-  return (
-    <AnimatePresence>
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          className="absolute inset-0 bg-black/40 backdrop-blur-sm"
-          onClick={onClose}
-        />
-        <motion.div
-          initial={{ opacity: 0, scale: 0.95, y: 20 }}
-          animate={{ opacity: 1, scale: 1, y: 0 }}
-          exit={{ opacity: 0, scale: 0.95, y: 20 }}
-          className="relative w-full max-w-lg bg-[var(--bg-card)] rounded-[2.5rem] shadow-2xl p-8 overflow-hidden border border-[var(--border-main)]"
-        >
-          <div className="absolute top-0 left-0 w-full h-2 bg-[var(--bg-active)]">
-            <motion.div
-              className="h-full bg-purple-600"
-              initial={{ width: "0%" }}
-              animate={{ width: `${(step / 3) * 100}%` }}
-              transition={{ duration: 0.3 }}
-            />
-          </div>
-
-          <button
-            onClick={onClose}
-            className="absolute top-6 right-6 w-8 h-8 flex items-center justify-center rounded-full bg-[var(--bg-active)] text-[var(--text-muted)] hover:bg-[var(--border-main)] transition-colors"
-          >
-            <X className="w-4 h-4" />
-          </button>
-
-          <div className="mb-8">
-            <h2 className="text-xl sm:text-2xl font-black text-[var(--text-main)]">
-              Join {club.club_name}
-            </h2>
-            <p className="text-[var(--text-muted)] font-medium">
-              Complete these steps to become a member.
-            </p>
-          </div>
-
-          {step === 1 && (
-            <motion.div
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -20 }}
-              className="space-y-6"
-            >
-              <div className="p-4 rounded-2xl bg-purple-50 dark:bg-purple-900/20 border border-purple-100 dark:border-purple-800/50 flex gap-4">
-                <div className="w-10 h-10 rounded-xl bg-white dark:bg-bg-active flex items-center justify-center text-purple-600 dark:text-purple-400 font-black shrink-0 shadow-sm">
-                  1
-                </div>
-                <div>
-                  <h4 className="font-black text-[var(--text-main)]">
-                    Application Form
-                  </h4>
-                  <p className="text-sm text-[var(--text-muted)] mt-1">
-                    Tell them a bit about yourself and why you want to join.
-                  </p>
-                </div>
-              </div>
-              <button
-                onClick={() => setStep(2)}
-                className="w-full py-4 bg-purple-600 text-white rounded-2xl font-black flex items-center justify-center gap-2 hover:bg-purple-700 transition-colors"
-              >
-                Start Application <ArrowRight className="w-4 h-4" />
-              </button>
-            </motion.div>
-          )}
-
-          {step === 2 && (
-            <motion.div
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -20 }}
-              className="space-y-6"
-            >
-              <div className="p-4 rounded-2xl bg-amber-50 dark:bg-amber-900/20 border border-amber-100 dark:border-amber-800/50 flex gap-4">
-                <div className="w-10 h-10 rounded-xl bg-white dark:bg-bg-active flex items-center justify-center text-amber-600 dark:text-amber-400 font-black shrink-0 shadow-sm">
-                  2
-                </div>
-                <div>
-                  <h4 className="font-black text-[var(--text-main)]">
-                    Intro Interview
-                  </h4>
-                  <p className="text-sm text-[var(--text-muted)] mt-1">
-                    A quick 15-minute chat with the core team to align
-                    interests.
-                  </p>
-                </div>
-              </div>
-              <div className="flex gap-3">
-                <button
-                  onClick={() => setStep(1)}
-                  className="px-6 py-4 bg-[var(--bg-active)] text-[var(--text-main)] rounded-2xl font-black hover:bg-[var(--border-main)] transition-colors"
-                >
-                  Back
-                </button>
-                <button
-                  onClick={() => setStep(3)}
-                  className="flex-1 py-4 bg-purple-600 text-white rounded-2xl font-black flex items-center justify-center gap-2 hover:bg-purple-700 transition-colors"
-                >
-                  Schedule Chat <ArrowRight className="w-4 h-4" />
-                </button>
-              </div>
-            </motion.div>
-          )}
-
-          {step === 3 && (
-            <motion.div
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -20 }}
-              className="space-y-6 text-center"
-            >
-              <div className="w-20 h-20 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Check className="w-10 h-10" />
-              </div>
-              <h3 className="text-lg sm:text-xl font-black text-[var(--text-main)]">
-                You're on your way!
-              </h3>
-              <p className="text-[var(--text-muted)] font-medium pb-4">
-                Check your student email for the Google Meet link and next
-                steps.
-              </p>
-
-              <button
-                onClick={onClose}
-                className="w-full py-4 bg-emerald-500 text-white rounded-2xl font-black hover:bg-emerald-600 transition-colors"
-              >
-                Got it
-              </button>
-            </motion.div>
-          )}
-        </motion.div>
-      </div>
-    </AnimatePresence>
-  );
-};
 
 const ClubDetailPage = () => {
   const { slug } = useParams();
   const { data: club, isLoading, error } = useClub(slug);
   const [copied, setCopied] = useState(false);
-  const [isJoinModalOpen, setIsJoinModalOpen] = useState(false);
 
   if (isLoading) return <LoadingSpinner />;
   if (error)
@@ -308,7 +160,7 @@ const ClubDetailPage = () => {
 
           <div className="absolute bottom-6 left-6 right-6 z-20 flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
             <div className="flex flex-col sm:flex-row sm:items-end gap-3 sm:gap-5">
-              <div className="w-20 h-20 sm:w-32 sm:h-32 rounded-[1.2rem] sm:rounded-[1.5rem] bg-[var(--bg-card)] p-1.5 shadow-2xl relative z-10 sm:-mb-2">
+              <div className="hidden lg:block w-20 h-20 sm:w-32 sm:h-32 rounded-[1.2rem] sm:rounded-[1.5rem] bg-[var(--bg-card)] p-1.5 shadow-2xl relative z-10 sm:-mb-2">
                 <div className="w-full h-full rounded-[1rem] sm:rounded-[1.2rem] bg-purple-50 dark:bg-purple-900/20 flex items-center justify-center text-purple-600 dark:text-purple-400 font-black text-2xl sm:text-3xl lg:text-4xl overflow-hidden border border-purple-100 dark:border-purple-800/50">
                   {club.logo_url ? (
                     <img
@@ -322,19 +174,10 @@ const ClubDetailPage = () => {
                 </div>
               </div>
               <div className="pb-0 sm:pb-2 flex-1 min-w-0">
-                <h1 className="text-xl sm:text-3xl lg:text-4xl font-black text-white drop-shadow-md tracking-tight leading-tight truncate">
+                <h1 className="text-lg sm:text-2xl md:text-3xl lg:text-4xl font-black text-white drop-shadow-md tracking-tight leading-tight break-words">
                   {club.club_name}
                 </h1>
               </div>
-            </div>
-
-            <div className="shrink-0 pb-2">
-              <button
-                onClick={() => setIsJoinModalOpen(true)}
-                className="w-full sm:w-auto px-8 py-4 bg-white text-slate-900 rounded-2xl font-black tracking-wide shadow-xl hover:bg-purple-50 hover:text-purple-600 transition-colors flex items-center justify-center gap-2"
-              >
-                Join Community
-              </button>
             </div>
           </div>
         </div>
@@ -450,12 +293,7 @@ const ClubDetailPage = () => {
         </div>
       </div>
 
-      {/* Onboarding Stepper Modal */}
-      <OnboardingModal
-        isOpen={isJoinModalOpen}
-        onClose={() => setIsJoinModalOpen(false)}
-        club={club}
-      />
+
     </motion.div>
   );
 };

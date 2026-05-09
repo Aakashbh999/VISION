@@ -18,7 +18,7 @@ module.exports = (err, req, res, next) => {
 
   const message =
     statusCode >= 500 && env.NODE_ENV === "production"
-      ? "Internal Server Error"
+      ? "Server Failure"
       : err.message || "Internal Server Error";
 
   res.status(statusCode).json({

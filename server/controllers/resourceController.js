@@ -653,10 +653,10 @@ exports.rejectResource = catchAsync(async (req, res) => {
 
     const resourceRes = await client.query(
       `UPDATE portal.resources
-       SET status = 'rejected'
+       SET status = 'rejected', rejection_reason = $2
        WHERE resource_id = $1 AND status = 'pending'
        RETURNING resource_id, title, created_by`,
-      [id],
+      [id, reason || null],
     );
 
     if (resourceRes.rowCount === 0) {

@@ -138,13 +138,13 @@ const Dashboard = () => {
       {/* Row 3: Left stack (Milestones + Quick Actions) + Notifications */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="space-y-6">
-          <XpMilestoneCard />
-
           <SurfaceCard>
             <CardHeader className="mb-3">
-              <CardTitle className="text-(--text-muted)">Quick Actions</CardTitle>
+              <CardTitle className="text-(--text-muted)">
+                Quick Actions
+              </CardTitle>
             </CardHeader>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
               {quickActions.map((action) => (
                 <Link
                   key={action.label}
@@ -156,52 +156,57 @@ const Dashboard = () => {
                     <p className="text-sm font-bold text-(--text-main)">
                       {action.label}
                     </p>
-                    <p className="text-xs text-(--text-muted)">{action.helper}</p>
+                    <p className="text-xs text-(--text-muted)">
+                      {action.helper}
+                    </p>
                   </div>
                 </Link>
               ))}
             </div>
           </SurfaceCard>
-        </div>
 
-        <SurfaceCard>
-          <CardHeader className="mb-3">
-            <CardTitle className="flex items-center gap-2 text-(--text-muted)">
-              <Bell className="w-4 h-4 text-violet-500" />
-              Notifications
-            </CardTitle>
-          </CardHeader>
-          <CardBody className="space-y-2">
-            {notifLoading ? (
-              <div className="space-y-3">
-                {[1, 2, 3].map((i) => (
-                  <Skeleton key={i} className="h-12 rounded-xl" />
-                ))}
-              </div>
-            ) : notifications.length === 0 ? (
-              <EmptyState
-                icon={Bell}
-                title="All Caught Up"
-                description="No new notifications right now."
-                className="py-8"
-              />
-            ) : (
-              notifications.slice(0, 4).map((n) => (
-                <div
-                  key={n.notification_id}
-                  className="p-3 rounded-2xl border border-(--border-main) bg-(--bg-active)"
-                >
-                  <p className="text-xs font-medium line-clamp-2 text-(--text-main)">
-                    {n.message}
-                  </p>
-                  <p className="text-[10px] text-(--text-muted) mt-1">
-                    {new Date(n.created_at).toLocaleDateString()}
-                  </p>
-                </div>
-              ))
-            )}
-          </CardBody>
-        </SurfaceCard>
+          <div className="hidden md:block">
+            <SurfaceCard>
+              <CardHeader className="mb-3">
+                <CardTitle className="flex items-center gap-2 text-(--text-muted)">
+                  <Bell className="w-4 h-4 text-violet-500" />
+                  Notifications
+                </CardTitle>
+              </CardHeader>
+              <CardBody className="space-y-2">
+                {notifLoading ? (
+                  <div className="space-y-3">
+                    {[1, 2, 3].map((i) => (
+                      <Skeleton key={i} className="h-12 rounded-xl" />
+                    ))}
+                  </div>
+                ) : notifications.length === 0 ? (
+                  <EmptyState
+                    icon={Bell}
+                    title="All Caught Up"
+                    description="No new notifications right now."
+                    className="py-8"
+                  />
+                ) : (
+                  notifications.slice(0, 4).map((n) => (
+                    <div
+                      key={n.notification_id}
+                      className="p-3 rounded-2xl border border-(--border-main) bg-(--bg-active)"
+                    >
+                      <p className="text-xs font-medium line-clamp-2 text-(--text-main)">
+                        {n.message}
+                      </p>
+                      <p className="text-[10px] text-(--text-muted) mt-1">
+                        {new Date(n.created_at).toLocaleDateString()}
+                      </p>
+                    </div>
+                  ))
+                )}
+              </CardBody>
+            </SurfaceCard>
+          </div>
+        </div>
+        <XpMilestoneCard />
       </div>
 
       {error && (

@@ -65,7 +65,7 @@ const RoadmapView = lazy(() => import("./pages/portal/RoadmapView"));
 const Discussions = lazy(() => import("./pages/portal/Discussions"));
 const CreateDiscussion = lazy(() => import("./pages/portal/CreateDiscussion"));
 const EditDiscussion = lazy(() => import("./pages/portal/EditDiscussion"));
-const MyPosts = lazy(() => import("./pages/portal/MyPosts"));
+
 const SavedDiscussions = lazy(() => import("./pages/portal/SavedDiscussions"));
 const Groups = lazy(() => import("./pages/portal/Groups"));
 const CreateGroup = lazy(() => import("./pages/portal/CreateGroup"));
@@ -138,7 +138,7 @@ const portalRoutes = [
   { path: "/roadmaps/:id", element: <RoadmapView /> },
   { path: "/discussions", element: <Discussions /> },
   { path: "/discussions/new", element: <CreateDiscussion /> },
-  { path: "/discussions/my-posts", element: <MyPosts /> },
+
   { path: "/discussions/saved", element: <SavedDiscussions /> },
   { path: "/discussions/:id/edit", element: <EditDiscussion /> },
   { path: "/discussions/:id", element: <DiscussionDetail /> },

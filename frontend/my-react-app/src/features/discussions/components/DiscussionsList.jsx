@@ -1,3 +1,4 @@
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { MessageSquare, Search } from "lucide-react";
 import LoadingSpinner from "../../../components/ui/LoadingSpinner";
@@ -31,6 +32,20 @@ const DiscussionsList = ({
   onShare,
   onImageClick,
 }) => {
+  const [openMenuId, setOpenMenuId] = useState(null);
+
+  // Close all menus on scroll or outside clicks
+  useEffect(() => {
+    const handleGlobalClick = (e) => {
+      // If the click is not on a menu button, close all menus
+      if (!e.target.closest('[data-menu-button="true"]')) {
+        setOpenMenuId(null);
+      }
+    };
+
+    window.addEventListener("click", handleGlobalClick);
+    return () => window.removeEventListener("click", handleGlobalClick);
+  }, []);
   if (isLoading) {
     return (
       <SurfaceCard className="py-20 flex flex-col items-center justify-center">
@@ -114,6 +129,10 @@ const DiscussionsList = ({
           loadingLike={loadingLike}
           loadingSave={loadingSave}
           onImageClick={onImageClick}
+          isMenuOpen={openMenuId === discussion.discussion_id}
+          onToggleMenu={() => 
+            setOpenMenuId(prev => prev === discussion.discussion_id ? null : discussion.discussion_id)
+          }
         />
       ))}
 

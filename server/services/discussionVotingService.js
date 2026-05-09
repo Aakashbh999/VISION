@@ -97,9 +97,8 @@ const handleCommentVote = async (commentId, userId, voteType) => {
     );
     const authorId = authorRes.rows[0]?.user_id;
 
-    if (authorId && authorId === uId) {
-      throw new Error("Cannot vote on your own comment.");
-    }
+    // Allow voting on own comment but skip XP gain
+    const isSelfVote = authorId && Number(authorId) === Number(uId);
 
     const existingRes = await client.query(
       `SELECT vote_type FROM portal.comment_likes WHERE comment_id = $1 AND user_id = $2`,
@@ -137,7 +136,7 @@ const handleCommentVote = async (commentId, userId, voteType) => {
       [commId],
     );
 
-    if (authorId && authorId !== uId) {
+    if (authorId && !isSelfVote) {
       if (newVoteType === 1 && oldVoteType !== 1) {
         await XPService.updateUserXP(
           authorId,

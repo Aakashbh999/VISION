@@ -20,20 +20,25 @@ exports.getDashboard = catchAsync(async (req, res) => {
     vxpActivityRes,
     discussionCountRes,
   ] = await Promise.all([
-    // 1️⃣ ROADMAP PROGRESS
+    // 1️⃣ ROADMAP PROGRESS (Aggregate average across all active roadmaps)
     pool.query(
       `SELECT
-          COALESCE(
-            COUNT(*) FILTER (WHERE urp.is_completed = TRUE) * 100.0 /
-            NULLIF(COUNT(rs.step_id), 0), 0
-          ) AS percent
-       FROM portal.program_roadmaps pr
-       JOIN portal.roadmaps r ON r.roadmap_id = pr.roadmap_id
-       JOIN portal.roadmap_steps rs ON rs.roadmap_id = r.roadmap_id
-       LEFT JOIN portal.user_roadmap_progress urp
-         ON urp.step_id = rs.step_id AND urp.user_id = $1
-       WHERE pr.program_id = $2 AND r.is_active = TRUE`,
-      [user_id, program_id],
+          COALESCE(AVG(roadmap_percent), 0) AS percent
+       FROM (
+         SELECT
+           r.roadmap_id,
+           COALESCE(
+             COUNT(urp.step_id) FILTER (WHERE urp.is_completed = TRUE) * 100.0 /
+             NULLIF(COUNT(rs.step_id), 0), 0
+           ) AS roadmap_percent
+         FROM portal.roadmaps r
+         JOIN portal.roadmap_steps rs ON rs.roadmap_id = r.roadmap_id
+         LEFT JOIN portal.user_roadmap_progress urp
+           ON urp.step_id = rs.step_id AND urp.user_id = $1
+         WHERE r.is_active = TRUE
+         GROUP BY r.roadmap_id
+       ) AS roadmap_progresses`,
+      [user_id],
     ),
 
     // 2️⃣ NEXT INCOMPLETE STEP
@@ -159,7 +164,7 @@ exports.getDashboard = catchAsync(async (req, res) => {
   }
 
   return res.json({
-    progress_percent: parseFloat(progressRes.rows[0].percent).toFixed(2),
+    progress_percent: Math.round(parseFloat(progressRes.rows[0].percent || 0)),
     next_step: nextStepRes.rows[0] || null,
     recommendations: recRes.rows,
     degree_feed: degreeFeed,
