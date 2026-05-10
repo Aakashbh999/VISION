@@ -14,6 +14,7 @@ const GroupDetailHeader = ({
   showAdminPanel,
   setShowAdminPanel,
   setIsSidebarOpen,
+  isSidebarOpen,
   handleJoinAction,
   isJoining,
 }) => {
@@ -92,8 +93,12 @@ const GroupDetailHeader = ({
                       variant="ghost"
                       size="sm"
                       onClick={() => {
-                        setShowAdminPanel(true);
-                        setIsSidebarOpen(true);
+                        if (isSidebarOpen && showAdminPanel) {
+                          setIsSidebarOpen(false);
+                        } else {
+                          setShowAdminPanel(true);
+                          setIsSidebarOpen(true);
+                        }
                       }}
                       className="h-8 w-8 p-0 rounded-lg bg-purple-600 text-white shadow-sm hover:bg-purple-600 hover:text-white"
                     >
@@ -105,8 +110,12 @@ const GroupDetailHeader = ({
                     size="sm"
                     className="h-8 w-8 p-0 rounded-lg border border-white/20 bg-white/10 text-white hover:bg-white/20"
                     onClick={() => {
-                      setShowAdminPanel(false);
-                      setIsSidebarOpen(true);
+                      if (isSidebarOpen && !showAdminPanel) {
+                        setIsSidebarOpen(false);
+                      } else {
+                        setShowAdminPanel(false);
+                        setIsSidebarOpen(true);
+                      }
                     }}
                   >
                     <Menu className="w-4 h-4" />
@@ -146,8 +155,12 @@ const GroupDetailHeader = ({
                     size="sm"
                     onClick={() => {
                       if (window.innerWidth < 1024) {
-                        setShowAdminPanel(true);
-                        setIsSidebarOpen(true);
+                        if (isSidebarOpen && showAdminPanel) {
+                          setIsSidebarOpen(false);
+                        } else {
+                          setShowAdminPanel(true);
+                          setIsSidebarOpen(true);
+                        }
                       } else {
                         setShowAdminPanel(!showAdminPanel);
                       }
@@ -164,8 +177,12 @@ const GroupDetailHeader = ({
                   size="sm"
                   className="rounded-xl border border-white/20 bg-white/10 text-white hover:bg-white/20"
                   onClick={() => {
-                    setShowAdminPanel(false);
-                    setIsSidebarOpen(true);
+                    if (isSidebarOpen && !showAdminPanel) {
+                      setIsSidebarOpen(false);
+                    } else {
+                      setShowAdminPanel(false);
+                      setIsSidebarOpen(true);
+                    }
                   }}
                 >
                   <Menu className="w-4 h-4 mr-2" />

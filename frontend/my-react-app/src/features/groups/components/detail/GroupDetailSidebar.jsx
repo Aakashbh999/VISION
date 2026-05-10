@@ -50,7 +50,6 @@ const GroupDetailSidebar = ({
       {isSidebarOpen && (
         <div
           className="absolute inset-0 bg-black/50 backdrop-blur-sm z-20 lg:hidden rounded-3xl"
-          onClick={() => setIsSidebarOpen(false)}
         />
       )}
 
