@@ -395,7 +395,7 @@ const ProfileHeaderCard = ({
 
           <StatBox
             isOwner={isOwner}
-            to="/resources/my"
+            to="/manage?tab=resources"
             icon={FileText}
             count={profile.resource_count}
             label="Resources"

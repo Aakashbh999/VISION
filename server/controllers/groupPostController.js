@@ -22,7 +22,7 @@ const isGroupAdmin = (groupOwnerId, membership, userId) =>
  ================================ */
 exports.getPosts = catchAsync(async (req, res) => {
   const { id } = req.params;
-  const { limit = 30, before, section = "general" } = req.query;
+  const { limit = 30, before, after, section = "general" } = req.query;
   const messageLimit = Math.min(parseInt(limit) || 30, 100);
 
   let query = `
@@ -46,28 +46,51 @@ exports.getPosts = catchAsync(async (req, res) => {
     `;
   const params = [id, section];
 
-  if (before) {
-    params.push(before);
-    query += ` AND gp.post_id < $${params.length}`;
+  if (after) {
+    params.push(after);
+    query += ` AND gp.post_id > $${params.length}`;
+    query += ` ORDER BY gp.post_id ASC`; // fetch newest from the `after` id upwards
+    
+    // When doing delta polling, we don't necessarily need the strict limit, but we'll apply it just in case
+    const posts = await pool.query(query, params);
+    
+    // If we fetched ASC, we reverse so the newest is first as expected by the frontend
+    const finalMessages = posts.rows.reverse();
+    
+    return successResponse(res, {
+      messages: finalMessages,
+      hasMore: false, // delta polling doesn't use hasMore backwards
+      oldestId: null,
+      latestId: finalMessages.length > 0 ? finalMessages[0].post_id : null,
+    });
+  } else {
+    if (before) {
+      params.push(before);
+      query += ` AND gp.post_id < $${params.length}`;
+    }
+
+    query += ` ORDER BY gp.post_id DESC LIMIT $${params.length + 1}`;
+    params.push(messageLimit + 1);
+
+    const posts = await pool.query(query, params);
+    const hasMoreItems = posts.rows.length > messageLimit;
+    const finalMessages = hasMoreItems
+      ? posts.rows.slice(0, messageLimit)
+      : posts.rows;
+
+    return successResponse(res, {
+      messages: finalMessages,
+      hasMore: hasMoreItems,
+      oldestId:
+        finalMessages.length > 0
+          ? finalMessages[finalMessages.length - 1].post_id
+          : null,
+      latestId:
+        finalMessages.length > 0 && !before
+          ? finalMessages[0].post_id
+          : null,
+    });
   }
-
-  query += ` ORDER BY gp.created_at DESC LIMIT $${params.length + 1}`;
-  params.push(messageLimit + 1);
-
-  const posts = await pool.query(query, params);
-  const hasMoreItems = posts.rows.length > messageLimit;
-  const finalMessages = hasMoreItems
-    ? posts.rows.slice(0, messageLimit)
-    : posts.rows;
-
-  return successResponse(res, {
-    messages: finalMessages,
-    hasMore: hasMoreItems,
-    oldestId:
-      finalMessages.length > 0
-        ? finalMessages[finalMessages.length - 1].post_id
-        : null,
-  });
 });
 
 /* ===============================
@@ -127,8 +150,26 @@ exports.createPost = catchAsync(async (req, res) => {
   if (section === "qa") {
     normalizedQaType = qa_post_type === "answer" ? "answer" : "question";
 
-    if (normalizedQaType === "question" && !normalizedContent) {
-      return errorResponse(res, "Question text is required.", 400);
+    if (normalizedQaType === "question") {
+      if (!normalizedContent) {
+        return errorResponse(res, "Question text is required.", 400);
+      }
+      
+      // Rate limiting check: max 2 questions per week per group
+      const recentQuestions = await pool.query(
+        `SELECT COUNT(*) FROM portal.group_posts 
+         WHERE group_id = $1 
+           AND user_id = $2 
+           AND section = 'qa' 
+           AND qa_post_type = 'question' 
+           AND created_at >= NOW() - INTERVAL '7 days'
+           AND deleted_at IS NULL`,
+        [id, userId]
+      );
+      
+      if (parseInt(recentQuestions.rows[0].count) >= 2) {
+        return errorResponse(res, "You have reached the limit of 2 questions per week in this group.", 429);
+      }
     }
 
     if (normalizedQaType === "answer") {
@@ -180,6 +221,14 @@ exports.createPost = catchAsync(async (req, res) => {
   let fileName = null;
   let fileType = null;
   if (section === "resources") {
+    if (!adminMode) {
+      return errorResponse(
+        res,
+        "Only group admins and moderators can upload resources to the vault.",
+        403,
+      );
+    }
+    
     if (!req.file) {
       return errorResponse(
         res,

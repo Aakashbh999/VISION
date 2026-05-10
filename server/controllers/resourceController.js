@@ -463,6 +463,15 @@ exports.getResources = catchAsync(async (req, res) => {
  */
 exports.getMyResources = catchAsync(async (req, res) => {
   const userId = req.user.portal_user_id;
+  const { status } = req.query;
+
+  let statusCondition = "";
+  let params = [userId];
+
+  if (status && status !== "all") {
+    statusCondition = "AND r.status = $2";
+    params.push(status);
+  }
 
   const result = await pool.query(
     `SELECT
@@ -483,8 +492,9 @@ exports.getMyResources = catchAsync(async (req, res) => {
            FROM portal.step_resource_map srm
            WHERE srm.resource_id = r.resource_id
          )
+         ${statusCondition}
        ORDER BY r.created_at DESC`,
-    [userId],
+    params,
   );
 
   return res.json(result.rows);

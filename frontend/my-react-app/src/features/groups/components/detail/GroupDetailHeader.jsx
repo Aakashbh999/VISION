@@ -95,28 +95,34 @@ const GroupDetailHeader = ({
                   variant={showAdminPanel ? "shiny" : "ghost"}
                   size="sm"
                   onClick={() => {
-                    setShowAdminPanel(!showAdminPanel);
-                    setIsSidebarOpen(true);
+                    if (window.innerWidth < 1024) {
+                      setShowAdminPanel(true);
+                      setIsSidebarOpen(true);
+                    } else {
+                      setShowAdminPanel(!showAdminPanel);
+                    }
                   }}
                   className="h-9 w-9 p-0 flex items-center justify-center"
-                  aria-label="Open admin panel"
-                  title="Admin panel"
+                  aria-label="Server Administration"
+                  title="Server Administration"
                 >
                   <Settings className="w-4 h-4" />
                 </Button>
               )}
 
-              {!isAdmin && (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="h-9 w-9 p-0 lg:hidden flex items-center justify-center"
-                  onClick={() => setIsSidebarOpen(true)}
-                  aria-label="Open group menu"
-                >
-                  <Menu className="w-5 h-5" />
-                </Button>
-              )}
+              <Button
+                variant={!showAdminPanel && isAdmin ? "shiny" : "ghost"}
+                size="sm"
+                className="h-9 w-9 p-0 lg:hidden flex items-center justify-center"
+                onClick={() => {
+                  setShowAdminPanel(false);
+                  setIsSidebarOpen(true);
+                }}
+                aria-label="Open group menu"
+                title="Group Menu"
+              >
+                <Menu className="w-5 h-5" />
+              </Button>
             </div>
           )}
         </div>

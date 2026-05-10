@@ -17,6 +17,7 @@ const initialFilters = {
   semester: "",
   degree_id: "",
   view: "all", // "all" or "my"
+  status: "all",
   page: 1,
   limit: 12,
 };

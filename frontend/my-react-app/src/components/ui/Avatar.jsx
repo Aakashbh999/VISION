@@ -40,11 +40,22 @@ const Avatar = ({
     ${className}
   `;
 
+  // Cloudinary Optimization for Avatars
+  const getOptimizedSrc = (url) => {
+    if (!url || !url.includes("cloudinary.com")) return url;
+    if (url.includes("/upload/w_") || url.includes("/upload/c_")) return url;
+    
+    // Most avatars don't need more than 150px
+    return url.replace("/upload/", "/upload/w_150,h_150,c_fill,q_auto,f_auto/");
+  };
+
+  const optimizedSrc = getOptimizedSrc(src);
+
   return (
     <div className={containerClasses}>
-      {src ? (
+      {optimizedSrc ? (
         <img
-          src={src}
+          src={optimizedSrc}
           alt={name}
           className="w-full h-full object-cover"
           loading="lazy"

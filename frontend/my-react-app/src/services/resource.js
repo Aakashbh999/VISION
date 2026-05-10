@@ -15,7 +15,7 @@ export const getResources = async (filters = {}) => {
   const { view, ...otherFilters } = filters;
 
   if (view === "my") {
-    const response = await api.get("/resources/my");
+    const response = await api.get("/resources/my", { params: otherFilters });
     // Standardize 'my' resources response to match the paginated format
     // as Resources.jsx expects { data: [...] }
     return { data: response.data };

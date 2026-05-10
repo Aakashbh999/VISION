@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { MessageSquare, Search } from "lucide-react";
 import LoadingSpinner from "../../../components/ui/LoadingSpinner";
+import Skeleton from "../../../components/ui/Skeleton";
 import DiscussionCard from "./DiscussionCard";
 import SurfaceCard from "../../../components/ui/SurfaceCard";
 import EmptyState from "../../../components/ui/EmptyState";
@@ -48,12 +49,22 @@ const DiscussionsList = ({
   }, []);
   if (isLoading) {
     return (
-      <SurfaceCard className="py-20 flex flex-col items-center justify-center">
-        <LoadingSpinner />
-        <p className="mt-4 text-xs font-black text-[var(--text-muted)] uppercase tracking-widest">
-          Loading conversations...
-        </p>
-      </SurfaceCard>
+      <div className="space-y-4">
+        {[1, 2, 3].map((i) => (
+          <SurfaceCard key={i} className="p-5 flex gap-4">
+            <Skeleton variant="circular" className="w-10 h-10 shrink-0" />
+            <div className="flex-1 space-y-3">
+              <Skeleton className="w-1/3 h-4" />
+              <Skeleton className="w-1/4 h-3" />
+              <div className="pt-2 space-y-2">
+                <Skeleton className="w-full h-3" />
+                <Skeleton className="w-5/6 h-3" />
+                <Skeleton className="w-4/6 h-3" />
+              </div>
+            </div>
+          </SurfaceCard>
+        ))}
+      </div>
     );
   }
 

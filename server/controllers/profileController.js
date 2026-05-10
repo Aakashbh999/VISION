@@ -620,8 +620,16 @@ exports.followUser = catchAsync(async (req, res) => {
         referenceId: followingId,
         metadata: { followed_user_id: followingId },
       });
-    } catch (feedErr) {
-      logger.warn({ err: feedErr }, "Follow feed event failed");
+      
+      // Send notification to the user being followed
+      await pool.query(
+        `INSERT INTO portal.notifications 
+          (user_id, type, message, actor_user_id, reference_id, reference_type)
+         VALUES ($1, $2, $3, $4, $5, $6)`,
+        [followingId, "new_follower", "started following you", followerId, followerId, "user"]
+      );
+    } catch (err) {
+      logger.warn({ err }, "Follow feed event or notification failed");
     }
   }
 

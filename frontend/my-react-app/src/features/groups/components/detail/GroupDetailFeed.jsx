@@ -15,7 +15,7 @@ import {
   X,
 } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Button from "../../../../components/ui/Button";
 import Avatar from "../../../../components/ui/Avatar";
 import Badge from "../../../../components/ui/Badge";
@@ -49,6 +49,16 @@ const GroupDetailFeed = ({
   messagesEndRef,
 }) => {
   const [activeMessageMenuId, setActiveMessageMenuId] = useState(null);
+  const [selectedMessageId, setSelectedMessageId] = useState(null);
+
+  useEffect(() => {
+    const handleClickOutside = () => {
+      setSelectedMessageId(null);
+      setActiveMessageMenuId(null);
+    };
+    document.addEventListener("click", handleClickOutside);
+    return () => document.removeEventListener("click", handleClickOutside);
+  }, []);
 
   const confirmAndDeletePost = (postId, reason, label = "this item") => {
     const confirmed = window.confirm(
@@ -91,7 +101,7 @@ const GroupDetailFeed = ({
                 {activeSection !== "discussion" &&
                   activeSection !== "general" && (
                     <div className="mb-8 max-w-4xl mx-auto">
-                      {activeSection !== "notice_board" || isAdmin ? (
+                      {(activeSection !== "notice_board" && activeSection !== "resources") || isAdmin ? (
                         <div className="bg-(--bg-card) border border-(--border-main) border-x-0 sm:border-x rounded-4xl p-5 shadow-sm group">
                           <div className="flex gap-4">
                             <Avatar
@@ -164,7 +174,9 @@ const GroupDetailFeed = ({
                       ) : (
                         <div className="bg-(--bg-active) border border-(--border-main) rounded-3xl p-8 flex flex-col items-center justify-center text-center">
                           <Megaphone className="w-8 h-8 text-(--text-muted) mb-3" />
-                          <Badge color="rose">Read-Only Notice Board</Badge>
+                          <Badge color="rose">
+                            Read-Only {activeSection === "resources" ? "Vault" : "Notice Board"}
+                          </Badge>
                         </div>
                       )}
                     </div>
@@ -207,6 +219,13 @@ const GroupDetailFeed = ({
                             />
                             <div
                               className={`flex flex-col ${isMe ? "items-end" : "items-start"} max-w-[80%] relative group`}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setSelectedMessageId(post.post_id);
+                                if (activeMessageMenuId && activeMessageMenuId !== post.post_id) {
+                                  setActiveMessageMenuId(null);
+                                }
+                              }}
                             >
                               <div className="flex items-center gap-2 mb-1 px-1">
                                 <span className="text-[10px] text-(--text-muted) font-bold uppercase">
@@ -239,12 +258,13 @@ const GroupDetailFeed = ({
                                 >
                                   <button
                                     type="button"
-                                    onClick={() =>
+                                    onClick={(e) => {
+                                      e.stopPropagation();
                                       setActiveMessageMenuId((prev) =>
                                         prev === post.post_id ? null : post.post_id,
-                                      )
-                                    }
-                                    className="w-7 h-7 rounded-full border border-(--border-main) bg-(--bg-card) text-(--text-muted) hover:text-(--text-main) hover:border-purple-300 flex items-center justify-center opacity-0 group-hover:opacity-100 focus:opacity-100 transition-colors"
+                                      );
+                                    }}
+                                    className={`w-7 h-7 rounded-full border border-(--border-main) bg-(--bg-card) text-(--text-muted) hover:text-(--text-main) hover:border-purple-300 flex items-center justify-center transition-opacity duration-200 focus:opacity-100 ${selectedMessageId === post.post_id ? 'opacity-100' : 'opacity-0 lg:group-hover:opacity-100'}`}
                                     aria-label="Message actions"
                                     title="Message actions"
                                   >
@@ -254,7 +274,8 @@ const GroupDetailFeed = ({
                                     <div className="mt-2 w-28 rounded-xl border border-(--border-main) bg-(--bg-card) shadow-lg p-1 z-20">
                                       <button
                                         type="button"
-                                        onClick={() => {
+                                        onClick={(e) => {
+                                          e.stopPropagation();
                                           setActiveMessageMenuId(null);
                                           confirmAndDeletePost(
                                             post.post_id,
