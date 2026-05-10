@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState } from "react"; // used by NavItem for sub-menu expand state
 import { Link, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -7,17 +7,13 @@ import {
   MessageCircle,
   Users2,
   Globe,
-  FolderOpen,
   ChevronDown,
   Library,
-  X,
-  Search,
 } from "lucide-react";
 import { useSidebar } from "../../hooks/useSidebar";
-import SearchModal from "../ui/SearchModal";
 import { useQueryClient } from "@tanstack/react-query";
 
-// Navigation items with nested sub-menus support
+// Navigation items with sub-menu support (children expand inline)
 const navItems = [
   {
     id: "dashboard",
@@ -186,46 +182,11 @@ const NavItem = ({ item, isCollapsed, depth = 0 }) => {
 };
 
 const PortalSidebarNew = () => {
-  const { isCollapsed, isMobileOpen, closeMobile, isMobile } = useSidebar();
-  const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const { isCollapsed, isMobile } = useSidebar();
 
   const sidebarContent = (
     <div className="flex flex-col h-full">
-      {/* Mobile close button */}
-      {isMobile && (
-        <div className="flex items-center justify-between px-4 py-3 border-b border-[var(--border-main)]">
-          <span className="text-base sm:text-lg font-semibold text-[var(--text-main)]">
-            Menu
-          </span>
-          <button
-            onClick={closeMobile}
-            className="p-1.5 rounded-lg hover:bg-[var(--bg-active)] transition-colors"
-          >
-            <X className="w-5 h-5 text-[var(--text-muted)]" />
-          </button>
-        </div>
-      )}
-
-      {/* Mobile Search Bar - Opens global SearchModal */}
-      {isMobile && (
-        <div className="px-4 py-4 border-b border-[var(--border-main)]">
-          <button
-            onClick={() => {
-              closeMobile();
-              setIsSearchOpen(true);
-            }}
-            className="w-full flex items-center gap-2 pl-9 pr-3 py-2 bg-[var(--bg-active)] border border-[var(--border-main)] rounded-xl text-sm text-[var(--text-muted)] hover:bg-[var(--bg-card)] hover:border-purple-300 transition-colors relative group"
-          >
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--text-muted)] group-hover:text-purple-500 transition-colors pointer-events-none" />
-            Quick search...
-            <kbd className="ml-auto text-[10px] font-medium px-1.5 py-0.5 bg-[var(--bg-active)] border border-[var(--border-main)] rounded text-[var(--text-muted)]">
-              ⌘K
-            </kbd>
-          </button>
-        </div>
-      )}
-
-      {/* Navigation */}
+      {/* Navigation links */}
       <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto overflow-x-hidden sidebar-scrollbar">
         {navItems.map((item) => (
           <NavItem
@@ -238,43 +199,8 @@ const PortalSidebarNew = () => {
     </div>
   );
 
-  // Mobile: Drawer with backdrop
-  if (isMobile) {
-    return (
-      <>
-        <AnimatePresence>
-          {isMobileOpen && (
-            <>
-              {/* Backdrop */}
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                onClick={closeMobile}
-                className="fixed inset-0 sidebar-backdrop z-40 lg:hidden"
-              />
-
-              {/* Drawer */}
-              <motion.aside
-                initial={{ x: "-100%" }}
-                animate={{ x: 0 }}
-                exit={{ x: "-100%" }}
-                transition={{ type: "spring", damping: 25, stiffness: 300 }}
-                className="fixed left-0 top-0 h-full w-64 bg-[var(--bg-main)] border-r border-[var(--border-main)] shadow-xl z-50 lg:hidden"
-              >
-                {sidebarContent}
-              </motion.aside>
-            </>
-          )}
-        </AnimatePresence>
-
-        <SearchModal
-          isOpen={isSearchOpen}
-          onClose={() => setIsSearchOpen(false)}
-        />
-      </>
-    );
-  }
+  // Mobile: bottom nav handles navigation — sidebar not rendered
+  if (isMobile) return null;
 
   // Desktop: Fixed sidebar with collapse
   return (

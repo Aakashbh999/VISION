@@ -1,4 +1,5 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { useEffect, useMemo, useRef, useState, memo } from "react";
 import {
   Bookmark,
   Loader2,
@@ -8,23 +9,14 @@ import {
   ThumbsUp,
   Rocket,
 } from "lucide-react";
-import { useEffect, useMemo, useRef, useState, memo } from "react";
 import Avatar from "../../../components/ui/Avatar";
 import Badge from "../../../components/ui/Badge";
 import SurfaceCard from "../../../components/ui/SurfaceCard";
 import { useAuth } from "../../../context/AuthContext";
 import { useDeleteDiscussion, useBoostDiscussion } from "../../../hooks/useDiscussionHooks";
-import { useNavigate } from "react-router-dom";
 import DeleteAction from "../../../components/DeleteAction";
-import { Edit } from "lucide-react";
 
-/**
- * Props:
- * - disc: discussion row data
- * - handleLike/handleSave/handleShare: action callbacks
- * - loadingLike/loadingSave: per-discussion loading ids
- * - onImageClick: callback for lightbox open
- */
+/** Memoized card for a single discussion in the feed list */
 const DiscussionCard = memo(({
   disc,
   handleLike,
@@ -41,7 +33,6 @@ const DiscussionCard = memo(({
     return /^\d+$/.test(normalized) ? normalized : null;
   };
   const [expanded, setExpanded] = useState(false);
-  // menuOpen state removed, using isMenuOpen prop instead
   const [optimisticVote, setOptimisticVote] = useState(
     Number(disc.user_vote || 0),
   );
@@ -173,7 +164,7 @@ const DiscussionCard = memo(({
   };
 
   return (
-    <SurfaceCard className="p-4 sm:p-5 bg-white dark:bg-slate-900 border-gray-200 dark:border-slate-700">
+    <SurfaceCard className="p-4 sm:p-5 bg-white dark:bg-slate-900 border-gray-200 dark:border-slate-700 border-x-0 sm:border-x rounded-none sm:rounded-xl">
       <div className="flex items-start justify-between gap-3">
         {authorProfileId ? (
           <Link
@@ -310,7 +301,7 @@ const DiscussionCard = memo(({
             {disc.title}
           </h2>
           <p
-            className={`mt-2 text-sm text-gray-500 dark:text-gray-400 leading-relaxed ${bodyPreviewClass}`}
+            className={`mt-2 text-[15px] sm:text-sm text-gray-500 dark:text-gray-400 leading-relaxed ${bodyPreviewClass}`}
           >
             {fullBody}
           </p>

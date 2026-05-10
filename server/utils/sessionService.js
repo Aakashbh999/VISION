@@ -18,7 +18,7 @@ const logger = require("./logger");
 const env = require("../config/env");
 
 // Token expiry times
-const ACCESS_TOKEN_EXPIRY = "15m"; // Short-lived access token
+const ACCESS_TOKEN_EXPIRY = "30m"; // Extended: reduces refresh churn for active sessions
 const REFRESH_TOKEN_EXPIRY_DAYS = 7; // Refresh token valid for 7 days
 const REFRESH_TOKEN_EXPIRY = `${REFRESH_TOKEN_EXPIRY_DAYS}d`;
 

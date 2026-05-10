@@ -39,7 +39,7 @@ const Groups = () => {
     sort: searchParams.get("sort") || "latest",
     program: searchParams.has("program")
       ? searchParams.get("program")
-      : (user?.program_id?.toString() || ""),
+      : user?.program_id?.toString() || "",
   });
   const [programs, setPrograms] = useState([]);
   const [displayGroups, setDisplayGroups] = useState([]);
@@ -114,12 +114,13 @@ const Groups = () => {
 
   return (
     <div className="max-w-6xl mx-auto space-y-6 sm:space-y-8 pb-16 sm:pb-20 px-2 sm:px-4">
-      {/* Premium Header Section */}
-      <div className="relative overflow-hidden bg-[var(--bg-card)]/40 backdrop-blur-xl border border-[var(--border-main)]/40 rounded-3xl p-5 sm:p-8 shadow-2xl shadow-purple-500/5">
-        <div className="absolute top-0 right-0 -mr-20 -mt-20 w-64 h-64 bg-purple-500/10 rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute bottom-0 left-0 -ml-20 -mb-20 w-64 h-64 bg-blue-500/10 rounded-full blur-3xl pointer-events-none" />
+      {/* Premium Header Section — simplified on mobile for a cleaner look */}
+      <div className="relative sm:overflow-hidden sm:bg-[var(--bg-card)]/40 sm:backdrop-blur-xl sm:border sm:border-[var(--border-main)]/40 sm:rounded-3xl p-0 sm:p-8 sm:shadow-2xl sm:shadow-purple-500/5">
+        <div className="hidden sm:block absolute top-0 right-0 -mr-20 -mt-20 w-64 h-64 bg-purple-500/10 rounded-full blur-3xl pointer-events-none" />
+        <div className="hidden sm:block absolute bottom-0 left-0 -ml-20 -mb-20 w-64 h-64 bg-blue-500/10 rounded-full blur-3xl pointer-events-none" />
 
-        <div className="relative flex flex-col lg:flex-row lg:items-center justify-between gap-6 sm:gap-8">
+        {/* Title + tagline + badge + CTA — desktop only */}
+        <div className="relative hidden sm:flex flex-col lg:flex-row lg:items-center justify-between gap-6 sm:gap-8 mb-6 sm:mb-10">
           <div className="space-y-2">
             <motion.h1
               initial={{ x: -20, opacity: 0 }}
@@ -181,18 +182,51 @@ const Groups = () => {
           </div>
         </div>
 
-        {/* Dynamic Filters Bar */}
-        <div className="mt-6 sm:mt-10 flex flex-col md:flex-row gap-3 sm:gap-4 p-1.5 sm:p-2 bg-[var(--bg-active)]/50 rounded-[2rem] border border-[var(--border-main)]/50 backdrop-blur-sm">
-          <div className="flex-1">
-            <UniversalSearch
-              placeholder="Search by topic, group name, or mentor..."
-              initialValue={filters.search}
-              onSearch={(val) =>
-                setFilters((prev) => ({ ...prev, search: val }))
+        {/* Dynamic Filters Bar — plain on mobile, stylized on desktop */}
+        <div className="relative flex flex-col md:flex-row gap-2 sm:gap-4 mt-0 sm:mt-10 p-0 sm:p-2 sm:bg-[var(--bg-active)]/50 sm:rounded-[2rem] sm:border sm:border-[var(--border-main)]/50 sm:backdrop-blur-sm">
+          {/* Search + mobile Start a Circle button side by side */}
+          <div className="flex items-center gap-2 flex-1">
+            <div className="flex-1">
+              <UniversalSearch
+                placeholder="Search by topic, group name, or mentor..."
+                initialValue={filters.search}
+                onSearch={(val) =>
+                  setFilters((prev) => ({ ...prev, search: val }))
+                }
+                isLoading={isLoading}
+                className="w-full [&>input]:bg-white [&>input]:dark:bg-slate-900"
+              />
+            </div>
+
+            {/* Mobile-only compact CTA — hidden on sm+ (hero section has it) */}
+            <button
+              onClick={() => {
+                if (canCreateGroup) {
+                  navigate("/groups/new");
+                } else {
+                  toast.error(
+                    `Unlock the Admin badge first! (${userXP}/500 VXP)`,
+                  );
+                }
+              }}
+              className={`sm:hidden shrink-0 flex items-center justify-center w-11 h-11 rounded-2xl font-black transition-all shadow-md ${
+                canCreateGroup
+                  ? "bg-purple-600 text-white shadow-purple-500/30 hover:bg-purple-700"
+                  : "bg-[var(--bg-card)] text-[var(--text-muted)] border border-[var(--border-main)]"
+              }`}
+              aria-label="Start a circle"
+              title={
+                canCreateGroup
+                  ? "Start a Circle"
+                  : `Need ${500 - userXP} more VXP`
               }
-              isLoading={isLoading}
-              className="w-full"
-            />
+            >
+              {canCreateGroup ? (
+                <Plus className="w-5 h-5" />
+              ) : (
+                <Lock className="w-4 h-4" />
+              )}
+            </button>
           </div>
 
           <div className="flex flex-wrap gap-2 items-center">
@@ -206,10 +240,10 @@ const Groups = () => {
               }}
               options={programs}
               placeholder="All IT Programs"
-              className="w-auto border-[var(--border-main)] rounded-2xl px-4 py-2 text-sm font-black focus:ring-purple-500/10 hover:border-purple-300"
+              className="w-auto bg-white dark:bg-slate-900 border-[var(--border-main)] rounded-2xl px-4 py-2 text-sm font-black focus:ring-purple-500/10 hover:border-purple-300"
             />
 
-            <div className="flex flex-wrap gap-1 bg-[var(--bg-card)]/80 p-1 rounded-2xl border border-[var(--border-main)] shadow-sm">
+            <div className="flex flex-wrap gap-1 bg-white dark:bg-slate-900 sm:bg-[var(--bg-card)]/80 p-1 rounded-2xl border border-[var(--border-main)] shadow-sm">
               {[
                 { value: "latest", label: "Recent", icon: Clock },
                 { value: "joined", label: "Joined", icon: Check },
@@ -267,10 +301,7 @@ const Groups = () => {
             animate="visible"
             className="grid grid-cols-1"
           >
-            <motion.div
-              variants={itemVariants}
-              className="text-center"
-            >
+            <motion.div variants={itemVariants} className="text-center">
               {data?.noResults ? (
                 <div className="max-w-2xl mx-auto space-y-10 px-4 text-left">
                   <div className="w-24 h-24 bg-purple-50 rounded-full flex items-center justify-center mx-auto shadow-sm">

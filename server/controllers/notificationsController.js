@@ -34,8 +34,14 @@ exports.getNotifications = catchAsync(async (req, res) => {
            n.created_at
          FROM portal.notifications n
          WHERE n.user_id = $1
-           AND ($4::boolean = FALSE OR n.is_read = FALSE)
-           AND ($5::int IS NULL OR n.created_at >= NOW() - ($5::int * INTERVAL '1 day'))
+            AND ($4::boolean = FALSE OR n.is_read = FALSE)
+            AND ($5::int IS NULL OR n.created_at >= NOW() - ($5::int * INTERVAL '1 day'))
+            AND (n.type != 'group_invite' OR EXISTS (
+                SELECT 1 FROM portal.group_invitations gi 
+                WHERE gi.invitation_id = n.related_id 
+                  AND gi.status = 'pending' 
+                  AND gi.expires_at > NOW()
+            ))
        ),
        deduped_notifications AS (
          SELECT
@@ -97,8 +103,11 @@ exports.getNotifications = catchAsync(async (req, res) => {
          )
        LEFT JOIN portal.resources r
          ON n.target_type = 'resource' AND r.resource_id = n.target_id
-       LEFT JOIN portal.study_groups g
-         ON n.target_type = 'group' AND g.group_id = n.target_id
+        LEFT JOIN portal.group_invitations i
+          ON n.type = 'group_invite' AND i.invitation_id = n.related_id
+        LEFT JOIN portal.study_groups g
+          ON (n.target_type = 'group' AND g.group_id = n.target_id)
+          OR (n.type = 'group_invite' AND g.group_id = i.group_id)
        WHERE n.rn = 1
          AND NOT EXISTS (
            SELECT 1 FROM portal.discussions d

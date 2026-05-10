@@ -37,6 +37,14 @@ export const formatNotificationMessage = (notification) => {
       return groupName
         ? `${actor} joined your group "${groupName}"`
         : `${actor} joined your group`;
+    case "group_invite":
+      return groupName
+        ? `${actor} invited you to join "${groupName}"`
+        : `${actor} invited you to join a circle`;
+    case "invite_accepted":
+      return groupName
+        ? `${actor} accepted your invitation to "${groupName}"`
+        : `${actor} accepted your invitation`;
     case "new_follower":
       return `${actor} started following you`;
     default:
@@ -45,6 +53,9 @@ export const formatNotificationMessage = (notification) => {
 };
 
 export const resolveNotificationPath = (notification) => {
+  if (notification.type === "group_invite" && notification.group_id) {
+    return `/groups/${notification.group_id}/profile`;
+  }
   if (notification.route_path) return notification.route_path;
 
   const targetType =

@@ -165,7 +165,7 @@ const Dashboard = () => {
             </div>
           </SurfaceCard>
 
-          <div className="hidden md:block">
+          <div className="hidden md:block max">
             <SurfaceCard>
               <CardHeader className="mb-3">
                 <CardTitle className="flex items-center gap-2 text-(--text-muted)">

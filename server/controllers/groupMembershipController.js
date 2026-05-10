@@ -245,6 +245,182 @@ exports.declineRequest = catchAsync(async (req, res) => {
 });
 
 /* ===============================
+   INVITE MEMBER (admin/co-admin only)
+ ================================ */
+exports.inviteMember = catchAsync(async (req, res) => {
+  const { id } = req.params;
+  const { userId: receiverId } = req.body;
+  const senderId = req.user.portal_user_id;
+
+  if (!receiverId) return errorResponse(res, "User ID is required", 400);
+
+  const membership = await getMembership(id, senderId);
+  if (!hasGroupPermission(membership, "manage_users")) {
+    return errorResponse(res, "Unauthorized", 403);
+  }
+
+  // Check if already a member
+  const existing = await pool.query(
+    `SELECT 1 FROM portal.group_members WHERE group_id = $1 AND user_id = $2`,
+    [id, receiverId],
+  );
+  if (existing.rows.length) {
+    return errorResponse(res, "User is already a member", 400);
+  }
+
+  // Check for existing pending invitation
+  const pending = await pool.query(
+    `SELECT 1 FROM portal.group_invitations 
+     WHERE group_id = $1 AND receiver_id = $2 AND status = 'pending' AND expires_at > NOW()`,
+    [id, receiverId],
+  );
+  if (pending.rows.length) {
+    return errorResponse(res, "Invitation already pending", 400);
+  }
+
+  const group = await pool.query(
+    `SELECT name FROM portal.study_groups WHERE group_id = $1`,
+    [id],
+  );
+  const groupName = group.rows[0]?.name || "a circle";
+
+  const invitation = await pool.query(
+    `INSERT INTO portal.group_invitations (group_id, sender_id, receiver_id) 
+     VALUES ($1, $2, $3) RETURNING invitation_id`,
+    [id, senderId, receiverId],
+  );
+
+  const invitationId = invitation.rows[0].invitation_id;
+
+  // Send Notification
+  const { notify } = require("../utils/activityService");
+  await notify({
+    userId: receiverId,
+    actorId: senderId,
+    type: "group_invite",
+    title: "Circle Invitation",
+    message: `You've been invited to join the circle: ${groupName}. This invite expires in 24 hours.`,
+    relatedType: "group_invite",
+    relatedId: invitationId,
+  });
+
+  return successResponse(res, { invitationId }, "Invitation sent successfully");
+});
+
+/* ===============================
+   ACCEPT INVITATION
+ ================================ */
+exports.acceptInvitation = catchAsync(async (req, res) => {
+  const { invitationId } = req.params;
+  const userId = req.user.portal_user_id;
+
+  const invitation = await pool.query(
+    `SELECT i.*, g.name AS group_name 
+     FROM portal.group_invitations i
+     JOIN portal.study_groups g ON g.group_id = i.group_id
+     WHERE i.invitation_id = $1 AND i.receiver_id = $2 AND i.status = 'pending'`,
+    [invitationId, userId],
+  );
+
+  if (!invitation.rows.length) {
+    return errorResponse(res, "Invitation not found or already processed", 404);
+  }
+
+  if (new Date(invitation.rows[0].expires_at) < new Date()) {
+    await pool.query(`UPDATE portal.group_invitations SET status = 'expired' WHERE invitation_id = $1`, [invitationId]);
+    return errorResponse(res, "This invitation has expired", 410);
+  }
+
+  const { group_id, sender_id, group_name } = invitation.rows[0];
+
+  await withTransaction(async (client) => {
+    // 1. Add to group members
+    await client.query(
+      `INSERT INTO portal.group_members (group_id, user_id, role, status) 
+       VALUES ($1, $2, 'member', 'approved') ON CONFLICT DO NOTHING`,
+      [group_id, userId],
+    );
+
+    // 2. Update invitation status
+    await client.query(
+      `UPDATE portal.group_invitations SET status = 'accepted' WHERE invitation_id = $1`,
+      [invitationId],
+    );
+
+    // 3. Mark notification as read (optional, but good UX)
+    await client.query(
+      `UPDATE portal.notifications SET is_read = TRUE 
+       WHERE type = 'group_invite' AND related_id = $1 AND user_id = $2`,
+      [invitationId, userId],
+    );
+  });
+
+  // Notify sender
+  const { notify, feed } = require("../utils/activityService");
+  await notify({
+    userId: sender_id,
+    actorId: userId,
+    type: "invite_accepted",
+    title: "Invitation Accepted",
+    message: `A student has accepted your invitation to join ${group_name}.`,
+    relatedType: "group",
+    relatedId: group_id,
+  });
+
+  // Add to feed
+  await feed({
+    actorId: userId,
+    actionType: "group_joined",
+    referenceType: "group",
+    referenceId: group_id,
+    metadata: { group_id, group_name, invite_id: invitationId },
+  });
+
+  return successResponse(res, { joined: true }, "You have joined the circle!");
+});
+
+/* ===============================
+   REJECT INVITATION
+ ================================ */
+exports.rejectInvitation = catchAsync(async (req, res) => {
+  const { invitationId } = req.params;
+  const userId = req.user.portal_user_id;
+
+  const invitation = await pool.query(
+    `SELECT i.*, g.name AS group_name 
+     FROM portal.group_invitations i
+     JOIN portal.study_groups g ON g.group_id = i.group_id
+     WHERE i.invitation_id = $1 AND i.receiver_id = $2 AND i.status = 'pending'`,
+    [invitationId, userId],
+  );
+
+  if (!invitation.rows.length) {
+    return errorResponse(res, "Invitation not found", 404);
+  }
+
+  const { sender_id, group_name, group_id } = invitation.rows[0];
+
+  await pool.query(
+    `UPDATE portal.group_invitations SET status = 'rejected' WHERE invitation_id = $1`,
+    [invitationId],
+  );
+
+  // Notify sender
+  const { notify } = require("../utils/activityService");
+  await notify({
+    userId: sender_id,
+    actorId: userId,
+    type: "invite_rejected",
+    title: "Invitation Declined",
+    message: `A student has declined your invitation to join ${group_name}.`,
+    relatedType: "group",
+    relatedId: group_id,
+  });
+
+  return successResponse(res, { rejected: true }, "Invitation declined");
+});
+
+/* ===============================
    APPOINT CO-ADMIN (owner only)
  ================================ */
 exports.appointCoAdmin = catchAsync(async (req, res) => {
@@ -425,6 +601,81 @@ exports.expandCapacity = catchAsync(async (req, res) => {
     { capacity: newCapacity },
     `Capacity expanded to ${newCapacity} members`,
   );
+});
+
+/* ===============================
+   REMOVE MEMBER
+ ================================ */
+exports.removeMember = catchAsync(async (req, res) => {
+  const { id, memberId } = req.params;
+  const adminId = req.user.portal_user_id;
+
+  if (String(memberId) === String(adminId)) {
+    return errorResponse(
+      res,
+      "You cannot remove yourself. Use Leave Group instead.",
+      400,
+    );
+  }
+
+  const membership = await getMembership(id, adminId);
+  if (!hasGroupPermission(membership, "manage_users")) {
+    return errorResponse(res, "Unauthorized", 403);
+  }
+
+  // Check target member's role
+  const target = await pool.query(
+    `SELECT role FROM portal.group_members WHERE group_id = $1 AND user_id = $2`,
+    [id, memberId],
+  );
+
+  if (!target.rows.length) {
+    return errorResponse(res, "Member not found", 404);
+  }
+
+  const targetRole = target.rows[0].role;
+
+  // Owners cannot be removed.
+  if (targetRole === "owner") {
+    return errorResponse(
+      res,
+      "The owner cannot be removed from the group",
+      403,
+    );
+  }
+
+  // Admins can remove anyone except owner.
+  // Moderators (if they have manage_users) can remove regular members.
+  if (membership.role === "moderator" && targetRole !== "member") {
+    return errorResponse(
+      res,
+      "Moderators can only remove regular members",
+      403,
+    );
+  }
+
+  await pool.query(
+    `DELETE FROM portal.group_members WHERE group_id = $1 AND user_id = $2`,
+    [id, memberId],
+  );
+
+  // Notify target user
+  const { notify } = require("../utils/activityService");
+  const group = await pool.query(
+    `SELECT name FROM portal.study_groups WHERE group_id = $1`,
+    [id],
+  );
+  await notify({
+    userId: memberId,
+    actorId: adminId,
+    type: "group_removed",
+    title: "Removed from Circle",
+    message: `You have been removed from the circle: ${group.rows[0]?.name || "a group"}.`,
+    relatedType: "group",
+    relatedId: id,
+  });
+
+  return successResponse(res, null, "Member removed successfully");
 });
 
 /* ===============================

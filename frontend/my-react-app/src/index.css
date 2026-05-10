@@ -87,7 +87,7 @@ body {
   background-color: var(--bg-main);
   color: var(--text-main);
   /* Resetting overscroll to default 'auto' to allow the bounce, but background-color above ensures it's themed */
-  overscroll-behavior-y: auto; 
+  overscroll-behavior-y: auto;
 }
 
 body {
