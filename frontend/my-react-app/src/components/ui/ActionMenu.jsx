@@ -57,7 +57,7 @@ const ActionMenu = ({
                   }}
                   className={`w-full flex items-center gap-3 px-4 py-2.5 text-xs font-black uppercase tracking-widest transition-colors duration-150 ${
                     action.variant === "danger"
-                      ? "text-red-600 hover:bg-red-50"
+                      ? "text-red-600 dark:text-red-400 hover:bg-red-500/10 dark:hover:bg-red-500/20"
                       : "text-[var(--text-main)] hover:bg-[var(--bg-active)]"
                   }`}
                 >

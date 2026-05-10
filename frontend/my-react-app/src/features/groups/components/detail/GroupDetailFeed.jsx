@@ -198,9 +198,18 @@ const GroupDetailFeed = ({
                     </div>
                   ) : (
                     feedPosts.map((post) => {
+                      const currentUserId = user?.portal_user_id ?? user?.user_id ?? user?.id;
                       const isMe =
-                        String(post.user_id) === String(user?.portal_user_id);
+                        (post.user_id &&
+                          currentUserId &&
+                          String(post.user_id) === String(currentUserId)) ||
+                        post.post_id < 0; // Optimistic posts are always mine
                       const isDeletedMessage = Boolean(post.is_deleted);
+                      if (isDeletedMessage) {
+                        const messageTime = new Date(post.updated_at || post.created_at);
+                        const isOld = Date.now() - messageTime.getTime() > 3600000; // 1 hour
+                        if (isOld) return null;
+                      }
 
                       if (
                         activeSection === "discussion" ||

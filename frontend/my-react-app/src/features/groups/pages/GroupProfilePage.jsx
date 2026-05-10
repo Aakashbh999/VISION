@@ -469,15 +469,7 @@ export default function GroupProfilePage() {
                 </button>
               )}
 
-              {canEditDescription && !isEditMode && (
-                <button
-                  type="button"
-                  onClick={handleEditStart}
-                  className="flex items-center gap-2 px-4 sm:px-5 py-2 bg-slate-900 text-white hover:bg-slate-800 rounded-xl font-bold transition-all"
-                >
-                  <PencilLine className="w-4 h-4" /> Edit Profile
-                </button>
-              )}
+
             </div>
           </div>
 

@@ -51,29 +51,34 @@ const DiscussionsHeader = ({
         </div>
       </div>
 
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between border-t border-[var(--border-main)] pt-3 gap-3">
-        <div className="flex flex-wrap gap-2 w-full sm:w-auto">
-          <button
-            onClick={onToggleFilters}
-            className="flex items-center gap-1 text-xs font-bold text-[var(--text-muted)] hover:bg-[var(--bg-active)] px-2 py-1 rounded"
-            aria-expanded={showFilters}
-          >
-            <Filter className="w-4 h-4" /> Filters
-          </button>
-          
-          <AcademicProgramFilter 
-            value={filters.program}
-            onChange={(event) => onUpdateFilter("program", event.target.value)}
-            options={programs}
-            placeholder="All IT Programs"
-            className="text-xs py-1.5 px-3 w-auto rounded-lg"
-          />
-          <div className="flex bg-[var(--bg-active)] rounded-lg p-0.5 border border-[var(--border-main)] sm:ml-auto">
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between border-t border-[var(--border-main)] pt-3 gap-3 w-full">
+        <div className="flex flex-col sm:flex-row items-center justify-between w-full gap-3">
+          <div className="flex items-center gap-2 w-full sm:w-auto flex-1">
+            <button
+              onClick={onToggleFilters}
+              className="flex items-center justify-center gap-1 text-xs font-bold text-[var(--text-main)] bg-[var(--bg-active)] hover:bg-[var(--bg-active)]/80 px-3 py-2 sm:py-1.5 rounded-lg border border-[var(--border-main)] shrink-0 transition-colors"
+              aria-expanded={showFilters}
+            >
+              <Filter className="w-4 h-4" /> <span className="hidden sm:inline">Filters</span>
+            </button>
+            
+            <div className="flex-1 min-w-0 sm:max-w-[280px]">
+              <AcademicProgramFilter 
+                value={filters.program}
+                onChange={(event) => onUpdateFilter("program", event.target.value)}
+                options={programs}
+                placeholder="All Programs"
+                className="text-xs py-2 sm:py-1.5 px-3 w-full rounded-lg bg-[var(--bg-card)] border-[var(--border-main)] focus:ring-2 focus:ring-purple-500 focus:border-purple-500 outline-none transition-all"
+              />
+            </div>
+          </div>
+
+          <div className="flex bg-[var(--bg-active)] rounded-lg p-0.5 border border-[var(--border-main)] w-full sm:w-auto shrink-0 justify-center">
             {["latest", "popular", "recommended"].map((s) => (
               <button
                 key={s}
                 onClick={() => onUpdateFilter("sort", s)}
-                className={`px-3 py-1 text-xs font-bold rounded-md transition-colors ${
+                className={`px-4 sm:px-3 py-2 sm:py-1.5 text-xs font-bold rounded-md transition-colors flex-1 sm:flex-none flex items-center justify-center ${
                   (!filters.sort && s === "latest") || filters.sort === s
                     ? "bg-[var(--bg-card)] text-purple-600 shadow-sm"
                     : "text-[var(--text-muted)] hover:text-[var(--text-main)]"

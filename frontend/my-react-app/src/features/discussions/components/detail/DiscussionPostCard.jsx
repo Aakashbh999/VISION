@@ -140,6 +140,15 @@ const DiscussionPostCard = ({
                   navigator.clipboard.writeText(window.location.href);
                 },
               },
+              ...(isDiscussionOwner
+                ? [
+                    {
+                      label: "Manage Post",
+                      icon: <Edit className="w-4 h-4" />,
+                      onClick: () => navigate(`/discussions/edit/${discussion.discussion_id}`),
+                    },
+                  ]
+                : []),
               ...(isDiscussionOwner && !isBoosted
                 ? [
                     {
@@ -185,7 +194,7 @@ const DiscussionPostCard = ({
               onLoad={() => setIsImageLoading(false)}
               className={`w-full max-h-[500px] object-cover transition-all duration-500 group-hover:scale-[1.02] ${isImageLoading ? "opacity-0" : "opacity-100"}`}
             />
-            <div className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity bg-black/40 backdrop-blur-md p-2 rounded-xl text-white">
+            <div className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity bg-black/40 dark:bg-black/60 backdrop-blur-md p-2 rounded-xl text-white">
               <Maximize2 className="w-4 h-4" />
             </div>
           </div>
