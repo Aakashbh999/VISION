@@ -40,10 +40,11 @@ const GroupDetailHeader = ({
     <>
       <div
         className="
+        sticky top-0 z-40
         px-3 sm:px-4 md:px-8 py-1 md:py-0 md:h-20
         flex flex-col gap-2 md:flex-row md:items-center md:justify-between md:gap-4
         border-b border-(--border-main)/50
-        relative z-30 mb-4 md:mb-6
+        mb-4 md:mb-6
         shrink-0
         backdrop-blur-xl bg-(--bg-main)/80
       "

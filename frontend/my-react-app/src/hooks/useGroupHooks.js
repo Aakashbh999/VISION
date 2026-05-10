@@ -184,9 +184,10 @@ export const useCreatePost = (groupId) => {
           const newPages = [...oldData.pages];
           
           // Create optimistic post
+          const currentUserId = user?.portal_user_id ?? user?.user_id ?? user?.id;
           const optimisticPost = {
             post_id: -Date.now(), // Temporary negative ID
-            user_id: user?.user_id,
+            user_id: currentUserId,
             full_name: user?.full_name || "You",
             profile_image: user?.profile_image,
             content: payload.content,

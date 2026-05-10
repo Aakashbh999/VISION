@@ -32,8 +32,8 @@ export const useProfilePageState = () => {
   const { user: currentUser } = useAuth();
   const { data: programs } = usePrograms();
 
-  const currentUserId = currentUser?.id ?? currentUser?.user_id;
-  const isOwner = userId === "me" || userId === currentUserId?.toString();
+  const currentUserId = currentUser?.portal_user_id ?? currentUser?.user_id ?? currentUser?.id;
+  const isOwner = userId === "me" || String(userId) === String(currentUserId);
 
   const { data: ownProfile, isLoading: isOwnLoading } = useOwnProfile({
     enabled: isOwner,
