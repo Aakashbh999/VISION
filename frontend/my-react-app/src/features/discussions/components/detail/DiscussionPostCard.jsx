@@ -60,7 +60,7 @@ const DiscussionPostCard = ({
       className="bg-[var(--bg-card)] border border-[var(--border-main)] border-x-0 sm:border-x rounded-xl overflow-hidden shadow-sm"
     >
       <div className="p-2 sm:p-6 md:p-8">
-        <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3 mb-3">
+        <div className="flex items-start justify-between gap-3 mb-3">
           {authorProfileId ? (
             <Link
               to={`/profile/${authorProfileId}`}
@@ -115,22 +115,7 @@ const DiscussionPostCard = ({
               </div>
             </div>
           )}
-        </div>
 
-        <div className="flex justify-between items-start mb-6">
-          <div className="flex flex-col gap-2 min-w-0">
-            {isBoosted && isDiscussionOwner && (
-              <div className="flex">
-                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-50 dark:bg-amber-900/30 border border-amber-200 dark:border-amber-700/50 text-[10px] font-black uppercase tracking-widest text-amber-600 dark:text-amber-400">
-                  <Rocket className="w-3 h-3 fill-current" />
-                  Post Boosted (Visible to you)
-                </span>
-              </div>
-            )}
-            <h1 className="text-lg sm:text-2xl md:text-3xl font-black text-[var(--text-main)] tracking-tight">
-              {discussion.title}
-            </h1>
-          </div>
           <ActionMenu
             actions={[
               {
@@ -170,6 +155,20 @@ const DiscussionPostCard = ({
                 : []),
             ]}
           />
+        </div>
+
+        <div className="flex flex-col gap-2 min-w-0 mb-6">
+          {isBoosted && isDiscussionOwner && (
+            <div className="flex">
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-50 dark:bg-amber-900/30 border border-amber-200 dark:border-amber-700/50 text-[10px] font-black uppercase tracking-widest text-amber-600 dark:text-amber-400">
+                <Rocket className="w-3 h-3 fill-current" />
+                Post Boosted (Visible to you)
+              </span>
+            </div>
+          )}
+          <h1 className="text-lg sm:text-2xl md:text-3xl font-black text-[var(--text-main)] tracking-tight">
+            {discussion.title}
+          </h1>
         </div>
 
         {discussion.image_url && (
