@@ -529,6 +529,7 @@ const Register = () => {
                     <BookOpen className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-(--text-muted)" />
                     <input
                       type="number"
+                      inputMode="numeric"
                       name="semester"
                       required
                       min="1"

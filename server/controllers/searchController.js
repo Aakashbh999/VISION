@@ -1,6 +1,7 @@
 const pool = require("../config/db");
 const recommendationService = require("../services/recommendationService");
 const catchAsync = require("../utils/catchAsync");
+const { buildPresenceSelect } = require("../utils/presence");
 
 /**
  * Universal Search Endpoint (Roadmaps, Groups, Clubs, Resources, Users)
@@ -264,7 +265,8 @@ exports.universalSearch = catchAsync(async (req, res) => {
             p.university,
             p.campus,
             p.profile_image AS profile_picture,
-            a.role
+            a.role,
+            ${buildPresenceSelect("p")}
           FROM portal.users p
           JOIN auth.users a ON a.auth_user_id = p.auth_user_id
           WHERE p.is_suspended = FALSE

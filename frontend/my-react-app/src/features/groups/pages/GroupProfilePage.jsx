@@ -31,18 +31,13 @@ import {
   PencilLine,
   LogOut,
   MoreHorizontal,
+  UserMinus,
 } from "lucide-react";
+import { useAuth } from "../../../context/AuthContext";
 import { motion as Motion } from "framer-motion";
 import LoadingSpinner from "../../../components/ui/LoadingSpinner";
 
-// ─────────────────────────────────────────────
-//  Permission levels
-//    owner    → can edit everything
-//    co_admin → Moderator — can edit description
-//    member   → read-only member
-//    viewer   → not a member, read-only
-// ─────────────────────────────────────────────
-
+// Role display config: owner = full access, co_admin = moderator, member = read-only
 const ROLE_CONFIG = {
   owner: {
     label: "Admin",
@@ -84,8 +79,10 @@ export default function GroupProfilePage() {
   // Derive permission level
   const isOwner = group?.is_owner;
   const isCoAdmin = group?.is_co_admin;
+  const { user } = useAuth();
   const canEditDescription = Boolean(group?.can_edit_profile || isOwner);
   const canEditImages = Boolean(group?.can_edit_profile || isOwner);
+  const canManageUsers = Boolean(group?.can_manage_users || isOwner);
 
   // Local edit state
   const [isEditMode, setIsEditMode] = useState(false);
@@ -180,6 +177,17 @@ export default function GroupProfilePage() {
     },
     onError: (err) =>
       showToast.error(err.response?.data?.error || "Failed to leave circle"),
+  });
+
+  const removeMemberMut = useMutation({
+    mutationFn: (memberId) => groupService.removeMember(id, memberId),
+    onSuccess: () => {
+      showToast.success("Member removed from circle");
+      queryClient.invalidateQueries({ queryKey: ["groupMembers", id] });
+      queryClient.invalidateQueries({ queryKey: ["group", id] });
+    },
+    onError: (err) =>
+      showToast.error(err.response?.data?.error || "Failed to remove member"),
   });
 
   // ── File handlers ───────────────────────────
@@ -654,12 +662,34 @@ export default function GroupProfilePage() {
                             </p>
                           )}
                           {m.is_online && (
-                            <p className="text-[10px] font-bold text-emerald-600 uppercase tracking-wider mt-0.5">
-                              Online now
-                            </p>
-                          )}
-                        </div>
-                      </Link>
+                             <p className="text-[10px] font-bold text-emerald-600 uppercase tracking-wider mt-0.5">
+                               Online now
+                             </p>
+                           )}
+                         </div>
+                         {canManageUsers &&
+                           String(m.user_id) !== String(group?.creator_id) &&
+                           String(m.user_id) !==
+                             String(user?.portal_user_id) && (
+                             <button
+                               onClick={(e) => {
+                                 e.preventDefault();
+                                 e.stopPropagation();
+                                 if (
+                                   window.confirm(
+                                     `Remove ${m.full_name} from circle?`,
+                                   )
+                                 ) {
+                                   removeMemberMut.mutate(m.user_id);
+                                 }
+                               }}
+                               className="ml-auto p-1.5 rounded-lg text-rose-500 hover:bg-rose-50 transition-all"
+                               title="Remove member"
+                             >
+                               <UserMinus className="w-4 h-4" />
+                             </button>
+                           )}
+                       </Link>
                     );
                   })}
                 </div>

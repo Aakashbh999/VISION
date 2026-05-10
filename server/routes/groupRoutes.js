@@ -46,6 +46,29 @@ router.patch(
 
 // Members
 router.get("/:id/members", verifyJWT, membershipController.getGroupMembers);
+// Invitations
+router.post(
+  "/:id/invitations",
+  verifyJWT,
+  requireApprovedStudent,
+  sanitizeInput,
+  membershipController.inviteMember,
+);
+router.post(
+  "/invitations/:invitationId/accept",
+  verifyJWT,
+  membershipController.acceptInvitation,
+);
+router.post(
+  "/invitations/:invitationId/reject",
+  verifyJWT,
+  membershipController.rejectInvitation,
+);
+router.delete(
+  "/:id/members/:memberId",
+  verifyJWT,
+  membershipController.removeMember,
+);
 
 // Join / Leave / Request
 router.post(

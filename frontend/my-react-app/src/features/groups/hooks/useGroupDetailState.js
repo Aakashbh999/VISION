@@ -28,8 +28,7 @@ export const useGroupDetailState = () => {
   const [editingAnswerText, setEditingAnswerText] = useState("");
   const [activeSection, setActiveSection] = useState("general");
   const [showAdminPanel, setShowAdminPanel] = useState(false);
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(window.innerWidth >= 1024);
 
   const {
     data: group,
@@ -144,6 +143,17 @@ export const useGroupDetailState = () => {
     },
     onError: (error) =>
       showToast.error(error.response?.data?.error || "Join failed"),
+  });
+
+  const removeMemberMut = useMutation({
+    mutationFn: (memberId) => groupService.removeMember(id, memberId),
+    onSuccess: () => {
+      showToast.success("Member removed from circle");
+      refetchMembers();
+      refetchGroup();
+    },
+    onError: (error) =>
+      showToast.error(error.response?.data?.error || "Failed to remove member"),
   });
 
   const deletePostMut = useMutation({
@@ -308,12 +318,12 @@ export const useGroupDetailState = () => {
   };
 
   useEffect(() => {
-    if (isMember && window.innerWidth >= 1024) {
+    if (window.innerWidth >= 1024) {
       setIsSidebarOpen(true);
     } else {
       setIsSidebarOpen(false);
     }
-  }, [id, isMember]);
+  }, [id]);
 
   useEffect(() => {
     const handleResize = () => {
@@ -362,8 +372,6 @@ export const useGroupDetailState = () => {
     activeSection,
     showAdminPanel,
     setShowAdminPanel,
-    isSidebarCollapsed,
-    setIsSidebarCollapsed,
     isSidebarOpen,
     setIsSidebarOpen,
     messagesEndRef,
@@ -376,6 +384,7 @@ export const useGroupDetailState = () => {
     expandCapacityMut,
     requestJoinMut,
     joinGroupMut,
+    removeMemberMut,
     createPostMutation,
     deletePostMut,
     editQaAnswerMut,

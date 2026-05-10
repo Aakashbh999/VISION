@@ -19,6 +19,7 @@ import { useState, useEffect } from "react";
 import Button from "../../../../components/ui/Button";
 import Avatar from "../../../../components/ui/Avatar";
 import Badge from "../../../../components/ui/Badge";
+import { SECTIONS } from "../../constants/groupDetailConstants";
 
 const GroupDetailFeed = ({
   user,
@@ -69,11 +70,35 @@ const GroupDetailFeed = ({
     deletePostMut.mutate({ postId, reason });
   };
 
+  const activeSectionLabel =
+    SECTIONS.find((section) => section.id === activeSection)?.label ||
+    "General Chat";
+
+  const activeSectionSummary =
+    activeSection === "notice_board"
+      ? "Pinned announcements, updates, and official posts live here."
+      : activeSection === "qa"
+        ? "Post questions, thread answers, and keep the knowledge base tidy."
+        : activeSection === "resources"
+          ? "Upload files, notes, and shared learning material for the group."
+          : "A live conversation space for the group and its members.";
+
   return (
-    <>
+    <div className="flex h-full min-h-0 flex-col">
+      <div className="flex items-center justify-between gap-4 border-b border-(--border-main) bg-[linear-gradient(180deg,var(--bg-main),var(--bg-card))] px-5 py-4 sm:px-6">
+        <div className="min-w-0">
+          <h2 className="mt-1 truncate text-lg font-black text-(--text-main) sm:text-xl">
+            {activeSectionLabel}
+          </h2>
+          <p className="mt-1 line-clamp-2 text-sm leading-6 text-(--text-muted)">
+            {activeSectionSummary}
+          </p>
+        </div>
+      </div>
+
       <div
         ref={messagesContainerRef}
-        className={`flex-1 overflow-y-auto p-4 md:p-6 scroll-smooth ${
+        className={`flex-1 min-h-0 overflow-y-auto p-4 md:p-6 scroll-smooth ${
           activeSection === "discussion" || activeSection === "general"
             ? "bg-(--bg-main)"
             : "bg-(--bg-main)/30"
@@ -101,7 +126,9 @@ const GroupDetailFeed = ({
                 {activeSection !== "discussion" &&
                   activeSection !== "general" && (
                     <div className="mb-8 max-w-4xl mx-auto">
-                      {(activeSection !== "notice_board" && activeSection !== "resources") || isAdmin ? (
+                      {(activeSection !== "notice_board" &&
+                        activeSection !== "resources") ||
+                      isAdmin ? (
                         <div className="bg-(--bg-card) border border-(--border-main) border-x-0 sm:border-x rounded-4xl p-5 shadow-sm group">
                           <div className="flex gap-4">
                             <Avatar
@@ -146,7 +173,7 @@ const GroupDetailFeed = ({
                               {activeSection === "resources" && (
                                 <div className="mt-3">
                                   <label className="inline-flex items-center gap-2 text-xs font-semibold text-(--text-muted) cursor-pointer hover:text-purple-600">
-                                    <FileUp className="w-4 h-4 text-purple-600"  />
+                                    <FileUp className="w-4 h-4 text-purple-600" />
                                     Upload resource
                                     <input
                                       type="file"
@@ -175,7 +202,10 @@ const GroupDetailFeed = ({
                         <div className="bg-(--bg-active) border border-(--border-main) rounded-3xl p-8 flex flex-col items-center justify-center text-center">
                           <Megaphone className="w-8 h-8 text-(--text-muted) mb-3" />
                           <Badge color="rose">
-                            Read-Only {activeSection === "resources" ? "Vault" : "Notice Board"}
+                            Read-Only{" "}
+                            {activeSection === "resources"
+                              ? "Vault"
+                              : "Notice Board"}
                           </Badge>
                         </div>
                       )}
@@ -198,7 +228,8 @@ const GroupDetailFeed = ({
                     </div>
                   ) : (
                     feedPosts.map((post) => {
-                      const currentUserId = user?.portal_user_id ?? user?.user_id ?? user?.id;
+                      const currentUserId =
+                        user?.portal_user_id ?? user?.user_id ?? user?.id;
                       const isMe =
                         (post.user_id &&
                           currentUserId &&
@@ -206,8 +237,11 @@ const GroupDetailFeed = ({
                         post.post_id < 0; // Optimistic posts are always mine
                       const isDeletedMessage = Boolean(post.is_deleted);
                       if (isDeletedMessage) {
-                        const messageTime = new Date(post.updated_at || post.created_at);
-                        const isOld = Date.now() - messageTime.getTime() > 3600000; // 1 hour
+                        const messageTime = new Date(
+                          post.updated_at || post.created_at,
+                        );
+                        const isOld =
+                          Date.now() - messageTime.getTime() > 3600000; // 1 hour
                         if (isOld) return null;
                       }
 
@@ -231,7 +265,10 @@ const GroupDetailFeed = ({
                               onClick={(e) => {
                                 e.stopPropagation();
                                 setSelectedMessageId(post.post_id);
-                                if (activeMessageMenuId && activeMessageMenuId !== post.post_id) {
+                                if (
+                                  activeMessageMenuId &&
+                                  activeMessageMenuId !== post.post_id
+                                ) {
                                   setActiveMessageMenuId(null);
                                 }
                               }}
@@ -255,11 +292,13 @@ const GroupDetailFeed = ({
                                   isDeletedMessage
                                     ? "bg-(--bg-active) text-(--text-muted) border border-(--border-main) italic"
                                     : isMe
-                                    ? "bg-purple-600 text-white rounded-tr-none"
-                                    : "bg-(--bg-active) text-(--text-main) border-(--border-main) rounded-tl-none border"
+                                      ? "bg-purple-600 text-white rounded-tr-none"
+                                      : "bg-(--bg-active) text-(--text-main) border-(--border-main) rounded-tl-none border"
                                 }`}
                               >
-                                {isDeletedMessage ? "Message deleted" : post.content}
+                                {isDeletedMessage
+                                  ? "Message deleted"
+                                  : post.content}
                               </div>
                               {isMe && !isDeletedMessage && (
                                 <div
@@ -270,10 +309,12 @@ const GroupDetailFeed = ({
                                     onClick={(e) => {
                                       e.stopPropagation();
                                       setActiveMessageMenuId((prev) =>
-                                        prev === post.post_id ? null : post.post_id,
+                                        prev === post.post_id
+                                          ? null
+                                          : post.post_id,
                                       );
                                     }}
-                                    className={`w-7 h-7 rounded-full border border-(--border-main) bg-(--bg-card) text-(--text-muted) hover:text-(--text-main) hover:border-purple-300 flex items-center justify-center transition-opacity duration-200 focus:opacity-100 ${selectedMessageId === post.post_id ? 'opacity-100' : 'opacity-0 lg:group-hover:opacity-100'}`}
+                                    className={`w-7 h-7 rounded-full border border-(--border-main) bg-(--bg-card) text-(--text-muted) hover:text-(--text-main) hover:border-purple-300 flex items-center justify-center transition-opacity duration-200 focus:opacity-100 ${selectedMessageId === post.post_id ? "opacity-100" : "opacity-0 lg:group-hover:opacity-100"}`}
                                     aria-label="Message actions"
                                     title="Message actions"
                                   >
@@ -307,7 +348,8 @@ const GroupDetailFeed = ({
 
                       if (activeSection === "qa") {
                         const answer = post.answer;
-                        const answerIsEditing = editingAnswerId === answer?.post_id;
+                        const answerIsEditing =
+                          editingAnswerId === answer?.post_id;
 
                         return (
                           <div
@@ -485,35 +527,36 @@ const GroupDetailFeed = ({
                               <div className="text-(--text-muted) text-sm whitespace-pre-wrap leading-relaxed">
                                 {post.content}
                               </div>
-                              {activeSection === "resources" && post.file_url && (
-                                <div className="mt-3 flex items-center justify-between gap-3">
-                                  <a
-                                    href={post.file_url}
-                                    target="_blank"
-                                    rel="noreferrer"
-                                    className="inline-flex items-center gap-2 text-sm text-purple-600 hover:underline transition-colors"
-                                  >
-                                    <Download className="w-4 h-4 pointer-events-none" />
-                                    {post.file_name || "Download resource"}
-                                  </a>
-                                  {isAdmin && (
-                                    <button
-                                      type="button"
-                                      onClick={() =>
-                                        confirmAndDeletePost(
-                                          post.post_id,
-                                          "Deleted by group admin",
-                                          "this resource",
-                                        )
-                                      }
-                                      className="text-(--text-muted) hover:text-red-500 transition-colors"
-                                      title="Delete resource"
+                              {activeSection === "resources" &&
+                                post.file_url && (
+                                  <div className="mt-3 flex items-center justify-between gap-3">
+                                    <a
+                                      href={post.file_url}
+                                      target="_blank"
+                                      rel="noreferrer"
+                                      className="inline-flex items-center gap-2 text-sm text-purple-600 hover:underline transition-colors"
                                     >
-                                      <Trash2 className="w-4 h-4 pointer-events-none" />
-                                    </button>
-                                  )}
-                                </div>
-                              )}
+                                      <Download className="w-4 h-4 pointer-events-none" />
+                                      {post.file_name || "Download resource"}
+                                    </a>
+                                    {isAdmin && (
+                                      <button
+                                        type="button"
+                                        onClick={() =>
+                                          confirmAndDeletePost(
+                                            post.post_id,
+                                            "Deleted by group admin",
+                                            "this resource",
+                                          )
+                                        }
+                                        className="text-(--text-muted) hover:text-red-500 transition-colors"
+                                        title="Delete resource"
+                                      >
+                                        <Trash2 className="w-4 h-4 pointer-events-none" />
+                                      </button>
+                                    )}
+                                  </div>
+                                )}
                             </div>
                           </div>
                         </div>
@@ -531,7 +574,7 @@ const GroupDetailFeed = ({
 
       {isMember &&
         (activeSection === "discussion" || activeSection === "general") && (
-          <div className="p-4 md:p-6 bg-(--bg-card) border-t border-(--border-main)">
+          <div className="sticky bottom-0 z-10 border-t border-(--border-main) bg-(--bg-card)/95 p-4 backdrop-blur-xl md:p-6 shrink-0">
             <form
               onSubmit={handlePostSubmit}
               className="max-w-4xl mx-auto flex items-center gap-3"
@@ -557,7 +600,7 @@ const GroupDetailFeed = ({
             </form>
           </div>
         )}
-    </>
+    </div>
   );
 };
 

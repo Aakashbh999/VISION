@@ -82,6 +82,13 @@ exports.getGroups = catchAsync(async (req, res) => {
   let paramIndex = params.length;
   const conditions = ["g.deleted_at IS NULL"];
 
+  // Privacy Filter: Exclude private groups unless member
+  if (userId) {
+    conditions.push(`(g.privacy_type != 'private' OR EXISTS(SELECT 1 FROM portal.group_members WHERE group_id = g.group_id AND user_id = $1))`);
+  } else {
+    conditions.push(`g.privacy_type != 'private'`);
+  }
+
   // Filter by program (with bridging logic)
   if (program) {
     paramIndex++;

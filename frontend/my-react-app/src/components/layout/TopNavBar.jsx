@@ -135,10 +135,10 @@ const TopNavBar = () => {
     <header className="fixed top-0 left-0 right-0 h-16 bg-[var(--bg-main)]/95 backdrop-blur-md border-b border-[var(--border-main)] z-40 flex items-center justify-between px-4 transition-all duration-300">
       {/* Left section: Menu toggle + Logo + Breadcrumb */}
       <div className="flex items-center gap-3">
-        {/* Mobile menu toggle */}
+        {/* Mobile menu toggle — hidden on mobile since bottom nav handles navigation */}
         <button
           onClick={toggle}
-          className="p-2 rounded-lg bg-[#0f0a1f] text-white shadow-lg shadow-purple-900/20 hover:bg-purple-900 transition-all duration-300"
+          className="hidden lg:flex p-2.5 rounded-lg bg-[#0f0a1f] text-white shadow-lg shadow-purple-900/20 hover:bg-purple-900 transition-all duration-300 min-w-11 min-h-11 items-center justify-center"
           aria-label="Toggle sidebar"
         >
           <Menu className="w-5 h-5" />
@@ -160,7 +160,7 @@ const TopNavBar = () => {
         {/* Universal Search Button */}
         <button
           onClick={searchModal.open}
-          className="flex items-center gap-2 px-3 py-1.5 text-[var(--text-muted)] hover:text-[var(--text-main)] hover:bg-purple-600/10 dark:hover:bg-purple-500/20 rounded-lg border border-[var(--border-main)] transition-colors"
+          className="flex items-center gap-2 px-3 py-2.5 min-h-11 text-[var(--text-muted)] hover:text-[var(--text-main)] hover:bg-purple-600/10 dark:hover:bg-purple-500/20 rounded-lg border border-[var(--border-main)] transition-colors"
           aria-label="Search (Ctrl+K)"
         >
           <Search className="w-4 h-4" />
@@ -208,7 +208,7 @@ const TopNavBar = () => {
             ref={notificationsButtonRef}
             type="button"
             onClick={handleNotificationsToggle}
-            className="relative p-2 rounded-lg hover:bg-purple-600/10 dark:hover:bg-purple-500/20 transition-colors"
+            className="relative p-2.5 min-w-11 min-h-11 rounded-lg hover:bg-purple-600/10 dark:hover:bg-purple-500/20 transition-colors flex items-center justify-center"
             aria-label="Open notifications"
             aria-expanded={notificationsOpen}
           >
@@ -230,7 +230,7 @@ const TopNavBar = () => {
         <div className="relative" ref={profileRef}>
           <button
             onClick={() => setProfileMenuOpen(!profileMenuOpen)}
-            className="flex items-center gap-2 p-1.5 rounded-lg hover:bg-purple-600/10 dark:hover:bg-purple-500/20 transition-colors"
+            className="flex items-center gap-2 p-2 min-w-11 min-h-11 rounded-lg hover:bg-purple-600/10 dark:hover:bg-purple-500/20 transition-colors"
             aria-label="User menu"
           >
             <Avatar

@@ -1,7 +1,8 @@
 import { useState } from "react";
-import { Search } from "lucide-react";
+import { Search, Plus } from "lucide-react";
 import { CO_ADMIN_PERMISSION_OPTIONS } from "../../constants/groupDetailConstants";
 import Avatar from "../../../../components/ui/Avatar";
+import PromoteMemberModal from "./PromoteMemberModal";
 
 const CoAdminRolesCard = ({
   members,
@@ -10,37 +11,32 @@ const CoAdminRolesCard = ({
   removeCoAdminMut,
   updatePermissionMut,
 }) => {
-  const [search, setSearch] = useState("");
+  const [showPromoteModal, setShowPromoteModal] = useState(false);
 
   const filteredMembers = members?.filter((member) => {
-    const isSelf = String(member.user_id) === String(user?.portal_user_id);
-    const isExcludedRole = member.role === "owner" || member.role === "admin";
-    const matchesSearch = (member.full_name || "").toLowerCase().includes(search.toLowerCase());
-    
-    return !isSelf && !isExcludedRole && matchesSearch;
+    return member.role === "co_admin";
   });
 
   return (
     <div className="bg-[var(--bg-card)] p-5 rounded-sm sm:rounded-2xl border border-[var(--border-main)] border-x-0 sm:border-x shadow-sm">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6">
-        <h3 className="text-xs font-black uppercase text-[var(--text-muted)] tracking-wider">
-          Moderator Roles
-        </h3>
-        
-        <div className="relative w-full sm:w-64">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-[var(--text-muted)]" />
-          <input
-            type="text"
-            placeholder="Search members to promote..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="w-full pl-9 pr-4 py-2 bg-[var(--bg-active)] border border-[var(--border-main)] rounded-xl text-xs text-[var(--text-main)] placeholder:text-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 transition-all"
-          />
+        <div className="flex items-center gap-3">
+          <h3 className="text-xs font-black uppercase text-[var(--text-muted)] tracking-wider">
+            Moderator Roles
+          </h3>
+          <button 
+            onClick={() => setShowPromoteModal(true)}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-purple-600 text-white text-[10px] font-black uppercase tracking-wider hover:bg-purple-700 transition-colors shadow-sm"
+          >
+            <Plus className="w-3 h-3" />
+            Add Moderator
+          </button>
         </div>
       </div>
 
       <div className="space-y-2">
-        {filteredMembers?.map((member) => (
+        {filteredMembers?.length > 0 ? (
+          filteredMembers.map((member) => (
             <div
               key={member.user_id}
               className="p-3 hover:bg-[var(--bg-active)] rounded-lg group border border-[var(--border-main)]"
@@ -112,8 +108,23 @@ const CoAdminRolesCard = ({
                 </div>
               )}
             </div>
-          ))}
+          ))
+        ) : (
+          <div className="text-center py-10 px-4">
+            <p className="text-xs font-medium text-[var(--text-muted)]">
+              No moderators appointed for this circle yet.
+            </p>
+          </div>
+        )}
       </div>
+
+      <PromoteMemberModal 
+        isOpen={showPromoteModal}
+        onClose={() => setShowPromoteModal(false)}
+        members={members}
+        user={user}
+        appointCoAdminMut={appointCoAdminMut}
+      />
     </div>
   );
 };

@@ -419,36 +419,6 @@ const SearchModal = ({ isOpen, onClose }) => {
               </div>
             )}
           </div>
-
-          <div className="flex items-center justify-between px-4 py-2.5 bg-[var(--bg-main)] border-t border-[var(--border-main)] text-xs text-[var(--text-muted)]">
-            <div className="flex items-center gap-4">
-              <span className="flex items-center gap-1.5">
-                <kbd className="inline-flex items-center justify-center w-5 h-5 bg-[var(--bg-card)] border border-[var(--border-main)] rounded text-[10px] font-medium">
-                  <ArrowUp className="w-3 h-3" />
-                </kbd>
-                <kbd className="inline-flex items-center justify-center w-5 h-5 bg-[var(--bg-card)] border border-[var(--border-main)] rounded text-[10px] font-medium">
-                  <ArrowDown className="w-3 h-3" />
-                </kbd>
-                <span>to navigate</span>
-              </span>
-              <span className="flex items-center gap-1.5">
-                <kbd className="inline-flex items-center justify-center px-1.5 h-5 bg-[var(--bg-card)] border border-[var(--border-main)] rounded text-[10px] font-medium">
-                  Enter
-                </kbd>
-                <span>to select</span>
-              </span>
-              <span className="flex items-center gap-1.5">
-                <kbd className="inline-flex items-center justify-center px-1.5 h-5 bg-[var(--bg-card)] border border-[var(--border-main)] rounded text-[10px] font-medium">
-                  Esc
-                </kbd>
-                <span>to close</span>
-              </span>
-            </div>
-            <span className="text-[var(--text-muted)]/60">
-              Powered by{" "}
-              <span className="font-medium text-purple-600">VISION</span>
-            </span>
-          </div>
         </motion.div>
       </motion.div>
     </AnimatePresence>

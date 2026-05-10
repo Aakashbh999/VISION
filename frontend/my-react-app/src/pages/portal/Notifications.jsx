@@ -10,6 +10,8 @@ import { CalendarClock, Trash2 } from "lucide-react";
 import { resolveNotificationPath } from "../../utils/notificationRouting";
 import { useNavigate } from "react-router-dom";
 import NotificationItem from "../../components/notifications/NotificationItem";
+import { acceptInvitation, rejectInvitation } from "../../services/group";
+import { showToast } from "../../utils/toast";
 
 const Notifications = () => {
   const navigate = useNavigate();
@@ -27,6 +29,29 @@ const Notifications = () => {
   const markReadMutation = useMutation({ mutationFn: markNotificationRead, onSuccess: invalidate });
   const deleteMutation = useMutation({ mutationFn: deleteNotification, onSuccess: invalidate });
   const clearAllMutation = useMutation({ mutationFn: clearNotifications, onSuccess: invalidate });
+
+  // Invitation Mutations
+  const acceptMutation = useMutation({
+    mutationFn: acceptInvitation,
+    onSuccess: (data) => {
+      showToast.success(data.message || "Invitation accepted");
+      invalidate();
+    },
+    onError: (err) => {
+      showToast.error(err.response?.data?.error || "Failed to accept invitation");
+    },
+  });
+
+  const rejectMutation = useMutation({
+    mutationFn: rejectInvitation,
+    onSuccess: (data) => {
+      showToast.success(data.message || "Invitation declined");
+      invalidate();
+    },
+    onError: (err) => {
+      showToast.error(err.response?.data?.error || "Failed to decline invitation");
+    },
+  });
 
   const handleNotificationNavigate = async (notification) => {
     const destination = resolveNotificationPath(notification);
@@ -106,6 +131,9 @@ const Notifications = () => {
                     onMarkRead={(id) => markReadMutation.mutate(id)}
                     onDelete={(id) => deleteMutation.mutate(id)}
                     onNavigate={handleNotificationNavigate}
+                    onAccept={(id) => acceptMutation.mutate(id)}
+                    onReject={(id) => rejectMutation.mutate(id)}
+                    isProcessing={acceptMutation.isPending || rejectMutation.isPending}
                   />
                 ))}
               </div>

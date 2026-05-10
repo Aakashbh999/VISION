@@ -7,14 +7,12 @@ import {
   Bookmark,
   ThumbsUp,
   Edit,
-  AlertTriangle,
   Maximize2,
   Image as ImageIcon,
   Rocket,
 } from "lucide-react";
 import { toast } from "react-toastify";
 import ActionMenu from "../../../../components/ui/ActionMenu";
-import DeleteAction from "../../../../components/DeleteAction";
 import Avatar from "../../../../components/ui/Avatar";
 
 const DiscussionPostCard = ({
@@ -57,7 +55,7 @@ const DiscussionPostCard = ({
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="bg-[var(--bg-card)] border border-[var(--border-main)] border-x-0 sm:border-x rounded-xl overflow-hidden shadow-sm"
+      className="bg-[var(--bg-card)] border border-[var(--border-main)] border-x-0 sm:border-x rounded-none sm:rounded-xl overflow-hidden shadow-sm"
     >
       <div className="p-2 sm:p-6 md:p-8">
         <div className="flex items-start justify-between gap-3 mb-3">
@@ -199,7 +197,7 @@ const DiscussionPostCard = ({
           </div>
         )}
 
-        <div className="prose prose-purple max-w-none text-[var(--text-main)] mb-10 whitespace-pre-wrap">
+        <div className="prose prose-purple max-w-none text-[var(--text-main)] mb-10 whitespace-pre-wrap text-[15px] sm:text-base leading-7">
           {discussion.content}
         </div>
 

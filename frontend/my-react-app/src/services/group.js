@@ -211,3 +211,24 @@ export const updateGroupQaAnswer = async (postId, content) => {
   const response = await api.patch(`/groups/posts/${postId}/answer`, { content });
   return response.data;
 };
+
+// Invitations
+export const inviteMember = async (groupId, userId) => {
+  const response = await api.post(`/groups/${groupId}/invitations`, { userId });
+  return response.data;
+};
+
+export const acceptInvitation = async (invitationId) => {
+  const response = await api.post(`/groups/invitations/${invitationId}/accept`);
+  return response.data;
+};
+
+export const rejectInvitation = async (invitationId) => {
+  const response = await api.post(`/groups/invitations/${invitationId}/reject`);
+  return response.data;
+};
+
+export const removeMember = async (groupId, memberId) => {
+  const response = await api.delete(`/groups/${groupId}/members/${memberId}`);
+  return response.data;
+};

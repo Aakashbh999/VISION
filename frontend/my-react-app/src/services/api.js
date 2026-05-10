@@ -22,6 +22,13 @@ axiosRetry(api, {
 let isRefreshing = false;
 let failedQueue = [];
 
+// Flag to prevent multiple auth:logout events firing from a single failure.
+// Reset only when the AuthContext signals the system is fully clean.
+let isLoggingOut = false;
+window.addEventListener("auth:loggedOut", () => {
+  isLoggingOut = false;
+});
+
 const processQueue = (error, token = null) => {
   failedQueue.forEach((prom) => {
     if (error) {
@@ -95,7 +102,10 @@ api.interceptors.response.use(
         isRefreshing = false;
         localStorage.removeItem("token");
         localStorage.removeItem("refreshToken");
-        window.dispatchEvent(new CustomEvent("auth:logout"));
+        if (!isLoggingOut) {
+          isLoggingOut = true;
+          window.dispatchEvent(new CustomEvent("auth:logout"));
+        }
         return Promise.reject(error);
       }
 
@@ -124,7 +134,10 @@ api.interceptors.response.use(
         // Refresh failed, clear tokens and logout
         localStorage.removeItem("token");
         localStorage.removeItem("refreshToken");
-        window.dispatchEvent(new CustomEvent("auth:logout"));
+        if (!isLoggingOut) {
+          isLoggingOut = true;
+          window.dispatchEvent(new CustomEvent("auth:logout"));
+        }
         return Promise.reject(refreshError);
       } finally {
         isRefreshing = false;

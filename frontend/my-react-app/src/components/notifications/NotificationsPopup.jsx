@@ -13,11 +13,39 @@ import {
   deleteNotification,
   markNotificationRead,
 } from "../../services/notifications";
+import {
+  acceptInvitation,
+  rejectInvitation,
+} from "../../services/group";
+import { showToast } from "../../utils/toast";
 
 const NotificationsPopup = ({ isOpen, onClose, toggleRef }) => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const panelRef = useRef(null);
+
+  // Invitation Mutations
+  const acceptMutation = useMutation({
+    mutationFn: acceptInvitation,
+    onSuccess: (data) => {
+      showToast.success(data.message || "Invitation accepted");
+      invalidateNotifications();
+    },
+    onError: (err) => {
+      showToast.error(err.response?.data?.error || "Failed to accept invitation");
+    },
+  });
+
+  const rejectMutation = useMutation({
+    mutationFn: rejectInvitation,
+    onSuccess: (data) => {
+      showToast.success(data.message || "Invitation declined");
+      invalidateNotifications();
+    },
+    onError: (err) => {
+      showToast.error(err.response?.data?.error || "Failed to decline invitation");
+    },
+  });
 
   useClickOutside(panelRef, (event) => {
     if (!isOpen) return;
@@ -162,6 +190,32 @@ const NotificationsPopup = ({ isOpen, onClose, toggleRef }) => {
                     <p className="mt-1 text-xs text-[var(--text-muted)]">
                       {new Date(notif.created_at).toLocaleString()}
                     </p>
+                    {notif.type === "group_invite" && (
+                      <div className="mt-3 flex items-center gap-2">
+                        <button
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            acceptMutation.mutate(notif.related_id);
+                          }}
+                          disabled={acceptMutation.isPending || rejectMutation.isPending}
+                          className="rounded-lg bg-purple-600 px-3 py-1.5 text-xs font-bold text-white hover:bg-purple-700 disabled:opacity-50"
+                        >
+                          Accept
+                        </button>
+                        <button
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            rejectMutation.mutate(notif.related_id);
+                          }}
+                          disabled={acceptMutation.isPending || rejectMutation.isPending}
+                          className="rounded-lg border border-[var(--border-main)] bg-[var(--bg-card)] px-3 py-1.5 text-xs font-bold text-[var(--text-main)] hover:bg-[var(--bg-active)] disabled:opacity-50"
+                        >
+                          Reject
+                        </button>
+                      </div>
+                    )}
                   </div>
                   <div className="flex items-center gap-1">
                     {!notif.is_read && (

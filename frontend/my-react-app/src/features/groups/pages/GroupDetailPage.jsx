@@ -6,6 +6,7 @@ import {
   GroupDetailLoadingView,
   GroupDetailErrorView,
   GroupDetailPrivateView,
+  GroupDetailNonMemberView,
 } from "../components/detail/GroupDetailStateViews";
 
 const GroupDetail = () => {
@@ -36,8 +37,6 @@ const GroupDetail = () => {
     activeSection,
     showAdminPanel,
     setShowAdminPanel,
-    isSidebarCollapsed,
-    setIsSidebarCollapsed,
     isSidebarOpen,
     setIsSidebarOpen,
     messagesEndRef,
@@ -50,6 +49,7 @@ const GroupDetail = () => {
     expandCapacityMut,
     requestJoinMut,
     joinGroupMut,
+    removeMemberMut,
     createPostMutation,
     deletePostMut,
     editQaAnswerMut,
@@ -69,90 +69,95 @@ const GroupDetail = () => {
     return <GroupDetailErrorView />;
   }
 
-  // Private View Filter
-  if (!isMember && group.privacy_type === "private") {
-    return <GroupDetailPrivateView />;
+  // Strict Access Control: Only members can enter the workspace
+  if (!isMember) {
+    if (group.privacy_type === "private") {
+      return <GroupDetailPrivateView />;
+    }
+    return (
+      <GroupDetailNonMemberView
+        group={group}
+        handleJoinAction={handleJoinAction}
+        isJoining={joinGroupMut.isPending || requestJoinMut.isPending}
+      />
+    );
   }
 
   return (
-    // Intentional full-bleed layout: group detail owns its own spacing.
-    <div
-      className="h-[calc(100vh-64px)] flex flex-col -mx-3 sm:-mx-6 lg:-mx-8 -my-5 sm:-my-8 overflow-hidden"
-      style={{ backgroundColor: "var(--bg-main)" }}
-    >
-      <div className="flex-1 flex overflow-hidden">
-        <div
-          className="flex-1 flex flex-col min-w-0 relative"
-          style={{ backgroundColor: "var(--bg-card)" }}
-        >
-          <GroupDetailHeader
-            id={id}
-            group={group}
-            activeSection={activeSection}
-            isMember={isMember}
-            isAdmin={isAdmin}
-            showAdminPanel={showAdminPanel}
-            setShowAdminPanel={setShowAdminPanel}
-            isSidebarCollapsed={isSidebarCollapsed}
-            setIsSidebarCollapsed={setIsSidebarCollapsed}
-            setIsSidebarOpen={setIsSidebarOpen}
-            handleJoinAction={handleJoinAction}
-            isJoining={joinGroupMut.isPending || requestJoinMut.isPending}
-          />
-
-          <GroupDetailFeed
-            user={user}
-            group={group}
-            isMember={isMember}
-            isAdmin={isAdmin}
-            activeSection={activeSection}
-            feedPosts={feedPosts}
-            isFetchingNextPage={isFetchingNextPage}
-            newPost={newPost}
-            setNewPost={setNewPost}
-            resourceFile={resourceFile}
-            setResourceFile={setResourceFile}
-            answerDrafts={answerDrafts}
-            setAnswerDrafts={setAnswerDrafts}
-            editingAnswerId={editingAnswerId}
-            setEditingAnswerId={setEditingAnswerId}
-            editingAnswerText={editingAnswerText}
-            setEditingAnswerText={setEditingAnswerText}
-            createPostMutation={createPostMutation}
-            deletePostMut={deletePostMut}
-            editQaAnswerMut={editQaAnswerMut}
-            handlePostSubmit={handlePostSubmit}
-            handleQaAnswerCreate={handleQaAnswerCreate}
-            handleStartEditAnswer={handleStartEditAnswer}
-            handleSaveEditedAnswer={handleSaveEditedAnswer}
-            messagesContainerRef={messagesContainerRef}
-            messagesEndRef={messagesEndRef}
-          />
-        </div>
-
-        <GroupDetailSidebar
+    <div className="flex-1 min-h-0 overflow-hidden bg-[radial-gradient(circle_at_top_left,rgba(168,85,247,0.08),transparent_30%),linear-gradient(180deg,var(--bg-main),var(--bg-main))]">
+      <div className="flex h-full min-h-0 flex-col gap-5 p-4 sm:p-5 lg:p-6">
+        <GroupDetailHeader
           id={id}
-          user={user}
           group={group}
-          members={members}
-          joinRequests={joinRequests}
-          isOwner={isOwner}
-          isAdmin={isAdmin}
-          canManageUsers={canManageUsers}
-          showAdminPanel={showAdminPanel}
-          isSidebarCollapsed={isSidebarCollapsed}
-          setIsSidebarCollapsed={setIsSidebarCollapsed}
-          isSidebarOpen={isSidebarOpen}
-          setIsSidebarOpen={setIsSidebarOpen}
           activeSection={activeSection}
           handleSectionChange={handleSectionChange}
-          appointCoAdminMut={appointCoAdminMut}
-          removeCoAdminMut={removeCoAdminMut}
-          updatePermissionMut={updatePermissionMut}
-          approveRequestMut={approveRequestMut}
-          declineRequestMut={declineRequestMut}
-          expandCapacityMut={expandCapacityMut}
+          isMember={isMember}
+          isAdmin={isAdmin}
+          showAdminPanel={showAdminPanel}
+          setShowAdminPanel={setShowAdminPanel}
+          setIsSidebarOpen={setIsSidebarOpen}
+          handleJoinAction={handleJoinAction}
+          isJoining={joinGroupMut.isPending || requestJoinMut.isPending}
         />
+
+        <div className="relative flex-1 min-h-0 overflow-hidden gap-5 lg:grid lg:grid-cols-[minmax(0,1fr)_20rem]">
+          <div className="min-w-0 flex min-h-0 max-h-[calc(100vh-1rem)] overflow-y-auto flex-col overflow-hidden rounded-3xl border border-(--border-main) bg-(--bg-card) shadow-sm">
+            <GroupDetailFeed
+              user={user}
+              group={group}
+              isMember={isMember}
+              isAdmin={isAdmin}
+              activeSection={activeSection}
+              feedPosts={feedPosts}
+              isFetchingNextPage={isFetchingNextPage}
+              newPost={newPost}
+              setNewPost={setNewPost}
+              resourceFile={resourceFile}
+              setResourceFile={setResourceFile}
+              answerDrafts={answerDrafts}
+              setAnswerDrafts={setAnswerDrafts}
+              editingAnswerId={editingAnswerId}
+              setEditingAnswerId={setEditingAnswerId}
+              editingAnswerText={editingAnswerText}
+              setEditingAnswerText={setEditingAnswerText}
+              createPostMutation={createPostMutation}
+              deletePostMut={deletePostMut}
+              editQaAnswerMut={editQaAnswerMut}
+              handlePostSubmit={handlePostSubmit}
+              handleQaAnswerCreate={handleQaAnswerCreate}
+              handleStartEditAnswer={handleStartEditAnswer}
+              handleSaveEditedAnswer={handleSaveEditedAnswer}
+              messagesContainerRef={messagesContainerRef}
+              messagesEndRef={messagesEndRef}
+            />
+          </div>
+
+          <div className="min-w-0 min-h-0 lg:h-full">
+            <GroupDetailSidebar
+              id={id}
+              user={user}
+              group={group}
+              members={members}
+              joinRequests={joinRequests}
+              isOwner={isOwner}
+              isAdmin={isAdmin}
+              canManageUsers={canManageUsers}
+              showAdminPanel={showAdminPanel}
+              isSidebarOpen={isSidebarOpen}
+              setIsSidebarOpen={setIsSidebarOpen}
+              activeSection={activeSection}
+              handleSectionChange={handleSectionChange}
+              showSectionNavigation={false}
+              appointCoAdminMut={appointCoAdminMut}
+              removeCoAdminMut={removeCoAdminMut}
+              updatePermissionMut={updatePermissionMut}
+              approveRequestMut={approveRequestMut}
+              declineRequestMut={declineRequestMut}
+              expandCapacityMut={expandCapacityMut}
+              removeMemberMut={removeMemberMut}
+            />
+          </div>
+        </div>
       </div>
     </div>
   );
