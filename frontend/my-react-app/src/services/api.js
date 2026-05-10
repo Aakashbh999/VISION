@@ -80,6 +80,16 @@ api.interceptors.response.use(
         return Promise.reject(error);
       }
 
+      // MULTI-TAB SYNC: Check if another tab has already refreshed the token
+      const currentToken = localStorage.getItem("token");
+      if (
+        currentToken &&
+        originalRequest.headers.Authorization !== `Bearer ${currentToken}`
+      ) {
+        originalRequest.headers.Authorization = `Bearer ${currentToken}`;
+        return api(originalRequest);
+      }
+
       if (isRefreshing) {
         // Wait for the refresh to complete
         return new Promise((resolve, reject) => {
@@ -95,21 +105,11 @@ api.interceptors.response.use(
       originalRequest._retry = true;
       isRefreshing = true;
 
-      const refreshToken = localStorage.getItem("refreshToken");
-
-      if (!refreshToken) {
-        // No refresh token, user needs to login again
-        isRefreshing = false;
-        localStorage.removeItem("token");
-        localStorage.removeItem("refreshToken");
-        if (!isLoggingOut) {
-          isLoggingOut = true;
-          window.dispatchEvent(new CustomEvent("auth:logout"));
-        }
-        return Promise.reject(error);
-      }
-
       try {
+        const refreshToken = localStorage.getItem("refreshToken");
+        if (!refreshToken) throw new Error("No refresh token");
+
+        // Use axios directly to bypass the interceptor's unwrap logic for the refresh call
         const response = await axios.post(
           `${api.defaults.baseURL}/auth/refresh-token`,
           { refreshToken },
@@ -127,16 +127,21 @@ api.interceptors.response.use(
         originalRequest.headers.Authorization = `Bearer ${accessToken}`;
 
         processQueue(null, accessToken);
-
         return api(originalRequest);
       } catch (refreshError) {
         processQueue(refreshError, null);
-        // Refresh failed, clear tokens and logout
-        localStorage.removeItem("token");
-        localStorage.removeItem("refreshToken");
-        if (!isLoggingOut) {
-          isLoggingOut = true;
-          window.dispatchEvent(new CustomEvent("auth:logout"));
+
+        // Robust Logout Trigger:
+        // ONLY logout if the server explicitly rejected the refresh token (401/403).
+        // For network errors or 500s, we keep the tokens and let the user try again later.
+        const status = refreshError.response?.status;
+        if (status === 401 || status === 403) {
+          localStorage.removeItem("token");
+          localStorage.removeItem("refreshToken");
+          if (!isLoggingOut) {
+            isLoggingOut = true;
+            window.dispatchEvent(new CustomEvent("auth:logout"));
+          }
         }
         return Promise.reject(refreshError);
       } finally {

@@ -1,7 +1,7 @@
 const Footer = ({ withSidebarOffset = false }) => {
   return (
     <footer
-      className={`mt-12 sm:mt-16 lg:mt-20 border-t border-(--border-main) bg-(--bg-main) py-5 sm:py-8 transition-colors duration-300 ${
+      className={`mt-12 sm:mt-16 lg:mt-20 border-t border-(--border-main) bg-(--bg-main) py-5 sm:py-8 pb-24 lg:pb-8 transition-colors duration-300 ${
         withSidebarOffset ? "lg:ml-64" : ""
       }`}
     >

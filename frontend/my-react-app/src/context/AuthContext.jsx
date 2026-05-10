@@ -11,16 +11,20 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 const AuthContext = createContext(null);
 
-/**
- * Parses the expiry time (in ms) from a JWT access token.
- * Returns null if the token is missing or malformed.
- */
 const getTokenExpiryMs = (token) => {
   if (!token) return null;
   try {
-    const payload = JSON.parse(atob(token.split(".")[1]));
+    const base64Url = token.split(".")[1];
+    const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
+    const jsonPayload = decodeURIComponent(
+      atob(base64)
+        .split("")
+        .map((c) => "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2))
+        .join(""),
+    );
+    const payload = JSON.parse(jsonPayload);
     return payload.exp ? payload.exp * 1000 : null;
-  } catch {
+  } catch (err) {
     return null;
   }
 };
@@ -90,11 +94,12 @@ export const AuthProvider = ({ children }) => {
     if (!expiryMs) return;
 
     const msUntilExpiry = expiryMs - Date.now();
-    const FIVE_MINUTES_MS = 5 * 60 * 1000;
-    const msUntilRefresh = msUntilExpiry - FIVE_MINUTES_MS;
+    // Refresh 7 minutes before expiry to be safe against clock skew
+    const REFRESH_THRESHOLD_MS = 7 * 60 * 1000;
+    const msUntilRefresh = msUntilExpiry - REFRESH_THRESHOLD_MS;
 
-    // If already within 5 minutes of expiry, don't schedule — the reactive
-    // interceptor will handle the next 401 naturally
+    // If already within the threshold, don't schedule — the reactive
+    // interceptor in api.js will handle the refresh on the next request.
     if (msUntilRefresh <= 0) return;
 
     refreshTimerRef.current = setTimeout(async () => {

@@ -96,6 +96,7 @@ const GroupDetail = () => {
           showAdminPanel={showAdminPanel}
           setShowAdminPanel={setShowAdminPanel}
           setIsSidebarOpen={setIsSidebarOpen}
+          isSidebarOpen={isSidebarOpen}
           handleJoinAction={handleJoinAction}
           isJoining={joinGroupMut.isPending || requestJoinMut.isPending}
         />
