@@ -17,7 +17,7 @@ const ResourcesPanel = () => {
           Resource Uploads
         </h2>
         <Link
-          to="/resources/my"
+          to="/resources?view=my"
           className="text-sm font-bold text-purple-600 hover:text-purple-700 flex items-center gap-1"
         >
           View in Library <ArrowRight className="w-4 h-4" />

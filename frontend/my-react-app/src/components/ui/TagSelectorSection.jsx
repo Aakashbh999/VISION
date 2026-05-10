@@ -16,6 +16,8 @@ const TagSelectorSection = ({
   onToggleSystemTag,
   onCustomTagKeyDown,
   showCustomTags = true,
+  label = "Tags",
+  showSystemLabel = true,
   getSystemTagId = (tag) => tag.tag_id,
   getSystemTagLabel = (tag) => tag.name,
 }) => {
@@ -24,7 +26,7 @@ const TagSelectorSection = ({
       <div className="flex items-center gap-1.5 mb-3">
         <Tag className="w-3.5 h-3.5 text-purple-500" />
         <label className="text-sm font-medium text-[var(--text-main)]">
-          Tags
+          {label}
         </label>
       </div>
 
@@ -90,9 +92,13 @@ const TagSelectorSection = ({
 
         <div className="pt-1">
           <div className="flex items-center justify-between mb-2">
-            <p className="text-xs font-medium text-[var(--text-main)]">
-              System tags
-            </p>
+            {showSystemLabel ? (
+              <p className="text-xs font-medium text-[var(--text-main)]">
+                System tags
+              </p>
+            ) : (
+              <div />
+            )}
             <span
               className={`text-xs font-medium px-2 py-0.5 rounded-full ${
                 systemTags.length >= systemTagCap

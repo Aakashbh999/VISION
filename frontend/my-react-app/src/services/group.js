@@ -50,12 +50,13 @@ export const leaveGroup = async (groupId) => {
 // Get group posts with pagination
 export const getGroupPosts = async (
   groupId,
-  { limit = 20, before, section = "general" } = {},
+  { limit = 20, before, after, section = "general" } = {},
 ) => {
   const params = new URLSearchParams();
   params.set("limit", limit);
   params.set("section", section);
   if (before) params.set("before", before);
+  if (after) params.set("after", after);
   const response = await api.get(
     `/groups/${groupId}/posts?${params.toString()}`,
   );
@@ -66,6 +67,7 @@ export const getGroupPosts = async (
     messages: Array.isArray(data.messages) ? data.messages : [],
     hasMore: data.hasMore || false,
     oldestId: data.oldestId || null,
+    latestId: data.latestId || null,
   };
 };
 

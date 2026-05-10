@@ -17,6 +17,8 @@ if (typeof connectionString === "string") {
 const pool = new Pool({
   connectionString: connectionString || undefined,
   ssl: { rejectUnauthorized: false },
+  max: 20,
+  idleTimeoutMillis: 30000,
 });
 
 // This is the "Magic Fix" for Neon's pooler

@@ -37,6 +37,8 @@ export const formatNotificationMessage = (notification) => {
       return groupName
         ? `${actor} joined your group "${groupName}"`
         : `${actor} joined your group`;
+    case "new_follower":
+      return `${actor} started following you`;
     default:
       return notification.message || "You have a new notification";
   }

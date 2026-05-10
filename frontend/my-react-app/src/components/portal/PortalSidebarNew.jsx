@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { useSidebar } from "../../hooks/useSidebar";
 import SearchModal from "../ui/SearchModal";
+import { useQueryClient } from "@tanstack/react-query";
 
 // Navigation items with nested sub-menus support
 const navItems = [
@@ -58,6 +59,7 @@ const navItems = [
 
 const NavItem = ({ item, isCollapsed, depth = 0 }) => {
   const location = useLocation();
+  const queryClient = useQueryClient();
   const [isExpanded, setIsExpanded] = useState(false);
   const hasChildren = item.children && item.children.length > 0;
   const Icon = item.icon;
@@ -112,6 +114,26 @@ const NavItem = ({ item, isCollapsed, depth = 0 }) => {
     </>
   );
 
+  const handleMouseEnter = () => {
+    // Only prefetch main resource-heavy pages
+    if (item.href === "/resources") {
+      queryClient.prefetchQuery({
+        queryKey: ["resources"],
+        queryFn: () => fetch("/api/resources").then((res) => res.json())
+      });
+    } else if (item.href === "/discussions") {
+      queryClient.prefetchQuery({
+        queryKey: ["discussions"],
+        queryFn: () => fetch("/api/discussions").then((res) => res.json())
+      });
+    } else if (item.href === "/groups") {
+      queryClient.prefetchQuery({
+        queryKey: ["studyGroups"],
+        queryFn: () => fetch("/api/groups").then((res) => res.json())
+      });
+    }
+  };
+
   return (
     <div>
       {item.href && !hasChildren ? (
@@ -119,12 +141,14 @@ const NavItem = ({ item, isCollapsed, depth = 0 }) => {
           to={item.href}
           className={linkClasses}
           title={isCollapsed ? item.label : undefined}
+          onMouseEnter={handleMouseEnter}
         >
           {content}
         </Link>
       ) : (
         <button
           onClick={handleClick}
+          onMouseEnter={handleMouseEnter}
           title={isCollapsed ? item.label : undefined}
           className={`${linkClasses} w-full text-left`}
         >

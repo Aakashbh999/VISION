@@ -20,6 +20,7 @@ import { FilterProvider, useFilters } from "../../context/LibraryFilterContext";
 import ResourceCard from "../../components/resources/ResourceCard";
 import ResourceUploadModal from "../../components/resources/ResourceUploadModal";
 import LoadingSpinner from "../../components/ui/LoadingSpinner";
+import Skeleton from "../../components/ui/Skeleton";
 import UniversalSearch from "../../components/ui/UniversalSearch";
 import SurfaceCard from "../../components/ui/SurfaceCard";
 import EmptyState from "../../components/ui/EmptyState";
@@ -213,12 +214,42 @@ const ResourcesContent = () => {
               ),
             )}
           </select>
+
+          {filters.view === "my" && (
+            <select
+              name="status"
+              value={filters.status || "all"}
+              onChange={handleFilterChange}
+              className="w-full md:w-auto px-4 py-3 bg-[var(--bg-active)] border border-transparent focus:border-purple-200 focus:bg-[var(--bg-card)] rounded-xl text-sm font-bold outline-none transition-all text-[var(--text-main)] cursor-pointer"
+            >
+              <option value="all">All Status</option>
+              <option value="approved">Approved</option>
+              <option value="pending">Pending Review</option>
+              <option value="rejected">Rejected</option>
+            </select>
+          )}
         </div>
       </SurfaceCard>
 
       {/* Content Results */}
       {isLoading ? (
-        <LoadingSpinner size="lg" className="py-24" />
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {[1, 2, 3, 4, 5, 6].map((i) => (
+            <SurfaceCard key={i} className="flex flex-col h-full overflow-hidden">
+              <Skeleton className="w-full h-40 rounded-none" />
+              <div className="p-5 flex-1 flex flex-col gap-3">
+                <Skeleton className="w-1/4 h-5" />
+                <Skeleton className="w-3/4 h-6" />
+                <Skeleton className="w-full h-4" />
+                <Skeleton className="w-2/3 h-4" />
+                <div className="mt-auto pt-4 flex justify-between items-center">
+                  <Skeleton className="w-1/3 h-4" />
+                  <Skeleton variant="circular" className="w-8 h-8" />
+                </div>
+              </div>
+            </SurfaceCard>
+          ))}
+        </div>
       ) : error ? (
         <ErrorState
           title="Resource library unavailable"
@@ -272,7 +303,7 @@ const ResourcesContent = () => {
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-6 sm:gap-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
           {resourcesData.data.map((resource) => (
-            <ResourceCard key={resource.resource_id} resource={resource} />
+            <ResourceCard key={resource.resource_id} resource={resource} showStatus={filters.view === "my"} />
           ))}
         </div>
       )}
@@ -302,6 +333,7 @@ const Resources = () => {
         ? searchParams.get("program_id")
         : user?.program_id?.toString() || "",
       view: searchParams.get("view") || "all",
+      status: searchParams.get("status") || "all",
       page: parseInt(searchParams.get("page"), 10) || 1,
       limit: 12,
     };

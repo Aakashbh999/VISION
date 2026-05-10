@@ -45,17 +45,17 @@ import PendingAccessMessage from "./components/portal/PendingAccessMessage";
 import ModeratorRoute from "./components/ModeratorRoute";
 import LoadingSpinner from "./components/ui/LoadingSpinner";
 
-// Admin pages — kept static as they are low‑traffic, role‑gated pages
-import AdminDashboard from "./pages/admin/Dashboard";
-import AdminPending from "./pages/admin/PendingStudents";
-import AdminStudents from "./pages/admin/StudentsList";
-import AdminReports from "./pages/admin/Reports";
-import AdminPendingResources from "./pages/admin/PendingResources";
-import AdminLogs from "./pages/admin/AdminLogs";
-import AdminRoadmapManagement from "./pages/admin/Roadmaps/RoadmapManagement";
-import AdminRoadmapBuilder from "./pages/admin/Roadmaps/RoadmapBuilder";
-import AdminRegistrationWhitelist from "./pages/admin/RegistrationWhitelist";
-import AdminCampuses from "./pages/admin/Campuses";
+// Admin pages lazy-loaded to reduce bundle size
+const AdminDashboard = lazy(() => import("./pages/admin/Dashboard"));
+const AdminPending = lazy(() => import("./pages/admin/PendingStudents"));
+const AdminStudents = lazy(() => import("./pages/admin/StudentsList"));
+const AdminReports = lazy(() => import("./pages/admin/Reports"));
+const AdminPendingResources = lazy(() => import("./pages/admin/PendingResources"));
+const AdminLogs = lazy(() => import("./pages/admin/AdminLogs"));
+const AdminRoadmapManagement = lazy(() => import("./pages/admin/Roadmaps/RoadmapManagement"));
+const AdminRoadmapBuilder = lazy(() => import("./pages/admin/Roadmaps/RoadmapBuilder"));
+const AdminRegistrationWhitelist = lazy(() => import("./pages/admin/RegistrationWhitelist"));
+const AdminCampuses = lazy(() => import("./pages/admin/Campuses"));
 
 // Portal pages lazy‑loaded to minimise initial bundle size
 const Dashboard = lazy(() => import("./pages/portal/Dashboard"));
@@ -71,7 +71,6 @@ const Groups = lazy(() => import("./pages/portal/Groups"));
 const CreateGroup = lazy(() => import("./pages/portal/CreateGroup"));
 const Clubs = lazy(() => import("./pages/portal/Clubs"));
 const Resources = lazy(() => import("./pages/portal/Resources"));
-const MyResources = lazy(() => import("./pages/portal/MyResources"));
 const ManageContent = lazy(() => import("./pages/portal/ManageContent"));
 const Feed = lazy(() => import("./pages/portal/Feed"));
 const Profile = lazy(() => import("./pages/portal/Profile"));
@@ -149,7 +148,6 @@ const portalRoutes = [
   { path: "/clubs", element: <Clubs /> },
   { path: "/clubs/:slug", element: <ClubDetail /> },
   { path: "/resources", element: <Resources /> },
-  { path: "/resources/my", element: <MyResources /> },
   { path: "/feed", element: <Feed /> },
   { path: "/manage", element: <ManageContent /> },
   { path: "/profile/:userId", element: <Profile /> },

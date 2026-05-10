@@ -127,7 +127,7 @@ const Register = () => {
     if (name === "date_of_birth") {
       let val = value.replace(/\D/g, "");
       if (val.length > 8) val = val.slice(0, 8);
-      
+
       let formatted = val;
       if (val.length > 6) {
         formatted = `${val.slice(0, 4)}-${val.slice(4, 6)}-${val.slice(6)}`;
@@ -161,7 +161,11 @@ const Register = () => {
 
   const toggleCareerScope = (tagName) => {
     setFormData((prev) => {
-      const nextCareerScope = toggleCappedSelection(prev.career_scope, tagName, 5);
+      const nextCareerScope = toggleCappedSelection(
+        prev.career_scope,
+        tagName,
+        5,
+      );
       return { ...prev, career_scope: nextCareerScope };
     });
   };
@@ -496,8 +500,8 @@ const Register = () => {
                 </div>
               </div>
 
-              <div className="grid grid-cols-12 gap-3">
-                <div className="col-span-7">
+              <div className="grid grid-cols-12 gap-2">
+                <div className="col-span-8">
                   <label className="text-[10px] font-black uppercase text-(--text-muted) tracking-widest mb-2 block">
                     Batch Enrollment (B.S.)
                   </label>
@@ -517,7 +521,7 @@ const Register = () => {
                     />
                   </div>
                 </div>
-                <div className="col-span-5">
+                <div className="col-span-4">
                   <label className="text-[10px] font-black uppercase text-(--text-muted) tracking-widest mb-2 block">
                     Semester
                   </label>
@@ -595,6 +599,8 @@ const Register = () => {
                 onToggleSystemTag={toggleCareerScope}
                 onCustomTagKeyDown={() => {}}
                 showCustomTags={false}
+                label="Interests"
+                showSystemLabel={false}
                 getSystemTagId={(tag) => tag.name}
                 getSystemTagLabel={(tag) => tag.name}
               />

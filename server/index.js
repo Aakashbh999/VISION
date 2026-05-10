@@ -1,4 +1,5 @@
 const express = require("express");
+const compression = require("compression");
 const cors = require("cors");
 const helmet = require("helmet");
 const rateLimit = require("express-rate-limit");
@@ -67,6 +68,7 @@ app.use(
   }),
 );
 app.use(express.json());
+app.use(compression());
 app.use(sanitizeInput);
 
 // Rate limiting for auth routes (prevents brute force attacks)
