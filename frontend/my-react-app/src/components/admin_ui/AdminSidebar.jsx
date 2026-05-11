@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { 
-  LayoutDashboard, Users, Clock, FileText, LogOut, 
-  ShieldAlert, Database, BookOpen, Briefcase, 
+import {
+  LayoutDashboard, Users, Clock, FileText, LogOut,
+  ShieldAlert, Database, BookOpen, Briefcase,
   MonitorPlay, GraduationCap, Tag, Search, ChevronDown, ChevronRight
 } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
@@ -13,7 +13,7 @@ const AdminSidebar = () => {
   const location = useLocation();
   const { logout, user } = useAuth();
   const { isCollapsed } = useSidebar();
-  
+
   const [searchQuery, setSearchQuery] = useState("");
   const [expandedCategories, setExpandedCategories] = useState({
     "Reference Data": false
@@ -26,7 +26,6 @@ const AdminSidebar = () => {
     }));
   };
 
-  // Define navigation grouped by categories
   const navCategories = [
     {
       title: "Core & Analytics",
@@ -64,7 +63,6 @@ const AdminSidebar = () => {
     }
   ];
 
-  // Insert role-specific items dynamically
   if (user?.is_moderator || user?.role === "admin") {
     navCategories[2].items.push({
       id: "pending-resources",
@@ -74,24 +72,23 @@ const AdminSidebar = () => {
     });
   }
 
-  // Filter based on global search
   const filteredCategories = navCategories.map(category => {
-    const filteredItems = category.items.filter(item => 
+    const filteredItems = category.items.filter(item =>
       item.label.toLowerCase().includes(searchQuery.toLowerCase())
     );
     return { ...category, items: filteredItems };
   }).filter(category => category.items.length > 0);
 
   return (
-    <motion.aside 
+    <motion.aside
       animate={{ width: isCollapsed ? SIDEBAR_WIDTH.collapsed : SIDEBAR_WIDTH.expanded }}
       className="hidden lg:flex flex-col fixed left-0 top-16 h-[calc(100vh-4rem)] bg-[var(--bg-card)]/90 backdrop-blur-sm border-r border-[var(--border-main)] shadow-sm z-30 overflow-hidden"
     >
-      
-      {/* Search Header */}
+
+      {}
       <AnimatePresence>
         {!isCollapsed && (
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -99,9 +96,9 @@ const AdminSidebar = () => {
           >
             <div className="relative">
               <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)]" />
-              <input 
-                type="text" 
-                placeholder="Search menu..." 
+              <input
+                type="text"
+                placeholder="Search menu..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="w-full bg-[var(--bg-active)] border border-[var(--border-main)] rounded-xl py-2 pl-9 pr-3 text-sm text-[var(--text-main)] outline-none focus:border-blue-500 transition-colors"
@@ -111,13 +108,13 @@ const AdminSidebar = () => {
         )}
       </AnimatePresence>
 
-      {/* Navigation Links */}
+      {}
       <div className="flex-1 overflow-y-auto px-5 py-3 space-y-6 custom-scrollbar pb-24">
         {filteredCategories.map((category) => (
           <div key={category.title} className="space-y-1">
-            {/* Category Header */}
+            {}
             {category.collapsible ? (
-               <button 
+               <button
                  onClick={() => toggleCategory(category.title)}
                  className="flex items-center justify-between w-full px-2 py-1 mb-1 text-xs font-bold tracking-wider text-[var(--text-muted)] uppercase hover:text-[var(--text-main)] transition-colors"
                >
@@ -131,11 +128,11 @@ const AdminSidebar = () => {
                  </h3>
                )
             )}
-            
-            {/* Category Items */}
+
+            {}
             <AnimatePresence initial={false}>
               {(!category.collapsible || expandedCategories[category.title] || searchQuery) && (
-                <motion.div 
+                <motion.div
                   initial={{ height: 0, opacity: 0 }}
                   animate={{ height: "auto", opacity: 1 }}
                   exit={{ height: 0, opacity: 0 }}
@@ -177,7 +174,7 @@ const AdminSidebar = () => {
         )}
       </div>
 
-      {/* Footer Area */}
+      {}
       <div className="absolute bottom-0 left-0 right-0 p-3 bg-gradient-to-t from-[var(--bg-card)] via-[var(--bg-card)] to-transparent pt-8">
         <button
           onClick={logout}

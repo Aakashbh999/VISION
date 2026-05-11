@@ -12,7 +12,7 @@ const ItJobs = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingItem, setEditingItem] = useState(null);
   const [formData, setFormData] = useState({
-    role_name: "", salary_range: "", market_demand: "", 
+    role_name: "", salary_range: "", market_demand: "",
     key_skills: "", job_summary: "", description: "", is_public: true
   });
   const [confirmModal, setConfirmModal] = useState({ isOpen: false });
@@ -59,7 +59,7 @@ const ItJobs = () => {
     } else {
       setEditingItem(null);
       setFormData({
-        role_name: "", salary_range: "", market_demand: "", 
+        role_name: "", salary_range: "", market_demand: "",
         key_skills: "", job_summary: "", description: "", is_public: true
       });
     }
@@ -88,10 +88,10 @@ const ItJobs = () => {
     { header: "Salary Range", accessor: "salary_range" },
     { header: "Demand", accessor: "market_demand" },
     { header: "Status", accessor: "is_public", render: (row) => (
-        row.is_public ? 
-        <span className="text-green-500 flex items-center gap-1"><CheckCircle className="w-4 h-4"/> Public</span> : 
+        row.is_public ?
+        <span className="text-green-500 flex items-center gap-1"><CheckCircle className="w-4 h-4"/> Public</span> :
         <span className="text-gray-400 flex items-center gap-1"><XCircle className="w-4 h-4"/> Hidden</span>
-      ) 
+      )
     }
   ];
 
@@ -110,13 +110,13 @@ const ItJobs = () => {
         </button>
       </div>
 
-      <AdminTable 
-        columns={columns} 
-        data={data.data || data} 
-        isLoading={isLoading} 
-        error={error} 
-        onEdit={handleOpenModal} 
-        onDelete={confirmDelete} 
+      <AdminTable
+        columns={columns}
+        data={data.data || data}
+        isLoading={isLoading}
+        error={error}
+        onEdit={handleOpenModal}
+        onDelete={confirmDelete}
       />
 
       {isModalOpen && (
@@ -126,7 +126,7 @@ const ItJobs = () => {
             <div className="flex items-center justify-between p-5 border-b border-border-main bg-bg-active/30">
               <h2 className="text-lg font-bold text-text-main">{editingItem ? "Edit Job Insight" : "Add Job Insight"}</h2>
             </div>
-            
+
             <form onSubmit={handleSubmit} className="p-5 space-y-4 overflow-y-auto">
               <div className="grid grid-cols-2 gap-4">
                 <div>
@@ -156,7 +156,7 @@ const ItJobs = () => {
                 <label className="text-xs font-bold text-text-muted mb-1 block">Full Description</label>
                 <textarea rows="3" value={formData.description || ""} onChange={(e) => setFormData({...formData, description: e.target.value})} className="w-full px-3 py-2 bg-bg-active border border-border-main rounded-xl text-sm" />
               </div>
-              
+
               <div className="flex items-center gap-2 pt-2">
                 <input type="checkbox" id="isPublic" checked={formData.is_public} onChange={(e) => setFormData({...formData, is_public: e.target.checked})} className="rounded text-blue-600 focus:ring-blue-500" />
                 <label htmlFor="isPublic" className="text-sm text-text-main font-medium cursor-pointer">Visible to public</label>

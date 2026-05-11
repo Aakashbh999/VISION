@@ -11,7 +11,6 @@ import {
 } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 
-/* ─── Helpers ─────────────────────────────────────────────────── */
 const fmtTime = (totalSeconds) => {
   const h = Math.floor(totalSeconds / 3600).toString().padStart(2, "0");
   const m = Math.floor((totalSeconds % 3600) / 60).toString().padStart(2, "0");
@@ -32,7 +31,6 @@ const get4DayCooldown = (leftAt) => {
   return `${mins}m`;
 };
 
-/* ─── Leave Confirmation Modal ─────────────────────────────────── */
 const LeaveModal = ({ roadmapTitle, onConfirm, onCancel, isLeaving }) => (
   <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
     <div className="bg-[var(--bg-card)] border border-[var(--border-main)] rounded-3xl shadow-2xl max-w-md w-full p-8 space-y-6 animate-in fade-in zoom-in-95 duration-200">
@@ -81,7 +79,6 @@ const LeaveModal = ({ roadmapTitle, onConfirm, onCancel, isLeaving }) => (
   </div>
 );
 
-/* ─── Session Timer ────────────────────────────────────────────── */
 const SessionTimer = () => {
   const [seconds, setSeconds] = useState(0);
   const startRef = useRef(Date.now());
@@ -108,18 +105,17 @@ const SessionTimer = () => {
   );
 };
 
-/* ─── Main Component ───────────────────────────────────────────── */
 const RoadmapDetail = () => {
   const { id } = useParams();
   const { data, isLoading, error } = useRoadmap(id);
-  const { 
-    status: enrolment, 
-    leaveRoadmap: doLeave, 
+  const {
+    status: enrolment,
+    leaveRoadmap: doLeave,
     isLeaving,
     lockRoadmap: doLock,
     isLocking
   } = useRoadmapStatus(id);
-  
+
   const completeStepMutation = useCompleteStep(id);
   const [selectedStep, setSelectedStep] = useState(null);
   const { data: resources, isLoading: resourcesLoading } = useStepResources(id, selectedStep?.step_id);
@@ -142,14 +138,12 @@ const RoadmapDetail = () => {
 
   const { roadmap, steps, progress_percent } = data;
 
-  // Linear Step Logic: Index of the first step that is NOT completed
   const firstIncompleteIndex = steps.findIndex(s => !s.is_completed);
-  
-  // A step is "locked" if it's not the next available one and the roadmap is active
+
   const isStepLocked = (index) => {
-    if (isCompleted) return false; // If completed, everything is unlocked
-    if (index === 0) return false; // First step is always unlocked
-    if (firstIncompleteIndex === -1) return false; // All completed
+    if (isCompleted) return false;
+    if (index === 0) return false;
+    if (firstIncompleteIndex === -1) return false;
     return index > firstIncompleteIndex;
   };
 
@@ -172,7 +166,7 @@ const RoadmapDetail = () => {
         />
       )}
 
-      {/* Header with Title and Global Actions */}
+      {}
       <div className="flex flex-col gap-4">
         <Link
           to="/roadmaps"
@@ -180,16 +174,16 @@ const RoadmapDetail = () => {
         >
           <ChevronLeft className="w-4 h-4" /> Back to Roadmaps
         </Link>
-        
+
         <div className="flex items-center justify-between gap-4 flex-wrap">
           <div>
             <h1 className="text-2xl sm:text-3xl font-black text-[var(--text-main)] uppercase tracking-tight">
               {roadmap.title}
             </h1>
           </div>
-          
+
           <div className="flex items-center gap-3">
-             {/* Lock Button (if not enrolled) */}
+             {}
              {!isActive && !isCompleted && !isInCooldown && (
                <button
                  onClick={() => doLock()}
@@ -201,7 +195,7 @@ const RoadmapDetail = () => {
                </button>
              )}
 
-             {/* Leave button (if enrolled) */}
+             {}
              {isActive && (
                <button
                  onClick={() => setShowLeaveModal(true)}
@@ -214,14 +208,14 @@ const RoadmapDetail = () => {
           </div>
         </div>
 
-        {/* Total Progress Bar at the top */}
+        {}
         <div className="space-y-2 mt-2">
           <div className="flex items-center justify-between text-[10px] font-black uppercase tracking-widest text-[var(--text-muted)]">
             <span>Overall Path Progress</span>
             <span className="text-purple-600 font-black">{progress_percent || 0}% Complete</span>
           </div>
           <div className="h-4 bg-[var(--bg-active)] rounded-full overflow-hidden border border-[var(--border-main)] p-0.5">
-            <div 
+            <div
               className="h-full bg-gradient-to-r from-purple-600 to-indigo-500 rounded-full transition-all duration-1000 shadow-sm"
               style={{ width: `${progress_percent || 0}%` }}
             />
@@ -229,7 +223,7 @@ const RoadmapDetail = () => {
         </div>
       </div>
 
-      {/* Status Banners */}
+      {}
       {isInCooldown && (
         <div className="flex items-center gap-3 px-5 py-3.5 bg-amber-500/10 border border-amber-500/20 rounded-2xl">
           <Clock className="w-5 h-5 text-amber-600 dark:text-amber-400 flex-shrink-0" />
@@ -252,9 +246,9 @@ const RoadmapDetail = () => {
         </div>
       )}
 
-      {/* Main content grid */}
+      {}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Steps list */}
+        {}
         <div className="lg:col-span-1 space-y-3">
           <h2 className="text-xs font-black text-[var(--text-muted)] uppercase tracking-widest">
             Learning Path
@@ -299,7 +293,7 @@ const RoadmapDetail = () => {
             })}
           </div>
 
-          {/* Session Timer & Focus Widget */}
+          {}
           {isActive && (
             <div className="space-y-4">
               <SessionTimer />
@@ -315,7 +309,7 @@ const RoadmapDetail = () => {
           )}
         </div>
 
-        {/* Step details panel */}
+        {}
         <div className="lg:col-span-2">
           {selectedStep ? (
             <div className="bg-[var(--bg-card)] rounded-sm sm:rounded-xl border border-[var(--border-main)] border-x-0 sm:border-x p-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
@@ -343,7 +337,7 @@ const RoadmapDetail = () => {
                 )}
               </div>
 
-              {/* Resources */}
+              {}
               <div className="mt-8">
                 <div className="flex items-center justify-between mb-4">
                    <h3 className="text-xs font-black text-[var(--text-muted)] uppercase tracking-widest">
@@ -353,7 +347,7 @@ const RoadmapDetail = () => {
                     {resources?.length || 0} Materials Found
                   </span>
                 </div>
-                
+
                 {resourcesLoading ? (
                   <div className="py-12 flex justify-center"><LoadingSpinner /></div>
                 ) : (

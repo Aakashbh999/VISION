@@ -106,7 +106,7 @@ const SocialPanel = () => {
 
   return (
     <div className="p-4 sm:p-6 md:p-8 space-y-5 sm:space-y-6">
-      {/* Sub-header */}
+      {}
       <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-4">
         <div>
           <h2 className="text-lg sm:text-2xl font-black text-[var(--text-main)] leading-tight">
@@ -125,9 +125,9 @@ const SocialPanel = () => {
         />
       </div>
 
-      {/* Split layout */}
+      {}
       <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,1.5fr)_minmax(320px,0.75fr)] gap-4 sm:gap-6 items-start">
-        {/* User list */}
+        {}
         <div className="relative">
           <div
             className={`transition-opacity duration-300 ${activeQuery.isFetching ? "opacity-60" : "opacity-100"}`}
@@ -191,7 +191,7 @@ const SocialPanel = () => {
 
                   return (
                     <React.Fragment key={user.user_id}>
-                      {/* Mobile: navigate to profile */}
+                      {}
                       <Link
                         to={`/profile/${user.user_id}`}
                         className="xl:hidden w-full text-left p-4 rounded-2xl border transition-all flex items-center gap-4 bg-[var(--bg-card)] border-[var(--border-main)] hover:bg-[var(--bg-active)]"
@@ -199,7 +199,7 @@ const SocialPanel = () => {
                         {rowContent}
                         <ChevronRight className="w-5 h-5 shrink-0 text-[var(--text-muted)]" />
                       </Link>
-                      {/* Desktop: select to view detail */}
+                      {}
                       <button
                         type="button"
                         onClick={() => setSelectedUser(user)}
@@ -221,7 +221,7 @@ const SocialPanel = () => {
             )}
           </div>
 
-          {/* Loading overlay */}
+          {}
           {(activeQuery.isFetching || activeQuery.isLoading) && (
             <div className="absolute inset-0 flex justify-center items-center bg-[var(--bg-active)]/50 backdrop-blur-sm rounded-3xl z-10">
               <LoadingSpinner size="sm" />
@@ -235,7 +235,7 @@ const SocialPanel = () => {
           />
         </div>
 
-        {/* Selected user detail */}
+        {}
         <div className="hidden xl:block bg-[var(--bg-active)] rounded-3xl border border-[var(--border-main)] p-4 sm:p-6 sticky top-6">
           {selectedUser ? (
             <div className="space-y-4 sm:space-y-5">
@@ -310,7 +310,7 @@ const SocialPanel = () => {
         </div>
       </div>
 
-      {/* Error messages */}
+      {}
       {socialTab === "followers" && followersQuery.error && (
         <div className="text-center py-4 text-sm text-rose-500 bg-rose-500/10 rounded-2xl border border-rose-500/20">
           Failed to load followers.

@@ -2,17 +2,6 @@ import { Link, useNavigate } from "react-router-dom";
 import { MessageCircle, ThumbsUp, Clock, Edit } from "lucide-react";
 import Badge from "../ui/Badge";
 
-/**
- * DiscussionListItem — shared card for My Posts and Saved Discussions.
- *
- * Props:
- *  discussion   – the discussion object
- *  linkWrapper  – if true renders the card as a <Link>; if false renders as
- *                 a clickable <div> (navigating via onClick)
- *  to           – destination href when linkWrapper=true
- *  meta         – optional extra meta nodes (e.g. "Saved on <date>")
- *  actions      – slot: action buttons rendered below the stat row (e.g. unsave btn)
- */
 const DiscussionListItem = ({
   discussion: disc,
   linkWrapper = false,
@@ -27,7 +16,7 @@ const DiscussionListItem = ({
 
   const content = (
     <div className="flex items-start justify-between">
-      {/* Left: title + preview + tags */}
+      {}
       <div className="flex-1">
         <h2 className="text-base sm:text-lg font-semibold text-[var(--text-main)] mb-1">
           {disc.title}
@@ -55,7 +44,7 @@ const DiscussionListItem = ({
         </div>
       </div>
 
-      {/* Right: like/comment counts + action buttons */}
+      {}
       <div
         className="flex flex-col items-end gap-2 ml-4"
         onClick={(e) => {

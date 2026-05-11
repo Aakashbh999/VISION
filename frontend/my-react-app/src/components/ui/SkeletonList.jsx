@@ -1,9 +1,5 @@
 import Skeleton from "./Skeleton";
 
-/**
- * Skeleton List Loader
- * Mimics the layout of a list of items while loading
- */
 const SkeletonList = ({ count = 5, variant = "discussion" }) => {
   if (variant === "discussion") {
     return (

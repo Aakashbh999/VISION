@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Mail, Info, ChevronUp, ChevronDown } from "lucide-react";
 
 const Footer = ({ withSidebarOffset = false }) => {
-  const [expandedSection, setExpandedSection] = useState(null); // 'about', 'contact', or null
+  const [expandedSection, setExpandedSection] = useState(null);
 
   const toggleSection = (section) => {
     setExpandedSection(expandedSection === section ? null : section);

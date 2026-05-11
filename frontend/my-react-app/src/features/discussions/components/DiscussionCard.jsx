@@ -16,7 +16,6 @@ import { useAuth } from "../../../context/AuthContext";
 import { useDeleteDiscussion, useBoostDiscussion } from "../../../hooks/useDiscussionHooks";
 import DeleteAction from "../../../components/DeleteAction";
 
-/** Memoized card for a single discussion in the feed list */
 const DiscussionCard = memo(({
   disc,
   handleLike,
@@ -61,7 +60,7 @@ const DiscussionCard = memo(({
     const onKeyDown = (event) => {
       if (event.key === "Escape") {
         event.preventDefault();
-        onToggleMenu(); // Close via toggle
+        onToggleMenu();
         menuButtonRef.current?.focus();
         return;
       }

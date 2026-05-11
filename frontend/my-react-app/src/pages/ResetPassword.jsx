@@ -11,7 +11,7 @@ const ResetPassword = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const token = searchParams.get("token");
-  
+
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -31,7 +31,6 @@ const ResetPassword = () => {
     },
   });
 
-  // Since the token comes from URL, we need to manually update the form if it wasn't there at first render
   useEffect(() => {
     if (token) {
       register("token").onChange({ target: { value: token, name: "token" } });
@@ -46,7 +45,7 @@ const ResetPassword = () => {
     try {
       await apiResetPassword(token, newPassword);
       setSuccess(true);
-      // Automatically redirect to login after 3 seconds
+
       setTimeout(() => {
         navigate("/login");
       }, 3000);
@@ -110,7 +109,7 @@ const ResetPassword = () => {
             className="space-y-5"
             aria-busy={loading}
           >
-            {/* Hidden field for token as it's required by the schema */}
+            {}
             <input type="hidden" {...register("token")} />
 
             <div>

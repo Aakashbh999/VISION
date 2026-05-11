@@ -36,7 +36,7 @@ const LoadingSpinner = ({ size = "md", className = "", inline = false }) => {
             </filter>
           </defs>
 
-          {/* Background Circle (The Pulse) */}
+          {}
           <circle
             cx="50"
             cy="50"
@@ -46,7 +46,7 @@ const LoadingSpinner = ({ size = "md", className = "", inline = false }) => {
             className="animate-pulse"
           />
 
-          {/* Outer Ring - Rotating */}
+          {}
           <circle
             cx="50"
             cy="50"
@@ -59,7 +59,7 @@ const LoadingSpinner = ({ size = "md", className = "", inline = false }) => {
             style={{ transformOrigin: "center" }}
           />
 
-          {/* Glass Layer */}
+          {}
           <circle
             cx="50"
             cy="50"
@@ -72,7 +72,7 @@ const LoadingSpinner = ({ size = "md", className = "", inline = false }) => {
             filter="url(#glassBlurSpinner)"
           />
 
-          {/* The Pupil (Core Vision) - Breathing */}
+          {}
           <circle cx="50" cy="50" r="14" fill="url(#eyeGradientSpinner)">
             <animate
               attributeName="r"
@@ -82,7 +82,7 @@ const LoadingSpinner = ({ size = "md", className = "", inline = false }) => {
             />
           </circle>
 
-          {/* Highlight */}
+          {}
           <circle cx="44" cy="44" r="4" fill="white" fillOpacity="0.6" />
         </svg>
       </div>

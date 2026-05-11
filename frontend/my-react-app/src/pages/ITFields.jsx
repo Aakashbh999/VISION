@@ -20,7 +20,6 @@ import {
   Wifi,
 } from "lucide-react";
 
-// Helper to pick an icon based on the field name
 const getIconForField = (fieldName) => {
   const name = fieldName.toLowerCase();
   if (name.includes("web")) return Code2;
@@ -31,7 +30,7 @@ const getIconForField = (fieldName) => {
   if (name.includes("mobile")) return Smartphone;
   if (name.includes("devops")) return GitBranch;
   if (name.includes("analytics")) return BarChart3;
-  return Code2; // fallback
+  return Code2;
 };
 
 const ITFields = () => {
@@ -66,7 +65,7 @@ const ITFields = () => {
               demand: field.demand_level,
               slug: field.slug,
               icon: getIconForField(field.field_name),
-              motivation: field.motivation, // if available
+              motivation: field.motivation,
             }}
           />
         ))}

@@ -29,8 +29,8 @@ const ResourceUploadModal = ({ isOpen, onClose }) => {
     semester: "",
     program_id: "",
     url: "",
-    system_tags: [], // array of tag_id integers (max 5)
-    custom_tags: [], // array of tag name strings (max 2)
+    system_tags: [],
+    custom_tags: [],
   });
   const { programs } = useDiscussionReferenceData();
   const [file, setFile] = useState(null);
@@ -54,7 +54,6 @@ const ResourceUploadModal = ({ isOpen, onClose }) => {
     }
   };
 
-  // Toggle a system tag on/off (respects cap)
   const toggleSystemTag = (tagId) => {
     setFormData((prev) => {
       const nextSystemTags = toggleCappedSelection(
@@ -138,7 +137,6 @@ const ResourceUploadModal = ({ isOpen, onClose }) => {
     if (formData.semester) submitData.append("semester", formData.semester);
     if (formData.program_id) submitData.append("program_id", formData.program_id);
 
-    // Send tags in the new split format
     if (formData.system_tags.length > 0) {
       submitData.append("system_tags", JSON.stringify(formData.system_tags));
     }
@@ -168,7 +166,7 @@ const ResourceUploadModal = ({ isOpen, onClose }) => {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
       <div className="bg-(--bg-card) rounded-2xl w-full max-w-2xl shadow-xl max-h-[90vh] overflow-y-auto">
-        {/* Header */}
+        {}
         <div className="flex justify-between items-center p-6 border-b border-(--border-main) sticky top-0 bg-(--bg-card)/95 backdrop-blur z-10">
           <h2 className="text-xl font-bold text-(--text-main)">
             Share a Resource
@@ -189,7 +187,7 @@ const ResourceUploadModal = ({ isOpen, onClose }) => {
           )}
 
           <div className="space-y-5">
-            {/* Title */}
+            {}
             <div>
               <label className="block text-sm font-medium text-(--text-main) mb-1">
                 Title *
@@ -205,7 +203,7 @@ const ResourceUploadModal = ({ isOpen, onClose }) => {
               />
             </div>
 
-            {/* Description */}
+            {}
             <div>
               <label className="block text-sm font-medium text-(--text-main) mb-1">
                 Description
@@ -235,7 +233,7 @@ const ResourceUploadModal = ({ isOpen, onClose }) => {
               onCustomTagKeyDown={handleCustomTagKeyDown}
             />
 
-            {/* ── Type / Program / Semester ─────────────────────── */}
+            {}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-(--text-main) mb-1">
@@ -289,7 +287,7 @@ const ResourceUploadModal = ({ isOpen, onClose }) => {
               </div>
             </div>
 
-            {/* ── File / URL Input ─────────────────────────────── */}
+            {}
             <div>
               <label className="block text-sm font-medium text-(--text-main) mb-2">
                 {formData.resource_type === "link"
@@ -341,7 +339,7 @@ const ResourceUploadModal = ({ isOpen, onClose }) => {
             </div>
           </div>
 
-          {/* Info Box */}
+          {}
           <div className="bg-purple-50/50 border border-purple-100 rounded-xl p-4 text-sm text-purple-800 flex items-start gap-3">
             <Lightbulb className="w-5 h-5 text-purple-600 dark:text-purple-400 shrink-0 mt-0.5" />
             <p>

@@ -21,11 +21,6 @@ ChartJS.register(
   Legend,
 );
 
-/**
- * VXPActivityGraph
- * @param {Array} activityData - Array of { day: string, xp_gained: number } (7 items)
- * @param {boolean} isLoading
- */
 export default function VXPActivityGraph({ activityData = [], isLoading = false }) {
   const labels = activityData.length
     ? activityData.map((d) => d.day)
@@ -66,7 +61,7 @@ export default function VXPActivityGraph({ activityData = [], isLoading = false 
         },
       ],
     }),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+
     [activityData],
   );
 
@@ -113,7 +108,7 @@ export default function VXPActivityGraph({ activityData = [], isLoading = false 
 
   return (
     <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-lg p-6 h-full flex flex-col border border-gray-100 dark:border-slate-700">
-      {/* Header */}
+      {}
       <div className="flex items-start justify-between mb-4">
         <div>
           <h3 className="text-base font-bold text-gray-900 dark:text-white">
@@ -133,7 +128,7 @@ export default function VXPActivityGraph({ activityData = [], isLoading = false 
         </div>
       </div>
 
-      {/* Best day badge */}
+      {}
       {!isLoading && maxDay && maxDay.xp_gained > 0 && (
         <div className="mb-3 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-violet-50 dark:bg-violet-900/30 border border-violet-200 dark:border-violet-700 self-start">
           <span className="text-[10px] font-bold text-violet-600 dark:text-violet-400 uppercase tracking-wide">
@@ -142,7 +137,7 @@ export default function VXPActivityGraph({ activityData = [], isLoading = false 
         </div>
       )}
 
-      {/* Chart */}
+      {}
       <div className="flex-1 min-h-0" style={{ minHeight: 160 }}>
         {isLoading ? (
           <div className="h-full flex items-center justify-center">

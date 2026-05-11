@@ -38,12 +38,9 @@ const updateStudentStatus = async (userId, nextStatus, errorMessage, reason = nu
   }
 };
 
-/* ===============================
-   GET Pending Students
- ================================ */
 exports.getPendingStudents = catchAsync(async (req, res) => {
   const result = await pool.query(`
-      SELECT 
+      SELECT
         p.user_id,
         p.full_name,
         a.email,
@@ -82,9 +79,6 @@ exports.getPendingStudents = catchAsync(async (req, res) => {
   });
 });
 
-/* ===============================
-   GET Students By Status
- ================================ */
 exports.getStudentsByStatus = catchAsync(async (req, res) => {
   const { status, search } = req.query;
   const { page, limit, offset } = parsePagination(req.query, {
@@ -112,7 +106,7 @@ exports.getStudentsByStatus = catchAsync(async (req, res) => {
   const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(" AND ")}` : "";
 
   const query = `
-      SELECT 
+      SELECT
         p.user_id,
         p.full_name,
         a.email,
@@ -149,9 +143,6 @@ exports.getStudentsByStatus = catchAsync(async (req, res) => {
   });
 });
 
-/* ===============================
-   APPROVE Student
- ================================ */
 exports.approveStudent = catchAsync(async (req, res) => {
   const { user_id } = req.params;
   const adminId = req.user.portal_user_id;
@@ -162,9 +153,6 @@ exports.approveStudent = catchAsync(async (req, res) => {
   res.json({ message: "Student approved successfully" });
 });
 
-/* ===============================
-   REJECT Student
- ================================ */
 exports.rejectStudent = catchAsync(async (req, res) => {
   const { user_id } = req.params;
   const { reason } = req.body;
@@ -176,12 +164,9 @@ exports.rejectStudent = catchAsync(async (req, res) => {
   res.json({ message: "Student rejected successfully" });
 });
 
-/* ===============================
-   STUDENT STATS
- ================================ */
 exports.getStudentStats = catchAsync(async (req, res) => {
   const result = await pool.query(`
-      SELECT 
+      SELECT
         COUNT(*) FILTER (WHERE student_status = 'pending_review') AS pending,
         COUNT(*) FILTER (WHERE student_status = 'approved') AS approved,
         COUNT(*) FILTER (WHERE student_status = 'rejected') AS rejected,
@@ -192,9 +177,6 @@ exports.getStudentStats = catchAsync(async (req, res) => {
   res.json(result.rows[0]);
 });
 
-/* ===============================
-   SOFT DELETE DISCUSSION
- ================================ */
 exports.deleteDiscussion = catchAsync(async (req, res) => {
   const { id } = req.params;
   const adminId = req.user.portal_user_id;
@@ -214,7 +196,6 @@ exports.deleteDiscussion = catchAsync(async (req, res) => {
     throw createError(404, "Discussion not found or already deleted");
   }
 
-  // Log action
   await pool.query(
     `
       INSERT INTO portal.moderation_logs
@@ -227,9 +208,6 @@ exports.deleteDiscussion = catchAsync(async (req, res) => {
   res.json({ message: "Discussion deleted successfully" });
 });
 
-/* ===============================
-  GET ALL REPORTS
- ================================ */
 exports.getReports = catchAsync(async (req, res) => {
   const { search } = req.query;
   const { page, limit, offset } = parsePagination(req.query, {
@@ -273,9 +251,6 @@ exports.getReports = catchAsync(async (req, res) => {
   });
 });
 
-/* ===============================
-  CLOSE REPORT
- ================================ */
 exports.closeReport = catchAsync(async (req, res) => {
   const { id } = req.params;
 
@@ -290,10 +265,6 @@ exports.closeReport = catchAsync(async (req, res) => {
 
   res.json({ message: "Report closed" });
 });
-
-/* ===============================
-  SUSPEND ROUTE
- ================================ */
 
 exports.suspendUser = catchAsync(async (req, res) => {
   const { user_id } = req.params;
@@ -326,9 +297,6 @@ exports.suspendUser = catchAsync(async (req, res) => {
   res.json({ message: "User suspended successfully" });
 });
 
-/* ===============================
-  REACTIVATE ROUTE
- ================================ */
 exports.reactivateUser = catchAsync(async (req, res) => {
   const { user_id } = req.params;
   const adminId = req.user.portal_user_id;
@@ -347,12 +315,9 @@ exports.reactivateUser = catchAsync(async (req, res) => {
   res.json({ message: "User reactivated successfully" });
 });
 
-/* ===============================
-  Admin Dashboard Aggregation Endpoint
- ================================ */
 exports.getAdminDashboard = catchAsync(async (req, res) => {
   const stats = await pool.query(`
-      SELECT 
+      SELECT
         COUNT(*) FILTER (WHERE student_status = 'pending_review') AS pending,
         COUNT(*) FILTER (WHERE student_status = 'approved') AS approved,
         COUNT(*) FILTER (WHERE student_status = 'rejected') AS rejected,
@@ -377,9 +342,6 @@ exports.getAdminDashboard = catchAsync(async (req, res) => {
   });
 });
 
-/* ===============================
-  Audit log viewer (legacy moderation logs)
- ================================ */
 exports.getModerationLogs = catchAsync(async (req, res) => {
   const { page, limit, offset } = parsePagination(req.query, {
     defaultLimit: 20,
@@ -407,9 +369,6 @@ exports.getModerationLogs = catchAsync(async (req, res) => {
   });
 });
 
-/* ===============================
-  Comprehensive Audit Logs
- ================================ */
 exports.getAuditLogs = catchAsync(async (req, res) => {
   const { adminId, action, targetType, page = 1, limit = 50 } = req.query;
 
@@ -438,15 +397,11 @@ exports.getAuditLogs = catchAsync(async (req, res) => {
   });
 });
 
-/* ===============================
-  Get audit log actions summary
- ================================ */
 exports.getAuditLogsSummary = catchAsync(async (req, res) => {
   const { days = 7 } = req.query;
 
-  // Get summary from existing moderation_logs table
   const result = await pool.query(
-    `SELECT 
+    `SELECT
          action_type,
          target_type,
          COUNT(*) as count,
@@ -458,9 +413,8 @@ exports.getAuditLogsSummary = catchAsync(async (req, res) => {
     [parseInt(days)],
   );
 
-  // Get action counts
   const actionCounts = await pool.query(
-    `SELECT 
+    `SELECT
          COUNT(*) FILTER (WHERE action_type = 'approve') as approvals,
          COUNT(*) FILTER (WHERE action_type = 'reject') as rejections,
          COUNT(*) FILTER (WHERE action_type = 'suspend') as suspensions,
@@ -476,16 +430,12 @@ exports.getAuditLogsSummary = catchAsync(async (req, res) => {
   });
 });
 
-/* ===============================
-  Get user activity (for user profile/admin view)
- ================================ */
 exports.getUserActivity = catchAsync(async (req, res) => {
   const { userId } = req.params;
   const { limit = 20 } = req.query;
 
-  // Get moderation actions targeting this user
   const result = await pool.query(
-    `SELECT 
+    `SELECT
          ml.log_id,
          ml.action_type,
          ml.target_type,
@@ -502,24 +452,20 @@ exports.getUserActivity = catchAsync(async (req, res) => {
   res.json(result.rows);
 });
 
-/* ===============================
-  Get active sessions for admin view
-  NOTE: Requires device_sessions table to be added
- ================================ */
 exports.getActiveSessions = catchAsync(async (req, res) => {
-  // Check if device_sessions table exists
+
   const tableExists = await pool.query(
     `SELECT EXISTS (
-         SELECT FROM information_schema.tables 
-         WHERE table_schema = 'auth' 
+         SELECT FROM information_schema.tables
+         WHERE table_schema = 'auth'
          AND table_name = 'device_sessions'
        )`,
   );
 
   if (!tableExists.rows[0].exists) {
-    // Return recent logins from auth.users instead
+
     const result = await pool.query(`
-        SELECT 
+        SELECT
           au.auth_user_id,
           au.email,
           pu.full_name,
@@ -535,7 +481,7 @@ exports.getActiveSessions = catchAsync(async (req, res) => {
   }
 
   const result = await pool.query(`
-      SELECT 
+      SELECT
         ds.session_id,
         ds.auth_user_id,
         au.email,
@@ -558,34 +504,28 @@ exports.getActiveSessions = catchAsync(async (req, res) => {
   res.json(result.rows);
 });
 
-/* ===============================
-  Force logout user (admin action)
-  NOTE: Full implementation requires refresh_tokens table
- ================================ */
 exports.forceLogoutUser = catchAsync(async (req, res) => {
   const { userId } = req.params;
   const adminId = req.user.portal_user_id;
 
-  // Check if refresh_tokens table exists for full logout
   const tableExists = await pool.query(
     `SELECT EXISTS (
-         SELECT FROM information_schema.tables 
-         WHERE table_schema = 'auth' 
+         SELECT FROM information_schema.tables
+         WHERE table_schema = 'auth'
          AND table_name = 'refresh_tokens'
        )`,
   );
 
   if (tableExists.rows[0].exists) {
-    // Revoke all refresh tokens
+
     await pool.query(
-      `UPDATE auth.refresh_tokens 
+      `UPDATE auth.refresh_tokens
          SET is_revoked = TRUE, revoked_at = NOW()
          WHERE auth_user_id = $1 AND is_revoked = FALSE`,
       [userId],
     );
   }
 
-  // Log admin action to moderation logs
   await pool.query(
     `INSERT INTO portal.moderation_logs
        (admin_user_id, action_type, target_type, target_id)
@@ -596,9 +536,6 @@ exports.forceLogoutUser = catchAsync(async (req, res) => {
   res.json({ message: "User logged out from all devices" });
 });
 
-/* ===============================
-  PERMANENT DELETE CONTENT
- ================================ */
 exports.hardDeleteContent = catchAsync(async (req, res) => {
   const { type, id } = req.body;
   const adminId = req.user.portal_user_id;
@@ -630,7 +567,7 @@ exports.hardDeleteContent = catchAsync(async (req, res) => {
       case "group":
         tableName = "portal.study_groups";
         idColumn = "group_id";
-        cloudinaryIdColumn = "group_image_public_id"; // Also handles banner in cleanup
+        cloudinaryIdColumn = "group_image_public_id";
         break;
       default:
         throw createError(
@@ -639,7 +576,6 @@ exports.hardDeleteContent = catchAsync(async (req, res) => {
         );
     }
 
-    // 1. Get image info for Cloudinary cleanup if applicable
     let publicIds = [];
     if (cloudinaryIdColumn) {
       const imgRes = await client.query(
@@ -655,7 +591,6 @@ exports.hardDeleteContent = catchAsync(async (req, res) => {
       }
     }
 
-    // 2. Perform the Hard Delete
     const deleteRes = await client.query(
       `DELETE FROM ${tableName} WHERE ${idColumn} = $1 RETURNING ${idColumn}`,
       [id],
@@ -665,7 +600,6 @@ exports.hardDeleteContent = catchAsync(async (req, res) => {
       throw createError(404, `${type} not found`);
     }
 
-    // 3. Clean up Cloudinary
     for (const pid of publicIds) {
       try {
         const cloudinary = require("../config/cloudinary");
@@ -678,7 +612,6 @@ exports.hardDeleteContent = catchAsync(async (req, res) => {
       }
     }
 
-    // 4. Log admin action
     await logAdminEvent(req, AuditActions.ADMIN_HARD_DELETE_CONTENT, type, id, {
       permanent: true,
     });
@@ -692,9 +625,6 @@ exports.hardDeleteContent = catchAsync(async (req, res) => {
   res.json({ message: resultMessage });
 });
 
-/* ===============================
-  PERMANENT DELETE USER
- ================================ */
 exports.hardDeleteUser = catchAsync(async (req, res) => {
   const { user_id } = req.params;
   const adminId = req.user.portal_user_id;
@@ -708,7 +638,7 @@ exports.hardDeleteUser = catchAsync(async (req, res) => {
   }
 
   const message = await withTransaction(async (client) => {
-    // 1. Get Auth User ID first
+
     const userRes = await client.query(
       `SELECT auth_user_id FROM portal.users WHERE user_id = $1`,
       [user_id],
@@ -720,18 +650,14 @@ exports.hardDeleteUser = catchAsync(async (req, res) => {
 
     const authUserId = userRes.rows[0].auth_user_id;
 
-    // 2. Delete from portal.users (cascades to moderation_logs, user_stats, etc. if configured)
-    // Note: Some tables might need manual cleanup if CASCADE isn't on everywhere
     await client.query(`DELETE FROM portal.users WHERE user_id = $1`, [
       user_id,
     ]);
 
-    // 3. Delete from auth.users (This is the "Hard" delete)
     await client.query(`DELETE FROM auth.users WHERE auth_user_id = $1`, [
       authUserId,
     ]);
 
-    // 4. Log action (Note: target_id is the portal user_id we just deleted)
     await logAdminEvent(
       req,
       AuditActions.ADMIN_HARD_DELETE_CONTENT,
@@ -752,9 +678,6 @@ exports.hardDeleteUser = catchAsync(async (req, res) => {
   res.json({ message });
 });
 
-/* ===============================
-  EXAMINE REPORTED CONTENT
- ================================ */
 exports.examineReportContent = catchAsync(async (req, res) => {
   const { report_id } = req.params;
 
@@ -788,12 +711,9 @@ exports.examineReportContent = catchAsync(async (req, res) => {
   });
 });
 
-/* ===============================
-  RESOLVE REPORT WITH ACTION
- ================================ */
 exports.resolveReportWithAction = catchAsync(async (req, res) => {
   const { report_id } = req.params;
-  const { action } = req.body; // 'dismiss', 'soft_delete', 'hard_delete'
+  const { action } = req.body;
   const adminId = req.user.portal_user_id;
 
   if (!["dismiss", "soft_delete", "hard_delete"].includes(action)) {
@@ -801,7 +721,7 @@ exports.resolveReportWithAction = catchAsync(async (req, res) => {
   }
 
   const message = await withTransaction(async (client) => {
-    // 1. Get report info
+
     const reportRes = await client.query(
       `SELECT * FROM portal.reports WHERE report_id = $1`,
       [report_id],
@@ -813,7 +733,6 @@ exports.resolveReportWithAction = catchAsync(async (req, res) => {
 
     const report = reportRes.rows[0];
 
-    // 2. Perform Action on Targeted Content
     if (action === "soft_delete") {
       const config = getModerationTargetConfig(report.target_type);
       if (!config) {
@@ -882,7 +801,6 @@ exports.resolveReportWithAction = catchAsync(async (req, res) => {
       }
     }
 
-    // 3. Close the report
     const status = action === "dismiss" ? "dismissed" : "resolved";
     await client.query(
       `UPDATE portal.reports SET status = $1 WHERE report_id = $2`,
@@ -906,10 +824,6 @@ exports.resolveReportWithAction = catchAsync(async (req, res) => {
   res.json({ message });
 });
 
-/* ===============================
-  Registration Whitelist Management
- ================================ */
-
 exports.getRegistrationWhitelists = catchAsync(async (req, res) => {
   const { batch_year, program, search } = req.query;
   const { page, limit, offset } = parsePagination(req.query, {
@@ -919,12 +833,12 @@ exports.getRegistrationWhitelists = catchAsync(async (req, res) => {
 
   let whereClause = "WHERE 1=1";
   const params = [];
-  
+
   if (batch_year) {
     params.push(parseInt(batch_year));
     whereClause += ` AND batch_year = $${params.length}`;
   }
-  
+
   if (program) {
     params.push(program);
     whereClause += ` AND program = $${params.length}`;
@@ -936,12 +850,12 @@ exports.getRegistrationWhitelists = catchAsync(async (req, res) => {
   }
 
   const query = `
-    SELECT * FROM portal.registration_no 
-    ${whereClause} 
-    ORDER BY created_at DESC 
+    SELECT * FROM portal.registration_no
+    ${whereClause}
+    ORDER BY created_at DESC
     LIMIT $${params.length + 1} OFFSET $${params.length + 2}
   `;
-  
+
   const countQuery = `SELECT COUNT(*) FROM portal.registration_no ${whereClause}`;
 
   const [result, countResult] = await Promise.all([
@@ -962,7 +876,7 @@ exports.addRegistrationWhitelist = catchAsync(async (req, res) => {
   const { registration_number, student_name, date_of_birth, batch_year, program } = req.body;
 
   const result = await pool.query(
-    `INSERT INTO portal.registration_no 
+    `INSERT INTO portal.registration_no
      (registration_number, student_name, date_of_birth, batch_year, program)
      VALUES ($1, $2, $3, $4, $5)
      RETURNING *`,
@@ -983,7 +897,7 @@ exports.updateRegistrationWhitelist = catchAsync(async (req, res) => {
   const { registration_number, student_name, date_of_birth, batch_year, program } = req.body;
 
   const result = await pool.query(
-    `UPDATE portal.registration_no 
+    `UPDATE portal.registration_no
      SET registration_number = $1, student_name = $2, date_of_birth = $3, batch_year = $4, program = $5
      WHERE registration_number = $6
      RETURNING *`,

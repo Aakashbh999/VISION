@@ -1,9 +1,5 @@
 import { useRef, useEffect } from "react";
 
-/**
- * Hook for managing focus automatically on modals/dialogs
- * Moves focus to specified element and restores on cleanup
- */
 export const useAutoFocus = (shouldFocus = true, selector = null) => {
   const ref = useRef(null);
 
@@ -21,10 +17,6 @@ export const useAutoFocus = (shouldFocus = true, selector = null) => {
   return ref;
 };
 
-/**
- * Hook for managing focus trap (keeps focus within modal/dialog)
- * Essential for accessibility in modals and popovers
- */
 export const useFocusTrap = (elementRef, isActive = true) => {
   useEffect(() => {
     if (!isActive || !elementRef.current) return;
@@ -57,15 +49,10 @@ export const useFocusTrap = (elementRef, isActive = true) => {
   }, [elementRef, isActive]);
 };
 
-/**
- * Hook for managing page title for screen readers
- * Useful for SPAs to announce page changes
- */
 export const usePageTitle = (title) => {
   useEffect(() => {
     document.title = title;
 
-    // Also announce to screen readers
     const announcement = document.querySelector('[role="status"]');
     if (announcement) {
       announcement.textContent = title;
@@ -73,10 +60,6 @@ export const usePageTitle = (title) => {
   }, [title]);
 };
 
-/**
- * Hook for skip to main content (keyboard navigation)
- * Should be used with a skip link in Layout
- */
 export const useSkipLink = () => {
   useEffect(() => {
     const handleSkip = (e) => {
@@ -94,10 +77,6 @@ export const useSkipLink = () => {
   }, []);
 };
 
-/**
- * Hook for announcing dynamic content to screen readers
- * Useful for toast messages, loading states, etc.
- */
 export const useAnnounce = () => {
   const announceRef = useRef(null);
 

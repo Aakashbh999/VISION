@@ -18,7 +18,7 @@ const CategoryPage = ({
 
   return (
     <div className="px-3 sm:px-6 lg:px-8 py-5 sm:py-8 lg:py-10">
-      {/* Header */}
+      {}
       <div className="max-w-3xl">
         <h1 className="text-2xl sm:text-3xl font-bold text-[var(--text-main)]">
           {title}
@@ -28,7 +28,7 @@ const CategoryPage = ({
         </p>
       </div>
 
-      {/* Filter pills */}
+      {}
       <div className="flex flex-wrap gap-2 mt-8">
         {filterOptions.map((option) => (
           <button
@@ -45,14 +45,14 @@ const CategoryPage = ({
         ))}
       </div>
 
-      {/* Grid */}
+      {}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mt-8">
         {filteredData.map((item) =>
           createElement(CardComponent, { key: item.id, item }),
         )}
       </div>
 
-      {/* Empty state */}
+      {}
       {filteredData.length === 0 && (
         <p className="text-center text-[var(--text-muted)] mt-12">
           No items found for {filter}.

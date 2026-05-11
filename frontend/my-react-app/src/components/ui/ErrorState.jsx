@@ -1,17 +1,6 @@
 import { motion } from "framer-motion";
 import { AlertCircle, RefreshCw } from "lucide-react";
 
-/**
- * Reusable Error State Component
- * Shows when an error occurs with retry option
- *
- * Props:
- * - title: Error message headline
- * - description: Additional context about the error
- * - onRetry: Callback function when retry button is clicked
- * - retryText: Custom retry button text (default: "Try Again")
- * - className: Additional container classes
- */
 const ErrorState = ({
   title = "Something went wrong",
   description = "We encountered an unexpected error. Please try again.",
@@ -28,7 +17,7 @@ const ErrorState = ({
       role="alert"
       aria-live="assertive"
     >
-      {/* Error Icon */}
+      {}
       <motion.div
         initial={{ scale: 0.8 }}
         animate={{ scale: 1 }}
@@ -38,17 +27,17 @@ const ErrorState = ({
         <AlertCircle className="w-8 h-8 text-red-600 dark:text-red-400" />
       </motion.div>
 
-      {/* Error Message */}
+      {}
       <h3 className="text-lg font-black text-red-900 dark:text-red-100 mb-2 uppercase">
         {title}
       </h3>
 
-      {/* Description */}
+      {}
       <p className="text-sm text-red-700 dark:text-red-300 max-w-md mx-auto mb-6">
         {description}
       </p>
 
-      {/* Retry Button */}
+      {}
       {onRetry && (
         <motion.button
           whileHover={{ scale: 1.05 }}

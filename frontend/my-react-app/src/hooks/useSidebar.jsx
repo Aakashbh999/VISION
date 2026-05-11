@@ -3,8 +3,8 @@ import { useState, useEffect, createContext, useContext } from "react";
 const SidebarContext = createContext(null);
 
 export const SIDEBAR_WIDTH = {
-  expanded: "16rem", // 256px
-  collapsed: "4.5rem", // 72px
+  expanded: "16rem",
+  collapsed: "4.5rem",
 };
 
 export const SidebarProvider = ({ children }) => {
@@ -12,7 +12,6 @@ export const SidebarProvider = ({ children }) => {
   const [isMobileOpen, setIsMobileOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
 
-  // Detect mobile viewport
   useEffect(() => {
     const checkMobile = () => {
       setIsMobile(window.innerWidth < 1024);
@@ -23,10 +22,9 @@ export const SidebarProvider = ({ children }) => {
     return () => window.removeEventListener("resize", checkMobile);
   }, []);
 
-  // Close mobile drawer when switching to desktop
   useEffect(() => {
     if (!isMobile) {
-      // Defer state update to prevent cascading renders
+
       const timer = setTimeout(() => setIsMobileOpen(false), 0);
       return () => clearTimeout(timer);
     }

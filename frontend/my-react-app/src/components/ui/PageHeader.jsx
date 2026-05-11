@@ -1,13 +1,4 @@
-/**
- * PageHeader — standard portal page header.
- *
- * Props:
- *  title      – main heading text (required)
- *  subtitle   – supporting paragraph text
- *  action     – ReactNode rendered on the right (e.g. a <Link> or <button>)
- *  className  – extra classes for the outer wrapper
- *  compact    – if true, uses a lighter bg/border card card style
- */
+
 const PageHeader = ({
   title,
   subtitle,

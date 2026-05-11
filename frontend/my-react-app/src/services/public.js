@@ -1,9 +1,8 @@
 import api from "./api";
 
-// IT Fields
 export const getItFields = async (page = 1, limit = 9) => {
   const response = await api.get(`/it-fields?page=${page}&limit=${limit}`);
-  return response.data; // { data: [...], pagination: {...} }
+  return response.data;
 };
 
 export const getItFieldBySlug = async (slug) => {
@@ -11,7 +10,6 @@ export const getItFieldBySlug = async (slug) => {
   return response.data;
 };
 
-// Academic Degrees
 export const getAcademicDegrees = async (page = 1, limit = 9) => {
   const response = await api.get(
     `/academic-degrees?page=${page}&limit=${limit}`,
@@ -24,7 +22,6 @@ export const getAcademicDegreeBySlug = async (slug) => {
   return response.data;
 };
 
-// Job Market
 export const getJobMarket = async (page = 1, limit = 9) => {
   const response = await api.get(`/job-market?page=${page}&limit=${limit}`);
   return response.data;
@@ -35,7 +32,6 @@ export const getJobMarketBySlug = async (slug) => {
   return response.data;
 };
 
-// IT Clubs
 export const getItClubs = async (page = 1, limit = 9) => {
   const response = await api.get(`/it-clubs?page=${page}&limit=${limit}`);
   return response.data;

@@ -4,10 +4,6 @@ const {
   DEFAULT_CO_ADMIN_PERMISSIONS,
 } = require("./constants");
 
-/**
- * Normalizes user permissions based on their role
- * Owners get all co-admin permissions by default
- */
 exports.normalizePermissions = (role, permissions) => {
   if (role === "owner") {
     return { ...DEFAULT_CO_ADMIN_PERMISSIONS };
@@ -15,9 +11,6 @@ exports.normalizePermissions = (role, permissions) => {
   return { ...EMPTY_GROUP_PERMISSIONS, ...(permissions || {}) };
 };
 
-/**
- * Checks if a membership object has a specific permission
- */
 exports.hasGroupPermission = (membership, permissionKey) => {
   if (!membership) return false;
   if (membership.role === "owner") return true;
@@ -25,9 +18,6 @@ exports.hasGroupPermission = (membership, permissionKey) => {
   return membership.permissions?.[permissionKey] === true;
 };
 
-/**
- * Gets a user's membership and specific permissions for a group
- */
 exports.getMembership = async (groupId, userId) => {
   if (!userId) return null;
 

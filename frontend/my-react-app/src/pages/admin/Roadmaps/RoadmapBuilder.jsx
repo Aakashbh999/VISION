@@ -17,7 +17,7 @@ const RoadmapBuilder = () => {
   });
 
   if (isLoading) return <LoadingSpinner />;
-  
+
   if (error || !roadmap) {
     return (
       <div className="p-8 text-center">
@@ -31,7 +31,7 @@ const RoadmapBuilder = () => {
 
   return (
     <div className="max-w-4xl mx-auto space-y-6 pb-20">
-      {/* Header */}
+      {}
       <div>
         <Link
           to="/admin/roadmaps"
@@ -59,7 +59,7 @@ const RoadmapBuilder = () => {
         </div>
       </div>
 
-      {/* Steps List */}
+      {}
       <div className="space-y-4">
         {steps.length === 0 ? (
           <div className="bg-[var(--bg-card)] border border-dashed border-[var(--border-main)] rounded-2xl p-12 text-center flex flex-col items-center">
@@ -79,23 +79,23 @@ const RoadmapBuilder = () => {
           </div>
         ) : (
           <div className="space-y-4 relative">
-            {/* The line connecting steps visually */}
+            {}
             <div className="absolute left-[39px] top-6 bottom-6 w-0.5 bg-[var(--border-main)] -z-10 hidden sm:block" />
-            
+
             {steps.map((step, index) => (
-              <RoadmapStepCard 
-                key={step.step_id} 
-                step={step} 
-                roadmapId={id} 
-                isFirst={index === 0} 
-                isLast={index === steps.length - 1} 
+              <RoadmapStepCard
+                key={step.step_id}
+                step={step}
+                roadmapId={id}
+                isFirst={index === 0}
+                isLast={index === steps.length - 1}
               />
             ))}
           </div>
         )}
       </div>
 
-      {/* Footer Add Button inside flow */}
+      {}
       {steps.length > 0 && (
         <div className="flex justify-center mt-8">
           <button
@@ -108,7 +108,7 @@ const RoadmapBuilder = () => {
       )}
 
       {isAddingStep && (
-        <StepFormModal 
+        <StepFormModal
           roadmapId={id}
           onClose={() => setIsAddingStep(false)}
         />

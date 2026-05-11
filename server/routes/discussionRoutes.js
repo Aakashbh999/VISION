@@ -7,7 +7,6 @@ const upload = require("../middleware/uploadMiddleware");
 const rateLimit = require("express-rate-limit");
 const sanitizeInput = require("../middleware/sanitizeInput");
 
-// Anti-spam limiter: 5 creations per 1 minute
 const createLimiter = rateLimit({
   windowMs: 1 * 60 * 1000,
   max: 5,
@@ -16,7 +15,6 @@ const createLimiter = rateLimit({
   legacyHeaders: false,
 });
 
-// Public routes (optional auth for personalization)
 router.get("/", optionalJWT, ctrl.getAllDiscussions);
 router.get("/tags", ctrl.getAllTags);
 router.get("/specializations", ctrl.getSpecializations);
@@ -24,15 +22,12 @@ router.get("/degrees", ctrl.getDegrees);
 router.get("/programs", ctrl.getPrograms);
 router.get("/trending", ctrl.getTrendingDiscussions);
 
-// Protected routes - must come before /:id
 router.get("/user/defaults", verifyJWT, ctrl.getUserDefaults);
 router.get("/user/my-posts", verifyJWT, ctrl.getMyPosts);
 router.get("/user/saved", verifyJWT, ctrl.getSavedDiscussions);
 
-// Discussion details - parameterized route comes AFTER specific routes
 router.get("/:id", optionalJWT, ctrl.getDiscussionDetails);
 
-// Protected routes
 router.post(
   "/",
   verifyJWT,
@@ -52,7 +47,6 @@ router.post(
   ctrl.uploadImage,
 );
 
-// Comments (renamed from replies)
 router.post(
   "/:id/comments",
   verifyJWT,
@@ -68,11 +62,9 @@ router.post(
   ctrl.softDeleteComment,
 );
 
-// Like and Save
 router.post("/:id/vote", verifyJWT, sanitizeInput, voteCtrl.handleVote);
 router.post("/:id/save", verifyJWT, sanitizeInput, ctrl.toggleSave);
 
-// Comment Likes
 router.post(
   "/comments/:id/vote",
   verifyJWT,

@@ -5,8 +5,8 @@ export const useUnreadCount = (enabled = true) => {
   return useQuery({
     queryKey: ["unreadCount"],
     queryFn: getUnreadCount,
-    refetchInterval: enabled ? 60000 : false, // refetch every minute only if enabled
+    refetchInterval: enabled ? 60000 : false,
     staleTime: 30000,
-    enabled: enabled, // Only run query if enabled
+    enabled: enabled,
   });
 };

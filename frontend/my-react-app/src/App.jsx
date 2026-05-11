@@ -21,7 +21,6 @@ import ITFields from "./pages/ITFields";
 import AcademicGuide from "./pages/AcademicGuide";
 import ITJobs from "./pages/ITJobs";
 
-// Reference Data Admin Pages
 import ItFieldsAdmin from "./pages/admin/RefData/ItFields";
 import AcademicDegreesAdmin from "./pages/admin/RefData/AcademicDegrees";
 import ItJobsAdmin from "./pages/admin/RefData/ItJobs";
@@ -45,7 +44,6 @@ import PendingAccessMessage from "./components/portal/PendingAccessMessage";
 import ModeratorRoute from "./components/ModeratorRoute";
 import LoadingSpinner from "./components/ui/LoadingSpinner";
 
-// Admin pages lazy-loaded to reduce bundle size
 const AdminDashboard = lazy(() => import("./pages/admin/Dashboard"));
 const AdminPending = lazy(() => import("./pages/admin/PendingStudents"));
 const AdminStudents = lazy(() => import("./pages/admin/StudentsList"));
@@ -57,7 +55,6 @@ const AdminRoadmapBuilder = lazy(() => import("./pages/admin/Roadmaps/RoadmapBui
 const AdminRegistrationWhitelist = lazy(() => import("./pages/admin/RegistrationWhitelist"));
 const AdminCampuses = lazy(() => import("./pages/admin/Campuses"));
 
-// Portal pages lazy‑loaded to minimise initial bundle size
 const Dashboard = lazy(() => import("./pages/portal/Dashboard"));
 const Notifications = lazy(() => import("./pages/portal/Notifications"));
 const Roadmaps = lazy(() => import("./pages/portal/Roadmaps"));
@@ -79,7 +76,6 @@ const GroupProfile = lazy(() => import("./pages/portal/GroupProfile"));
 const DiscussionDetail = lazy(() => import("./pages/portal/DiscussionDetail"));
 const ClubDetail = lazy(() => import("./pages/portal/ClubDetail"));
 
-// Public routes (always accessible)
 const publicRoutes = [
   { path: "/", element: <RedirectIfAuthenticated /> },
   { path: "/it-fields", element: <ITFields /> },
@@ -89,7 +85,6 @@ const publicRoutes = [
   { path: "/career-paths", element: <CareerPaths /> },
 ];
 
-// Auth routes (login, register, forgot password) – redirect if already logged in
 const authRoutes = [
   { path: "/login", element: <Login /> },
   { path: "/register", element: <Register /> },
@@ -97,13 +92,11 @@ const authRoutes = [
   { path: "/reset-password", element: <ResetPassword /> },
 ];
 
-// Routes that require authentication (email verification, pending approval)
 const requireAuthRoutes = [
   { path: "/verify-email", element: <VerifyEmail /> },
   { path: "/pending-approval", element: <PendingApproval /> },
 ];
 
-// Admin routes
 const adminRoutes = [
   { path: "/admin/dashboard", element: <AdminDashboard /> },
   { path: "/admin/pending", element: <AdminPending /> },
@@ -115,7 +108,7 @@ const adminRoutes = [
   { path: "/admin/registration-whitelist", element: <AdminRegistrationWhitelist /> },
   { path: "/admin/campuses", element: <AdminCampuses /> },
   { path: "/admin", element: <Navigate to="/admin/dashboard" replace /> },
-  // Reference Data Admin Routes
+
   { path: "/admin/reference/it-fields", element: <ItFieldsAdmin /> },
   { path: "/admin/reference/academic-degrees", element: <AcademicDegreesAdmin /> },
   { path: "/admin/reference/it-jobs", element: <ItJobsAdmin /> },
@@ -124,12 +117,10 @@ const adminRoutes = [
   { path: "/admin/reference/tags", element: <TagsAdmin /> },
 ];
 
-// Moderator routes
 const moderatorRoutes = [
   { path: "/admin/resources/pending", element: <AdminPendingResources /> },
 ];
 
-// Portal routes (approved students only) – true portal pages
 const portalRoutes = [
   { path: "/dashboard", element: <Dashboard /> },
   { path: "/notifications", element: <Notifications /> },
@@ -158,7 +149,6 @@ const portalRoutes = [
   { path: "/career-paths", element: <CareerPaths /> },
 ];
 
-// Suspense fallback for lazy portal pages
 const PageLoader = () => (
   <LoadingSpinner
     size="sm"
@@ -166,7 +156,6 @@ const PageLoader = () => (
   />
 );
 
-// Helper components for PublicLayout
 const PublicNavbarWrapper = ({ variant, user }) => {
   const { toggle } = useSidebar();
   return (
@@ -220,43 +209,34 @@ function PublicLayout() {
           <PublicSidebarWrapper isAdmin={isAdminRoute} />
           <PublicMainWrapper isAdminRoute={isAdminRoute}>
             <Routes>
-              {/* Public routes */}
               {publicRoutes.map(({ path, element }) => (
                 <Route key={path} path={path} element={element} />
               ))}
 
-              {/* Auth routes wrapped with PublicRoute */}
               <Route element={<PublicRoute />}>
                 {authRoutes.map(({ path, element }) => (
                   <Route key={path} path={path} element={element} />
                 ))}
               </Route>
 
-              {/* RequireAuth routes */}
               <Route element={<RequireAuth />}>
                 {requireAuthRoutes.map(({ path, element }) => (
                   <Route key={path} path={path} element={element} />
                 ))}
               </Route>
 
-              {/* Admin routes */}
               <Route element={<AdminRoute />}>
                 {adminRoutes.map(({ path, element }) => (
                   <Route key={path} path={path} element={element} />
                 ))}
               </Route>
 
-              {/* Moderator routes */}
               <Route element={<ModeratorRoute />}>
                 {moderatorRoutes.map(({ path, element }) => (
                   <Route key={path} path={path} element={element} />
                 ))}
               </Route>
 
-              {/* Legacy portal redirect */}
-              <Route path="/portal/*" element={<Navigate to="/dashboard" replace />} />
-
-              {/* 404 catch‑all */}
               <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
           </PublicMainWrapper>
@@ -275,7 +255,6 @@ function AppContent() {
     return <LoadingSpinner className="min-h-screen bg-bg-main py-0" />;
   }
 
-  // Define portal paths (true portal pages)
   const portalPaths = [
     "/dashboard",
     "/notifications",
@@ -304,7 +283,6 @@ function AppContent() {
     user?.email_status === "verified" &&
     user?.student_status === "pending";
 
-  // Limited portal for pending users (only dashboard and profile)
   if (isPortalRoute && isPendingUser) {
     return (
       <Routes>
@@ -317,7 +295,6 @@ function AppContent() {
     );
   }
 
-  // Full portal for approved users
   if (isPortalRoute && isApprovedUser) {
     return (
       <Suspense fallback={<PageLoader />}>
@@ -327,7 +304,7 @@ function AppContent() {
               {portalRoutes.map(({ path, element }) => (
                 <Route key={path} path={path} element={element} />
               ))}
-              {/* Redirect /profile to /profile/me (current user) */}
+              {}
               <Route path="/profile" element={<Navigate to="/profile/me" replace />} />
             </Route>
           </Route>
@@ -336,7 +313,6 @@ function AppContent() {
     );
   }
 
-  // All other routes (public, auth, admin) go to PublicLayout
   return <PublicLayout />;
 }
 

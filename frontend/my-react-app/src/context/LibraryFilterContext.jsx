@@ -16,7 +16,7 @@ const initialFilters = {
   program_id: "",
   semester: "",
   degree_id: "",
-  view: "all", // "all" or "my"
+  view: "all",
   status: "all",
   page: 1,
   limit: 12,

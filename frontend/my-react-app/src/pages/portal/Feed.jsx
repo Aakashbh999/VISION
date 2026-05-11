@@ -43,13 +43,12 @@ const Feed = () => {
     [feedPayload],
   );
 
-  // Sync feed payload with accumulated list
   useEffect(() => {
     if (feedPayload?.data) {
       if (page === 1) {
         setAllFeedItems(feedPayload.data);
       } else {
-        // Prevent duplicates if react-query refetches or logic double-triggers
+
         setAllFeedItems((prev) => {
           const existingIds = new Set(prev.map((i) => i.activity_id));
           const newItems = feedPayload.data.filter(
@@ -61,21 +60,19 @@ const Feed = () => {
     }
   }, [feedPayload, page]);
 
-  // Handle Tab/Search Reset
   const handleQueryChange = (event) => {
     setQuery(event.target.value);
     setPage(1);
-    // State will be reset by the useEffect above when feedPayload for page 1 arrives
+
   };
 
   const handleTabChange = (tabId) => {
     setActiveTab(tabId);
     setPage(1);
-    // Explicitly clear to prevent jumpy UI during load
+
     setAllFeedItems([]);
   };
 
-  // Infinite Scroll Observer
   useEffect(() => {
     const observer = new IntersectionObserver(
       (entries) => {
@@ -101,7 +98,7 @@ const Feed = () => {
     <div className="max-w-6xl mx-auto space-y-8 bg-(--bg-main) text-(--text-main)">
       <PrimaryPortalTabs activeTab="feed" />
 
-      {/* Header & Tabs Section */}
+      {}
       <div className="space-y-6">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div>
@@ -138,7 +135,7 @@ const Feed = () => {
         <FeedTabs activeTab={activeTab} onTabChange={handleTabChange} />
       </div>
 
-      {/* Feed Content */}
+      {}
       <div className="space-y-6 min-h-[60vh]">
         {isLoading && page === 1 ? (
           <SurfaceCard className="py-20 flex flex-col items-center justify-center gap-4">
@@ -170,7 +167,7 @@ const Feed = () => {
           </div>
         )}
 
-        {/* Load More Sentinel / Manual Trigger */}
+        {}
         {(pagination.totalPages > pagination.page || isFetching) && (
           <div
             ref={loadMoreRef}

@@ -6,13 +6,11 @@ exports.getRecommendations = catchAsync(async (req, res) => {
 
     const { portal_user_id: user_id, program_id } = req.user;
 
-    // Clear old cache (older than 6 hours) for the explicit user
     await pool.query(`
       DELETE FROM portal.resource_scores
       WHERE user_id = $1 AND calculated_at < NOW() - INTERVAL '6 hours'
     `, [user_id]);
 
-    // Check if cached recommendations exist
     const cached = await pool.query(
       `SELECT r.resource_id, r.title, r.url, rs.score
        FROM portal.resource_scores rs
@@ -30,42 +28,40 @@ exports.getRecommendations = catchAsync(async (req, res) => {
       });
     }
 
-    // \ud83d\udd25 Calculate scores dynamically using a CTE to handle large datasets
-    // We only insert the top 50 matches into the cache to avoid bloating the DB
     const calculated = await pool.query(
       `
       WITH RankedResources AS (
         SELECT
           $1::uuid AS user_id,
           r.resource_id,
-          
+
           (
             -- Program match
             CASE WHEN r.program_id = $2 THEN 40 ELSE 0 END
-            
+
             +
-            
+
             -- Tag match
             (
               SELECT COUNT(*) * 10
               FROM portal.resource_tags rt
-              JOIN portal.user_interests ui 
+              JOIN portal.user_interests ui
                 ON ui.tag_id = rt.tag_id
               WHERE rt.resource_id = r.resource_id
               AND ui.user_id = $1
             )
-            
+
             +
-            
+
             -- Popularity
             (
               SELECT COUNT(*) * 2
               FROM portal.user_resource_interactions uri
               WHERE uri.resource_id = r.resource_id
             )
-            
+
             -
-            
+
             -- Already completed penalty
             (
               SELECT COUNT(*) * 50
@@ -74,11 +70,11 @@ exports.getRecommendations = catchAsync(async (req, res) => {
               AND uri.user_id = $1
               AND uri.interaction_type = 'completed'
             )
-            
+
           ) AS score,
-          
+
           'auto_calculated' AS reason
-          
+
         FROM portal.resources r
         WHERE r.status = 'approved'
         ORDER BY score DESC
@@ -94,7 +90,6 @@ exports.getRecommendations = catchAsync(async (req, res) => {
       [user_id, program_id],
     );
 
-    // Return top results
     const final = await pool.query(
       `SELECT r.resource_id, r.title, r.url, rs.score
        FROM portal.resource_scores rs

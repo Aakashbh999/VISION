@@ -12,9 +12,9 @@ const ItClubs = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingItem, setEditingItem] = useState(null);
   const [formData, setFormData] = useState({
-    club_name: "", location: "", institution: "", specialty: "", contact_info: "", 
-    website_url: "", facebook_url: "", linkedin_url: "", discord_url: "", 
-    github_url: "", description_full: "", logo_url: "", banner_url: "", 
+    club_name: "", location: "", institution: "", specialty: "", contact_info: "",
+    website_url: "", facebook_url: "", linkedin_url: "", discord_url: "",
+    github_url: "", description_full: "", logo_url: "", banner_url: "",
     founded_year: "", is_public: true
   });
   const [confirmModal, setConfirmModal] = useState({ isOpen: false });
@@ -61,9 +61,9 @@ const ItClubs = () => {
     } else {
       setEditingItem(null);
       setFormData({
-        club_name: "", location: "", institution: "", specialty: "", contact_info: "", 
-        website_url: "", facebook_url: "", linkedin_url: "", discord_url: "", 
-        github_url: "", description_full: "", logo_url: "", banner_url: "", 
+        club_name: "", location: "", institution: "", specialty: "", contact_info: "",
+        website_url: "", facebook_url: "", linkedin_url: "", discord_url: "",
+        github_url: "", description_full: "", logo_url: "", banner_url: "",
         founded_year: "", is_public: true
       });
     }
@@ -73,7 +73,7 @@ const ItClubs = () => {
   const handleSubmit = (e) => {
     e.preventDefault();
     const dataToSubmit = { ...formData };
-    // Handle empty founded_year to prevent invalid integer error
+
     if (dataToSubmit.founded_year === "") {
         dataToSubmit.founded_year = null;
     }
@@ -98,10 +98,10 @@ const ItClubs = () => {
     { header: "Specialty", accessor: "specialty" },
     { header: "Location", accessor: "location" },
     { header: "Status", accessor: "is_public", render: (row) => (
-        row.is_public ? 
-        <span className="text-green-500 flex items-center gap-1"><CheckCircle className="w-4 h-4"/> Public</span> : 
+        row.is_public ?
+        <span className="text-green-500 flex items-center gap-1"><CheckCircle className="w-4 h-4"/> Public</span> :
         <span className="text-gray-400 flex items-center gap-1"><XCircle className="w-4 h-4"/> Hidden</span>
-      ) 
+      )
     }
   ];
 
@@ -120,13 +120,13 @@ const ItClubs = () => {
         </button>
       </div>
 
-      <AdminTable 
-        columns={columns} 
-        data={data.data || data} 
-        isLoading={isLoading} 
-        error={error} 
-        onEdit={handleOpenModal} 
-        onDelete={confirmDelete} 
+      <AdminTable
+        columns={columns}
+        data={data.data || data}
+        isLoading={isLoading}
+        error={error}
+        onEdit={handleOpenModal}
+        onDelete={confirmDelete}
       />
 
       {isModalOpen && (
@@ -136,9 +136,9 @@ const ItClubs = () => {
             <div className="flex items-center justify-between p-5 border-b border-border-main bg-bg-active/30">
               <h2 className="text-lg font-bold text-text-main">{editingItem ? "Edit IT Club" : "Add IT Club"}</h2>
             </div>
-            
+
             <form onSubmit={handleSubmit} className="p-5 space-y-4 overflow-y-auto">
-              {/* Basic Info */}
+              {}
               <h3 className="font-bold text-text-main border-b border-border-main pb-2">Basic Info</h3>
               <div className="grid grid-cols-2 gap-4">
                 <div>
@@ -165,7 +165,7 @@ const ItClubs = () => {
                 </div>
               </div>
 
-              {/* Details & Media */}
+              {}
               <h3 className="font-bold text-text-main border-b border-border-main pb-2 mt-4">Details & Media</h3>
               <div>
                 <label className="text-xs font-bold text-text-muted mb-1 block">Full Description</label>
@@ -182,7 +182,7 @@ const ItClubs = () => {
                 </div>
               </div>
 
-              {/* Links & Contact */}
+              {}
               <h3 className="font-bold text-text-main border-b border-border-main pb-2 mt-4">Links & Contact</h3>
               <div className="grid grid-cols-2 gap-4">
                 <div>

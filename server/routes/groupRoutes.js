@@ -13,13 +13,10 @@ const {
 const upload = require("../middleware/uploadMiddleware");
 const sanitizeInput = require("../middleware/sanitizeInput");
 
-// Get managed groups (owner/co-admin)
 router.get("/managed", verifyJWT, crudController.getManagedGroups);
 
-// List all groups
 router.get("/", optionalJWT, crudController.getGroups);
 
-// ── Post-level routes (specific before /:id) ──────────────────
 router.get("/:id/posts", verifyJWT, postController.getPosts);
 router.post(
   "/:id/posts",
@@ -30,7 +27,6 @@ router.post(
   postController.createPost,
 );
 
-// Soft delete post (user-initiated, records reason)
 router.post(
   "/posts/:postId/soft-delete",
   verifyJWT,
@@ -44,9 +40,8 @@ router.patch(
   postController.updateQaAnswer,
 );
 
-// Members
 router.get("/:id/members", verifyJWT, membershipController.getGroupMembers);
-// Invitations
+
 router.post(
   "/:id/invitations",
   verifyJWT,
@@ -70,7 +65,6 @@ router.delete(
   membershipController.removeMember,
 );
 
-// Join / Leave / Request
 router.post(
   "/:id/join",
   verifyJWT,
@@ -92,7 +86,6 @@ router.post(
   membershipController.requestToJoin,
 );
 
-// Join Requests management (admin/co-admin)
 router.get(
   "/:id/join-requests",
   verifyJWT,
@@ -111,7 +104,6 @@ router.post(
   membershipController.declineRequest,
 );
 
-// Co-Admin management (owner only)
 router.post(
   "/:id/members/:memberId/appoint-co-admin",
   verifyJWT,
@@ -131,7 +123,6 @@ router.patch(
   membershipController.updateCoAdminPermissions,
 );
 
-// Capacity expansion via VXP
 router.post(
   "/:id/expand-capacity",
   verifyJWT,
@@ -139,7 +130,6 @@ router.post(
   membershipController.expandCapacity,
 );
 
-// Image/Banner update
 router.post(
   "/:id/image",
   verifyJWT,
@@ -155,7 +145,6 @@ router.post(
   mediaController.updateGroupBanner,
 );
 
-// Create group
 router.post(
   "/",
   verifyJWT,
@@ -164,10 +153,8 @@ router.post(
   crudController.createGroup,
 );
 
-// Update group (owner only)
 router.patch("/:id", verifyJWT, sanitizeInput, crudController.updateGroup);
 
-// Soft delete (user-initiated, records reason)
 router.post(
   "/:id/soft-delete",
   verifyJWT,
@@ -175,7 +162,6 @@ router.post(
   crudController.softDeleteGroup,
 );
 
-// Group details (generic — must be last)
 router.get("/:id", optionalJWT, crudController.getGroupDetails);
 
 module.exports = router;

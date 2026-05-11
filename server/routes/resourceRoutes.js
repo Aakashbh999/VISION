@@ -10,16 +10,10 @@ const {
   requireApprovedStudent,
 } = require("../middleware/authMiddleware");
 
-// ── Public ────────────────────────────────────────────────
-// GET /api/resources – approved resources only, with filters
 router.get("/resources", optionalJWT, resourceCtrl.getResources);
 
-// ── Authenticated ─────────────────────────────────────────
-// GET /api/resources/my – user's own uploads (all statuses)
 router.get("/resources/my", verifyJWT, resourceCtrl.getMyResources);
 
-// POST /api/resources – upload a new resource (pending)
-// Uses multer middleware for file uploads to Cloudinary
 router.post(
   "/resources",
   verifyJWT,
@@ -29,7 +23,6 @@ router.post(
   resourceCtrl.uploadResource,
 );
 
-// Soft delete resource (user-initiated, records reason)
 router.post(
   "/resources/:id/soft-delete",
   verifyJWT,

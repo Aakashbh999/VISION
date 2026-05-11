@@ -1,11 +1,5 @@
 import api from "./api";
 
-/**
- * Universal Search Service
- * Uses the unified /api/search endpoint for weighted multi-index search
- */
-
-// Category definitions for consistent styling
 export const SEARCH_CATEGORIES = {
   ROADMAPS: "Roadmaps",
   RESOURCES: "Resources",
@@ -15,7 +9,6 @@ export const SEARCH_CATEGORIES = {
   USERS: "Users",
 };
 
-// Icon mapping for result types
 const CATEGORY_ICONS = {
   roadmap: "map",
   resource: "file",
@@ -34,13 +27,9 @@ const resolveEntityId = (entity, keys = [], fallback = "") => {
   return fallback;
 };
 
-/**
- * Transform API response to unified search result format
- */
 const transformResults = (apiResponse) => {
   const results = [];
 
-  // Process roadmaps
   if (apiResponse.roadmaps?.length) {
     apiResponse.roadmaps.forEach((r, idx) => {
       const roadmapId = resolveEntityId(r, ["id", "roadmap_id"], `idx-${idx}`);
@@ -58,7 +47,6 @@ const transformResults = (apiResponse) => {
     });
   }
 
-  // Process resources
   if (apiResponse.resources?.length) {
     apiResponse.resources.forEach((r, idx) => {
       const resourceId = resolveEntityId(
@@ -84,7 +72,6 @@ const transformResults = (apiResponse) => {
     });
   }
 
-  // Process groups
   if (apiResponse.groups?.length) {
     apiResponse.groups.forEach((g, idx) => {
       const groupId = resolveEntityId(g, ["id", "group_id"], `idx-${idx}`);
@@ -105,7 +92,6 @@ const transformResults = (apiResponse) => {
     });
   }
 
-  // Process clubs
   if (apiResponse.clubs?.length) {
     apiResponse.clubs.forEach((c, idx) => {
       const clubId = resolveEntityId(
@@ -130,7 +116,6 @@ const transformResults = (apiResponse) => {
     });
   }
 
-  // Process discussions
   if (apiResponse.discussions?.length) {
     apiResponse.discussions.forEach((d, idx) => {
       const discussionId = resolveEntityId(
@@ -151,7 +136,6 @@ const transformResults = (apiResponse) => {
     });
   }
 
-  // Process users
   if (apiResponse.users?.length) {
     apiResponse.users.forEach((u, idx) => {
       const userId = resolveEntityId(u, ["id", "user_id"], `idx-${idx}`);
@@ -174,12 +158,6 @@ const transformResults = (apiResponse) => {
   return results;
 };
 
-/**
- * Get universal search results from the /api/search endpoint
- * @param {string} query - The search query (empty returns recommendations)
- * @param {number} limit - Max results per category (default 5)
- * @returns {Promise<Object>} - Search results with metadata
- */
 export const getUniversalResults = async (query = "", limit = 5) => {
   try {
     const response = await api.get("/search", {
@@ -207,15 +185,9 @@ export const getUniversalResults = async (query = "", limit = 5) => {
   }
 };
 
-/**
- * Get results grouped by category
- * @param {string} query - The search query
- * @returns {Promise<Object>} - Object with categories as keys and results arrays as values
- */
 export const getGroupedResults = async (query) => {
   const { results } = await getUniversalResults(query);
 
-  // Group by category
   return results.reduce((acc, item) => {
     if (!acc[item.category]) {
       acc[item.category] = [];
@@ -225,11 +197,6 @@ export const getGroupedResults = async (query) => {
   }, {});
 };
 
-/**
- * Get quick search suggestions for autocomplete
- * @param {string} query - The partial search query
- * @returns {Promise<Array>} - Array of suggestion strings
- */
 export const getSearchSuggestions = async (query) => {
   if (!query || query.trim().length < 2) {
     return [];

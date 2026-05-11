@@ -2,15 +2,11 @@ const pool = require("../config/db");
 const createError = require("http-errors");
 const catchAsync = require("../utils/catchAsync");
 
-/* ===============================
-   PUBLIC ROUTES
-================================ */
-
 exports.getActiveCampuses = catchAsync(async (req, res) => {
   const result = await pool.query(
-    `SELECT campus_id, campus_name, affiliated_university, location 
-     FROM portal.campuses 
-     WHERE is_active = true 
+    `SELECT campus_id, campus_name, affiliated_university, location
+     FROM portal.campuses
+     WHERE is_active = true
      ORDER BY campus_name ASC`
   );
   res.json({
@@ -18,10 +14,6 @@ exports.getActiveCampuses = catchAsync(async (req, res) => {
     data: result.rows,
   });
 });
-
-/* ===============================
-   ADMIN ROUTES
-================================ */
 
 exports.getAllCampuses = catchAsync(async (req, res) => {
   const result = await pool.query(
@@ -35,20 +27,20 @@ exports.getAllCampuses = catchAsync(async (req, res) => {
 
 exports.createCampus = catchAsync(async (req, res) => {
   const { campus_name, affiliated_university, location, contact_email, is_active } = req.body;
-  
+
   const existing = await pool.query(
     `SELECT 1 FROM portal.campuses WHERE campus_name = $1`,
     [campus_name]
   );
-  
+
   if (existing.rows.length > 0) {
     throw createError(400, "Campus with this name already exists");
   }
 
   const result = await pool.query(
-    `INSERT INTO portal.campuses 
-      (campus_name, affiliated_university, location, contact_email, is_active) 
-     VALUES ($1, $2, $3, $4, $5) 
+    `INSERT INTO portal.campuses
+      (campus_name, affiliated_university, location, contact_email, is_active)
+     VALUES ($1, $2, $3, $4, $5)
      RETURNING *`,
     [campus_name, affiliated_university, location, contact_email, is_active ?? true]
   );
@@ -64,7 +56,7 @@ exports.updateCampus = catchAsync(async (req, res) => {
   const { campus_name, affiliated_university, location, contact_email, is_active } = req.body;
 
   const result = await pool.query(
-    `UPDATE portal.campuses 
+    `UPDATE portal.campuses
      SET campus_name = COALESCE($1, campus_name),
          affiliated_university = COALESCE($2, affiliated_university),
          location = COALESCE($3, location),
@@ -88,7 +80,6 @@ exports.updateCampus = catchAsync(async (req, res) => {
 exports.deleteCampus = catchAsync(async (req, res) => {
   const { campus_id } = req.params;
 
-  // We rely on foreign keys set to ON DELETE SET NULL to not break users
   const result = await pool.query(
     `DELETE FROM portal.campuses WHERE campus_id = $1 RETURNING campus_id`,
     [campus_id]

@@ -1,7 +1,6 @@
 const pool = require("../config/db");
 const catchAsync = require("../utils/catchAsync");
 
-// GET /api/programs
 exports.getPrograms = catchAsync(async (req, res) => {
     const result = await pool.query(
       `SELECT program_id, program_name

@@ -10,9 +10,6 @@ const {
 const { getMembership, hasGroupPermission } = require("../utils/groupPermissions");
 const catchAsync = require("../utils/catchAsync");
 
-/* ===============================
-   UPDATE GROUP IMAGE (with cooldown/VXP)
- ================================ */
 exports.updateGroupImage = catchAsync(async (req, res) => {
     const { id } = req.params;
     const userId = req.user.portal_user_id;
@@ -74,9 +71,6 @@ exports.updateGroupImage = catchAsync(async (req, res) => {
     });
 });
 
-/* ===============================
-   UPDATE GROUP BANNER
- ================================ */
 exports.updateGroupBanner = catchAsync(async (req, res) => {
     const { id } = req.params;
     const userId = req.user.portal_user_id;

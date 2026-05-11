@@ -103,7 +103,7 @@ const buildRankedFeedQuery = ({ config, includeBreakdown = false }) => {
         )
         -- For You specific: Filter out noisy audit logs like 'followed' or 'joined' unless specifically requested
         AND (
-          $6::text <> 'for-you' OR 
+          $6::text <> 'for-you' OR
           af.action_type NOT IN ('group_join_approved', 'group_joined', 'user_followed', 'completed_step')
         )
         -- Privacy: Hide all messages from groups unless user is an approved member
@@ -236,7 +236,7 @@ const fetchRankedFeed = async ({
   search,
   limit,
   offset,
-  tab, // Pass tab to the query
+  tab,
   config,
   includeBreakdown = false,
 }) => {

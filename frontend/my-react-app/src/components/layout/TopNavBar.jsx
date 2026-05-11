@@ -25,7 +25,6 @@ import Logo from "../ui/Logo/Logo";
 import ThemeToggle from "./ThemeToggle";
 import NotificationsPopup from "../notifications/NotificationsPopup";
 
-// Breadcrumb mapping
 const routeLabels = {
   portal: "Portal",
   dashboard: "Dashboard",
@@ -133,9 +132,9 @@ const TopNavBar = () => {
 
   return (
     <header className="fixed top-0 left-0 right-0 h-16 bg-[var(--bg-main)]/95 backdrop-blur-md border-b border-[var(--border-main)] z-40 flex items-center justify-between px-4 transition-all duration-300">
-      {/* Left section: Menu toggle + Logo + Breadcrumb */}
+      {}
       <div className="flex items-center gap-3">
-        {/* Mobile menu toggle — hidden on mobile since bottom nav handles navigation */}
+        {}
         <button
           onClick={toggle}
           className="hidden lg:flex p-2.5 rounded-lg bg-[#0f0a1f] text-white shadow-lg shadow-purple-900/20 hover:bg-purple-900 transition-all duration-300 min-w-11 min-h-11 items-center justify-center"
@@ -144,20 +143,20 @@ const TopNavBar = () => {
           <Menu className="w-5 h-5" />
         </button>
 
-        {/* Logo – height manually controlled by you */}
+        {}
         <Link to="/dashboard" className="shrink-0">
           <Logo className="h-10 hover:opacity-80 transition-opacity" />
         </Link>
 
-        {/* Breadcrumb (hidden on mobile) */}
+        {}
         <div className="hidden md:block border-l border-[var(--border-main)] pl-4 ml-2">
           <Breadcrumb />
         </div>
       </div>
 
-      {/* Right section: Search, XP, Explore, Notifications, Profile */}
+      {}
       <div className="flex items-center gap-2 lg:gap-4">
-        {/* Universal Search Button */}
+        {}
         <button
           onClick={searchModal.open}
           className="flex items-center gap-2 px-3 py-2.5 min-h-11 text-[var(--text-muted)] hover:text-[var(--text-main)] hover:bg-purple-600/10 dark:hover:bg-purple-500/20 rounded-lg border border-[var(--border-main)] transition-colors"
@@ -170,7 +169,7 @@ const TopNavBar = () => {
           </kbd>
         </button>
 
-        {/* Explore Dropdown */}
+        {}
         <div className="relative hidden lg:block" ref={exploreRef}>
           <button
             onClick={() => setExploreDropdownOpen(!exploreDropdownOpen)}
@@ -199,10 +198,10 @@ const TopNavBar = () => {
           )}
         </div>
 
-        {/* Theme Toggle */}
+        {}
         <ThemeToggle />
 
-        {/* Notifications */}
+        {}
         <div className="relative">
           <button
             ref={notificationsButtonRef}
@@ -226,7 +225,7 @@ const TopNavBar = () => {
           />
         </div>
 
-        {/* Profile Menu */}
+        {}
         <div className="relative" ref={profileRef}>
           <button
             onClick={() => setProfileMenuOpen(!profileMenuOpen)}
@@ -249,7 +248,7 @@ const TopNavBar = () => {
             >
               {!showLogoutConfirm ? (
                 <>
-                  {/* User info header */}
+                  {}
                   <div className="px-4 py-3 border-b border-[var(--border-main)]">
                     <div className="flex items-center justify-between">
                       <div>
@@ -271,7 +270,7 @@ const TopNavBar = () => {
                     </div>
                   </div>
 
-                  {/* Menu items */}
+                  {}
                   {user?.role !== "admin" && (
                     <Link
                       to="/profile"
@@ -292,7 +291,7 @@ const TopNavBar = () => {
                 </>
               ) : (
                 <>
-                  {/* Logout confirmation */}
+                  {}
                   <div className="px-4 py-3 text-sm text-[var(--text-main)] border-b border-[var(--border-main)]">
                     Are you sure you want to sign out?
                   </div>
@@ -319,7 +318,7 @@ const TopNavBar = () => {
         </div>
       </div>
 
-      {/* Search Modal */}
+      {}
       <SearchModal isOpen={searchModal.isOpen} onClose={searchModal.close} />
     </header>
   );

@@ -132,7 +132,7 @@ const ProfileHeaderCard = ({
         )}
         {isOwner && isEditMode && (
           <>
-            {/* Save/Cancel buttons top left */}
+            {}
             <div className="absolute top-4 left-4 z-20 flex gap-2">
               <Button
                 type="button"
@@ -154,7 +154,7 @@ const ProfileHeaderCard = ({
                 <Check className="w-4 h-4" /> Save
               </Button>
             </div>
-            {/* Banner upload overlay */}
+            {}
             <div className="absolute inset-0 bg-black/35 flex items-center justify-center opacity-0 group-hover/banner:opacity-100 transition-opacity">
               <button
                 type="button"
@@ -170,7 +170,7 @@ const ProfileHeaderCard = ({
 
       <div className="px-6 lg:px-8 pb-6 relative z-10">
         <div className="flex flex-col md:flex-row gap-4 md:gap-6 relative z-20">
-          {/* Avatar Area */}
+          {}
           <div className="relative shrink-0 -mt-16 sm:-mt-20 md:-mt-24 mx-auto md:mx-0 group/avatar">
             <div
               onClick={() => {
@@ -212,9 +212,9 @@ const ProfileHeaderCard = ({
             </div>
           </div>
 
-          {/* Info and Buttons Area */}
+          {}
           <div className="flex-1 flex flex-col md:flex-row justify-between items-center md:items-end gap-5 mt-2 sm:mt-0 pb-4">
-            {/* User Info Block */}
+            {}
             <div className="text-center md:text-left flex-1 min-w-0 w-full">
               {isOwner && isEditMode ? (
                 <div className="space-y-3 max-w-xl mx-auto md:mx-0">
@@ -299,7 +299,7 @@ const ProfileHeaderCard = ({
               </div>
             </div>
 
-            {/* CTA Buttons */}
+            {}
             <div className="flex flex-col sm:flex-row justify-center md:justify-end items-center gap-3 shrink-0 w-full md:w-auto mt-4 md:mt-0">
               {!isOwner &&
                 (profile.is_following ? (
@@ -357,8 +357,8 @@ const ProfileHeaderCard = ({
           </div>
         </div>
 
-        {/* Divider / Grid space */}
-        {/* Stats Grid */}
+        {}
+        {}
         <div className="mt-2 pt-6 border-t border-(--border-main) grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6 text-sm">
           <StatBox
             isOwner={isOwner}

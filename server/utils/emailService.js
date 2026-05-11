@@ -137,7 +137,6 @@ const sendMail = async (mailOptions) => {
   return { messageId: data?.id };
 };
 
-// Verify HTTP email config on startup
 (async () => {
   try {
     const health = checkEmailHealth();
@@ -151,9 +150,6 @@ const sendMail = async (mailOptions) => {
   }
 })();
 
-/**
- * Send a generic email
- */
 exports.sendEmail = async ({ to, subject, html }) => {
   await sendMail({
     from: env.EMAIL_FROM,
@@ -163,9 +159,6 @@ exports.sendEmail = async ({ to, subject, html }) => {
   });
 };
 
-/**
- * Send email verification email
- */
 exports.sendVerificationEmail = async ({ to, userName, verificationLink }) => {
   const html = emailVerificationTemplate({
     userName,
@@ -189,9 +182,6 @@ exports.sendVerificationEmail = async ({ to, userName, verificationLink }) => {
   }
 };
 
-/**
- * Send password reset email
- */
 exports.sendPasswordResetEmail = async ({
   to,
   userName,
@@ -215,9 +205,6 @@ exports.sendPasswordResetEmail = async ({
   });
 };
 
-/**
- * Send welcome email after verification
- */
 exports.sendWelcomeEmail = async ({ to, userName }) => {
   const html = welcomeTemplate({
     userName,
@@ -232,9 +219,6 @@ exports.sendWelcomeEmail = async ({ to, userName }) => {
   });
 };
 
-/**
- * Send new login alert email
- */
 exports.sendNewLoginAlert = async ({
   to,
   userName,
@@ -259,9 +243,6 @@ exports.sendNewLoginAlert = async ({
   });
 };
 
-/**
- * Send security alert email
- */
 exports.sendSecurityAlert = async ({
   to,
   userName,

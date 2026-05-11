@@ -1,12 +1,4 @@
-/**
- * ClubAvatarLogo — shows club logo image or first-letter fallback.
- *
- * Props:
- *  club       – club object (needs .logo_url and .club_name)
- *  size       – 'sm' (48px) | 'md' (56px, default) | 'lg' (80px)
- *  rounded    – CSS rounded class override (default 'rounded-[1.25rem]')
- *  className  – extra classes for the outer wrapper
- */
+
 const SIZE_MAP = {
   sm: "w-12 h-12 text-base",
   md: "w-14 h-14 text-xl",

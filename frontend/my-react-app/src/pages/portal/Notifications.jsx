@@ -30,7 +30,6 @@ const Notifications = () => {
   const deleteMutation = useMutation({ mutationFn: deleteNotification, onSuccess: invalidate });
   const clearAllMutation = useMutation({ mutationFn: clearNotifications, onSuccess: invalidate });
 
-  // Invitation Mutations
   const acceptMutation = useMutation({
     mutationFn: acceptInvitation,
     onSuccess: (data) => {
@@ -58,14 +57,13 @@ const Notifications = () => {
     if (!notification.is_read) {
       try {
         await markReadMutation.mutateAsync(notification.notification_id);
-      } catch { /* allow navigation even if read update fails */ }
+      } catch {  }
     }
     if (destination) navigate(destination);
   };
 
   const notifications = notificationsPayload?.data || [];
 
-  // Group by today / yesterday / earlier
   const now = new Date();
   const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
   const yesterdayStart = new Date(todayStart);
@@ -91,7 +89,7 @@ const Notifications = () => {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
+      {}
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-xl sm:text-2xl font-bold text-[var(--text-main)]">
@@ -112,7 +110,7 @@ const Notifications = () => {
         )}
       </div>
 
-      {/* Sections */}
+      {}
       {sections.length === 0 ? (
         <p className="text-[var(--text-muted)]">No notifications yet.</p>
       ) : (

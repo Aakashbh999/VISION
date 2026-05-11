@@ -47,9 +47,6 @@ function normalizeAcademicProfile(profile) {
   };
 }
 
-/**
- * GET /api/profile/:userId  — Public profile view
- */
 exports.getPublicProfile = catchAsync(async (req, res) => {
   const { userId } = req.params;
   const viewerId = req.user?.portal_user_id;
@@ -140,9 +137,6 @@ exports.getPublicProfile = catchAsync(async (req, res) => {
   });
 });
 
-/**
- * GET /api/profile/me  — Own full profile (private fields included)
- */
 exports.getOwnProfile = catchAsync(async (req, res) => {
   const userId = req.user.portal_user_id;
 
@@ -205,7 +199,6 @@ exports.getOwnProfile = catchAsync(async (req, res) => {
 
   const profile = normalizeAcademicProfile(result.rows[0]);
 
-  // Cooldown metadata for UI
   profile.profile_pic_cooldown_active = isCooldownActive(
     profile.last_profile_pic_update,
     PROFILE_PIC_COOLDOWN_DAYS,
@@ -223,10 +216,6 @@ exports.getOwnProfile = catchAsync(async (req, res) => {
   return successResponse(res, { ...profile, badges: badgesRes.rows });
 });
 
-
-/**
- * PATCH /api/profile/me  — Update editable profile fields in one request
- */
 exports.updateProfile = catchAsync(async (req, res) => {
   const userId = req.user.portal_user_id;
   const {
@@ -393,9 +382,6 @@ exports.updateProfile = catchAsync(async (req, res) => {
   );
 });
 
-/**
- * PATCH /api/profile/bio  — Update bio
- */
 exports.updateBio = catchAsync(async (req, res) => {
   const userId = req.user.portal_user_id;
   const { bio } = req.body;
@@ -419,14 +405,10 @@ exports.updateBio = catchAsync(async (req, res) => {
   return successResponse(res, { bio: bio.trim() }, "Bio updated successfully");
 });
 
-/**
- * POST /api/profile/image  — Update profile picture (with cooldown + VXP bypass)
- */
 exports.updateProfileImage = catchAsync(async (req, res) => {
   const userId = req.user.portal_user_id;
   const { use_skip, spend_vxp } = req.body;
 
-  // Get current cooldown state
   const current = await pool.query(
     `SELECT last_profile_pic_update, profile_pic_free_skips FROM portal.users WHERE user_id = $1`,
     [userId],
@@ -449,7 +431,7 @@ exports.updateProfileImage = catchAsync(async (req, res) => {
         );
       }
     } else if (spend_vxp === "true" || spend_vxp === true) {
-      // VXP deduction handled in transaction below
+
     } else {
       const daysLeft = getCooldownDaysLeft(
         last_profile_pic_update,
@@ -481,9 +463,6 @@ exports.updateProfileImage = catchAsync(async (req, res) => {
   });
 });
 
-/**
- * POST /api/profile/banner  — Update banner image (with cooldown + VXP bypass)
- */
 exports.updateProfileBanner = catchAsync(async (req, res) => {
   const userId = req.user.portal_user_id;
   const { use_skip, spend_vxp } = req.body;
@@ -510,7 +489,7 @@ exports.updateProfileBanner = catchAsync(async (req, res) => {
         );
       }
     } else if (spend_vxp === "true" || spend_vxp === true) {
-      // handled in transaction
+
     } else {
       const daysLeft = getCooldownDaysLeft(
         last_banner_update,
@@ -542,14 +521,10 @@ exports.updateProfileBanner = catchAsync(async (req, res) => {
   });
 });
 
-/**
- * Shared helper to remove either profile image or banner
- */
 async function handleImageRemoval(req, res, type) {
   const userId = req.user.portal_user_id;
   const isProfile = type === "profile";
 
-  // Determine column names
   const publicIdCol = isProfile
     ? "profile_image_public_id"
     : "banner_image_public_id";
@@ -581,23 +556,14 @@ async function handleImageRemoval(req, res, type) {
   return successResponse(res, { [returnKey]: null }, successMsg);
 }
 
-/**
- * DELETE /api/profile/image  — Remove profile picture
- */
 exports.removeProfileImage = async (req, res) => {
   return handleImageRemoval(req, res, "profile");
 };
 
-/**
- * DELETE /api/profile/banner  — Remove banner image
- */
 exports.removeProfileBanner = async (req, res) => {
   return handleImageRemoval(req, res, "banner");
 };
 
-/**
- * POST /api/profile/:userId/follow
- */
 exports.followUser = catchAsync(async (req, res) => {
   const followerId = req.user.portal_user_id;
   const followingId = parseInt(req.params.userId);
@@ -620,10 +586,9 @@ exports.followUser = catchAsync(async (req, res) => {
         referenceId: followingId,
         metadata: { followed_user_id: followingId },
       });
-      
-      // Send notification to the user being followed
+
       await pool.query(
-        `INSERT INTO portal.notifications 
+        `INSERT INTO portal.notifications
           (user_id, type, message, actor_user_id, reference_id, reference_type)
          VALUES ($1, $2, $3, $4, $5, $6)`,
         [followingId, "new_follower", "started following you", followerId, followerId, "user"]
@@ -636,9 +601,6 @@ exports.followUser = catchAsync(async (req, res) => {
   return successResponse(res, { is_following: true }, "Now following user");
 });
 
-/**
- * DELETE /api/profile/:userId/follow
- */
 exports.unfollowUser = catchAsync(async (req, res) => {
   const followerId = req.user.portal_user_id;
   const followingId = parseInt(req.params.userId);
@@ -651,9 +613,6 @@ exports.unfollowUser = catchAsync(async (req, res) => {
   return successResponse(res, { is_following: false }, "Unfollowed user");
 });
 
-/**
- * GET /api/profile/:userId/followers
- */
 exports.getFollowers = catchAsync(async (req, res) => {
   const viewerId = req.user?.portal_user_id || null;
   const { page, limit, offset } = parsePagination(req.query, {
@@ -713,9 +672,6 @@ exports.getFollowers = catchAsync(async (req, res) => {
   });
 });
 
-/**
- * GET /api/profile/:userId/following
- */
 exports.getFollowing = catchAsync(async (req, res) => {
   const viewerId = req.user?.portal_user_id || null;
   const { page, limit, offset } = parsePagination(req.query, {

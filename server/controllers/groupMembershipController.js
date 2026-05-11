@@ -19,27 +19,23 @@ const catchAsync = require("../utils/catchAsync");
 const logger = require("../utils/logger");
 const { withTransaction } = require("../utils/withTransaction");
 
-/* ===============================
-   GET GROUP MEMBERS
- ================================ */
 exports.getGroupMembers = catchAsync(async (req, res) => {
   const { id } = req.params;
   const { limit } = req.query;
 
-  let query = `SELECT 
+  let query = `SELECT
         u.user_id, u.full_name, u.profile_image,
         ${buildPresenceSelect("u")},
         gm.joined_at, gm.role, gm.permissions
       FROM portal.group_members gm
       JOIN portal.users u ON u.user_id = gm.user_id
       WHERE gm.group_id = $1
-      ORDER BY 
+      ORDER BY
         CASE gm.role WHEN 'owner' THEN 0 WHEN 'co_admin' THEN 1 ELSE 2 END,
         gm.joined_at ASC`;
 
   const params = [id];
 
-  // Add limit if specified
   if (limit) {
     query += ` LIMIT $2`;
     params.push(parseInt(limit));
@@ -56,9 +52,6 @@ exports.getGroupMembers = catchAsync(async (req, res) => {
   );
 });
 
-/* ===============================
-   JOIN GROUP (privacy-aware)
- ================================ */
 exports.joinGroup = catchAsync(async (req, res) => {
   const { id } = req.params;
   const { invite } = req.query;
@@ -74,7 +67,6 @@ exports.joinGroup = catchAsync(async (req, res) => {
 
   const { privacy_type, capacity, invite_token, member_count } = group.rows[0];
 
-  // Check capacity
   if (parseInt(member_count) >= parseInt(capacity)) {
     return errorResponse(res, "This group is at full capacity", 400);
   }
@@ -84,7 +76,7 @@ exports.joinGroup = catchAsync(async (req, res) => {
       return errorResponse(res, "Invalid invite link", 403);
     }
   } else if (privacy_type === "request") {
-    // Redirect to request-to-join flow
+
     return errorResponse(
       res,
       "This group requires a join request. Use POST /request-join instead.",
@@ -92,7 +84,6 @@ exports.joinGroup = catchAsync(async (req, res) => {
     );
   }
 
-  // Public or valid private invite — direct join
   await pool.query(
     `INSERT INTO portal.group_members (group_id, user_id, role, status) VALUES ($1, $2, 'member', 'approved') ON CONFLICT DO NOTHING`,
     [id, userId],
@@ -113,9 +104,6 @@ exports.joinGroup = catchAsync(async (req, res) => {
   return successResponse(res, { joined: true }, "Joined group successfully");
 });
 
-/* ===============================
-   REQUEST TO JOIN (for request-type groups)
- ================================ */
 exports.requestToJoin = catchAsync(async (req, res) => {
   const { id } = req.params;
   const userId = req.user.portal_user_id;
@@ -126,7 +114,6 @@ exports.requestToJoin = catchAsync(async (req, res) => {
   );
   if (!group.rows.length) return errorResponse(res, "Group not found", 404);
 
-  // Check already a member
   const existing = await pool.query(
     `SELECT 1 FROM portal.group_members WHERE group_id = $1 AND user_id = $2`,
     [id, userId],
@@ -143,9 +130,6 @@ exports.requestToJoin = catchAsync(async (req, res) => {
   return successResponse(res, { requested: true }, "Join request submitted");
 });
 
-/* ===============================
-   GET JOIN REQUESTS (admin/co-admin only)
- ================================ */
 exports.getJoinRequests = catchAsync(async (req, res) => {
   const { id } = req.params;
   const userId = req.user.portal_user_id;
@@ -167,9 +151,6 @@ exports.getJoinRequests = catchAsync(async (req, res) => {
   return successResponse(res, requests.rows);
 });
 
-/* ===============================
-   APPROVE JOIN REQUEST
- ================================ */
 exports.approveRequest = catchAsync(async (req, res) => {
   const { id, requestId } = req.params;
   const userId = req.user.portal_user_id;
@@ -185,7 +166,6 @@ exports.approveRequest = catchAsync(async (req, res) => {
   );
   if (!request.rows.length) return errorResponse(res, "Request not found", 404);
 
-  // Check capacity
   const cap = await pool.query(
     `SELECT capacity, (SELECT COUNT(*) FROM portal.group_members WHERE group_id = $1 AND status = 'approved') AS member_count
        FROM portal.study_groups WHERE group_id = $1`,
@@ -224,9 +204,6 @@ exports.approveRequest = catchAsync(async (req, res) => {
   return successResponse(res, null, "Join request approved");
 });
 
-/* ===============================
-   DECLINE JOIN REQUEST
- ================================ */
 exports.declineRequest = catchAsync(async (req, res) => {
   const { id, requestId } = req.params;
   const userId = req.user.portal_user_id;
@@ -244,9 +221,6 @@ exports.declineRequest = catchAsync(async (req, res) => {
   return successResponse(res, null, "Join request declined");
 });
 
-/* ===============================
-   INVITE MEMBER (admin/co-admin only)
- ================================ */
 exports.inviteMember = catchAsync(async (req, res) => {
   const { id } = req.params;
   const { userId: receiverId } = req.body;
@@ -259,7 +233,6 @@ exports.inviteMember = catchAsync(async (req, res) => {
     return errorResponse(res, "Unauthorized", 403);
   }
 
-  // Check if already a member
   const existing = await pool.query(
     `SELECT 1 FROM portal.group_members WHERE group_id = $1 AND user_id = $2`,
     [id, receiverId],
@@ -268,9 +241,8 @@ exports.inviteMember = catchAsync(async (req, res) => {
     return errorResponse(res, "User is already a member", 400);
   }
 
-  // Check for existing pending invitation
   const pending = await pool.query(
-    `SELECT 1 FROM portal.group_invitations 
+    `SELECT 1 FROM portal.group_invitations
      WHERE group_id = $1 AND receiver_id = $2 AND status = 'pending' AND expires_at > NOW()`,
     [id, receiverId],
   );
@@ -285,14 +257,13 @@ exports.inviteMember = catchAsync(async (req, res) => {
   const groupName = group.rows[0]?.name || "a circle";
 
   const invitation = await pool.query(
-    `INSERT INTO portal.group_invitations (group_id, sender_id, receiver_id) 
+    `INSERT INTO portal.group_invitations (group_id, sender_id, receiver_id)
      VALUES ($1, $2, $3) RETURNING invitation_id`,
     [id, senderId, receiverId],
   );
 
   const invitationId = invitation.rows[0].invitation_id;
 
-  // Send Notification
   const { notify } = require("../utils/activityService");
   await notify({
     userId: receiverId,
@@ -307,15 +278,12 @@ exports.inviteMember = catchAsync(async (req, res) => {
   return successResponse(res, { invitationId }, "Invitation sent successfully");
 });
 
-/* ===============================
-   ACCEPT INVITATION
- ================================ */
 exports.acceptInvitation = catchAsync(async (req, res) => {
   const { invitationId } = req.params;
   const userId = req.user.portal_user_id;
 
   const invitation = await pool.query(
-    `SELECT i.*, g.name AS group_name 
+    `SELECT i.*, g.name AS group_name
      FROM portal.group_invitations i
      JOIN portal.study_groups g ON g.group_id = i.group_id
      WHERE i.invitation_id = $1 AND i.receiver_id = $2 AND i.status = 'pending'`,
@@ -334,28 +302,25 @@ exports.acceptInvitation = catchAsync(async (req, res) => {
   const { group_id, sender_id, group_name } = invitation.rows[0];
 
   await withTransaction(async (client) => {
-    // 1. Add to group members
+
     await client.query(
-      `INSERT INTO portal.group_members (group_id, user_id, role, status) 
+      `INSERT INTO portal.group_members (group_id, user_id, role, status)
        VALUES ($1, $2, 'member', 'approved') ON CONFLICT DO NOTHING`,
       [group_id, userId],
     );
 
-    // 2. Update invitation status
     await client.query(
       `UPDATE portal.group_invitations SET status = 'accepted' WHERE invitation_id = $1`,
       [invitationId],
     );
 
-    // 3. Mark notification as read (optional, but good UX)
     await client.query(
-      `UPDATE portal.notifications SET is_read = TRUE 
+      `UPDATE portal.notifications SET is_read = TRUE
        WHERE type = 'group_invite' AND related_id = $1 AND user_id = $2`,
       [invitationId, userId],
     );
   });
 
-  // Notify sender
   const { notify, feed } = require("../utils/activityService");
   await notify({
     userId: sender_id,
@@ -367,7 +332,6 @@ exports.acceptInvitation = catchAsync(async (req, res) => {
     relatedId: group_id,
   });
 
-  // Add to feed
   await feed({
     actorId: userId,
     actionType: "group_joined",
@@ -379,15 +343,12 @@ exports.acceptInvitation = catchAsync(async (req, res) => {
   return successResponse(res, { joined: true }, "You have joined the circle!");
 });
 
-/* ===============================
-   REJECT INVITATION
- ================================ */
 exports.rejectInvitation = catchAsync(async (req, res) => {
   const { invitationId } = req.params;
   const userId = req.user.portal_user_id;
 
   const invitation = await pool.query(
-    `SELECT i.*, g.name AS group_name 
+    `SELECT i.*, g.name AS group_name
      FROM portal.group_invitations i
      JOIN portal.study_groups g ON g.group_id = i.group_id
      WHERE i.invitation_id = $1 AND i.receiver_id = $2 AND i.status = 'pending'`,
@@ -405,7 +366,6 @@ exports.rejectInvitation = catchAsync(async (req, res) => {
     [invitationId],
   );
 
-  // Notify sender
   const { notify } = require("../utils/activityService");
   await notify({
     userId: sender_id,
@@ -420,9 +380,6 @@ exports.rejectInvitation = catchAsync(async (req, res) => {
   return successResponse(res, { rejected: true }, "Invitation declined");
 });
 
-/* ===============================
-   APPOINT CO-ADMIN (owner only)
- ================================ */
 exports.appointCoAdmin = catchAsync(async (req, res) => {
   const { id, memberId } = req.params;
   const userId = req.user.portal_user_id;
@@ -439,7 +396,6 @@ exports.appointCoAdmin = catchAsync(async (req, res) => {
     );
   }
 
-  // Check co-admin limit
   const coAdminCount = await pool.query(
     `SELECT COUNT(*) FROM portal.group_members WHERE group_id = $1 AND role = 'co_admin' AND status = 'approved'`,
     [id],
@@ -463,9 +419,6 @@ exports.appointCoAdmin = catchAsync(async (req, res) => {
   return successResponse(res, null, "Co-Admin appointed successfully");
 });
 
-/* ===============================
-   UPDATE CO-ADMIN PERMISSIONS (owner only)
- ================================ */
 exports.updateCoAdminPermissions = catchAsync(async (req, res) => {
   const { id, memberId } = req.params;
   const userId = req.user.portal_user_id;
@@ -523,9 +476,6 @@ exports.updateCoAdminPermissions = catchAsync(async (req, res) => {
   );
 });
 
-/* ===============================
-   REMOVE CO-ADMIN (owner only)
- ================================ */
 exports.removeCoAdmin = catchAsync(async (req, res) => {
   const { id, memberId } = req.params;
   const userId = req.user.portal_user_id;
@@ -549,9 +499,6 @@ exports.removeCoAdmin = catchAsync(async (req, res) => {
   return successResponse(res, null, "Co-Admin role removed");
 });
 
-/* ===============================
-   EXPAND CAPACITY (+2 slots via VXP)
- ================================ */
 exports.expandCapacity = catchAsync(async (req, res) => {
   const { id } = req.params;
   const userId = req.user.portal_user_id;
@@ -603,9 +550,6 @@ exports.expandCapacity = catchAsync(async (req, res) => {
   );
 });
 
-/* ===============================
-   REMOVE MEMBER
- ================================ */
 exports.removeMember = catchAsync(async (req, res) => {
   const { id, memberId } = req.params;
   const adminId = req.user.portal_user_id;
@@ -623,7 +567,6 @@ exports.removeMember = catchAsync(async (req, res) => {
     return errorResponse(res, "Unauthorized", 403);
   }
 
-  // Check target member's role
   const target = await pool.query(
     `SELECT role FROM portal.group_members WHERE group_id = $1 AND user_id = $2`,
     [id, memberId],
@@ -635,7 +578,6 @@ exports.removeMember = catchAsync(async (req, res) => {
 
   const targetRole = target.rows[0].role;
 
-  // Owners cannot be removed.
   if (targetRole === "owner") {
     return errorResponse(
       res,
@@ -644,8 +586,6 @@ exports.removeMember = catchAsync(async (req, res) => {
     );
   }
 
-  // Admins can remove anyone except owner.
-  // Moderators (if they have manage_users) can remove regular members.
   if (membership.role === "moderator" && targetRole !== "member") {
     return errorResponse(
       res,
@@ -659,7 +599,6 @@ exports.removeMember = catchAsync(async (req, res) => {
     [id, memberId],
   );
 
-  // Notify target user
   const { notify } = require("../utils/activityService");
   const group = await pool.query(
     `SELECT name FROM portal.study_groups WHERE group_id = $1`,
@@ -678,9 +617,6 @@ exports.removeMember = catchAsync(async (req, res) => {
   return successResponse(res, null, "Member removed successfully");
 });
 
-/* ===============================
-   LEAVE GROUP
- ================================ */
 exports.leaveGroup = catchAsync(async (req, res) => {
   const { id } = req.params;
   const userId = req.user.portal_user_id;

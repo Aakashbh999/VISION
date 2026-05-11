@@ -8,16 +8,6 @@ import SurfaceCard from "../../../components/ui/SurfaceCard";
 import EmptyState from "../../../components/ui/EmptyState";
 import ErrorState from "../../../components/ui/ErrorState";
 
-/**
- * Props:
- * - isLoading, error, data: query status payload
- * - filters: current filter values
- * - discussions: normalized discussions array
- * - user: authenticated user object
- * - loadingLike/loadingSave: mutation ui states
- * - onLike/onDownvote/onSave/onShare: interaction callbacks
- * - onImageClick: open lightbox callback
- */
 const DiscussionsList = ({
   isLoading,
   error,
@@ -35,10 +25,9 @@ const DiscussionsList = ({
 }) => {
   const [openMenuId, setOpenMenuId] = useState(null);
 
-  // Close all menus on scroll or outside clicks
   useEffect(() => {
     const handleGlobalClick = (e) => {
-      // If the click is not on a menu button, close all menus
+
       if (!e.target.closest('[data-menu-button="true"]')) {
         setOpenMenuId(null);
       }
@@ -141,7 +130,7 @@ const DiscussionsList = ({
           loadingSave={loadingSave}
           onImageClick={onImageClick}
           isMenuOpen={openMenuId === discussion.discussion_id}
-          onToggleMenu={() => 
+          onToggleMenu={() =>
             setOpenMenuId(prev => prev === discussion.discussion_id ? null : discussion.discussion_id)
           }
         />

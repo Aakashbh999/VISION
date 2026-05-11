@@ -10,7 +10,7 @@ export const useNotifications = (options = 10, enabledArg = true) => {
   return useQuery({
     queryKey: ["notifications", normalizedOptions],
     queryFn: () => getNotifications(normalizedOptions),
-    staleTime: 2 * 60 * 1000, // 2 minutes
-    enabled, // Only run query if enabled
+    staleTime: 2 * 60 * 1000,
+    enabled,
   });
 };

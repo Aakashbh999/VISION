@@ -16,7 +16,6 @@ const navItems = [
   { id: "clubs",      label: "Clubs",    icon: Globe,            href: "/clubs" },
 ];
 
-// Routes where the bottom nav should be hidden — group chat has its own fixed bottom input
 const HIDDEN_PATTERNS = [/^\/groups\/[^/]+$/];
 
 const MobileBottomNav = () => {
@@ -43,7 +42,7 @@ const MobileBottomNav = () => {
                 aria-label={item.label}
                 aria-current={isActive ? "page" : undefined}
               >
-                {/* Active indicator pill at top */}
+                {}
                 {isActive && (
                   <motion.span
                     layoutId="mobile-nav-pill"
@@ -52,7 +51,7 @@ const MobileBottomNav = () => {
                   />
                 )}
 
-                {/* 44px minimum touch target */}
+                {}
                 <span
                   className={`w-11 h-9 flex items-center justify-center rounded-xl transition-all duration-150 ${
                     isActive
@@ -83,7 +82,7 @@ const MobileBottomNav = () => {
           })}
         </div>
 
-        {/* iOS home-indicator safe-area */}
+        {}
         <div style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)" }} />
       </div>
     </nav>

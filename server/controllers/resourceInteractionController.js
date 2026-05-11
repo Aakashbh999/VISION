@@ -10,9 +10,8 @@ const VALID_INTERACTION_TYPES = [
   "view",
   "click",
 ];
-const UNIQUE_TYPES = ["bookmark", "like", "dislike", "complete"]; // only one per user/resource
+const UNIQUE_TYPES = ["bookmark", "like", "dislike", "complete"];
 
-// Record interaction
 exports.interactWithResource = catchAsync(async (req, res) => {
   const { id } = req.params;
   const { type } = req.body;
@@ -32,7 +31,7 @@ exports.interactWithResource = catchAsync(async (req, res) => {
   }
 
   if (UNIQUE_TYPES.includes(type)) {
-    // Toggle: if record exists remove it, otherwise insert
+
     const existing = await pool.query(
       `SELECT id FROM portal.user_resource_interactions
          WHERE user_id = $1 AND resource_id = $2 AND interaction_type = $3`,
@@ -56,7 +55,7 @@ exports.interactWithResource = catchAsync(async (req, res) => {
       [portalUserId, id, type],
     );
   } else {
-    // view & click → allow multiple records
+
     await pool.query(
       `INSERT INTO portal.user_resource_interactions
          (user_id, resource_id, interaction_type)

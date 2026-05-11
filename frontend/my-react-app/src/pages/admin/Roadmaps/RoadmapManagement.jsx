@@ -11,7 +11,7 @@ import AdminTable from "../../../components/admin_ui/AdminTable";
 const RoadmapManagement = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingRoadmap, setEditingRoadmap] = useState(null);
-  
+
   const queryClient = useQueryClient();
 
   const { data: roadmaps = [], isLoading } = useQuery({
@@ -66,7 +66,7 @@ const RoadmapManagement = () => {
       header: "Status",
       render: (row) => (
         <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold border ${
-          row.is_active 
+          row.is_active
             ? "bg-green-50 text-green-700 border-green-200 dark:bg-green-950/30 dark:text-green-400 dark:border-green-800"
             : "bg-gray-50 text-gray-600 border-gray-200 dark:bg-gray-800/50 dark:text-gray-400 dark:border-gray-700"
         }`}>

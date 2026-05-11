@@ -2,9 +2,6 @@ const pool = require("../config/db");
 const catchAsync = require("../utils/catchAsync");
 const createError = require("http-errors");
 
-/* ===============================
-   GET CLUB DIRECTORY
- ================================ */
 exports.getClubs = catchAsync(async (req, res) => {
   const { search, specialty, institution } = req.query;
 
@@ -52,7 +49,6 @@ exports.getClubs = catchAsync(async (req, res) => {
 
   const result = await pool.query(query, values);
 
-  // If searching and no results found, return recommendations
   if (search && result.rows.length === 0) {
     const {
       userSemester,
@@ -78,31 +74,28 @@ exports.getClubs = catchAsync(async (req, res) => {
   res.json(result.rows);
 });
 
-/* ===============================
-   CLUB DETAILS (Directory Profile)
- ================================ */
 exports.getClubDetails = catchAsync(async (req, res) => {
   const { id } = req.params;
 
   const query = `
-      SELECT 
-        id, 
-        slug, 
-        club_name, 
-        location, 
-        institution, 
-        specialty, 
-        contact_info, 
+      SELECT
+        id,
+        slug,
+        club_name,
+        location,
+        institution,
+        specialty,
+        contact_info,
         description_full,
-        website_url, 
-        facebook_url, 
+        website_url,
+        facebook_url,
         linkedin_url,
         discord_url,
         github_url,
         logo_url,
         banner_url,
         founded_year
-      FROM portal.it_clubs 
+      FROM portal.it_clubs
       WHERE id = $1 AND (is_public IS NULL OR is_public = 'true' OR is_public = true)
     `;
 
@@ -115,14 +108,11 @@ exports.getClubDetails = catchAsync(async (req, res) => {
   res.json(result.rows[0]);
 });
 
-/* ===============================
-   GET SPECIALTIES (for filtering)
- ================================ */
 exports.getSpecialties = catchAsync(async (req, res) => {
   const result = await pool.query(`
-      SELECT DISTINCT specialty 
-      FROM portal.it_clubs 
-      WHERE specialty IS NOT NULL 
+      SELECT DISTINCT specialty
+      FROM portal.it_clubs
+      WHERE specialty IS NOT NULL
       ORDER BY specialty
     `);
   res.json(result.rows.map((r) => r.specialty));

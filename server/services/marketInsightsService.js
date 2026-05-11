@@ -1,20 +1,11 @@
-/**
- * Market Insights Service
- * Intelligence layer for job market analytics
- * All SQL queries centralized here - controllers only call these functions
- */
+
 
 const pool = require("../config/db");
 
-/**
- * Get overview statistics for a specific IT field
- * @param {number} fieldId - IT field ID
- * @returns {Object} Field overview with job count, avg salary, top skills, experience ratio
- */
 const getFieldOverview = async (fieldId) => {
-  // Get field info with job statistics
+
   const fieldQuery = `
-    SELECT 
+    SELECT
       f.id,
       f.slug,
       f.field_name,
@@ -35,9 +26,8 @@ const getFieldOverview = async (fieldId) => {
     GROUP BY f.id
   `;
 
-  // Get top 5 skills for this field
   const skillsQuery = `
-    SELECT 
+    SELECT
       s.skill_id,
       s.name,
       s.category,
@@ -83,15 +73,9 @@ const getFieldOverview = async (fieldId) => {
   };
 };
 
-/**
- * Get top skills by demand for a specific field
- * @param {number} fieldId - IT field ID
- * @param {number} limit - Max skills to return (default 10)
- * @returns {Array} Skills sorted by demand frequency
- */
 const getTopSkillsByField = async (fieldId, limit = 10) => {
   const query = `
-    SELECT 
+    SELECT
       s.skill_id,
       s.name,
       s.category,
@@ -112,14 +96,9 @@ const getTopSkillsByField = async (fieldId, limit = 10) => {
   return result.rows;
 };
 
-/**
- * Get salary distribution by experience level for a field
- * @param {number} fieldId - IT field ID
- * @returns {Object} Salary stats grouped by experience level
- */
 const getSalaryDistribution = async (fieldId) => {
   const query = `
-    SELECT 
+    SELECT
       experience_level,
       COUNT(*) as job_count,
       MIN(salary_min) as min_salary,
@@ -127,24 +106,23 @@ const getSalaryDistribution = async (fieldId) => {
       AVG((salary_min + salary_max) / 2)::INTEGER as avg_salary,
       PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY (salary_min + salary_max) / 2)::INTEGER as median_salary
     FROM portal.jobs
-    WHERE field_id = $1 
-      AND is_active = true 
-      AND salary_min IS NOT NULL 
+    WHERE field_id = $1
+      AND is_active = true
+      AND salary_min IS NOT NULL
       AND salary_max IS NOT NULL
     GROUP BY experience_level
-    ORDER BY 
-      CASE experience_level 
-        WHEN 'entry' THEN 1 
-        WHEN 'mid' THEN 2 
-        WHEN 'senior' THEN 3 
+    ORDER BY
+      CASE experience_level
+        WHEN 'entry' THEN 1
+        WHEN 'mid' THEN 2
+        WHEN 'senior' THEN 3
       END
   `;
 
   const result = await pool.query(query, [fieldId]);
 
-  // Calculate overall stats
   const overallQuery = `
-    SELECT 
+    SELECT
       MIN(salary_min) as min_salary,
       MAX(salary_max) as max_salary,
       AVG((salary_min + salary_max) / 2)::INTEGER as avg_salary
@@ -160,14 +138,9 @@ const getSalaryDistribution = async (fieldId) => {
   };
 };
 
-/**
- * Get trending fields based on job count and growth
- * @param {number} limit - Max fields to return
- * @returns {Array} Fields sorted by demand/trending score
- */
 const getTrendingFields = async (limit = 10) => {
   const query = `
-    SELECT 
+    SELECT
       f.id,
       f.slug,
       f.field_name,
@@ -181,13 +154,13 @@ const getTrendingFields = async (limit = 10) => {
     FROM portal.it_fields f
     LEFT JOIN portal.jobs j ON j.field_id = f.id AND j.is_active = true
     GROUP BY f.id
-    ORDER BY 
+    ORDER BY
       job_count DESC,
-      CASE f.demand_level 
-        WHEN 'High' THEN 3 
-        WHEN 'Medium' THEN 2 
-        WHEN 'Low' THEN 1 
-        ELSE 0 
+      CASE f.demand_level
+        WHEN 'High' THEN 3
+        WHEN 'Medium' THEN 2
+        WHEN 'Low' THEN 1
+        ELSE 0
       END DESC,
       f.growth_rate DESC NULLS LAST
     LIMIT $1
@@ -197,11 +170,6 @@ const getTrendingFields = async (limit = 10) => {
   return result.rows;
 };
 
-/**
- * Get all IT fields with analytics data
- * @param {Object} options - Pagination and filtering options
- * @returns {Object} Paginated fields with analytics
- */
 const getAllFields = async ({ page = 1, limit = 10, demandLevel = null }) => {
   const offset = (page - 1) * limit;
 
@@ -214,7 +182,7 @@ const getAllFields = async ({ page = 1, limit = 10, demandLevel = null }) => {
   }
 
   const query = `
-    SELECT 
+    SELECT
       f.id,
       f.slug,
       f.field_name,
@@ -253,11 +221,6 @@ const getAllFields = async ({ page = 1, limit = 10, demandLevel = null }) => {
   };
 };
 
-/**
- * Search and filter jobs
- * @param {Object} filters - Search filters
- * @returns {Object} Paginated job results
- */
 const searchJobs = async ({
   fieldId = null,
   experienceLevel = null,
@@ -307,12 +270,11 @@ const searchJobs = async ({
     paramIndex++;
   }
 
-  // Handle skill filtering with subquery
   let skillJoin = "";
   if (skillIds && skillIds.length > 0) {
     skillJoin = `
       AND j.job_id IN (
-        SELECT job_id FROM portal.job_skills 
+        SELECT job_id FROM portal.job_skills
         WHERE skill_id = ANY($${paramIndex++})
         GROUP BY job_id
         HAVING COUNT(DISTINCT skill_id) >= 1
@@ -324,7 +286,7 @@ const searchJobs = async ({
   const whereClause = conditions.join(" AND ");
 
   const query = `
-    SELECT 
+    SELECT
       j.job_id,
       j.title,
       j.company,
@@ -371,11 +333,6 @@ const searchJobs = async ({
   };
 };
 
-/**
- * Get all skills with optional category filter
- * @param {string} category - Optional category filter
- * @returns {Array} Skills list
- */
 const getAllSkills = async (category = null) => {
   let query = `
     SELECT skill_id, name, category
@@ -394,13 +351,9 @@ const getAllSkills = async (category = null) => {
   return result.rows;
 };
 
-/**
- * Get market statistics summary
- * @returns {Object} Overall market stats
- */
 const getMarketStats = async () => {
   const query = `
-    SELECT 
+    SELECT
       (SELECT COUNT(*) FROM portal.jobs WHERE is_active = true) as total_jobs,
       (SELECT COUNT(*) FROM portal.it_fields) as total_fields,
       (SELECT COUNT(*) FROM portal.skills) as total_skills,
@@ -413,12 +366,6 @@ const getMarketStats = async () => {
   return result.rows[0];
 };
 
-/**
- * Get comparison between two fields
- * @param {number} fieldId1 - First field ID
- * @param {number} fieldId2 - Second field ID
- * @returns {Object} Comparison data
- */
 const compareFields = async (fieldId1, fieldId2) => {
   const [field1, field2] = await Promise.all([
     getFieldOverview(fieldId1),

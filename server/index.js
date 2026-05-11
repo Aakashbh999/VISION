@@ -35,13 +35,10 @@ const pool = require("./config/db");
 const app = express();
 const PORT = env.PORT;
 
-// Render sits behind a proxy; trust it so rate-limiting and client IPs work correctly.
 app.set("trust proxy", 1);
 
-// Middleware
-app.use(helmet()); // Security headers
+app.use(helmet());
 
-// CORS: restrict to whitelisted origins in production
 const allowedOrigins = env.CORS_ORIGINS
   ? env.CORS_ORIGINS.split(",").map((o) => o.trim())
   : [
@@ -53,8 +50,7 @@ const allowedOrigins = env.CORS_ORIGINS
 app.use(
   cors({
     origin: (origin, callback) => {
-      // Allow requests with no origin (mobile apps, curl, Postman)
-      // Allow any Vercel deployment (preview or production domains)
+
       if (
         !origin ||
         allowedOrigins.includes(origin) ||
@@ -71,36 +67,32 @@ app.use(express.json());
 app.use(compression());
 app.use(sanitizeInput);
 
-// Rate limiting for auth routes (prevents brute force attacks)
 const authLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 20, // 20 attempts per IP per window
+  windowMs: 15 * 60 * 1000,
+  max: 20,
   message: { error: "Too many attempts. Try again later." },
   standardHeaders: true,
   legacyHeaders: false,
 });
 
-// Stricter rate limiting for password reset (prevents email enumeration)
 const passwordResetLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 5, // 5 attempts per IP per window
+  windowMs: 15 * 60 * 1000,
+  max: 5,
   message: { error: "Too many password reset attempts. Try again later." },
   standardHeaders: true,
   legacyHeaders: false,
 });
 
-// Apply rate limiting to auth endpoints
 app.use("/api/auth/login", authLimiter);
 app.use("/api/auth/register", authLimiter);
 app.use("/api/auth/forgot-password", passwordResetLimiter);
 app.use("/api/auth/reset-password", passwordResetLimiter);
 
-// Database Verification & Health Check (New Verification Logic)
 app.get("/api/health", async (req, res) => {
   try {
-    // This query confirms the .env search_path is working and sees your tables
+
     const dbCheck = await pool.query(`
-      SELECT 
+      SELECT
         current_setting('search_path') as path,
         (SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = 'auth') as auth_tables,
         (SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = 'portal') as portal_tables
@@ -141,8 +133,7 @@ app.get("/api/health/email", (req, res) => {
     message: "Email service configuration is healthy",
   });
 });
-// Use the Modular Routes
-// This means all routes in itRoutes will now start with /api
+
 app.use("/api", itRoutes);
 app.use("/api/auth", authRoutes);
 app.use("/api", programRoutes);
@@ -165,16 +156,13 @@ app.use("/api/clubs", clubRoutes);
 app.use("/api/study-groups", studyGroupRoutes);
 app.use("/api/campuses", campusRoutes);
 
-// Root Test Route
 app.get("/", (req, res) => {
   res.send("VISION Server is structured, modular, and ready for the market!");
 });
 
-// Global Error Handler
 const errorHandler = require("./middleware/errorHandler");
 app.use(errorHandler);
 
-// Start server (Render will set PORT automatically)
 app.listen(PORT, () => {
   logger.info({ port: PORT }, "VISION Server running");
 });

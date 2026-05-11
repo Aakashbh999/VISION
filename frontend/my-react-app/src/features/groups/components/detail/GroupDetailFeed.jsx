@@ -234,14 +234,14 @@ const GroupDetailFeed = ({
                         (post.user_id &&
                           currentUserId &&
                           String(post.user_id) === String(currentUserId)) ||
-                        post.post_id < 0; // Optimistic posts are always mine
+                        post.post_id < 0;
                       const isDeletedMessage = Boolean(post.is_deleted);
                       if (isDeletedMessage) {
                         const messageTime = new Date(
                           post.updated_at || post.created_at,
                         );
                         const isOld =
-                          Date.now() - messageTime.getTime() > 3600000; // 1 hour
+                          Date.now() - messageTime.getTime() > 3600000;
                         if (isOld) return null;
                       }
 

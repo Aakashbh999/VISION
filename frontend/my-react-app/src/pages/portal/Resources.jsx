@@ -8,15 +8,12 @@ import {
   Award,
   SlidersHorizontal,
 } from "lucide-react";
-// Forcing a fresh build by refactoring imports.
 
-// Hooks & Context
 import { useAuth } from "../../context/AuthContext";
 import { useResources } from "../../hooks/useResources";
 import { useDiscussionReferenceData } from "../../features/discussions/hooks/useDiscussionReferenceData";
 import { FilterProvider, useFilters } from "../../context/LibraryFilterContext";
 
-// Components
 import ResourceCard from "../../components/resources/ResourceCard";
 import ResourceUploadModal from "../../components/resources/ResourceUploadModal";
 import LoadingSpinner from "../../components/ui/LoadingSpinner";
@@ -32,7 +29,6 @@ const ResourcesContent = () => {
   const { filters, updateFilter, resetFilters } = useFilters();
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
 
-  // Data Fetching
   const { data: resourcesData, isLoading, error } = useResources(filters);
   const { programs } = useDiscussionReferenceData();
 
@@ -49,7 +45,7 @@ const ResourcesContent = () => {
 
   return (
     <div className="max-w-[1400px] mx-auto px-2 sm:px-4 md:px-8 lg:px-10 py-3 sm:py-4 md:py-8 lg:py-10 pb-16 sm:pb-20">
-      {/* Header Section */}
+      {}
       <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-4 sm:gap-6 mb-8 sm:mb-10">
         <div className="space-y-1">
           <h1 className="text-xl sm:text-3xl lg:text-4xl font-black text-[var(--text-main)] tracking-tight leading-tight">
@@ -71,7 +67,7 @@ const ResourcesContent = () => {
         </button>
       </div>
 
-      {/* Filters Section */}
+      {}
       <SurfaceCard className="mb-6 sm:mb-8">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
           <div>
@@ -231,7 +227,7 @@ const ResourcesContent = () => {
         </div>
       </SurfaceCard>
 
-      {/* Content Results */}
+      {}
       {isLoading ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {[1, 2, 3, 4, 5, 6].map((i) => (
@@ -320,7 +316,6 @@ const Resources = () => {
   const { user } = useAuth();
   const [searchParams] = useSearchParams();
 
-  // Initialize filters from URL search params on mount to avoid double-fetching
   const initialFilters = useMemo(() => {
     return {
       search: searchParams.get("search") || "",

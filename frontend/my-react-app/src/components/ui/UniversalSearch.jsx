@@ -38,8 +38,8 @@ const UniversalSearch = ({
         value={value}
         onChange={(e) => setValue(e.target.value)}
         placeholder={placeholder}
-        className={`w-full pl-11 pr-12 py-3 bg-[var(--bg-active)] border border-[var(--border-main)] rounded-2xl 
-                   focus:outline-none focus:ring-4 focus:ring-purple-500/10 focus:border-purple-500 
+        className={`w-full pl-11 pr-12 py-3 bg-[var(--bg-active)] border border-[var(--border-main)] rounded-2xl
+                   focus:outline-none focus:ring-4 focus:ring-purple-500/10 focus:border-purple-500
                    focus:bg-[var(--bg-card)] transition-all text-sm font-medium text-[var(--text-main)]
                    placeholder:text-[var(--text-muted)]`}
         autoComplete="off"

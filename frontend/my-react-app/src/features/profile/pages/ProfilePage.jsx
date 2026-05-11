@@ -88,7 +88,7 @@ const ProfilePage = () => {
         handleBannerDone={handleBannerDone}
       />
 
-      {/* Removed bottom Save/Cancel bar, now in banner */}
+      {}
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
         <div className="lg:col-span-2 space-y-12">

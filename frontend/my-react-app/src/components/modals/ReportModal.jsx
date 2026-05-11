@@ -33,7 +33,7 @@ const ReportModal = ({
       }, 2000);
     } catch (error) {
       console.error(error);
-      // Error handled by parent/toast
+
     }
   };
 

@@ -1,7 +1,6 @@
 import axios from "axios";
 import axiosRetry from "axios-retry";
 
-// Get the base URL directly from the environment variable
 const baseURL =
   import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api";
 
@@ -18,12 +17,9 @@ axiosRetry(api, {
   },
 });
 
-// Flag to prevent multiple refresh requests
 let isRefreshing = false;
 let failedQueue = [];
 
-// Flag to prevent multiple auth:logout events firing from a single failure.
-// Reset only when the AuthContext signals the system is fully clean.
 let isLoggingOut = false;
 window.addEventListener("auth:loggedOut", () => {
   isLoggingOut = false;
@@ -40,7 +36,6 @@ const processQueue = (error, token = null) => {
   failedQueue = [];
 };
 
-// Request interceptor to add token
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem("token");
   if (token) {
@@ -49,20 +44,19 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
-// Response interceptor to handle token refresh and unwrap standard responses
 api.interceptors.response.use(
   (response) => {
-    // If the response follows our standard { success: true, data: ... } format, unwrap it
+
     if (
       response.data &&
       response.data.success === true &&
       "data" in response.data
     ) {
-      // If there is pagination metadata, don't unwrap so the component gets the full object
+
       if ("pagination" in response.data) {
         return { ...response, data: response.data };
       }
-      // Simple unwrap for standard responses
+
       return { ...response, data: response.data.data };
     }
     return response;
@@ -70,9 +64,8 @@ api.interceptors.response.use(
   async (error) => {
     const originalRequest = error.config;
 
-    // If error is 401 and we haven't already tried to refresh
     if (error.response?.status === 401 && !originalRequest._retry) {
-      // Don't try to refresh if this was a refresh-token or login request
+
       if (
         originalRequest.url?.includes("/auth/refresh-token") ||
         originalRequest.url?.includes("/auth/login")
@@ -80,7 +73,6 @@ api.interceptors.response.use(
         return Promise.reject(error);
       }
 
-      // MULTI-TAB SYNC: Check if another tab has already refreshed the token
       const currentToken = localStorage.getItem("token");
       if (
         currentToken &&
@@ -91,7 +83,7 @@ api.interceptors.response.use(
       }
 
       if (isRefreshing) {
-        // Wait for the refresh to complete
+
         return new Promise((resolve, reject) => {
           failedQueue.push({ resolve, reject });
         })
@@ -109,7 +101,6 @@ api.interceptors.response.use(
         const refreshToken = localStorage.getItem("refreshToken");
         if (!refreshToken) throw new Error("No refresh token");
 
-        // Use axios directly to bypass the interceptor's unwrap logic for the refresh call
         const response = await axios.post(
           `${api.defaults.baseURL}/auth/refresh-token`,
           { refreshToken },
@@ -117,13 +108,11 @@ api.interceptors.response.use(
 
         const { accessToken, refreshToken: newRefreshToken } = response.data;
 
-        // Store new tokens
         localStorage.setItem("token", accessToken);
         if (newRefreshToken) {
           localStorage.setItem("refreshToken", newRefreshToken);
         }
 
-        // Update the original request with new token
         originalRequest.headers.Authorization = `Bearer ${accessToken}`;
 
         processQueue(null, accessToken);
@@ -131,9 +120,6 @@ api.interceptors.response.use(
       } catch (refreshError) {
         processQueue(refreshError, null);
 
-        // Robust Logout Trigger:
-        // ONLY logout if the server explicitly rejected the refresh token (401/403).
-        // For network errors or 500s, we keep the tokens and let the user try again later.
         const status = refreshError.response?.status;
         if (status === 401 || status === 403) {
           localStorage.removeItem("token");

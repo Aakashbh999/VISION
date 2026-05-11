@@ -6,13 +6,12 @@ import { getResources, uploadResource } from "../../../../services/resource";
 import { addResourceToStep } from "../../../../services/adminRoadmap";
 
 const StepResourceLinkerModal = ({ stepId, roadmapId, onClose, existingResourceIds = [] }) => {
-  const [mode, setMode] = useState("search"); // 'search' or 'create'
+  const [mode, setMode] = useState("search");
   const [searchTerm, setSearchTerm] = useState("");
   const [newLink, setNewLink] = useState({ title: "", url: "" });
-  
+
   const queryClient = useQueryClient();
 
-  // Search Query
   const { data: searchResults, isLoading: isSearching } = useQuery({
     queryKey: ["adminResourceSearch", searchTerm],
     queryFn: () => getResources({ search: searchTerm }),
@@ -20,7 +19,6 @@ const StepResourceLinkerModal = ({ stepId, roadmapId, onClose, existingResourceI
     staleTime: 60 * 1000,
   });
 
-  // Link Existing Resource Mutation
   const linkExistingMut = useMutation({
     mutationFn: (resourceId) => addResourceToStep(stepId, { resource_id: resourceId, is_required: true }),
     onSuccess: () => {
@@ -33,22 +31,20 @@ const StepResourceLinkerModal = ({ stepId, roadmapId, onClose, existingResourceI
     }
   });
 
-  // Create and Link New Resource Mutation
   const createAndLinkMut = useMutation({
     mutationFn: async (data) => {
-      // 1. Create the resource
+
       const resourceResponse = await uploadResource({
         ...data,
         resource_type: "link",
-        status: "approved", // Admin bypass
+        status: "approved",
       });
-      
+
       const newResourceId = resourceResponse.resource_id;
-      
-      // 2. Link it to the step
-      return addResourceToStep(stepId, { 
-        resource_id: newResourceId, 
-        is_required: true 
+
+      return addResourceToStep(stepId, {
+        resource_id: newResourceId,
+        is_required: true
       });
     },
     onSuccess: () => {
@@ -66,7 +62,7 @@ const StepResourceLinkerModal = ({ stepId, roadmapId, onClose, existingResourceI
     if (!newLink.title.trim() || !newLink.url.trim()) {
       return toast.error("Title and URL are required");
     }
-    // Simple URL validation
+
     try {
       new URL(newLink.url);
     } catch (_) {
@@ -79,14 +75,14 @@ const StepResourceLinkerModal = ({ stepId, roadmapId, onClose, existingResourceI
 
   return (
     <div className="fixed inset-0 z-[70] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
-      <div 
+      <div
         className="bg-[var(--bg-card)] border border-[var(--border-main)] rounded-2xl shadow-2xl w-full max-w-2xl flex flex-col max-h-[85vh] animate-in zoom-in-95 duration-200"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between p-6 border-b border-[var(--border-main)] shrink-0">
           <div className="flex items-center gap-3">
             {mode === "create" && (
-              <button 
+              <button
                 onClick={() => setMode("search")}
                 className="p-1.5 hover:bg-[var(--bg-active)] rounded-lg text-[var(--text-muted)] transition-colors"
                 title="Back to Search"

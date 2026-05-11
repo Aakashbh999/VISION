@@ -7,14 +7,13 @@ const LazyGroupMemberAvatars = ({ groupId, memberCount = 0 }) => {
   const [showAvatars, setShowAvatars] = useState(false);
   const containerRef = useRef(null);
 
-  // Load member data on demand (hover or viewport visibility)
   const loadMembers = async () => {
     if (members || isLoading) return;
 
     setIsLoading(true);
     try {
       const res = await api.get(`/groups/${groupId}/members?limit=3`);
-      // Handle both response structures: array response or wrapped response
+
       const memberData = Array.isArray(res.data)
         ? res.data
         : res.data?.members || res.data?.data || [];
@@ -22,14 +21,13 @@ const LazyGroupMemberAvatars = ({ groupId, memberCount = 0 }) => {
       setShowAvatars(true);
     } catch (error) {
       console.error("Failed to load group members:", error);
-      // Fall back to initials on error
+
       setShowAvatars(false);
     } finally {
       setIsLoading(false);
     }
   };
 
-  // Intersection Observer for viewport visibility
   useEffect(() => {
     const observer = new IntersectionObserver(
       (entries) => {
@@ -60,7 +58,7 @@ const LazyGroupMemberAvatars = ({ groupId, memberCount = 0 }) => {
     >
       <div className="flex -space-x-3 overflow-hidden">
         {showAvatars && displayMembers.length > 0
-          ? // Show actual member avatars
+          ?
             displayMembers.map((member, i) => (
               <div
                 key={member.user_id || i}
@@ -79,7 +77,7 @@ const LazyGroupMemberAvatars = ({ groupId, memberCount = 0 }) => {
                 )}
               </div>
             ))
-          : // Show initials as placeholders
+          :
             [...Array(displayCount)].map((_, i) => (
               <div
                 key={i}

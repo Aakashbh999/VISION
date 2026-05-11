@@ -1,6 +1,5 @@
 import api from "./api";
 
-// ROADMAPS
 export const getAdminRoadmaps = async () => {
   const response = await api.get("/admin/roadmaps");
   return response.data;
@@ -26,7 +25,6 @@ export const deleteRoadmap = async (id) => {
   return response.data;
 };
 
-// ROADMAP STEPS
 export const addRoadmapStep = async (roadmapId, data) => {
   const response = await api.post(`/admin/roadmaps/${roadmapId}/steps`, data);
   return response.data;
@@ -47,7 +45,6 @@ export const reorderRoadmapStep = async (stepId, direction) => {
   return response.data;
 };
 
-// ROADMAP STEP RESOURCES
 export const addResourceToStep = async (stepId, data) => {
   const response = await api.post(`/admin/roadmaps/steps/${stepId}/resources`, data);
   return response.data;
@@ -58,7 +55,6 @@ export const removeResourceFromStep = async (stepId, resourceId) => {
   return response.data;
 };
 
-// SUBMISSION REVIEW
 export const getPendingRoadmapSubmissions = async () => {
   const response = await api.get("/admin/roadmaps/submissions/pending");
   return response.data;

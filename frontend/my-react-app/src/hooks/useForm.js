@@ -1,16 +1,6 @@
 import { useState, useCallback } from "react";
 import { motion } from "framer-motion";
 
-/**
- * useForm - Hook for managing form state, validation, and submission
- *
- * Usage:
- * const { values, errors, touched, handleChange, handleBlur, handleSubmit } = useForm({
- *   initialValues: { email: '', password: '' },
- *   onSubmit: async (values) => { ... },
- *   validate: (values) => { ... }
- * })
- */
 export const useForm = ({
   initialValues = {},
   onSubmit = () => {},
@@ -23,7 +13,6 @@ export const useForm = ({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isValid, setIsValid] = useState(false);
 
-  // Validate field
   const validateField = useCallback(
     (name, value) => {
       const fieldErrors = validate({ ...values, [name]: value });
@@ -32,7 +21,6 @@ export const useForm = ({
     [values, validate],
   );
 
-  // Handle change
   const handleChange = useCallback(
     (e) => {
       const { name, value, type, checked } = e.target;
@@ -40,7 +28,6 @@ export const useForm = ({
 
       setValues((prev) => ({ ...prev, [name]: newValue }));
 
-      // Real-time validation
       const error = validateField(name, newValue);
       setErrors((prev) => ({
         ...prev,
@@ -50,29 +37,24 @@ export const useForm = ({
     [validateField],
   );
 
-  // Handle blur
   const handleBlur = useCallback((e) => {
     const { name } = e.target;
     setTouched((prev) => ({ ...prev, [name]: true }));
   }, []);
 
-  // Handle submit
   const handleSubmit = useCallback(
     async (e) => {
       e?.preventDefault();
 
-      // Validate all fields
       const newErrors = validate(values);
       setErrors(newErrors);
 
-      // Mark all fields as touched
       const newTouched = Object.keys(values).reduce(
         (acc, key) => ({ ...acc, [key]: true }),
         {},
       );
       setTouched(newTouched);
 
-      // Check if valid
       const hasErrors = Object.values(newErrors).some((err) => err);
       if (!hasErrors) {
         setIsValid(true);
@@ -92,7 +74,6 @@ export const useForm = ({
     [values, validate, onSubmit, onError],
   );
 
-  // Reset form
   const resetForm = useCallback(() => {
     setValues(initialValues);
     setErrors({});
@@ -101,12 +82,10 @@ export const useForm = ({
     setIsValid(false);
   }, [initialValues]);
 
-  // Set field value
   const setFieldValue = useCallback((name, value) => {
     setValues((prev) => ({ ...prev, [name]: value }));
   }, []);
 
-  // Set field error
   const setFieldError = useCallback((name, error) => {
     setErrors((prev) => ({ ...prev, [name]: error }));
   }, []);
@@ -126,9 +105,6 @@ export const useForm = ({
   };
 };
 
-/**
- * FormContainer - Wraps form with consistent styling and error display
- */
 export const FormContainer = ({
   children,
   onSubmit,
@@ -148,9 +124,6 @@ export const FormContainer = ({
   </motion.form>
 );
 
-/**
- * FormFieldGroup - Groups multiple fields together
- */
 export const FormFieldGroup = ({
   children,
   label = null,
@@ -171,9 +144,6 @@ export const FormFieldGroup = ({
   </div>
 );
 
-/**
- * FormActions - Standard form buttons (Submit, Cancel, Reset)
- */
 export const FormActions = ({
   onSubmit = () => {},
   onCancel = () => {},

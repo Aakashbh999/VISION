@@ -56,7 +56,6 @@ const HeroFireflyIcons = () => {
   const [dotPositions] = useState(INITIAL_DOT_POSITIONS);
   const [glowingIndices, setGlowingIndices] = useState([]);
 
-  // Helper to get N unique random indices
   function getRandomIndices(count, max) {
     const indices = new Set();
     while (indices.size < count) {
@@ -66,22 +65,21 @@ const HeroFireflyIcons = () => {
   }
 
   useEffect(() => {
-    // Pick a random number between 20 and 30
+
     function pickRandomGlow() {
-      const count = Math.floor(Math.random() * 11) + 20; // 20 to 30
+      const count = Math.floor(Math.random() * 11) + 20;
       setGlowingIndices(getRandomIndices(count, dotPositions.length));
     }
     pickRandomGlow();
-    const interval = setInterval(pickRandomGlow, 1500); // Change every 1.5s
+    const interval = setInterval(pickRandomGlow, 1500);
     return () => clearInterval(interval);
   }, [dotPositions.length]);
 
-  // Heartbeat: only one icon at a time
   const [heartbeatIndex, setHeartbeatIndex] = useState(0);
   useEffect(() => {
     const interval = setInterval(() => {
       setHeartbeatIndex((prev) => (prev + 1) % icons.length);
-    }, 1200); // 1.2s per icon
+    }, 1200);
     return () => clearInterval(interval);
   }, []);
 
@@ -136,7 +134,7 @@ const HeroFireflyIcons = () => {
           </div>
         );
       })}
-      {/* Heartbeat keyframes style */}
+      {}
       <style>{`
       @keyframes heartbeat {
         0% { transform: scale(1); }

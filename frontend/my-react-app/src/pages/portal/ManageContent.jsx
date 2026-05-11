@@ -38,7 +38,7 @@ const ManageContent = () => {
         subtitle="Keep track of all the resources, discussions, and social connections you've created across VISION."
       />
 
-      {/* Main tab switcher */}
+      {}
       <div className="bg-[var(--bg-card)] p-2 rounded-2xl shadow-sm border border-[var(--border-main)] flex gap-2 overflow-x-auto">
         {TABS.map((tab) => {
           const Icon = tab.icon;
@@ -60,7 +60,7 @@ const ManageContent = () => {
         })}
       </div>
 
-      {/* Panel content */}
+      {}
       <SurfaceCard className="overflow-hidden">
         {activeTab === "resources" && <ResourcesPanel />}
         {activeTab === "discussions" && <DiscussionsPanel />}

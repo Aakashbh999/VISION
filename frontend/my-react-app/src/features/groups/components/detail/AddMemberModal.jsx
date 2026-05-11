@@ -11,14 +11,14 @@ const AddMemberModal = ({ isOpen, onClose, groupId, members = [], onMemberAdded 
   const [query, setQuery] = useState("");
   const [results, setResults] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [isAdding, setIsAdding] = useState(null); // ID of user being added
+  const [isAdding, setIsAdding] = useState(null);
 
   const isAlreadyMember = (userId) => {
-    // Extract numeric ID from "user-123" format if necessary
-    const targetId = typeof userId === "string" && userId.startsWith("user-") 
-      ? userId.split("-")[1] 
+
+    const targetId = typeof userId === "string" && userId.startsWith("user-")
+      ? userId.split("-")[1]
       : userId;
-    
+
     return (members || []).some(m => String(m.user_id) === String(targetId));
   };
 
@@ -32,7 +32,7 @@ const AddMemberModal = ({ isOpen, onClose, groupId, members = [], onMemberAdded 
       setIsLoading(true);
       try {
         const { results: searchResults } = await getUniversalResults(query);
-        // Filter only users
+
         const users = searchResults.filter(r => r.category === SEARCH_CATEGORIES.USERS);
         setResults(users);
       } catch (error) {
@@ -48,14 +48,14 @@ const AddMemberModal = ({ isOpen, onClose, groupId, members = [], onMemberAdded 
   const handleAddMember = async (targetUser) => {
     setIsAdding(targetUser.id);
     try {
-      const userId = typeof targetUser.id === "string" && targetUser.id.startsWith("user-") 
-        ? targetUser.id.split("-")[1] 
+      const userId = typeof targetUser.id === "string" && targetUser.id.startsWith("user-")
+        ? targetUser.id.split("-")[1]
         : targetUser.id;
 
       await api.post(`/groups/${groupId}/invitations`, { userId });
-      
+
       showToast.success(`Invitation sent to ${targetUser.title}`);
-      
+
       if (onMemberAdded) onMemberAdded();
     } catch (error) {
       showToast.error(error.response?.data?.error || "Failed to send invitation");
@@ -75,20 +75,20 @@ const AddMemberModal = ({ isOpen, onClose, groupId, members = [], onMemberAdded 
         className="absolute inset-0 bg-slate-950/40 backdrop-blur-sm"
         onClick={onClose}
       />
-      
+
       <motion.div
         initial={{ opacity: 0, scale: 0.95, y: 20 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.95, y: 20 }}
         className="relative w-full max-w-lg bg-[var(--bg-card)] rounded-[2.5rem] shadow-2xl border border-[var(--border-main)] overflow-hidden flex flex-col max-h-[80vh]"
       >
-        {/* Header */}
+        {}
         <div className="px-8 pt-8 pb-4 flex items-center justify-between">
           <div>
             <h2 className="text-2xl font-black text-[var(--text-main)] tracking-tight">Invite Member</h2>
             <p className="text-sm text-[var(--text-muted)] font-medium">Send an invitation to join this circle</p>
           </div>
-          <button 
+          <button
             onClick={onClose}
             className="p-2 rounded-2xl bg-[var(--bg-active)] text-[var(--text-muted)] hover:text-[var(--text-main)] transition-colors"
           >
@@ -96,7 +96,7 @@ const AddMemberModal = ({ isOpen, onClose, groupId, members = [], onMemberAdded 
           </button>
         </div>
 
-        {/* Search Input */}
+        {}
         <div className="px-8 py-4">
           <div className="relative group">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[var(--text-muted)] group-focus-within:text-purple-500 transition-colors" />
@@ -111,7 +111,7 @@ const AddMemberModal = ({ isOpen, onClose, groupId, members = [], onMemberAdded 
           </div>
         </div>
 
-        {/* Results */}
+        {}
         <div className="flex-1 overflow-y-auto px-4 pb-8 min-h-[300px]">
           {isLoading ? (
             <div className="flex flex-col items-center justify-center py-20 opacity-50">
@@ -123,13 +123,13 @@ const AddMemberModal = ({ isOpen, onClose, groupId, members = [], onMemberAdded 
               {results.map((user) => {
                 const added = isAlreadyMember(user.id);
                 return (
-                  <div 
+                  <div
                     key={user.id}
                     className="flex items-center gap-4 p-4 rounded-3xl hover:bg-[var(--bg-active)] transition-all group"
                   >
-                    <Avatar 
-                      src={user.profilePicture} 
-                      name={user.title} 
+                    <Avatar
+                      src={user.profilePicture}
+                      name={user.title}
                       size="md"
                       className="border border-[var(--border-main)] shadow-sm"
                       status={user.is_online ? "online" : null}

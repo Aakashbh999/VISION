@@ -7,9 +7,6 @@ import DeleteAction from "../../../components/DeleteAction";
 import SimplePagination from "../../../components/ui/SimplePagination";
 import EmptyState from "../../../components/ui/EmptyState";
 
-/**
- * DiscussionsPanel — renders the user's discussion threads directly inside ManageContent.
- */
 const DiscussionsPanel = () => {
   const [page, setPage] = useState(1);
   const { data, isLoading, error } = useMyPosts(page, 10);

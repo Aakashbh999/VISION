@@ -1,8 +1,4 @@
-/**
- * Moderator Middleware
- * Allows access if the authenticated user is an admin OR has the is_moderator flag.
- * Must be used AFTER verifyJWT.
- */
+
 exports.verifyModerator = (req, res, next) => {
   if (!req.user) {
     return res.status(401).json({ error: "Authentication required" });

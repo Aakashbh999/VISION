@@ -21,7 +21,7 @@ const AboutMeCard = ({
     if (currentTags.includes(tagName)) {
       nextTags = currentTags.filter((t) => t !== tagName);
     } else {
-      if (currentTags.length >= 5) return; // Cap at 5
+      if (currentTags.length >= 5) return;
       nextTags = [...currentTags, tagName];
     }
     handleDraftChange("career_scope", nextTags.join(", "));
@@ -94,7 +94,7 @@ const AboutMeCard = ({
           )}
         </div>
 
-        {/* About Me Section */}
+        {}
         <div className="space-y-4">
           <p className="text-sm font-black uppercase tracking-widest text-[var(--text-muted)] opacity-60">
             About Me
@@ -130,7 +130,7 @@ const AboutMeCard = ({
           )}
         </div>
 
-        {/* Interests Section */}
+        {}
         <div className="mt-10 pt-8 border-t border-[var(--border-main)] space-y-4">
           <div className="flex justify-between items-end">
             <p className="text-sm font-black uppercase tracking-widest text-[var(--text-muted)] opacity-60">
@@ -142,7 +142,7 @@ const AboutMeCard = ({
               </span>
             )}
           </div>
-          
+
           {isOwner && isEditMode ? (
             <div className="flex flex-wrap gap-2.5">
               {isTagsLoading ? (
@@ -156,8 +156,8 @@ const AboutMeCard = ({
                       type="button"
                       onClick={() => handleTagToggle(tag.name)}
                       className={`px-4 py-2 rounded-xl text-[13px] font-bold border-2 transition-all ${
-                        isSelected 
-                          ? 'bg-purple-600 border-purple-600 text-white shadow-md scale-105' 
+                        isSelected
+                          ? 'bg-purple-600 border-purple-600 text-white shadow-md scale-105'
                           : 'bg-[var(--bg-active)] border-[var(--border-main)] text-[var(--text-muted)] hover:border-purple-300'
                       }`}
                     >

@@ -1,15 +1,6 @@
 import { CheckCircle2, Trash2 } from "lucide-react";
 import { formatNotificationMessage } from "../../utils/notificationRouting";
 
-/**
- * NotificationItem — a single notification row.
- *
- * Props:
- *  notification  – notification object
- *  onMarkRead    – fn(id) to mark as read
- *  onDelete      – fn(id) to delete
- *  onNavigate    – fn(notification) to navigate on click
- */
 const NotificationItem = ({
   notification: notif,
   onMarkRead,
@@ -30,7 +21,7 @@ const NotificationItem = ({
     onClick={() => onNavigate(notif)}
   >
     <div className="flex items-start justify-between gap-4">
-      {/* Message + timestamp */}
+      {}
       <div className="flex-1 min-w-0">
         <p className="text-[var(--text-main)] text-sm sm:text-base">
           {formatNotificationMessage(notif)}
@@ -40,7 +31,7 @@ const NotificationItem = ({
         </span>
       </div>
 
-      {/* Action buttons */}
+      {}
       <div className="flex items-center gap-1.5">
         {!notif.is_read && (
           <button

@@ -146,7 +146,7 @@ const Dashboard = () => {
 
   return (
     <div className="max-w-7xl mx-auto pb-12 space-y-10">
-      {/* Header Section */}
+      {}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
         <div>
           <h1 className="text-4xl font-black text-text-main tracking-tight">
@@ -159,7 +159,7 @@ const Dashboard = () => {
         </div>
       </div>
 
-      {/* Main Stats Grid */}
+      {}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         <StatCard
           title="Total Users"
@@ -206,7 +206,7 @@ const Dashboard = () => {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
-        {/* Activity Feed */}
+        {}
         <div className="lg:col-span-2 space-y-6">
           <div className="flex items-center justify-between">
             <h2 className="text-xl font-black text-text-main tracking-tight flex items-center gap-2">
@@ -248,7 +248,7 @@ const Dashboard = () => {
           </div>
         </div>
 
-        {/* Quick Action Side Panel */}
+        {}
         <div className="space-y-6">
           <h2 className="text-xl font-black text-text-main tracking-tight">
             Management Suite

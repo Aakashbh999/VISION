@@ -32,14 +32,12 @@ const StudentsList = () => {
   const queryClient = useQueryClient();
   const { user } = useAuth();
 
-  // Sync state to URL
   useEffect(() => {
     const params = { status, page: page.toString() };
     if (debouncedSearchTerm) params.search = debouncedSearchTerm;
     setSearchParams(params, { replace: true });
   }, [status, page, debouncedSearchTerm, setSearchParams]);
 
-  // Reset page when search changes
   useEffect(() => {
     setPage(1);
   }, [debouncedSearchTerm, status]);

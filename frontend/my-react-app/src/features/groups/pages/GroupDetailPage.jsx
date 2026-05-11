@@ -69,7 +69,6 @@ const GroupDetail = () => {
     return <GroupDetailErrorView />;
   }
 
-  // Strict Access Control: Only members can enter the workspace
   if (!isMember) {
     if (group.privacy_type === "private") {
       return <GroupDetailPrivateView />;

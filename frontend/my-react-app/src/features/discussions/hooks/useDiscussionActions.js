@@ -109,7 +109,6 @@ export const useDiscussionActions = ({ user, queryClient }) => {
         ),
       );
 
-      // Skip immediate refetch here to avoid stale payload snapping counts back.
     },
     onError: (error, _variables, context) => {
       if (context?.previousSnapshots?.length) {
@@ -145,7 +144,7 @@ export const useDiscussionActions = ({ user, queryClient }) => {
       return { previousSnapshots };
     },
     onSuccess: () => {
-      // Keep optimistic UI without hard invalidation jitter.
+
     },
     onSettled: () => {
       setLoadingSave(null);

@@ -4,7 +4,6 @@ const ProfileStatsSidebar = ({ profile, isOwner }) => {
   const current_level = profile?.current_level || 1;
   const total_xp = profile?.total_xp || 0;
 
-  // Level Formula Calculation
   const currentLevelXP = Math.pow(current_level - 1, 2) * 100;
   const nextLevelXP = Math.pow(current_level, 2) * 100;
   const xpInCurrentLevel = Math.max(0, total_xp - currentLevelXP);
@@ -16,13 +15,13 @@ const ProfileStatsSidebar = ({ profile, isOwner }) => {
 
   return (
     <div className="space-y-12">
-      {/* VISIONXP Card */}
+      {}
       <div className={`bg-[var(--bg-card)] bg-opacity-80 backdrop-blur-2xl rounded-3xl shadow-sm border border-[var(--border-main)] relative overflow-hidden group transition-all ${isOwner ? "hover:shadow-md" : ""}`}>
-        
-        {/* Subtle Purple Glass Glow Background */}
+
+        {}
         <div className="absolute inset-0 bg-gradient-to-br from-purple-500/5 to-indigo-500/5 dark:from-purple-500/10 dark:to-indigo-500/10 pointer-events-none"></div>
 
-        {/* Neon Glow Effects (Subtle and blend in both modes) */}
+        {}
         <div className="absolute top-0 right-0 w-64 h-64 bg-purple-400/10 dark:bg-purple-400/20 rounded-full blur-3xl -mr-20 -mt-20 group-hover:bg-purple-400/20 dark:group-hover:bg-purple-400/30 transition-all duration-700 pointer-events-none"></div>
         <div className="absolute bottom-0 left-0 w-64 h-64 bg-indigo-400/10 dark:bg-indigo-400/20 rounded-full blur-3xl -ml-20 -mb-20 group-hover:bg-indigo-400/20 dark:group-hover:bg-indigo-400/30 transition-all duration-700 pointer-events-none"></div>
 
@@ -87,7 +86,7 @@ const ProfileStatsSidebar = ({ profile, isOwner }) => {
               </span>
             </div>
             <div className="h-2 w-full bg-[var(--bg-active)] rounded-full overflow-hidden border border-[var(--border-main)] p-0.5">
-              <div 
+              <div
                 className="h-full bg-gradient-to-r from-cyan-400 to-lime-400 rounded-full shadow-[0_0_10px_rgba(6,182,212,0.5)] transition-all duration-700 ease-out"
                 style={{ width: `${progressPercent}%` }}
               ></div>

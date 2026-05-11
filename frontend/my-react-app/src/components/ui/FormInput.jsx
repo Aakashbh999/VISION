@@ -2,24 +2,6 @@ import { forwardRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { AlertCircle, CheckCircle2, Eye, EyeOff } from "lucide-react";
 
-/**
- * FormInput - Advanced form input with validation feedback
- *
- * Props:
- * - label: Field label text
- * - type: Input type (text, email, password, number, etc.)
- * - value: Current input value
- * - onChange: Change handler
- * - onBlur: Blur handler
- * - error: Error message (if any)
- * - success: Success message or boolean
- * - hint: Helper text below input
- * - required: Show required indicator
- * - disabled: Disable the input
- * - icon: Lucide icon component
- * - validation: Validation rules { pattern, minLength, maxLength, custom }
- * - id: Input ID (for accessibility)
- */
 const FormInput = forwardRef(
   (
     {
@@ -46,7 +28,6 @@ const FormInput = forwardRef(
     const [showPassword, setShowPassword] = useState(false);
     const [localError, setLocalError] = useState(null);
 
-    // Real-time validation
     const validateField = (val) => {
       setLocalError(null);
 
@@ -90,7 +71,7 @@ const FormInput = forwardRef(
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.2 }}
       >
-        {/* Label */}
+        {}
         {label && (
           <label
             htmlFor={id}
@@ -101,14 +82,14 @@ const FormInput = forwardRef(
           </label>
         )}
 
-        {/* Input Wrapper */}
+        {}
         <div className="relative">
-          {/* Left Icon */}
+          {}
           {Icon && (
             <Icon className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-[var(--text-muted)] pointer-events-none" />
           )}
 
-          {/* Input Field */}
+          {}
           <input
             ref={ref}
             id={id}
@@ -146,7 +127,7 @@ const FormInput = forwardRef(
             {...props}
           />
 
-          {/* Password Toggle */}
+          {}
           {isPassword && (
             <button
               type="button"
@@ -162,7 +143,7 @@ const FormInput = forwardRef(
             </button>
           )}
 
-          {/* Right Icon - Success/Error */}
+          {}
           {(displayError || success) && !isPassword && (
             <motion.div
               initial={{ scale: 0 }}
@@ -178,7 +159,7 @@ const FormInput = forwardRef(
           )}
         </div>
 
-        {/* Error Message */}
+        {}
         <AnimatePresence mode="wait">
           {displayError && (
             <motion.p
@@ -195,7 +176,7 @@ const FormInput = forwardRef(
           )}
         </AnimatePresence>
 
-        {/* Success Message */}
+        {}
         <AnimatePresence mode="wait">
           {success && !displayError && (
             <motion.p
@@ -211,7 +192,7 @@ const FormInput = forwardRef(
           )}
         </AnimatePresence>
 
-        {/* Helper Text */}
+        {}
         {hint && !displayError && (
           <motion.p
             initial={{ opacity: 0 }}

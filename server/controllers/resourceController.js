@@ -9,11 +9,6 @@ const {
 } = require("../utils/pagination");
 const { withTransaction } = require("../utils/withTransaction");
 
-/**
- * Find an existing tag or create a new 'custom' type tag.
- * Accepts a pg pool or client (for use inside/outside transactions).
- * Returns the tag_id, or null if the name normalises to empty.
- */
 async function getOrCreateCustomTag(db, name) {
   const clean = String(name).trim().slice(0, 50);
   if (!clean) return null;
@@ -38,23 +33,6 @@ async function getOrCreateCustomTag(db, name) {
   return result.rows[0].tag_id;
 }
 
-/* ===============================
-   UPLOAD RESOURCE (User Contribution)
-   Status defaults to 'pending' – awaits moderator approval
-   Supports both file uploads (via Cloudinary) and external links
-
-   Tag system (new):
-   - system_tags: JSON array of tag IDs (max 5, must be tag_type = 'system')
-   - custom_tags: JSON array of tag name strings (max 2, created as 'custom' if new)
-   - Hashtags in descriptions are parsed for SEMESTER DETECTION ONLY — no tags
-     are silently created from them. Tags must always be explicitly selected.
- ================================ */
-/**
- * POST /api/resources
- * Body (multipart/form-data): title, description, resource_type, program_id, semester,
- *   degree_id, url (for links), file (for uploads),
- *   system_tags (JSON int array), custom_tags (JSON string array)
- */
 exports.uploadResource = catchAsync(async (req, res) => {
   const userId = req.user.portal_user_id;
   const {
@@ -70,12 +48,9 @@ exports.uploadResource = catchAsync(async (req, res) => {
   } = req.body;
   const { extractHashtagsAndSemester } = require("../utils/hashtagUtils");
 
-  // Extract semester hint from description hashtags (#Semester2 etc.) only.
-  // Semester is the only useful signal — hashtags column doesn't exist on this DB.
   const { semester: extractedSemester } =
     extractHashtagsAndSemester(description);
 
-  // --- Parse system tags (IDs referencing portal.tags where tag_type = 'system') ---
   let systemTagIds = [];
   if (systemTagsRaw) {
     try {
@@ -88,7 +63,6 @@ exports.uploadResource = catchAsync(async (req, res) => {
     }
   }
 
-  // --- Parse custom tags (free-text names, max 2) ---
   let customTagNames = [];
   if (customTagsRaw) {
     try {
@@ -104,7 +78,6 @@ exports.uploadResource = catchAsync(async (req, res) => {
     }
   }
 
-  // Enforce tag caps
   if (systemTagIds.length > 5) {
     return errorResponse(res, "You can select at most 5 system tags.", 400);
   }
@@ -112,7 +85,6 @@ exports.uploadResource = catchAsync(async (req, res) => {
     return errorResponse(res, "You can add at most 2 custom tags.", 400);
   }
 
-  // Use extracted semester if not provided explicitly
   const finalSemester = semester || extractedSemester;
   const normalizedTitle = typeof title === "string" ? title.trim() : "";
   const normalizedDescription =
@@ -122,7 +94,6 @@ exports.uploadResource = catchAsync(async (req, res) => {
   const normalizedUrl = typeof url === "string" ? url.trim() : "";
   const allowedResourceTypes = new Set(["notes", "book", "project", "link"]);
 
-  // Validation
   if (!normalizedTitle || !normalizedResourceType) {
     return errorResponse(res, "title and resource_type are required", 400);
   }
@@ -152,7 +123,6 @@ exports.uploadResource = catchAsync(async (req, res) => {
     return errorResponse(res, "Semester must be between 1 and 8", 400);
   }
 
-  // Fallback to user registration defaults if not provided
   const resolvedProgramId = program_id || req.user.program_id;
   const resolvedDegreeId = degree_id || req.user.academic_degree_id;
 
@@ -204,7 +174,6 @@ exports.uploadResource = catchAsync(async (req, res) => {
 
     const finalStatus = (req.user.role === 'admin' && req.body.status === 'approved') ? 'approved' : 'pending';
 
-    // Insert the resource row (no hashtags column on this deployment)
     const result = await client.query(
       `INSERT INTO portal.resources
            (title, description, resource_type, program_id, semester, degree_id, url,
@@ -229,7 +198,6 @@ exports.uploadResource = catchAsync(async (req, res) => {
 
     const resourceId = result.rows[0].resource_id;
 
-    // Link system tags (validate they exist as system-type to prevent spoofing)
     if (systemTagIds.length > 0) {
       const validCheck = await client.query(
         `SELECT tag_id FROM portal.tags WHERE tag_id = ANY($1) AND tag_type = 'system'`,
@@ -247,7 +215,6 @@ exports.uploadResource = catchAsync(async (req, res) => {
       }
     }
 
-    // Create & link custom tags
     for (const name of customTagNames) {
       const tagId = await getOrCreateCustomTag(client, name);
       if (tagId) {
@@ -260,9 +227,8 @@ exports.uploadResource = catchAsync(async (req, res) => {
 
     await client.query("COMMIT");
 
-    // Fetch the full resource data with joined fields to return to the frontend
     const fullResource = await pool.query(
-      `SELECT 
+      `SELECT
          r.*,
          u.user_id AS uploader_id,
          u.full_name AS uploader_name,
@@ -296,14 +262,6 @@ exports.uploadResource = catchAsync(async (req, res) => {
   }
 });
 
-/* ===============================
-   GET ALL APPROVED RESOURCES (Public)
-   Filters: program_id, semester, degree_id, resource_type, search
-   Pagination: page, limit
- ================================ */
-/**
- * GET /api/resources
- */
 exports.getResources = catchAsync(async (req, res) => {
   const {
     program_id,
@@ -332,7 +290,7 @@ exports.getResources = catchAsync(async (req, res) => {
   if (program_id) {
     const pId = parseInt(program_id);
     params.push(pId);
-    // Bridging logic for core programs (IDs 1-5)
+
     if (pId >= 1 && pId <= 5) {
       conditions.push(`(r.program_id = $${params.length} OR r.degree_id = $${params.length})`);
     } else {
@@ -349,7 +307,7 @@ exports.getResources = catchAsync(async (req, res) => {
   }
   if (resource_type) {
     if (resource_type === "pdf") {
-      // Broad check for PDFs: literal .pdf, or cloudinary raw upload, or default notes/book type where it's assumed to be PDF
+
       conditions.push(
         `(r.file_url ILIKE '%.pdf%' OR r.file_url ILIKE '%/raw/upload/%' OR (r.resource_type IN ('notes', 'book', 'project') AND r.file_url IS NOT NULL))`,
       );
@@ -369,19 +327,15 @@ exports.getResources = catchAsync(async (req, res) => {
     params.push(search);
     params.push(`%${search}%`);
   }
-  // NOTE: r.program_tag and r.hashtags columns do not exist on this deployment.
-  // Those filters are intentionally omitted here.
 
   const whereClause = `WHERE ${conditions.join(" AND ")}`;
 
-  // Count total for pagination
   const countResult = await pool.query(
     `SELECT COUNT(*) FROM portal.resources r ${whereClause}`,
     params,
   );
   const total = parseInt(countResult.rows[0].count);
 
-  // Incorporate recommended scoring
   let selectAdditions = "";
   let joinAdditions = "";
   if (sort === "recommended" && req.user?.portal_user_id) {
@@ -390,7 +344,6 @@ exports.getResources = catchAsync(async (req, res) => {
     joinAdditions = `LEFT JOIN portal.resource_scores rs ON rs.resource_id = r.resource_id AND rs.user_id = $${params.length}`;
   }
 
-  // Fetch paginated results with degree name
   params.push(limitNum, offset);
 
   const orderByClause =
@@ -418,7 +371,6 @@ exports.getResources = catchAsync(async (req, res) => {
     params,
   );
 
-  // If searching and no results found, return recommendations
   if (search && result.rows.length === 0) {
     const {
       userSemester,
@@ -455,12 +407,6 @@ exports.getResources = catchAsync(async (req, res) => {
   });
 });
 
-/* ===============================
-   GET MY RESOURCES (All Statuses)
- ================================ */
-/**
- * GET /api/resources/my
- */
 exports.getMyResources = catchAsync(async (req, res) => {
   const userId = req.user.portal_user_id;
   const { status } = req.query;
@@ -500,12 +446,6 @@ exports.getMyResources = catchAsync(async (req, res) => {
   return res.json(result.rows);
 });
 
-/* ===============================
-   GET PENDING RESOURCES (Mod/Admin)
- ================================ */
-/**
- * GET /api/admin/resources/pending
- */
 exports.getPendingResources = catchAsync(async (req, res) => {
   const { search } = req.query;
   const { page: pageNum, limit: limitNum, offset } = parsePagination(req.query, {
@@ -545,7 +485,7 @@ exports.getPendingResources = catchAsync(async (req, res) => {
       [...params, limitNum, offset],
     ),
     pool.query(
-      `SELECT COUNT(*) FROM portal.resources r 
+      `SELECT COUNT(*) FROM portal.resources r
        JOIN portal.users u ON u.user_id = r.created_by
        ${whereClause}`,
       params,
@@ -559,23 +499,15 @@ exports.getPendingResources = catchAsync(async (req, res) => {
     pagination: {
       ...buildPaginationMeta({ total, page: pageNum, limit: limitNum }),
     },
-    totalPages: Math.ceil(total / limitNum), // For backward compatibility
+    totalPages: Math.ceil(total / limitNum),
   });
 });
 
-/* ===============================
-   APPROVE RESOURCE (Mod/Admin)
-   Awards 10 reputation points to uploader + notification
- ================================ */
-/**
- * PATCH /api/admin/resources/:id/approve
- */
 exports.approveResource = catchAsync(async (req, res) => {
   const { id } = req.params;
   const modId = req.user.portal_user_id;
   const { title, uploaderId } = await withTransaction(async (client) => {
 
-    // Update resource status
     const resourceRes = await client.query(
       `UPDATE portal.resources
        SET status = 'approved'
@@ -592,7 +524,6 @@ exports.approveResource = catchAsync(async (req, res) => {
 
     const { title, created_by: uploaderId } = resourceRes.rows[0];
 
-    // Award 10 reputation points to uploader
     await client.query(
       `UPDATE portal.users
        SET reputation_points = COALESCE(reputation_points, 0) + 10
@@ -600,7 +531,6 @@ exports.approveResource = catchAsync(async (req, res) => {
       [uploaderId],
     );
 
-    // Log in moderation_logs
     await client.query(
       `INSERT INTO portal.moderation_logs
          (admin_user_id, action_type, target_type, target_id)
@@ -610,7 +540,6 @@ exports.approveResource = catchAsync(async (req, res) => {
     return { title, uploaderId };
   });
 
-  // Send notification (outside transaction – non-critical)
   try {
     await notify({
       userId: uploaderId,
@@ -645,13 +574,6 @@ exports.approveResource = catchAsync(async (req, res) => {
   });
 });
 
-/* ===============================
-   REJECT RESOURCE (Mod/Admin)
- ================================ */
-/**
- * PATCH /api/admin/resources/:id/reject
- * Body: reason (optional)
- */
 exports.rejectResource = catchAsync(async (req, res) => {
   const client = await pool.connect();
   try {
@@ -676,7 +598,6 @@ exports.rejectResource = catchAsync(async (req, res) => {
 
     const { title, created_by: uploaderId } = resourceRes.rows[0];
 
-    // Log in moderation_logs
     await client.query(
       `INSERT INTO portal.moderation_logs
          (admin_user_id, action_type, target_type, target_id)
@@ -686,7 +607,6 @@ exports.rejectResource = catchAsync(async (req, res) => {
 
     await client.query("COMMIT");
 
-    // Notify uploader (non-critical)
     try {
       const reasonText = reason ? ` Reason: ${reason}` : "";
       await notify({
@@ -711,22 +631,13 @@ exports.rejectResource = catchAsync(async (req, res) => {
   }
 });
 
-/* ===============================
-   SOFT DELETE RESOURCE (user-initiated)
-   — records deletion + reason for moderation
- ================================ */
-/**
- * POST /api/resources/:id/soft-delete
- * Body: reason (optional)
- */
 exports.softDeleteResource = catchAsync(async (req, res) => {
   const { id } = req.params;
   const userId = req.user.portal_user_id;
   const { reason } = req.body;
 
-  // Verify resource exists and is not already deleted
   const resource = await pool.query(
-    `SELECT created_by FROM portal.resources 
+    `SELECT created_by FROM portal.resources
        WHERE resource_id = $1 AND deleted_at IS NULL`,
     [id],
   );
@@ -735,14 +646,12 @@ exports.softDeleteResource = catchAsync(async (req, res) => {
     return errorResponse(res, "Resource not found or already deleted", 404);
   }
 
-  // Only creator can soft delete
   if (resource.rows[0].created_by !== userId) {
     return errorResponse(res, "Only the creator can delete this resource", 403);
   }
 
-  // Soft delete: mark with deletion timestamp, user, and reason
   const result = await pool.query(
-    `UPDATE portal.resources 
+    `UPDATE portal.resources
        SET deleted_at = NOW(), deleted_by = $1, deletion_reason = $2
        WHERE resource_id = $3
        RETURNING resource_id, title, deleted_at`,

@@ -3,6 +3,7 @@ node_modules/
 
 # Environment variables
 .env
+.env.example
 
 # Database/CSV data (Optional: keep if you want them in Git)
 # db/db-seeds/data/*.csv

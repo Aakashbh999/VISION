@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import { ChevronLeft, Loader2, Plus, X, AlertTriangle, Tag } from "lucide-react";
-import { SYSTEM_TAG_CAP, CUSTOM_TAG_CAP } from "../../hooks/useCreateDiscussionState"; // borrow limits
+import { SYSTEM_TAG_CAP, CUSTOM_TAG_CAP } from "../../hooks/useCreateDiscussionState";
 
 const EditDiscussionForm = ({
   id,
@@ -128,7 +128,7 @@ const EditDiscussionForm = ({
           </div>
         </div>
 
-        {/* ── System Tags ─────────────────────────────────── */}
+        {}
         <div>
           <div className="flex items-center justify-between mb-2">
             <label className="flex items-center gap-1.5 text-sm font-medium text-[var(--text-main)]">
@@ -174,7 +174,7 @@ const EditDiscussionForm = ({
           </div>
         </div>
 
-        {/* ── Custom Tags ──────────────────────────────────── */}
+        {}
         <div>
           <div className="flex items-center justify-between mb-2">
             <label className="text-sm font-medium text-[var(--text-main)]">
@@ -194,7 +194,7 @@ const EditDiscussionForm = ({
             </span>
           </div>
 
-          {/* Existing custom tags */}
+          {}
           {formData.custom_tags.length > 0 && (
             <div className="flex flex-wrap gap-2 mb-2">
               {formData.custom_tags.map((tag) => (
@@ -215,7 +215,7 @@ const EditDiscussionForm = ({
             </div>
           )}
 
-          {/* Custom tag input — hidden once cap is reached */}
+          {}
           {formData.custom_tags.length < CUSTOM_TAG_CAP && (
             <div className="flex gap-2">
               <input

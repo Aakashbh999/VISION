@@ -2,7 +2,6 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import profileService from "../services/profile";
 import { showToast } from "../utils/toast";
 
-// Fetch public profile
 export const usePublicProfile = (userId) => {
   return useQuery({
     queryKey: ["profile", userId],
@@ -17,7 +16,6 @@ export const usePublicProfile = (userId) => {
   });
 };
 
-// Fetch own full profile
 export const useOwnProfile = (options = {}) => {
   return useQuery({
     queryKey: ["profile", "me"],
@@ -31,13 +29,12 @@ export const useOwnProfile = (options = {}) => {
   });
 };
 
-// Update Bio
 export const useUpdateBio = () => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (bio) => profileService.updateBio(bio),
     onSuccess: (data) => {
-      // Optimistic update
+
       queryClient.setQueryData(["profile", "me"], (oldData) => {
         if (!oldData) return oldData;
         return { ...oldData, bio: data.bio };
@@ -68,7 +65,6 @@ export const useUpdateProfile = () => {
   });
 };
 
-// Upload Images (Profile / Banner)
 export const useUpdateProfileImage = () => {
   const queryClient = useQueryClient();
   return useMutation({
@@ -135,7 +131,6 @@ export const useRemoveProfileBanner = () => {
   });
 };
 
-// Follow / Unfollow logic
 export const useFollowUser = () => {
   const queryClient = useQueryClient();
   return useMutation({
@@ -144,7 +139,7 @@ export const useFollowUser = () => {
         ? profileService.unfollowUser(userId)
         : profileService.followUser(userId),
     onMutate: async ({ userId, isFollowing }) => {
-      // URL params are strings — normalise to string to match the cache key
+
       const cacheKey = ["profile", String(userId)];
       await queryClient.cancelQueries({ queryKey: cacheKey });
       const previousProfile = queryClient.getQueryData(cacheKey);
@@ -177,11 +172,10 @@ export const useFollowUser = () => {
   });
 };
 
-// Fetch system tags
 export const useSystemTags = () => {
   return useQuery({
     queryKey: ["tags", "system"],
     queryFn: profileService.getSystemTags,
-    staleTime: 60 * 60 * 1000, // They don't change often
+    staleTime: 60 * 60 * 1000,
   });
 };

@@ -5,16 +5,14 @@ const path = require("path");
 const validator = require("validator");
 const createError = require("http-errors");
 
-// Helper to sanitize filename for Cloudinary public_id
 const sanitizeFilename = (filename) => {
   const name = path.parse(filename).name;
   return name
     .replace(/[^a-zA-Z0-9-_]/g, "_")
     .replace(/_+/g, "_")
-    .substring(0, 100); // Limit length
+    .substring(0, 100);
 };
 
-// Helper to determine if file is a raw type (non-image)
 const isRawFile = (mimetype) => {
   const rawMimes = [
     "application/pdf",
@@ -38,16 +36,12 @@ const storage = new CloudinaryStorage({
     const timestamp = Date.now();
     const publicId = `${originalName}_${timestamp}`;
 
-    // Decide resource type
     let resourceType = "auto";
-    // PDF and other docs should use 'auto' to allow Cloudinary to handle them better
-    // specifically for 'allowed_formats' and for correct URL generation.
-    // 'raw' is only strictly necessary for non-media files Cloudinary doesn't recognize.
+
     if (file.mimetype.startsWith("image/")) {
       resourceType = "image";
     }
 
-    // Get extension from original filename
     const extension = path.extname(file.originalname);
 
     return {
@@ -57,7 +51,7 @@ const storage = new CloudinaryStorage({
       type: "upload",
       access_mode: "public",
       use_filename: true,
-      unique_filename: false, // timestamp ensures uniqueness
+      unique_filename: false,
       allowed_formats: [
         "jpg",
         "jpeg",
@@ -79,7 +73,6 @@ const storage = new CloudinaryStorage({
   },
 });
 
-// File filter for validation
 const fileFilter = (req, file, cb) => {
   const allowedMimes = [
     "image/jpeg",
@@ -138,7 +131,7 @@ const fileFilter = (req, file, cb) => {
 const upload = multer({
   storage,
   fileFilter,
-  limits: { fileSize: 10 * 1024 * 1024 }, // 10MB limit (enforced server-side for all files)
+  limits: { fileSize: 10 * 1024 * 1024 },
 });
 
 module.exports = upload;

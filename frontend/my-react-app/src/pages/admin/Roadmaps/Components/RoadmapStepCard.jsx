@@ -9,10 +9,9 @@ import StepResourceLinkerModal from "./StepResourceLinkerModal";
 const RoadmapStepCard = ({ step, roadmapId, isFirst, isLast }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [isLinking, setIsLinking] = useState(false);
-  
+
   const queryClient = useQueryClient();
 
-  // Delete Step
   const deleteMut = useMutation({
     mutationFn: deleteRoadmapStep,
     onSuccess: () => {
@@ -21,7 +20,6 @@ const RoadmapStepCard = ({ step, roadmapId, isFirst, isLast }) => {
     }
   });
 
-  // Reorder Step
   const reorderMut = useMutation({
     mutationFn: ({ direction }) => reorderRoadmapStep(step.step_id, direction),
     onSuccess: () => {
@@ -29,7 +27,6 @@ const RoadmapStepCard = ({ step, roadmapId, isFirst, isLast }) => {
     }
   });
 
-  // Remove Resource
   const removeResourceMut = useMutation({
     mutationFn: (resourceId) => removeResourceFromStep(step.step_id, resourceId),
     onSuccess: () => {
@@ -54,9 +51,9 @@ const RoadmapStepCard = ({ step, roadmapId, isFirst, isLast }) => {
 
   return (
     <div className="bg-[var(--bg-card)] border border-[var(--border-main)] rounded-2xl shadow-sm overflow-hidden group">
-      {/* Header and Reorder Controls */}
+      {}
       <div className="flex items-start p-5 gap-4">
-        {/* Reorder Buttons */}
+        {}
         <div className="flex flex-col gap-1 items-center justify-center pt-1 opacity-50 group-hover:opacity-100 transition-opacity">
           <button
             onClick={() => reorderMut.mutate({ direction: "up" })}
@@ -77,7 +74,7 @@ const RoadmapStepCard = ({ step, roadmapId, isFirst, isLast }) => {
           </button>
         </div>
 
-        {/* Info */}
+        {}
         <div className="flex-1 min-w-0">
           <div className="flex justify-between items-start gap-4">
             <div>
@@ -88,8 +85,8 @@ const RoadmapStepCard = ({ step, roadmapId, isFirst, isLast }) => {
                 </span>
               )}
             </div>
-            
-            {/* Action Buttons */}
+
+            {}
             <div className="flex gap-1 shrink-0">
               <button
                 onClick={() => setIsEditing(true)}
@@ -108,25 +105,25 @@ const RoadmapStepCard = ({ step, roadmapId, isFirst, isLast }) => {
               </button>
             </div>
           </div>
-          
+
           {step.description && (
             <p className="mt-3 text-sm text-[var(--text-muted)] leading-relaxed whitespace-pre-wrap">
               {step.description}
             </p>
           )}
 
-          {/* Resources Section */}
+          {}
           <div className="mt-6 border-t border-[var(--border-main)] pt-4">
             <div className="flex items-center justify-between mb-3">
               <h4 className="text-xs font-bold tracking-wider text-[var(--text-muted)] uppercase">Linked Resources ({step.resources?.length || 0})</h4>
-              <button 
+              <button
                 onClick={() => setIsLinking(true)}
                 className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold bg-[var(--bg-main)] hover:bg-[var(--bg-active)] border border-[var(--border-main)] rounded-lg transition-colors text-[var(--text-main)]"
               >
                 <Plus className="w-3 h-3" /> Add Resource
               </button>
             </div>
-            
+
             {step.resources && step.resources.length > 0 ? (
               <ul className="space-y-2">
                 {step.resources.map(res => (
@@ -145,7 +142,7 @@ const RoadmapStepCard = ({ step, roadmapId, isFirst, isLast }) => {
                           <ExternalLink className="w-4 h-4" />
                         </a>
                       )}
-                      <button 
+                      <button
                         onClick={() => handleRemoveResource(res.resource_id)}
                         disabled={removeResourceMut.isPending}
                         className="p-1.5 text-gray-400 hover:text-red-500 transition-colors"
@@ -166,15 +163,15 @@ const RoadmapStepCard = ({ step, roadmapId, isFirst, isLast }) => {
       </div>
 
       {isEditing && (
-        <StepFormModal 
-          step={step} 
-          roadmapId={roadmapId} 
-          onClose={() => setIsEditing(false)} 
+        <StepFormModal
+          step={step}
+          roadmapId={roadmapId}
+          onClose={() => setIsEditing(false)}
         />
       )}
 
       {isLinking && (
-        <StepResourceLinkerModal 
+        <StepResourceLinkerModal
           stepId={step.step_id}
           roadmapId={roadmapId}
           existingResourceIds={existingResourceIds}

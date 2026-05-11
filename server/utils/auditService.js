@@ -1,22 +1,10 @@
-/**
- * Audit Log Service
- * Activity tracking using portal.moderation_logs table
- *
- * The existing moderation_logs table structure:
- * - log_id (serial PK)
- * - admin_user_id (FK to portal.users)
- * - action_type (varchar 50)
- * - target_type (varchar 50)
- * - target_id (integer)
- * - created_at (timestamp)
- */
+
 
 const pool = require("../config/db");
 const logger = require("./logger");
 
-// Audit action types
 const AuditActions = {
-  // Authentication events
+
   LOGIN_SUCCESS: "login_success",
   LOGIN_FAILED: "login_failed",
   LOGOUT: "logout",
@@ -27,21 +15,18 @@ const AuditActions = {
   EMAIL_VERIFICATION: "email_verification",
   REGISTRATION: "registration",
 
-  // Session events
   SESSION_CREATED: "session_created",
   SESSION_REVOKED: "session_revoked",
   ALL_SESSIONS_REVOKED: "all_sessions_revoked",
   NEW_DEVICE_LOGIN: "new_device_login",
   SUSPICIOUS_LOGIN: "suspicious_login",
 
-  // Account events
   PROFILE_UPDATE: "profile_update",
   AVATAR_CHANGE: "avatar_change",
   SETTINGS_CHANGE: "settings_change",
   ACCOUNT_SUSPENDED: "account_suspended",
   ACCOUNT_REACTIVATED: "account_reactivated",
 
-  // Content events
   DISCUSSION_CREATE: "discussion_create",
   DISCUSSION_DELETE: "discussion_delete",
   REPLY_CREATE: "reply_create",
@@ -50,7 +35,6 @@ const AuditActions = {
   POST_DELETE: "post_delete",
   REPORT_SUBMIT: "report_submit",
 
-  // Admin events (existing actions in the system)
   ADMIN_APPROVE_STUDENT: "approve",
   ADMIN_REJECT_STUDENT: "reject",
   ADMIN_SUSPEND_USER: "suspend",
@@ -60,16 +44,12 @@ const AuditActions = {
   ADMIN_CLOSE_REPORT: "close_report",
 };
 
-// Audit status types (for future use when schema is extended)
 const AuditStatus = {
   SUCCESS: "success",
   FAILURE: "failure",
   WARNING: "warning",
 };
 
-/**
- * Log an admin/moderation event using existing moderation_logs table
- */
 const logModerationAction = async ({
   adminUserId,
   actionType,
@@ -78,7 +58,7 @@ const logModerationAction = async ({
 }) => {
   try {
     await pool.query(
-      `INSERT INTO portal.moderation_logs 
+      `INSERT INTO portal.moderation_logs
        (admin_user_id, action_type, target_type, target_id)
        VALUES ($1, $2, $3, $4)`,
       [adminUserId, actionType, targetType, targetId],
@@ -88,9 +68,6 @@ const logModerationAction = async ({
   }
 };
 
-/**
- * Helper to extract request info for audit logging
- */
 const getRequestInfo = (req) => {
   return {
     ipAddress:
@@ -101,11 +78,6 @@ const getRequestInfo = (req) => {
   };
 };
 
-/**
- * Log authentication events
- * Note: These are logged to console for now.
- * Add auth.audit_logs table for persistent storage.
- */
 const logAuthEvent = async (
   req,
   action,
@@ -122,13 +94,8 @@ const logAuthEvent = async (
     ...details,
   });
 
-  // If we want to persist auth events, we'd need to extend moderation_logs
-  // or create a new auth.audit_logs table
 };
 
-/**
- * Log content events (discussions, posts, etc.)
- */
 const logContentEvent = async (
   req,
   action,
@@ -148,9 +115,6 @@ const logContentEvent = async (
   });
 };
 
-/**
- * Log admin events - uses existing moderation_logs table
- */
 const logAdminEvent = async (
   req,
   action,
@@ -171,9 +135,6 @@ const logAdminEvent = async (
   });
 };
 
-/**
- * Get moderation logs with filtering
- */
 const getAuditLogs = async ({
   adminUserId = null,
   actionType = null,
@@ -182,7 +143,7 @@ const getAuditLogs = async ({
   offset = 0,
 } = {}) => {
   let query = `
-    SELECT 
+    SELECT
       ml.log_id,
       ml.admin_user_id,
       pu.full_name as admin_name,
@@ -221,9 +182,6 @@ const getAuditLogs = async ({
   return result.rows;
 };
 
-/**
- * Get audit logs count for pagination
- */
 const getAuditLogsCount = async ({
   adminUserId = null,
   actionType = null,

@@ -29,7 +29,7 @@ const RoadmapFormModal = ({ roadmap, onClose }) => {
   }, [roadmap]);
 
   const mutFn = isEditing ? (d) => updateRoadmap(roadmap.roadmap_id, d) : createRoadmap;
-  
+
   const mutation = useMutation({
     mutationFn: mutFn,
     onSuccess: () => {
@@ -52,7 +52,7 @@ const RoadmapFormModal = ({ roadmap, onClose }) => {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
-      <div 
+      <div
         className="bg-[var(--bg-card)] border border-[var(--border-main)] rounded-2xl shadow-2xl w-full max-w-2xl overflow-hidden animate-in zoom-in-95 duration-200"
         onClick={(e) => e.stopPropagation()}
       >
@@ -110,7 +110,7 @@ const RoadmapFormModal = ({ roadmap, onClose }) => {
                 <option value="advanced">Advanced</option>
               </select>
             </div>
-            
+
             <div>
               <label className="block text-sm font-bold text-[var(--text-main)] mb-1.5">
                 Estimated Duration

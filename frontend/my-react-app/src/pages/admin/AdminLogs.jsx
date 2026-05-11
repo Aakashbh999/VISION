@@ -1,13 +1,13 @@
 import { useQuery } from "@tanstack/react-query";
 import { getModerationLogs } from "../../services/admin";
 import LoadingSpinner from "../../components/ui/LoadingSpinner";
-import { 
-  History, 
-  Search, 
-  ChevronLeft, 
-  ChevronRight, 
-  FileText, 
-  ShieldCheck, 
+import {
+  History,
+  Search,
+  ChevronLeft,
+  ChevronRight,
+  FileText,
+  ShieldCheck,
   AlertCircle,
   UserX,
   Trash2,
@@ -68,7 +68,7 @@ const AdminLogs = () => {
 
   return (
     <div className="max-w-7xl mx-auto space-y-8 pb-20">
-      {/* Header */}
+      {}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
         <div className="text-left">
           <h1 className="text-3xl font-black text-text-main tracking-tight flex items-center gap-3">
@@ -81,7 +81,7 @@ const AdminLogs = () => {
             Permanent record of all moderation and administrative interventions.
           </p>
         </div>
-        
+
         <div className="flex flex-col sm:flex-row items-center gap-4">
           <div className="relative w-full sm:w-64">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-text-muted" />
@@ -100,7 +100,7 @@ const AdminLogs = () => {
         </div>
       </div>
 
-      {/* Logs Table Area */}
+      {}
       <div className="bg-bg-card border border-border-main rounded-3xl overflow-hidden shadow-sm">
         <div className="overflow-x-auto text-left">
           <table className="w-full text-left border-collapse">
@@ -121,7 +121,7 @@ const AdminLogs = () => {
                     </td>
                 </tr>
               ) : filteredLogs.map((log, idx) => (
-                  <motion.tr 
+                  <motion.tr
                     key={log.log_id}
                     initial={{ opacity: 0, y: 5 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -168,7 +168,7 @@ const AdminLogs = () => {
           </table>
         </div>
 
-        {/* Pagination Footer */}
+        {}
         {pagination.totalPages > 1 && (
           <div className="px-6 py-6 border-t border-border-main flex items-center justify-between">
             <p className="text-xs font-bold text-text-muted">
@@ -182,7 +182,7 @@ const AdminLogs = () => {
               >
                 <ChevronLeft className="w-5 h-5" />
               </button>
-              
+
               <div className="flex items-center gap-1 min-w-[3rem] justify-center">
                   <span className="text-xs font-black text-text-main">{page}</span>
                   <span className="text-xs font-bold text-text-muted">/</span>
@@ -200,8 +200,8 @@ const AdminLogs = () => {
           </div>
         )}
       </div>
-      
-      {/* Footer Info */}
+
+      {}
       <div className="flex items-center justify-center gap-4 text-xs font-bold text-text-muted/40 uppercase tracking-[0.2em]">
           <AlertCircle className="w-4 h-4" />
           Audit Trail is Permanent and Irreversible

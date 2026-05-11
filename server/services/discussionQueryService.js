@@ -10,7 +10,7 @@ const buildFilterConditions = (filters, startParamIndex = 1) => {
   }
   if (filters.degree) {
     const degreeId = parseInt(filters.degree, 10);
-    // Bridge logic: IDs 1-5 are shared between Degrees and Programs (CSIT, BIT, BCA, BE)
+
     if (degreeId >= 1 && degreeId <= 5) {
       conditions.push(`(d.degree_id = $${paramIndex} OR d.program_id = $${paramIndex})`);
     } else {
@@ -26,7 +26,7 @@ const buildFilterConditions = (filters, startParamIndex = 1) => {
   }
   if (filters.program) {
     const programId = parseInt(filters.program, 10);
-    // Bridge logic: IDs 1-5 are shared between Degrees and Programs (CSIT, BIT, BCA, BE)
+
     if (programId >= 1 && programId <= 5) {
       conditions.push(`(d.program_id = $${paramIndex} OR d.degree_id = $${paramIndex})`);
     } else {

@@ -30,20 +30,18 @@ import AdminTable from "../../components/admin_ui/AdminTable";
 
 import { motion, AnimatePresence } from "framer-motion";
 const RegistrationWhitelist = () => {
-  // Local state for modal and editing record (must be above useEffect)
+
   const [isFormModalOpen, setIsFormModalOpen] = useState(false);
   const [editingRecord, setEditingRecord] = useState(null);
-  // Local state for date of birth input formatting in form modal
+
   const [formDateOfBirth, setFormDateOfBirth] = useState("");
 
-  // When editing, sync the editing record's DOB into the input
   useEffect(() => {
     if (isFormModalOpen) {
       setFormDateOfBirth(editingRecord?.date_of_birth || "");
     }
   }, [isFormModalOpen, editingRecord]);
 
-  // Handler for auto-formatting date of birth as YYYY-MM-DD
   const handleDateOfBirthChange = (e) => {
     let value = e.target.value.replace(/\D/g, "");
     if (value.length > 8) value = value.slice(0, 8);
@@ -65,7 +63,6 @@ const RegistrationWhitelist = () => {
   const debouncedSearchTerm = useDebounce(searchTerm, 500);
   const [modalConfig, setModalConfig] = useState({ isOpen: false });
 
-  // Sync state to URL
   useEffect(() => {
     const params = { page: page.toString() };
     if (batchYear) params.batch_year = batchYear;
@@ -74,7 +71,6 @@ const RegistrationWhitelist = () => {
     setSearchParams(params, { replace: true });
   }, [page, batchYear, program, debouncedSearchTerm, setSearchParams]);
 
-  // Reset page when search or filters change
   useEffect(() => {
     setPage(1);
   }, [debouncedSearchTerm, batchYear, program]);
@@ -157,7 +153,6 @@ const RegistrationWhitelist = () => {
   const records = data?.data || [];
   const pagination = data?.pagination || { totalPages: 1 };
 
-
   const columns = [
     {
       header: "Student Info",
@@ -197,7 +192,7 @@ const RegistrationWhitelist = () => {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
+      {}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 text-left">
         <div>
           <h1 className="text-2xl font-black text-text-main tracking-tight">
@@ -222,7 +217,7 @@ const RegistrationWhitelist = () => {
         </div>
       </div>
 
-      {/* Filters */}
+      {}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 bg-bg-card p-4 rounded-2xl border border-border-main shadow-sm">
         <div className="space-y-1.5 text-left">
           <label className="text-[10px] font-black uppercase text-text-muted tracking-widest px-1">
@@ -281,7 +276,7 @@ const RegistrationWhitelist = () => {
         </div>
       </div>
 
-      {/* Table */}
+      {}
       <AdminTable
         columns={columns}
         data={records}
@@ -294,7 +289,7 @@ const RegistrationWhitelist = () => {
         emptyMessage={searchTerm ? "No records found matching your search." : "No records found."}
       />
 
-      {/* Pagination */}
+      {}
       {pagination.totalPages > 1 && (
         <div className="flex justify-center gap-2 mt-8">
           {Array.from({ length: pagination.totalPages }, (_, i) => i + 1).map(
@@ -315,7 +310,7 @@ const RegistrationWhitelist = () => {
         </div>
       )}
 
-      {/* Form Modal */}
+      {}
       <AnimatePresence>
         {isFormModalOpen && (
           <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
@@ -349,7 +344,7 @@ const RegistrationWhitelist = () => {
                   e.preventDefault();
                   const formData = new FormData(e.target);
                   const payload = Object.fromEntries(formData.entries());
-                  // Overwrite date_of_birth with formatted state value
+
                   payload.date_of_birth = formDateOfBirth;
                   if (editingRecord) {
                     updateMutation.mutate({

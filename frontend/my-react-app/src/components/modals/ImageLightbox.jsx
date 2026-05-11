@@ -8,7 +8,7 @@ const ImageLightbox = ({ isOpen, image, title, onClose }) => {
       className="fixed inset-0 z-[100] bg-slate-900/90 dark:bg-black/95 backdrop-blur-sm flex flex-col p-4 md:p-10"
       onClick={onClose}
     >
-      {/* Controls */}
+      {}
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-white font-black text-sm uppercase tracking-widest line-clamp-1 pr-10">
           {title}
@@ -21,7 +21,7 @@ const ImageLightbox = ({ isOpen, image, title, onClose }) => {
         </button>
       </div>
 
-      {/* Image Display */}
+      {}
       <div className="flex-1 flex items-center justify-center overflow-hidden">
         <img
           src={image}
@@ -31,7 +31,7 @@ const ImageLightbox = ({ isOpen, image, title, onClose }) => {
         />
       </div>
 
-      {/* Footer info */}
+      {}
       <div className="mt-4 flex justify-center gap-4">
         <div className="bg-white/5 border border-white/10 px-4 py-2 rounded-full text-white/50 text-[10px] font-bold uppercase tracking-tighter flex items-center gap-2">
           <Maximize2 className="w-3 h-3" /> Full Resolution View

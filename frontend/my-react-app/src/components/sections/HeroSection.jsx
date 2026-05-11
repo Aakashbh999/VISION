@@ -10,7 +10,7 @@ const HeroSection = () => {
         <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-[var(--text-main)] mb-6 leading-tight">
           Master your <GradientText>IT Journey in Nepal</GradientText>
         </h1>
-        <p className="text-[var(--text-muted)] mb-8 leading-relaxed text-base sm:text-lg">
+        <p className="text-[var(--text-muted)] mb-8 leading-relaxed text-base sm:text-lg text-justify">
           Whether you're a <strong>+2 graduate</strong> exploring degrees like
           CSIT and BCA, or an <strong>undergraduate student</strong> looking to
           bridge the gap between syllabus and industry — we’ve got you covered.

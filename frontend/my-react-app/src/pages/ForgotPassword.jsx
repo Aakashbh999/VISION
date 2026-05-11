@@ -89,7 +89,7 @@ const ForgotPassword = () => {
               <p className="mt-2 text-sm text-[var(--text-muted)] leading-relaxed">
                 {success}
               </p>
-              
+
               <div className="mt-6 flex flex-col gap-3">
                 <Button
                   onClick={handleSubmit(onSubmit)}
@@ -102,7 +102,7 @@ const ForgotPassword = () => {
                   <RefreshCw className="h-4 w-4" />
                   {cooldown > 0 ? `Resend in ${cooldown}s` : "Resend Reset Link"}
                 </Button>
-                
+
                 <button
                   onClick={() => {
                     setSuccess("");

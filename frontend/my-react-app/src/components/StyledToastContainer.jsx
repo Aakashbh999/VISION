@@ -1,12 +1,5 @@
 import { ToastContainer } from "react-toastify";
 
-/**
- * StyledToastContainer - Custom-styled ToastContainer with theme support
- * Place this once in your root layout (App.jsx)
- *
- * Usage:
- * <StyledToastContainer />
- */
 const StyledToastContainer = ({ ...props }) => (
   <ToastContainer
     position="bottom-right"

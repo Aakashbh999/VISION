@@ -9,7 +9,7 @@ export const useRoadmapStatus = (id) => {
     queryKey: ["roadmap-status", id],
     queryFn: () => getRoadmapStatus(id),
     enabled: !!id,
-    staleTime: 1000 * 60, // 1 minute
+    staleTime: 1000 * 60,
   });
 
   const leaveMutation = useMutation({

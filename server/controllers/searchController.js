@@ -3,26 +3,12 @@ const recommendationService = require("../services/recommendationService");
 const catchAsync = require("../utils/catchAsync");
 const { buildPresenceSelect } = require("../utils/presence");
 
-/**
- * Universal Search Endpoint (Roadmaps, Groups, Clubs, Resources, Users)
- * Supports weighting and fuzzy matching (ILIKE)dex search across Roadmaps, Groups, and Resources
- * Uses portal schema: roadmaps, study_groups (METADATA ONLY), resources with resource_scores
- * EXCLUDES: group_messages (chat messages) - messaging search is separate
- */
-
-// Weight constants for scoring
 const WEIGHTS = {
-  EXACT_TITLE: 1.0, // Exact title/name match
-  TAG_MATCH: 0.7, // Tag/specialty match
-  DESCRIPTION: 0.3, // Description keyword match
+  EXACT_TITLE: 1.0,
+  TAG_MATCH: 0.7,
+  DESCRIPTION: 0.3,
 };
 
-/**
- * Calculate weighted score for a search match
- * @param {string} query - Search query
- * @param {Object} item - Item to score
- * @returns {number} - Weighted score
- */
 const calculateScore = (query, { name, title, description, tags }) => {
   const normalizedQuery = query.toLowerCase().trim();
   const itemTitle = (name || title || "").toLowerCase();
@@ -33,14 +19,12 @@ const calculateScore = (query, { name, title, description, tags }) => {
 
   let score = 0;
 
-  // Priority 1: Exact title/name match (weight 1.0)
   if (itemTitle === normalizedQuery) {
-    score += WEIGHTS.EXACT_TITLE * 2; // Bonus for exact match
+    score += WEIGHTS.EXACT_TITLE * 2;
   } else if (itemTitle.includes(normalizedQuery)) {
     score += WEIGHTS.EXACT_TITLE;
   }
 
-  // Priority 2: Tag/specialty match (weight 0.7)
   if (
     itemTags.some(
       (tag) => tag.includes(normalizedQuery) || normalizedQuery.includes(tag),
@@ -49,7 +33,6 @@ const calculateScore = (query, { name, title, description, tags }) => {
     score += WEIGHTS.TAG_MATCH;
   }
 
-  // Priority 3: Description keyword match (weight 0.3)
   if (itemDesc.includes(normalizedQuery)) {
     score += WEIGHTS.DESCRIPTION;
   }
@@ -57,11 +40,6 @@ const calculateScore = (query, { name, title, description, tags }) => {
   return score;
 };
 
-/**
- * GET /api/search
- * Universal search endpoint with weighted results
- * Query params: q (search query), limit (max results per category)
- */
 exports.universalSearch = catchAsync(async (req, res) => {
     const { q, limit = 5 } = req.query;
     const userId = req.user?.portal_user_id;
@@ -69,7 +47,6 @@ exports.universalSearch = catchAsync(async (req, res) => {
     const userProgramId = req.user?.program_id;
     const userDegreeId = req.user?.academic_degree_id;
 
-    // Empty query - return recommendations
     if (!q || q.trim().length < 2) {
       const recommendations = await recommendationService.getRecommendations(
         userId,
@@ -92,7 +69,6 @@ exports.universalSearch = catchAsync(async (req, res) => {
     const searchTerm = q.trim();
     const maxResults = Math.min(parseInt(limit) || 5, 10);
 
-    // Parallel search across all indices (inline SQL — no external helpers needed)
     const [
       roadmapsResult,
       groupsResult,
@@ -101,7 +77,7 @@ exports.universalSearch = catchAsync(async (req, res) => {
       discussionsResult,
       usersResult,
     ] = await Promise.all([
-      // \u2500\u2500 ROADMAPS \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
+
       pool.query(
         `SELECT
             roadmap_id AS id,
@@ -120,7 +96,6 @@ exports.universalSearch = catchAsync(async (req, res) => {
         [searchTerm, `%${searchTerm}%`, maxResults],
       ),
 
-      // \u2500\u2500 STUDY GROUPS (exclude private unless member) \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
       userId
         ? pool.query(
             `SELECT
@@ -176,7 +151,6 @@ exports.universalSearch = catchAsync(async (req, res) => {
             [searchTerm, `%${searchTerm}%`, maxResults],
           ),
 
-      // \u2500\u2500 IT CLUBS \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
       pool.query(
         `SELECT
             c.id,
@@ -200,7 +174,6 @@ exports.universalSearch = catchAsync(async (req, res) => {
         [searchTerm, `%${searchTerm}%`, maxResults],
       ),
 
-      // \u2500\u2500 RESOURCES (approved only) \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
       pool.query(
         `SELECT
             r.resource_id AS id,
@@ -237,7 +210,6 @@ exports.universalSearch = catchAsync(async (req, res) => {
         [searchTerm, `%${searchTerm}%`, maxResults],
       ),
 
-      // \u2500\u2500 DISCUSSIONS \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
       pool.query(
         `SELECT
             d.discussion_id AS id,
@@ -257,7 +229,6 @@ exports.universalSearch = catchAsync(async (req, res) => {
         [searchTerm, `%${searchTerm}%`, maxResults],
       ),
 
-      // \u2500\u2500 USERS \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
       pool.query(
         `SELECT
             p.user_id AS id,
@@ -283,7 +254,6 @@ exports.universalSearch = catchAsync(async (req, res) => {
       ),
     ]);
 
-    // Score and format results
     const roadmaps = roadmapsResult.rows
       .map((r) => ({
         ...r,
@@ -362,7 +332,6 @@ exports.universalSearch = catchAsync(async (req, res) => {
       discussions.length +
       users.length;
 
-    // Recommendation fallback if no results found
     if (total === 0) {
       const recommendations = await recommendationService.getRecommendations(
         userId,
@@ -390,10 +359,6 @@ exports.universalSearch = catchAsync(async (req, res) => {
     });
 });
 
-/**
- * GET /api/search/suggestions
- * Quick search suggestions for autocomplete
- */
 exports.getSearchSuggestions = catchAsync(async (req, res) => {
     const { q } = req.query;
     const userId = req.user?.portal_user_id;
@@ -404,7 +369,6 @@ exports.getSearchSuggestions = catchAsync(async (req, res) => {
 
     const searchTerm = q.trim();
 
-    // Build group privacy clause: exclude private groups unless the user is a member
     const groupPrivacyClause = userId
       ? `(privacy_type != 'private' OR EXISTS(
           SELECT 1 FROM portal.group_members
@@ -412,7 +376,6 @@ exports.getSearchSuggestions = catchAsync(async (req, res) => {
         ))`
       : `privacy_type != 'private'`;
 
-    // Get unique titles from all searchable entities with trigram fuzzy matching
     const suggestions = await pool.query(
       `SELECT DISTINCT suggestion, type FROM (
         SELECT title AS suggestion, 'roadmap' AS type

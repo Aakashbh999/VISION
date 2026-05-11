@@ -4,17 +4,11 @@ const catchAsync = require("../utils/catchAsync");
 const createError = require("http-errors");
 const logger = require("../utils/logger");
 
-/**
- * Vote Controller
- * Handles upvoting and downvoting with XP gain for authors.
- */
-
 exports.handleVote = catchAsync(async (req, res) => {
-  const { id } = req.params; // discussion_id
-  let { vote_type } = req.body; // 1, -1, or 0 (clear vote)
+  const { id } = req.params;
+  let { vote_type } = req.body;
   const userId = req.user.portal_user_id;
 
-  // Convert vote_type to number if string
   vote_type = Number(vote_type);
 
   if (![1, -1, 0].includes(vote_type)) {
@@ -23,7 +17,6 @@ exports.handleVote = catchAsync(async (req, res) => {
 
   const result = await discussionService.handleVote(id, userId, vote_type);
 
-  // Send notification for new upvote
   if (result.voteType === 1 && result.authorId && result.authorId !== userId) {
     try {
       const discussion = await discussionService.getDiscussionById(id);
@@ -46,11 +39,10 @@ exports.handleVote = catchAsync(async (req, res) => {
 });
 
 exports.handleCommentVote = catchAsync(async (req, res) => {
-  const { id } = req.params; // comment_id
-  let { vote_type } = req.body; // 1, -1, or 0 (clear vote)
+  const { id } = req.params;
+  let { vote_type } = req.body;
   const userId = req.user.portal_user_id;
 
-  // Convert vote_type to number if string
   vote_type = Number(vote_type);
 
   if (![1, -1, 0].includes(vote_type)) {
@@ -63,10 +55,9 @@ exports.handleCommentVote = catchAsync(async (req, res) => {
     vote_type,
   );
 
-  // Send notification for comment upvote
   if (result.voteType === 1 && result.authorId && result.authorId !== userId) {
     try {
-      // For comment notifications, we point to the parent discussion
+
       const commentRes = await pool.query(
         "SELECT discussion_id, content FROM portal.discussion_comments WHERE comment_id = $1",
         [id],

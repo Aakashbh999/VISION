@@ -40,7 +40,7 @@ const resolveApiBaseUrl = (req) => {
   const host = req.get("x-forwarded-host") || req.get("host");
 
   if (host) {
-    return `${protocol}://${host}`.replace(/\/+$/, "");
+    return `${protocol}://${host}`;
   }
 
   return `http://localhost:${env.PORT || 5000}`;
@@ -74,7 +74,6 @@ exports.register = catchAsync(async (req, res) => {
   try {
     await client.query("BEGIN");
 
-    // Check if email already exists
     const existing = await client.query(
       "SELECT 1 FROM auth.users WHERE email = $1",
       [email],
@@ -84,10 +83,8 @@ exports.register = catchAsync(async (req, res) => {
       throw createError(400, "Email already registered");
     }
 
-    // Hash password
     const hashedPassword = await bcrypt.hash(password, 12);
 
-    // 1. Insert into auth.users phase
     const authInsert = await client.query(
       `INSERT INTO auth.users (email, password_hash)
        VALUES ($1, $2)
@@ -97,7 +94,6 @@ exports.register = catchAsync(async (req, res) => {
 
     const authUserId = authInsert.rows[0].auth_user_id;
 
-    // 2. Normalize and compute academic data
     const normalizedBatchYear =
       batch_year === undefined || batch_year === null || batch_year === ""
         ? null
@@ -111,20 +107,17 @@ exports.register = catchAsync(async (req, res) => {
         ? null
         : Number.parseInt(semester, 10);
 
-    // Auto-calculate semester if not manual
     if (normalizedBatchYear && !normalizedManualSemester) {
       normalizedSemester = calculateSemesterFromBatch(normalizedBatchYear);
     }
 
     const academicCertificateUrl = req.file.path;
 
-    // All users start as pending_review for manual admin verification
     const studentStatus = "pending_review";
 
-    // 3. Insert into portal.users phase (atomic step)
     const portalInsert = await client.query(
       `INSERT INTO portal.users
-       (auth_user_id, full_name, university, campus_id, program_id, semester, batch_year, 
+       (auth_user_id, full_name, university, campus_id, program_id, semester, batch_year,
         semester_is_manual, tu_registration_no, academic_certificate_url, career_scope, date_of_birth, student_status)
        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
        RETURNING user_id`,
@@ -147,41 +140,36 @@ exports.register = catchAsync(async (req, res) => {
 
     const portalUserId = portalInsert.rows[0].user_id;
 
-    // 3.5 Populate Recommendation Engine (portal.user_interests)
     if (career_scope && typeof career_scope === "string") {
       const interests = career_scope
         .split(",")
         .map((t) => t.trim())
         .filter(Boolean);
       if (interests.length > 0) {
-        // Find matching system tag IDs based on name
         const tagsRes = await client.query(
           `SELECT tag_id FROM portal.tags WHERE name = ANY($1)`,
           [interests],
         );
 
-        // Insert into user_interests (which recommendation engine queries)
         if (tagsRes.rows.length > 0) {
           const insertVals = tagsRes.rows
             .map((r) => `(${portalUserId}, ${r.tag_id})`)
             .join(", ");
           await client.query(`
-            INSERT INTO portal.user_interests (user_id, tag_id) 
-            VALUES ${insertVals} 
+            INSERT INTO portal.user_interests (user_id, tag_id)
+            VALUES ${insertVals}
             ON CONFLICT DO NOTHING
           `);
         }
       }
     }
 
-    // 4. Initialize User Stats (VisionXP)
     await client.query(
       `INSERT INTO portal.user_stats (user_id, total_xp, current_level)
        VALUES ($1, 0, 1)`,
       [portalUserId],
     );
 
-    // 5. Verification token generation
     const emailToken = jwt.sign({ auth_user_id: authUserId }, env.JWT_SECRET, {
       expiresIn: "24h",
     });
@@ -201,7 +189,6 @@ exports.register = catchAsync(async (req, res) => {
 
     await client.query("COMMIT");
 
-    // 5. Post-commit: Notification / Verification Email
     const apiBaseUrl = resolveApiBaseUrl(req);
     const verificationLink = `${apiBaseUrl}/api/auth/verify-email?token=${emailToken}`;
 
@@ -229,7 +216,6 @@ exports.register = catchAsync(async (req, res) => {
   } catch (err) {
     await client.query("ROLLBACK");
 
-    // Specific handling for DB unique constraint violations
     if (err.code === "23505") {
       if (err.detail.includes("tu_registration_no")) {
         err.message = "Registration Number already in use.";
@@ -248,7 +234,6 @@ exports.register = catchAsync(async (req, res) => {
 exports.login = catchAsync(async (req, res) => {
   const { email, password } = req.validatedBody || req.body;
 
-  // Single query fetches auth + portal user data atomically
   const result = await pool.query(
     `SELECT
          a.auth_user_id,
@@ -264,7 +249,6 @@ exports.login = catchAsync(async (req, res) => {
   );
 
   if (result.rows.length === 0) {
-    // Log failed login attempt
     await logAuthEvent(
       req,
       AuditActions.LOGIN_FAILED,
@@ -276,7 +260,6 @@ exports.login = catchAsync(async (req, res) => {
 
   const user = result.rows[0];
 
-  // Check password
   const isMatch = await bcrypt.compare(password, user.password_hash);
   if (!isMatch) {
     await logAuthEvent(
@@ -288,7 +271,6 @@ exports.login = catchAsync(async (req, res) => {
     throw createError(400, "Invalid credentials");
   }
 
-  // 🚫 Block suspended users
   if (user.is_suspended) {
     await logAuthEvent(
       req,
@@ -299,10 +281,8 @@ exports.login = catchAsync(async (req, res) => {
     throw createError(403, "Your account is suspended.");
   }
 
-  // ✅ Create tokens with refresh token rotation
   const tokens = await createTokens(user, req);
 
-  // Log successful login and update last_login in parallel
   await Promise.all([
     logAuthEvent(req, AuditActions.LOGIN_SUCCESS, {
       authUserId: user.auth_user_id,
@@ -328,7 +308,6 @@ exports.verifyEmail = catchAsync(async (req, res) => {
     throw createError(400, "Token missing");
   }
 
-  // Check token exists in DB
   const tokenCheck = await pool.query(
     `SELECT * FROM auth.email_verification_tokens
        WHERE token = $1`,
@@ -341,15 +320,12 @@ exports.verifyEmail = catchAsync(async (req, res) => {
 
   const tokenData = tokenCheck.rows[0];
 
-  // Check expiration
   if (new Date(tokenData.expires_at) < new Date()) {
     throw createError(400, "Token expired");
   }
 
-  // Verify JWT
   const decoded = jwt.verify(token, env.JWT_SECRET);
 
-  // Update email status in auth.users
   await pool.query(
     `UPDATE auth.users
        SET email_status = 'verified'
@@ -357,7 +333,6 @@ exports.verifyEmail = catchAsync(async (req, res) => {
     [decoded.auth_user_id],
   );
 
-  // \u2705 Sync portal.users.is_verified
   await pool.query(
     `UPDATE portal.users
        SET is_verified = true
@@ -365,14 +340,12 @@ exports.verifyEmail = catchAsync(async (req, res) => {
     [decoded.auth_user_id],
   );
 
-  // Delete token (replay protection)
   await pool.query(
     `DELETE FROM auth.email_verification_tokens
        WHERE token = $1`,
     [token],
   );
 
-  // Get user info to send welcome email
   const userInfo = await pool.query(
     `SELECT a.email, p.full_name
        FROM auth.users a
@@ -406,7 +379,6 @@ exports.verifyEmail = catchAsync(async (req, res) => {
 exports.resendVerificationEmail = catchAsync(async (req, res) => {
   const { auth_user_id } = req.user;
 
-  // Get user info
   const userResult = await pool.query(
     `SELECT a.email, a.email_status, p.full_name
        FROM auth.users a
@@ -421,23 +393,19 @@ exports.resendVerificationEmail = catchAsync(async (req, res) => {
 
   const { email, email_status, full_name } = userResult.rows[0];
 
-  // Check if already verified
   if (email_status === "verified") {
     throw createError(400, "Email is already verified");
   }
 
-  // Delete any existing tokens for this user
   await pool.query(
     `DELETE FROM auth.email_verification_tokens WHERE auth_user_id = $1`,
     [auth_user_id],
   );
 
-  // Generate new verification token
   const emailToken = jwt.sign({ auth_user_id }, env.JWT_SECRET, {
     expiresIn: "24h",
   });
 
-  // Save token in DB
   await pool.query(
     `INSERT INTO auth.email_verification_tokens
        (auth_user_id, token, expires_at)
@@ -445,11 +413,9 @@ exports.resendVerificationEmail = catchAsync(async (req, res) => {
     [auth_user_id, emailToken],
   );
 
-  // Send verification email with timeout
   const apiBaseUrl = resolveApiBaseUrl(req);
   const verificationLink = `${apiBaseUrl}/api/auth/verify-email?token=${emailToken}`;
 
-  // Wrap with timeout promise to catch hanging Gmail SMTP
   const emailTimeout = new Promise((_, reject) =>
     setTimeout(() => reject(new Error("Email sending timeout")), 15000),
   );
@@ -474,7 +440,6 @@ exports.forgotPassword = catchAsync(async (req, res) => {
     [email],
   );
 
-  // Always respond the same (prevent email enumeration)
   if (!userResult.rows.length) {
     return res.json({
       message:
@@ -484,20 +449,16 @@ exports.forgotPassword = catchAsync(async (req, res) => {
 
   const authUserId = userResult.rows[0].auth_user_id;
 
-  // Generate secure random token
   const rawToken = crypto.randomBytes(32).toString("hex");
 
-  // Hash the token for storage (raw token sent to user, hash stored in DB)
   const tokenHash = hashToken(rawToken);
 
-  // Remove previous tokens for this user (only one active at a time)
   await pool.query(
     `DELETE FROM auth.password_reset_tokens
        WHERE auth_user_id = $1`,
     [authUserId],
   );
 
-  // Store HASHED token in DB (never store raw token)
   await pool.query(
     `INSERT INTO auth.password_reset_tokens
        (auth_user_id, token, expires_at)
@@ -507,7 +468,6 @@ exports.forgotPassword = catchAsync(async (req, res) => {
 
   const resetLink = `${env.FRONTEND_URL || "http://localhost:5173"}/reset-password?token=${rawToken}`;
 
-  // Get request info for security context
   const ipAddress = req.ip || req.connection.remoteAddress;
   const userAgent = req.headers["user-agent"];
 
@@ -519,7 +479,7 @@ exports.forgotPassword = catchAsync(async (req, res) => {
     await Promise.race([
       sendPasswordResetEmail({
         to: email,
-        userName: null, // Don't expose name in password reset for privacy
+        userName: null,
         resetLink,
         ipAddress,
         userAgent,
@@ -528,7 +488,6 @@ exports.forgotPassword = catchAsync(async (req, res) => {
     ]);
   } catch (emailErr) {
     logger.warn({ err: emailErr }, "Password reset email timeout");
-    // Still respond success to prevent user enumeration
   }
 
   res.json({
@@ -540,7 +499,6 @@ exports.forgotPassword = catchAsync(async (req, res) => {
 exports.resetPassword = catchAsync(async (req, res) => {
   const { token, newPassword } = req.validatedBody || req.body;
 
-  // Hash the incoming token and compare with stored hash
   const tokenHash = hashToken(token);
 
   const tokenResult = await pool.query(
@@ -565,7 +523,6 @@ exports.resetPassword = catchAsync(async (req, res) => {
     [hashedPassword, auth_user_id],
   );
 
-  // Delete used token
   await pool.query(
     `DELETE FROM auth.password_reset_tokens
        WHERE auth_user_id = $1`,
@@ -585,7 +542,6 @@ exports.refreshToken = catchAsync(async (req, res) => {
   try {
     const tokens = await rotateRefreshToken(refreshToken, req);
 
-    // Log token refresh
     await logAuthEvent(req, AuditActions.TOKEN_REFRESH, {
       authUserId: tokens.authUserId,
     });
@@ -618,7 +574,6 @@ exports.logout = catchAsync(async (req, res) => {
     await revokeRefreshToken(refreshToken);
   }
 
-  // Log logout
   await logAuthEvent(req, AuditActions.LOGOUT);
 
   res.json({ message: "Logged out successfully" });
@@ -629,7 +584,6 @@ exports.logoutAllDevices = catchAsync(async (req, res) => {
 
   await revokeAllUserTokens(authUserId);
 
-  // Log logout all
   await logAuthEvent(req, AuditActions.ALL_SESSIONS_REVOKED);
 
   res.json({ message: "Logged out from all devices successfully" });
@@ -651,7 +605,6 @@ exports.revokeSessionById = catchAsync(async (req, res) => {
     throw createError(404, "Session not found");
   }
 
-  // Log session revocation
   await logAuthEvent(req, AuditActions.SESSION_REVOKED, { sessionId: id });
 
   res.json({ message: "Session revoked successfully" });

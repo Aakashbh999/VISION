@@ -10,6 +10,6 @@ export const useCampuses = () => {
   return useQuery({
     queryKey: ["campuses"],
     queryFn: fetchCampuses,
-    staleTime: 10 * 60 * 1000, // 10 minutes
+    staleTime: 10 * 60 * 1000,
   });
 };

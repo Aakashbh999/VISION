@@ -23,7 +23,6 @@ import {
   AlertTriangle,
 } from "lucide-react";
 
-/** Returns a human-readable cooldown remaining string, or null if not in cooldown */
 const get4DayCooldown = (leftAt) => {
   if (!leftAt) return null;
   const FOUR_DAYS_MS = 4 * 24 * 60 * 60 * 1000;
@@ -51,7 +50,6 @@ const Roadmaps = () => {
     setSearchParams(params);
   }, [filters, setSearchParams]);
 
-  // Tick every minute to refresh cooldown countdowns
   useEffect(() => {
     const interval = setInterval(() => setTick((t) => t + 1), 60_000);
     return () => clearInterval(interval);
@@ -60,7 +58,6 @@ const Roadmaps = () => {
   const { data, isLoading, error } = useRoadmaps(filters);
   const roadmapsList = Array.isArray(data) ? data : data?.roadmaps || [];
 
-  // Find the active roadmap title for the lock tooltip
   const activeRoadmap = roadmapsList.find(
     (r) => r.enrolment_status === "active",
   );
@@ -91,7 +88,7 @@ const Roadmaps = () => {
         </div>
       </div>
 
-      {/* Focus Lock Banner */}
+      {}
       {hasActiveRoadmap && (
         <div className="flex items-center gap-3 px-5 py-3.5 bg-purple-500/10 dark:bg-purple-500/20 border border-purple-500/20 rounded-2xl">
           <Lock className="w-4 h-4 text-purple-600 dark:text-purple-400 flex-shrink-0" />
@@ -175,12 +172,12 @@ const Roadmaps = () => {
               const isLeft = roadmap.enrolment_status === "left";
               const cooldown = get4DayCooldown(roadmap.left_at);
               const isInCooldown = isLeft && !!cooldown;
-              // Locked = another roadmap is active AND this one is not that roadmap
+
               const isLocked = hasActiveRoadmap && !isActive && !isCompleted;
 
               const cardContent = (
                 <>
-                  {/* Lock overlay icon */}
+                  {}
                   {(isLocked || isInCooldown) && (
                     <div
                       className={`absolute top-4 right-4 z-20 p-2 backdrop-blur-md rounded-xl ${
@@ -289,7 +286,6 @@ const Roadmaps = () => {
                 </>
               );
 
-              // Locked/cooldown cards: render as div that shows a tooltip on click
               if (isLocked || isInCooldown) {
                 return (
                   <div key={roadmap.roadmap_id} className="relative">
@@ -305,7 +301,7 @@ const Roadmaps = () => {
                     >
                       {cardContent}
                     </SurfaceCard>
-                    {/* Inline toast under the card */}
+                    {}
                     {lockedTooltip && (
                       <div
                         className="mt-2 px-4 py-2.5 bg-slate-900 text-white text-xs font-bold rounded-xl shadow-lg cursor-pointer"

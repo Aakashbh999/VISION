@@ -8,7 +8,7 @@ export const useUserStats = () => {
       const { data } = await api.get("/users/stats");
       return data;
     },
-    // Keep data fresh
+
     refetchInterval: 30000,
     staleTime: 10000,
   });

@@ -1,11 +1,11 @@
-const Skeleton = ({ 
-  variant = "text", 
-  width, 
-  height, 
-  className = "" 
+const Skeleton = ({
+  variant = "text",
+  width,
+  height,
+  className = ""
 }) => {
   const baseClasses = "animate-pulse bg-[var(--bg-active)] rounded";
-  
+
   const variantClasses = {
     text: "h-3 w-full my-2",
     circular: "rounded-full",
@@ -18,7 +18,7 @@ const Skeleton = ({
   };
 
   return (
-    <div 
+    <div
       className={`${baseClasses} ${variantClasses[variant]} ${className}`}
       style={style}
     />

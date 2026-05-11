@@ -22,15 +22,15 @@ const CTASection = () => {
 
   return (
     <>
-      {/* CTA Section */}
+      {}
       <section className="relative overflow-hidden rounded-2xl lg:rounded-3xl py-8 sm:py-10 lg:py-12">
-        {/* Background glow */}
+        {}
         <div className="absolute inset-0 bg-linear-to-br from-blue-500/10 via-purple-500/10 to-pink-500/10 blur-2xl"></div>
 
-        {/* Content box */}
+        {}
         <div className="relative bg-linear-to-br from-blue-50 via-indigo-50 to-purple-50 dark:from-blue-950/30 dark:via-indigo-950/30 dark:to-purple-950/30 p-6 sm:p-8 lg:p-12 rounded-sm sm:rounded-2xl lg:rounded-3xl border border-blue-200 dark:border-blue-900/50 shadow-xl">
           <div className="max-w-2xl">
-            {/* Headline */}
+            {}
             <h2 className="text-xl sm:text-2xl lg:text-3xl font-bold text-(--text-main) mb-3 sm:mb-4 leading-tight">
               Level Up Your{" "}
               <GradientText>Academic & Professional Career</GradientText>
@@ -43,7 +43,7 @@ const CTASection = () => {
               professionals across Nepal.
             </p>
 
-            {/* CTA Buttons */}
+            {}
             <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
               <Button
                 as={Link}
@@ -68,7 +68,7 @@ const CTASection = () => {
         </div>
       </section>
 
-      {/* Modal */}
+      {}
       {showModal && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
@@ -82,7 +82,7 @@ const CTASection = () => {
             aria-modal="true"
             aria-labelledby="cta-modal-title"
           >
-            {/* Header */}
+            {}
             <div className="flex justify-between items-center mb-6">
               <h3
                 id="cta-modal-title"
@@ -101,7 +101,7 @@ const CTASection = () => {
               </button>
             </div>
 
-            {/* Message */}
+            {}
             <p className="text-(--text-muted) mb-8 text-sm leading-relaxed text-justify">
               Be part of a growing network of IT students and mentors in Nepal.
               By creating a free account, you’ll unlock access to career
@@ -109,7 +109,7 @@ const CTASection = () => {
               journey. It only takes a minute to get started!
             </p>
 
-            {/* Buttons */}
+            {}
             <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
               <Button
                 as={Link}
