@@ -61,6 +61,8 @@ const ITFields = () => {
             item={{
               name: field.field_name,
               shortDescription: field.short_description,
+              descriptionFull: field.description_full,
+              techStack: field.tech_stack_hint,
               demand: field.demand_level,
               slug: field.slug,
               icon: getIconForField(field.field_name),

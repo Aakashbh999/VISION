@@ -1,6 +1,5 @@
 import HeroSection from "../components/sections/HeroSection";
 import FeatureGrid from "../components/sections/FeatureGrid";
-import PopularSection from "../components/sections/PopularSection";
 import CTASection from "../components/sections/CTASection";
 import { HelpCircle, Lightbulb } from "lucide-react";
 
@@ -9,7 +8,6 @@ const Home = () => {
     <div className="space-y-12 sm:space-y-16 lg:space-y-20">
       <HeroSection />
       <FeatureGrid />
-      <PopularSection />
       {/* Trust / Guidance Message */}
       <section className="max-w-4xl mx-auto text-center py-8 sm:py-10 lg:py-12 rounded-2xl lg:rounded-3xl bg-gradient-to-br from-[var(--bg-card)] to-[var(--bg-active)] border border-[var(--border-main)] hover:shadow-lg dark:hover:shadow-[0_8px_30px_rgba(124,58,237,0.25)] transition-all duration-500">
         <div className="mb-4 sm:mb-6 flex justify-center">

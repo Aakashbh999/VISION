@@ -45,21 +45,6 @@ const Sidebar = () => {
           </NavLink>
         ))}
       </nav>
-
-      <div className="absolute bottom-8 left-5 right-5">
-        <div className="p-4 rounded-xl bg-[var(--sidebar-active-bg)] border border-purple-100 dark:border-purple-900/30 transition-shadow duration-300">
-          <p className="text-xs text-[var(--text-muted)]">Need guidance?</p>
-          <a
-            href="#"
-            className="text-sm font-medium text-purple-600 hover:text-purple-800 transition-colors duration-300 inline-flex items-center gap-1"
-          >
-            Chat with Mentor
-            <span className="group-hover:translate-x-1 transition-transform duration-300">
-              →
-            </span>
-          </a>
-        </div>
-      </div>
     </aside>
   );
 };
