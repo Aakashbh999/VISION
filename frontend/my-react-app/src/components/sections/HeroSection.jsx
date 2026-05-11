@@ -8,18 +8,19 @@ const HeroSection = () => {
     <section className="grid lg:grid-cols-2 gap-8 lg:gap-12 items-center">
       <div className="order-2 lg:order-1">
         <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-[var(--text-main)] mb-6 leading-tight">
-          Confused about <GradientText>IT careers after +2?</GradientText>
+          Master your <GradientText>IT Journey in Nepal</GradientText>
         </h1>
         <p className="text-[var(--text-muted)] mb-8 leading-relaxed text-base sm:text-lg">
-          Explore IT fields, understand degree options like CSIT, BCA, and BIT,
-          and discover real IT career opportunities in Nepal — all in one place.
+          Whether you're a <strong>+2 graduate</strong> exploring degrees like
+          CSIT and BCA, or an <strong>undergraduate student</strong> looking to
+          bridge the gap between syllabus and industry — we’ve got you covered.
         </p>
-        <div className="flex flex-col sm:flex-row gap-4 md:gap-7 lg:gap-12">
+        <div className="flex flex-col sm:flex-row gap-4">
           <Button as={Link} to="/it-fields" variant="gradient" size="lg">
             Explore IT Fields →
           </Button>
-          <Button as={Link} to="/register" variant="secondary" size="md">
-            Register
+          <Button as={Link} to="/login" variant="secondary" size="lg">
+            Student Login
           </Button>
         </div>
       </div>
