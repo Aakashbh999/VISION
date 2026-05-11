@@ -49,7 +49,8 @@ const DiscussionPostCard = ({
     String(authorProfileId || "") ===
     String(user?.portal_user_id || user?.user_id || "");
 
-  const isBoosted = discussion.is_boosted && new Date(discussion.boosted_until) > new Date();
+  const isBoosted =
+    discussion.is_boosted && new Date(discussion.boosted_until) > new Date();
 
   return (
     <motion.div
@@ -128,7 +129,7 @@ const DiscussionPostCard = ({
                     {
                       label: "Manage Post",
                       icon: <Edit className="w-4 h-4" />,
-                      onClick: () => navigate(`/discussions/edit/${discussion.discussion_id}`),
+                      onClick: () => navigate(`/manage?tab=discussions`),
                     },
                   ]
                 : []),

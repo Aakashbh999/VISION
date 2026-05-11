@@ -9,16 +9,22 @@ export const uploadResource = async (formData) => {
   return response.data;
 };
 
-export const getResources = async (filters = {}) => {
+export const getResources = async (filters = {}, signal) => {
   const { view, ...otherFilters } = filters;
 
   if (view === "my") {
-    const response = await api.get("/resources/my", { params: otherFilters });
+    const response = await api.get("/resources/my", {
+      params: otherFilters,
+      signal,
+    });
 
     return { data: response.data };
   }
 
-  const response = await api.get("/resources", { params: otherFilters });
+  const response = await api.get("/resources", {
+    params: otherFilters,
+    signal,
+  });
   return response.data;
 };
 

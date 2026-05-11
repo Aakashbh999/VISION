@@ -90,7 +90,7 @@ const updateCommentVoteTree = (comments, targetCommentId, nextVoteType) => {
 export const useDiscussions = (filters = {}) => {
   return useQuery({
     queryKey: ["discussions", filters],
-    queryFn: () => getDiscussions(filters),
+    queryFn: ({ signal }) => getDiscussions(filters, signal),
     staleTime: 2 * 60 * 1000,
   });
 };

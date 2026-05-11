@@ -142,13 +142,16 @@ exports.getDiscussions = async (filters = {}, currentUserId = null) => {
     pool.query(countQuery, countParams),
   ]);
 
+  const total = parseInt(countResult.rows[0].total, 10);
+
   return {
     discussions: discussions.rows,
-    pagination: buildPaginationMeta({
-      page,
-      limit,
-      total: parseInt(countResult.rows[0].total, 10),
-    }),
+    meta: {
+      totalItems: total,
+      currentPage: page,
+      totalPages: Math.ceil(total / limit),
+      hasNextPage: page * limit < total,
+    },
   };
 };
 

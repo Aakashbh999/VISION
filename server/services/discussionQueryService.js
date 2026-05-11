@@ -99,7 +99,8 @@ const buildSortClause = (
     case "oldest":
       return "ORDER BY d.created_at ASC";
     default:
-      return `ORDER BY ${boostPriority}, d.created_at DESC`;
+      // Default to a mix of recency and popularity
+      return `ORDER BY ${boostPriority}, d.created_at DESC, (d.like_count * 2 + d.comment_count) DESC`;
   }
 };
 

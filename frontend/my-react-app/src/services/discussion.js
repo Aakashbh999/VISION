@@ -1,6 +1,6 @@
 import api from "./api";
 
-export const getDiscussions = async (filters = {}) => {
+export const getDiscussions = async (filters = {}, signal) => {
   const params = new URLSearchParams();
 
   if (filters.specialization)
@@ -14,7 +14,9 @@ export const getDiscussions = async (filters = {}) => {
   if (filters.page) params.append("page", filters.page);
   if (filters.limit) params.append("limit", filters.limit);
 
-  const response = await api.get(`/discussions?${params.toString()}`);
+  const response = await api.get(`/discussions?${params.toString()}`, {
+    signal,
+  });
   return response.data;
 };
 

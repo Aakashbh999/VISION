@@ -9,7 +9,9 @@
     "start": "node index.js",
     "seed": "node db/db-seeds/scripts/seed.js",
     "dev": "node --watch server.js",
-    "migrate": "node src/db/migrations/run_migrations.js"
+    "migrate": "node src/db/migrations/run_migrations.js",
+    "load-test-data": "node scripts/loadTestData.js",
+    "load-test-data:cleanup": "node scripts/cleanupTestData.js"
   },
   "keywords": [],
   "author": "",

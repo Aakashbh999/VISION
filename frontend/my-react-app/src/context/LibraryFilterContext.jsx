@@ -26,7 +26,13 @@ export const FilterProvider = ({ children, initialFilters: propInitialFilters = 
   const [filters, setFilters] = useState(propInitialFilters);
 
   const updateFilter = (key, value) => {
-    setFilters((prev) => ({ ...prev, [key]: value }));
+    setFilters((prev) => {
+      const next = { ...prev, [key]: value };
+      if (key !== "page") {
+        next.page = 1;
+      }
+      return next;
+    });
   };
 
   const resetFilters = () => {

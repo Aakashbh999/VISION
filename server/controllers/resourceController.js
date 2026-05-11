@@ -390,19 +390,22 @@ exports.getResources = catchAsync(async (req, res) => {
       data: [],
       recommendations,
       noResults: true,
-      pagination: {
-        total: 0,
-        page: pageNum,
-        limit: limitNum,
+      meta: {
+        totalItems: 0,
+        currentPage: pageNum,
         totalPages: 0,
+        hasNextPage: false,
       },
     });
   }
 
   return res.json({
     data: result.rows,
-    pagination: {
-      ...buildPaginationMeta({ total, page: pageNum, limit: limitNum }),
+    meta: {
+      totalItems: total,
+      currentPage: pageNum,
+      totalPages: Math.ceil(total / limitNum),
+      hasNextPage: pageNum * limitNum < total,
     },
   });
 });

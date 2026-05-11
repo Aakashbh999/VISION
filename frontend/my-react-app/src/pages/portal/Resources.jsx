@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useRef, useEffect } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import {
   Search,
@@ -25,23 +25,80 @@ import ErrorState from "../../components/ui/ErrorState";
 import Button from "../../components/ui/Button";
 import { AcademicProgramFilter } from "../../components/lib";
 
+const RESOURCES_PAGE_SIZE = 30;
+
 const ResourcesContent = () => {
   const { filters, updateFilter, resetFilters } = useFilters();
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
+  const [allResources, setAllResources] = useState([]);
+  const [page, setPage] = useState(1);
+  const loadMoreRef = useRef(null);
 
-  const { data: resourcesData, isLoading, error } = useResources(filters);
+  const {
+    data: resourcesData,
+    isLoading,
+    isFetching,
+    error,
+  } = useResources({
+    ...filters,
+    limit: RESOURCES_PAGE_SIZE,
+    page,
+  });
   const { programs } = useDiscussionReferenceData();
+
+  // Synchronize local page state with filter context
+  useEffect(() => {
+    setPage(filters.page || 1);
+    setAllResources([]);
+  }, [filters.search, filters.resource_type, filters.semester, filters.program_id, filters.view, filters.status, filters.page]);
 
   const handleFilterChange = (e) => {
     const { name, value } = e.target;
     updateFilter(name, value);
-    if (name !== "page") updateFilter("page", 1);
   };
 
   const handleViewChange = (view) => {
     updateFilter("view", view);
-    updateFilter("page", 1);
   };
+
+  // Accumulate resources from multiple pages
+  useEffect(() => {
+    if (resourcesData?.data) {
+      if (page === 1) {
+        setAllResources(resourcesData.data);
+      } else {
+        setAllResources((prev) => {
+          const existingIds = new Set(prev.map((r) => r.resource_id));
+          const newResources = resourcesData.data.filter(
+            (r) => !existingIds.has(r.resource_id),
+          );
+          return [...prev, ...newResources];
+        });
+      }
+    }
+  }, [resourcesData, page]);
+
+  // Intersection Observer for infinite scroll
+  useEffect(() => {
+    const hasNextPage = resourcesData?.meta?.hasNextPage;
+    
+    if (!hasNextPage || isFetching) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && !isFetching && hasNextPage) {
+          setPage((prev) => prev + 1);
+        }
+      },
+      { threshold: 0.1 },
+    );
+
+    if (loadMoreRef.current) {
+      observer.observe(loadMoreRef.current);
+    }
+
+    return () => observer.disconnect();
+  }, [isFetching, resourcesData?.meta?.hasNextPage, page]);
 
   return (
     <div className="max-w-[1400px] mx-auto px-2 sm:px-4 md:px-8 lg:px-10 py-3 sm:py-4 md:py-8 lg:py-10 pb-16 sm:pb-20">
@@ -228,10 +285,13 @@ const ResourcesContent = () => {
       </SurfaceCard>
 
       {}
-      {isLoading ? (
+      {isLoading && page === 1 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {[1, 2, 3, 4, 5, 6].map((i) => (
-            <SurfaceCard key={i} className="flex flex-col h-full overflow-hidden">
+            <SurfaceCard
+              key={i}
+              className="flex flex-col h-full overflow-hidden"
+            >
               <Skeleton className="w-full h-40 rounded-none" />
               <div className="p-5 flex-1 flex flex-col gap-3">
                 <Skeleton className="w-1/4 h-5" />
@@ -252,7 +312,7 @@ const ResourcesContent = () => {
           description="Failed to load resources. Check your connection."
           onRetry={() => window.location.reload()}
         />
-      ) : !resourcesData?.data?.length || resourcesData?.noResults ? (
+      ) : (allResources.length === 0 && !isLoading) || resourcesData?.noResults ? (
         <SurfaceCard className="text-center py-14 sm:py-20 border-dashed border-2">
           {resourcesData?.noResults ? (
             <div className="max-w-3xl mx-auto px-3 sm:px-6">
@@ -293,15 +353,49 @@ const ResourcesContent = () => {
               </div>
             </div>
           ) : (
-            <EmptyState icon={Search} title="No Results Found" description="" />
+            <div className="flex flex-col items-center">
+              <EmptyState icon={Search} title="No Results Found" description="" />
+              <Button onClick={resetFilters} variant="outline" className="mt-4">
+                Clear All Filters
+              </Button>
+            </div>
           )}
         </SurfaceCard>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-6 sm:gap-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-          {resourcesData.data.map((resource) => (
-            <ResourceCard key={resource.resource_id} resource={resource} showStatus={filters.view === "my"} />
-          ))}
-        </div>
+        <>
+          <div 
+            key={JSON.stringify(filters)}
+            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-6 sm:gap-8 animate-in fade-in slide-in-from-bottom-4 duration-500"
+          >
+            {allResources.map((resource) => (
+              <ResourceCard
+                key={resource.resource_id}
+                resource={resource}
+                showStatus={filters.view === "my"}
+              />
+            ))}
+          </div>
+
+          {(resourcesData?.meta?.hasNextPage || isFetching) && (
+            <div
+              ref={loadMoreRef}
+              className="pt-12 pb-24 flex flex-col items-center gap-4"
+            >
+              {isFetching ? (
+                <LoadingSpinner size="sm" inline />
+              ) : (
+                <Button
+                  onClick={() => setPage((prev) => prev + 1)}
+                  variant="outline"
+                  size="md"
+                  className="px-8"
+                >
+                  Load More Resources
+                </Button>
+              )}
+            </div>
+          )}
+        </>
       )}
 
       <ResourceUploadModal
@@ -330,9 +424,9 @@ const Resources = () => {
       view: searchParams.get("view") || "all",
       status: searchParams.get("status") || "all",
       page: parseInt(searchParams.get("page"), 10) || 1,
-      limit: 12,
+      limit: RESOURCES_PAGE_SIZE,
     };
-  }, [searchParams]);
+  }, [searchParams, user]);
 
   return (
     <FilterProvider initialFilters={initialFilters}>
