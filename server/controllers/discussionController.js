@@ -1,3 +1,17 @@
+/**
+ * Discussion Controller
+ * Manages discussion forum operations including creation, filtering, trending discussions, and tag management.
+ * Integrates with profanity filtering and recommendation engine for enhanced content discovery.
+ *
+ * Features:
+ * - Discussions listing with multi-dimensional filtering (specialization, degree, program, tags, search)
+ * - Trending discussions ranking by engagement metrics
+ * - Dynamic tagging with system/custom tag support
+ * - Auto-search fallback with recommendations when no results found
+ * - User preference persistence for default filters
+ * - Profanity content validation
+ */
+
 const pool = require("../config/db");
 const discussionService = require("../services/discussionService");
 const profanityService = require("../services/profanityService");
@@ -25,6 +39,25 @@ async function processTagInput(tags) {
   return [...numericIds, ...numericStrings, ...convertedIds];
 }
 
+/**
+ * Get all discussions with optional filtering and search
+ * Returns paginated discussions with tags, supports multi-dimensional filtering
+ * Falls back to recommendations if search yields no results
+ *
+ * @async
+ * @param {Object} req - Express request
+ * @param {string} [req.query.specialization] - Filter by specialization (web-development, etc.)
+ * @param {string} [req.query.degree] - Filter by academic degree
+ * @param {string} [req.query.jobRole] - Filter by job role
+ * @param {string} [req.query.program] - Filter by academic program
+ * @param {string} [req.query.tag] - Filter by tag ID or name
+ * @param {string} [req.query.search] - Full-text search query
+ * @param {string} [req.query.sort] - Sort order (latest, trending, top) - default: latest
+ * @param {string} [req.query.page] - Page number for pagination
+ * @param {string} [req.query.limit] - Items per page
+ * @param {Object} res - Express response
+ * @returns {Object} - { discussions: [], pagination: {}, tags: [], recommendations?: [] }
+ */
 exports.getAllDiscussions = catchAsync(async (req, res) => {
   const userId = req.user?.portal_user_id || null;
   const filters = {
@@ -61,18 +94,48 @@ exports.getAllDiscussions = catchAsync(async (req, res) => {
   res.json(result);
 });
 
+/**
+ * Get trending discussions ranked by engagement metrics
+ * Returns top discussions by like count, comment count, and recency
+ *
+ * @async
+ * @param {Object} req - Express request
+ * @param {string} [req.query.limit] - Number of trending items (default: 10)
+ * @param {Object} res - Express response
+ * @returns {Array} - Sorted array of trending discussion objects
+ */
 exports.getTrendingDiscussions = catchAsync(async (req, res) => {
   const limit = parseInt(req.query.limit) || 10;
   const trending = await discussionService.getTrendingDiscussions(limit);
   res.json(trending);
 });
 
+/**
+ * Get user's saved discussion filter preferences
+ * Retrieves default filters (specialization, degree, etc.) for personalized browsing
+ *
+ * @async
+ * @param {Object} req - Express request (requires auth)
+ * @param {Object} req.user - { portal_user_id }
+ * @param {Object} res - Express response
+ * @returns {Object} - User's default filter preferences or empty object
+ */
 exports.getUserDefaults = catchAsync(async (req, res) => {
   const userId = req.user.portal_user_id;
   const defaults = await discussionService.getUserFilterDefaults(userId);
   res.json(defaults || {});
 });
 
+/**
+ * Get all available discussion tags
+ * Returns system tags and/or custom tags for filtering and categorization
+ *
+ * @async
+ * @param {Object} req - Express request
+ * @param {string} [req.query.type] - Filter by type: 'system' or 'custom'
+ * @param {Object} res - Express response
+ * @returns {Array} - Array of tag objects { tag_id, name, tag_type }
+ */
 exports.getAllTags = catchAsync(async (req, res) => {
   const { type } = req.query;
   const validType = type === "system" || type === "custom" ? type : null;
@@ -95,10 +158,28 @@ const SPECIALIZATIONS = [
   { id: 12, name: "Game Development", slug: "game-development" },
 ];
 
+/**
+ * Get all discussion specializations
+ * Returns predefined list of IT specialization categories
+ *
+ * @async
+ * @param {Object} req - Express request
+ * @param {Object} res - Express response
+ * @returns {Array} - Array of specialization objects { id, name, slug }
+ */
 exports.getSpecializations = catchAsync(async (req, res) => {
   res.json(SPECIALIZATIONS);
 });
 
+/**
+ * Get all academic degrees
+ * Returns degree codes for program/discussion filtering
+ *
+ * @async
+ * @param {Object} req - Express request
+ * @param {Object} res - Express response
+ * @returns {Array} - Array of degree objects { id, code, name }
+ */
 exports.getDegrees = catchAsync(async (req, res) => {
   const result = await pool.query(
     "SELECT id, degree_code as code, degree_code as name FROM portal.academic_degrees ORDER BY id ASC",
@@ -106,6 +187,15 @@ exports.getDegrees = catchAsync(async (req, res) => {
   res.json(result.rows);
 });
 
+/**
+ * Get all academic programs
+ * Returns programs available in the platform
+ *
+ * @async
+ * @param {Object} req - Express request
+ * @param {Object} res - Express response
+ * @returns {Array} - Array of program objects { id, name }
+ */
 exports.getPrograms = catchAsync(async (req, res) => {
   const result = await pool.query(
     "SELECT program_id as id, program_name as name FROM portal.programs ORDER BY program_id ASC",
@@ -113,6 +203,18 @@ exports.getPrograms = catchAsync(async (req, res) => {
   res.json(result.rows);
 });
 
+/**
+ * Get discussion details with comments
+ * Fetches single discussion and all associated comments with optional sorting
+ *
+ * @async
+ * @param {Object} req - Express request
+ * @param {string} req.params.id - Discussion ID
+ * @param {string} [req.query.sort] - Comment sort order (latest, top, oldest)
+ * @param {Object} res - Express response
+ * @returns {Object} - { discussion: {}, comments: [] }
+ * @throws {Error} - 404 if discussion not found
+ */
 exports.getDiscussionDetails = catchAsync(async (req, res) => {
   const { id } = req.params;
   const { sort } = req.query;
@@ -132,6 +234,25 @@ exports.getDiscussionDetails = catchAsync(async (req, res) => {
   });
 });
 
+/**
+ * Create new discussion
+ * Posts new discussion topic with tags, profanity filtering, and activity logging
+ *
+ * @async
+ * @param {Object} req - Express request (requires auth)
+ * @param {Object} req.user - { portal_user_id }
+ * @param {Object} req.validatedBody - {
+ *   title: string - Discussion title
+ *   content: string - Discussion body (min 10 chars)
+ *   tags: number[] - Tag IDs or names
+ *   degree_id?: number
+ *   program_id?: number
+ *   career_scope?: string
+ * }
+ * @param {Object} res - Express response
+ * @returns {Object} - Created discussion object with ID
+ * @throws {Error} - 400 if content fails profanity check or validation
+ */
 exports.createDiscussion = catchAsync(async (req, res) => {
   const userId = req.user.portal_user_id;
   let {
@@ -186,7 +307,6 @@ exports.createDiscussion = catchAsync(async (req, res) => {
         : [];
     tagIds = [...systemIds, ...customIds];
   } else {
-
     tagIds = await processTagInput(tags);
   }
 

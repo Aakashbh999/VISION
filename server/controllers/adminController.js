@@ -1,3 +1,16 @@
+/**
+ * Admin Controller
+ * Handles administrative operations for student management, moderation, and system oversight.
+ *
+ * Features:
+ * - Student registration review (approve/reject) with whitelist validation
+ * - Student status management (active, suspended, rejected)
+ * - Content moderation (discussions deletion, report management)
+ * - User suspension and reactivation
+ * - Admin audit logging for compliance tracking
+ * - Pagination support for large datasets
+ */
+
 const pool = require("../config/db");
 const {
   AuditActions,
@@ -8,12 +21,11 @@ const {
 const catchAsync = require("../utils/catchAsync");
 const createError = require("http-errors");
 const logger = require("../utils/logger");
-const {
-  parsePagination,
-  buildPaginationMeta,
-} = require("../utils/pagination");
+const { parsePagination, buildPaginationMeta } = require("../utils/pagination");
 const { withTransaction } = require("../utils/withTransaction");
-const { getModerationTargetConfig } = require("../utils/adminModerationTargets");
+const {
+  getModerationTargetConfig,
+} = require("../utils/adminModerationTargets");
 
 const logModerationAction = (adminId, actionType, targetType, targetId) =>
   pool.query(
@@ -23,7 +35,12 @@ const logModerationAction = (adminId, actionType, targetType, targetId) =>
     [adminId, actionType, targetType, targetId],
   );
 
-const updateStudentStatus = async (userId, nextStatus, errorMessage, reason = null) => {
+const updateStudentStatus = async (
+  userId,
+  nextStatus,
+  errorMessage,
+  reason = null,
+) => {
   const result = await pool.query(
     `UPDATE portal.users
       SET student_status = $2, rejection_reason = $3
@@ -92,7 +109,9 @@ exports.getStudentsByStatus = catchAsync(async (req, res) => {
   if (status === "suspended") {
     conditions.push("p.is_suspended = TRUE");
   } else if (status) {
-    conditions.push(`p.student_status = $${values.length + 1} AND p.is_suspended = FALSE`);
+    conditions.push(
+      `p.student_status = $${values.length + 1} AND p.is_suspended = FALSE`,
+    );
     values.push(status);
   }
 
@@ -103,7 +122,8 @@ exports.getStudentsByStatus = catchAsync(async (req, res) => {
     values.push(`%${search}%`);
   }
 
-  const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(" AND ")}` : "";
+  const whereClause =
+    conditions.length > 0 ? `WHERE ${conditions.join(" AND ")}` : "";
 
   const query = `
       SELECT
@@ -147,7 +167,11 @@ exports.approveStudent = catchAsync(async (req, res) => {
   const { user_id } = req.params;
   const adminId = req.user.portal_user_id;
 
-  await updateStudentStatus(user_id, "approved", "Already approved or not found");
+  await updateStudentStatus(
+    user_id,
+    "approved",
+    "Already approved or not found",
+  );
   await logModerationAction(adminId, "approve", "user", user_id);
 
   res.json({ message: "Student approved successfully" });
@@ -158,7 +182,12 @@ exports.rejectStudent = catchAsync(async (req, res) => {
   const { reason } = req.body;
   const adminId = req.user.portal_user_id;
 
-  await updateStudentStatus(user_id, "rejected", "Already rejected or not found", reason);
+  await updateStudentStatus(
+    user_id,
+    "rejected",
+    "Already rejected or not found",
+    reason,
+  );
   await logModerationAction(adminId, "reject", "user", user_id);
 
   res.json({ message: "Student rejected successfully" });
@@ -453,7 +482,6 @@ exports.getUserActivity = catchAsync(async (req, res) => {
 });
 
 exports.getActiveSessions = catchAsync(async (req, res) => {
-
   const tableExists = await pool.query(
     `SELECT EXISTS (
          SELECT FROM information_schema.tables
@@ -463,7 +491,6 @@ exports.getActiveSessions = catchAsync(async (req, res) => {
   );
 
   if (!tableExists.rows[0].exists) {
-
     const result = await pool.query(`
         SELECT
           au.auth_user_id,
@@ -517,7 +544,6 @@ exports.forceLogoutUser = catchAsync(async (req, res) => {
   );
 
   if (tableExists.rows[0].exists) {
-
     await pool.query(
       `UPDATE auth.refresh_tokens
          SET is_revoked = TRUE, revoked_at = NOW()
@@ -638,7 +664,6 @@ exports.hardDeleteUser = catchAsync(async (req, res) => {
   }
 
   const message = await withTransaction(async (client) => {
-
     const userRes = await client.query(
       `SELECT auth_user_id FROM portal.users WHERE user_id = $1`,
       [user_id],
@@ -721,7 +746,6 @@ exports.resolveReportWithAction = catchAsync(async (req, res) => {
   }
 
   const message = await withTransaction(async (client) => {
-
     const reportRes = await client.query(
       `SELECT * FROM portal.reports WHERE report_id = $1`,
       [report_id],
@@ -736,14 +760,16 @@ exports.resolveReportWithAction = catchAsync(async (req, res) => {
     if (action === "soft_delete") {
       const config = getModerationTargetConfig(report.target_type);
       if (!config) {
-        throw createError(400, `Unsupported target type: ${report.target_type}`);
+        throw createError(
+          400,
+          `Unsupported target type: ${report.target_type}`,
+        );
       }
 
       if (config.tableName) {
-        const extraSet =
-          config.softDeleteSetsDeletedFlag
-            ? ", is_deleted = TRUE"
-            : "";
+        const extraSet = config.softDeleteSetsDeletedFlag
+          ? ", is_deleted = TRUE"
+          : "";
         await client.query(
           `UPDATE ${config.tableName} SET deleted_at = NOW()${extraSet} WHERE ${config.idColumn} = $1`,
           [report.target_id],
@@ -758,7 +784,10 @@ exports.resolveReportWithAction = catchAsync(async (req, res) => {
     } else if (action === "hard_delete") {
       const config = getModerationTargetConfig(report.target_type);
       if (!config) {
-        throw createError(400, `Unsupported target type: ${report.target_type}`);
+        throw createError(
+          400,
+          `Unsupported target type: ${report.target_type}`,
+        );
       }
 
       if (config.tableName) {
@@ -788,9 +817,7 @@ exports.resolveReportWithAction = catchAsync(async (req, res) => {
 
         await client.query(
           `DELETE FROM ${config.tableName} WHERE ${config.idColumn} = $1`,
-          [
-          report.target_id,
-          ],
+          [report.target_id],
         );
         await logAdminEvent(
           req,
@@ -873,47 +900,76 @@ exports.getRegistrationWhitelists = catchAsync(async (req, res) => {
 });
 
 exports.addRegistrationWhitelist = catchAsync(async (req, res) => {
-  const { registration_number, student_name, date_of_birth, batch_year, program } = req.body;
+  const {
+    registration_number,
+    student_name,
+    date_of_birth,
+    batch_year,
+    program,
+  } = req.body;
 
   const result = await pool.query(
     `INSERT INTO portal.registration_no
      (registration_number, student_name, date_of_birth, batch_year, program)
      VALUES ($1, $2, $3, $4, $5)
      RETURNING *`,
-    [registration_number, student_name, date_of_birth, batch_year, program]
+    [registration_number, student_name, date_of_birth, batch_year, program],
   );
 
-  await logAdminEvent(req, AuditActions.ADMIN_CREATE_CONTENT, "registration_whitelist", registration_number);
+  await logAdminEvent(
+    req,
+    AuditActions.ADMIN_CREATE_CONTENT,
+    "registration_whitelist",
+    registration_number,
+  );
 
   res.status(201).json({
     success: true,
     data: result.rows[0],
-    message: "Registration added to whitelist"
+    message: "Registration added to whitelist",
   });
 });
 
 exports.updateRegistrationWhitelist = catchAsync(async (req, res) => {
   const { registration_number: originalRegNo } = req.params;
-  const { registration_number, student_name, date_of_birth, batch_year, program } = req.body;
+  const {
+    registration_number,
+    student_name,
+    date_of_birth,
+    batch_year,
+    program,
+  } = req.body;
 
   const result = await pool.query(
     `UPDATE portal.registration_no
      SET registration_number = $1, student_name = $2, date_of_birth = $3, batch_year = $4, program = $5
      WHERE registration_number = $6
      RETURNING *`,
-    [registration_number, student_name, date_of_birth, batch_year, program, originalRegNo]
+    [
+      registration_number,
+      student_name,
+      date_of_birth,
+      batch_year,
+      program,
+      originalRegNo,
+    ],
   );
 
   if (result.rowCount === 0) {
     throw createError(404, "Registration not found");
   }
 
-  await logAdminEvent(req, AuditActions.ADMIN_UPDATE_CONTENT, "registration_whitelist", registration_number);
+  await logAdminEvent(
+    req,
+    AuditActions.ADMIN_UPDATE_CONTENT,
+    "registration_whitelist",
+    registration_number,
+  );
 
   res.json({
     success: true,
     data: result.rows[0],
-    message: "Registration updated"
+    message: "Registration updated",
   });
 });
 
@@ -922,17 +978,22 @@ exports.deleteRegistrationWhitelist = catchAsync(async (req, res) => {
 
   const result = await pool.query(
     "DELETE FROM portal.registration_no WHERE registration_number = $1 RETURNING *",
-    [registration_number]
+    [registration_number],
   );
 
   if (result.rowCount === 0) {
     throw createError(404, "Registration not found");
   }
 
-  await logAdminEvent(req, AuditActions.ADMIN_DELETE_CONTENT, "registration_whitelist", registration_number);
+  await logAdminEvent(
+    req,
+    AuditActions.ADMIN_DELETE_CONTENT,
+    "registration_whitelist",
+    registration_number,
+  );
 
   res.json({
     success: true,
-    message: "Registration removed from whitelist"
+    message: "Registration removed from whitelist",
   });
 });

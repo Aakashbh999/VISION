@@ -1,3 +1,19 @@
+/**
+ * Roadmap Controller
+ * Manages learning roadmap enrollment, step progression, and resource tracking.
+ * Implements completion tracking with proof-of-work (PoW) submissions and cooldown periods.
+ *
+ * Features:
+ * - Roadmap browsing with enrollment status tracking
+ * - Roadmap detail retrieval with step hierarchies and resources
+ * - Step completion with 24-hour lockout between completions
+ * - Proof-of-work (PoW) submission for step verification
+ * - Resource visit tracking within roadmap context
+ * - Step-specific resource retrieval
+ * - User enrollment in roadmaps
+ * - Roadmap abandonment tracking (leave status)
+ */
+
 const pool = require("../config/db");
 const XPService = require("../services/xpService");
 const catchAsync = require("../utils/catchAsync");

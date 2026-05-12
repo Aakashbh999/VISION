@@ -1,3 +1,19 @@
+/**
+ * Study Group Controller (Legacy)
+ * Simple study group operations for basic group functionality.
+ * Note: Primary group features are in groupCRUDController and related group modules.
+ *
+ * Features:
+ * - Group creation
+ * - Group joining
+ * - Group leaving
+ * - Member listing
+ * - Post creation within groups
+ * - Post retrieval from groups
+ *
+ * Status: Legacy implementation (newer groupCRUDController + group membership/post controllers recommended)
+ */
+
 const pool = require("../config/db");
 const catchAsync = require("../utils/catchAsync");
 const createError = require("http-errors");

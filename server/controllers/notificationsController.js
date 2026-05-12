@@ -1,3 +1,19 @@
+/**
+ * Notifications Controller
+ * Manages user notification delivery, reading status, and cleanup.
+ * Supports pagination, filtering, and bulk operations.
+ *
+ * Features:
+ * - Notification retrieval with pagination (default 20, max 50 per page)
+ * - Unread-only filtering
+ * - Time-based filtering (last N days)
+ * - Read status tracking and marking
+ * - Bulk mark-as-read for all notifications
+ * - Individual notification deletion
+ * - Bulk cleanup (clear all notifications)
+ * - Notification type inference from activity metadata
+ */
+
 const pool = require("../config/db");
 const catchAsync = require("../utils/catchAsync");
 const createError = require("http-errors");

@@ -1,3 +1,17 @@
+/**
+ * Authentication Controller
+ * Handles user registration, login, email verification, password reset, and JWT token management.
+ * Implements OAuth-style JWT token rotation, multi-device session tracking, and security features.
+ *
+ * Features:
+ * - User registration with academic certificate verification and email validation
+ * - Login with suspension and email verification checks
+ * - JWT access/refresh token management with rotation and reuse detection
+ * - Email-based password reset flow with one-time tokens
+ * - Multi-device session management with revocation capabilities
+ * - Comprehensive audit logging for all authentication actions
+ */
+
 const pool = require("../config/db");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
@@ -27,6 +41,12 @@ const catchAsync = require("../utils/catchAsync");
 const env = require("../config/env");
 const logger = require("../utils/logger");
 
+/**
+ * Resolves the API base URL for email verification links
+ * Prefers configured BASE_URL, falls back to request headers (for proxied environments), then defaults to localhost
+ * @param {Object} req - Express request object
+ * @returns {string} - Base URL for verification links
+ */
 const resolveApiBaseUrl = (req) => {
   const configuredBaseUrl = (env.BASE_URL || "").trim();
   if (configuredBaseUrl) {
@@ -46,6 +66,36 @@ const resolveApiBaseUrl = (req) => {
   return `http://localhost:${env.PORT || 5000}`;
 };
 
+/**
+ * User Registration Handler
+ * Creates new student account with email verification workflow
+ * - Validates academic certificate upload
+ * - Creates separate auth (security) and portal (business) user records
+ * - Calculates semester from batch year if not manually specified
+ * - Associates user interests/career scope with system tags
+ * - Initializes user statistics (XP, level)
+ * - Sends verification email asynchronously (non-blocking)
+ *
+ * @async
+ * @param {Object} req - Express request object
+ * @param {Object} req.file - Academic certificate file
+ * @param {Object} req.validatedBody - Validated request body containing:
+ *   - email {string} - User email (unique)
+ *   - password {string} - Hashed with bcrypt (12 rounds)
+ *   - full_name {string}
+ *   - university {string}
+ *   - campus_id {number}
+ *   - program_id {number}
+ *   - semester {number} - Academic semester (optional, calculated from batch_year)
+ *   - batch_year {number} - Student batch year (optional)
+ *   - semester_is_manual {boolean} - Whether semester was manually entered
+ *   - tu_registration_no {string} - Unique registration number
+ *   - career_scope {string} - Comma-separated interests
+ *   - date_of_birth {string} - ISO date
+ * @param {Object} res - Express response object
+ * @returns {void} - Returns 201 with auth_user_id and success message
+ * @throws {Error} - 400 if email/registration number already exists, 400 if certificate missing
+ */
 exports.register = catchAsync(async (req, res) => {
   const input = req.validatedBody || req.body;
   const {
@@ -69,11 +119,13 @@ exports.register = catchAsync(async (req, res) => {
     throw createError(400, "Academic Certificate is required.");
   }
 
+  // Transaction-based approach to ensure atomic account creation
   const client = await pool.connect();
 
   try {
     await client.query("BEGIN");
 
+    // Check for duplicate email
     const existing = await client.query(
       "SELECT 1 FROM auth.users WHERE email = $1",
       [email],
@@ -231,6 +283,23 @@ exports.register = catchAsync(async (req, res) => {
   }
 });
 
+/**
+ * User Login Handler
+ * Validates credentials and issues JWT access/refresh token pair
+ * - Verifies email exists in system
+ * - Performs password comparison (bcrypt)
+ * - Checks if account is suspended
+ * - Logs authentication event to audit trail
+ * - Updates last_login timestamp
+ * - Returns JWT tokens with 15-minute expiry and 7-day refresh rotation
+ *
+ * @async
+ * @param {Object} req - Express request object
+ * @param {Object} req.validatedBody - { email: string, password: string }
+ * @param {Object} res - Express response object
+ * @returns {Object} - { accessToken, refreshToken, expiresIn, role }
+ * @throws {Error} - 400 if user not found or invalid credentials, 403 if suspended
+ */
 exports.login = catchAsync(async (req, res) => {
   const { email, password } = req.validatedBody || req.body;
 
@@ -301,6 +370,23 @@ exports.login = catchAsync(async (req, res) => {
   });
 });
 
+/**
+ * Email Verification Handler
+ * Validates one-time email verification token and activates user account
+ * - Checks token existence and expiration (24h window)
+ * - Decodes JWT to extract auth_user_id
+ * - Updates email_status to 'verified' in auth.users
+ * - Sets is_verified flag in portal.users
+ * - Sends welcome email asynchronously
+ * - Deletes token after use (one-time use)
+ *
+ * @async
+ * @param {Object} req - Express request object
+ * @param {string} req.query.token - Signed JWT email verification token
+ * @param {Object} res - Express response object
+ * @returns {Object} - { message: "Email successfully verified" }
+ * @throws {Error} - 400 if token missing, invalid, or expired
+ */
 exports.verifyEmail = catchAsync(async (req, res) => {
   const { token } = req.query;
 
@@ -376,6 +462,21 @@ exports.verifyEmail = catchAsync(async (req, res) => {
   res.json({ message: "Email successfully verified" });
 });
 
+/**
+ * Resend Verification Email Handler
+ * Generates new verification token and sends email to unverified users
+ * - Checks if user exists and account is not already verified
+ * - Invalidates previous tokens
+ * - Creates new 24h JWT token
+ * - Sends email with verification link (non-blocking)
+ *
+ * @async
+ * @param {Object} req - Express request object (requires auth)
+ * @param {Object} req.user - { auth_user_id }
+ * @param {Object} res - Express response object
+ * @returns {Object} - { message: "Verification email sent successfully" }
+ * @throws {Error} - 400 if already verified, 404 if user not found
+ */
 exports.resendVerificationEmail = catchAsync(async (req, res) => {
   const { auth_user_id } = req.user;
 
@@ -432,6 +533,23 @@ exports.resendVerificationEmail = catchAsync(async (req, res) => {
   res.json({ message: "Verification email sent successfully" });
 });
 
+/**
+ * Forgot Password Handler
+ * Initiates password reset flow via email
+ * - Checks if email exists (does not reveal email status for security)
+ * - Generates cryptographically secure random token (32 bytes hex)
+ * - Hashes token for database storage
+ * - Creates 1-hour expiring reset token
+ * - Sends password reset email with raw token in link
+ * - Non-blocking email send (logs timeout warnings)
+ *
+ * @async
+ * @param {Object} req - Express request object
+ * @param {Object} req.validatedBody - { email: string }
+ * @param {Object} res - Express response object
+ * @returns {Object} - Generic message (same for existing/non-existing emails for security)
+ * @throws {Error} - None (always returns success message)
+ */
 exports.forgotPassword = catchAsync(async (req, res) => {
   const { email } = req.validatedBody || req.body;
 
@@ -496,6 +614,22 @@ exports.forgotPassword = catchAsync(async (req, res) => {
   });
 });
 
+/**
+ * Reset Password Handler
+ * Completes password reset using one-time token from email
+ * - Validates token and checks expiration (1 hour window)
+ * - Hashes new password with bcrypt (12 rounds)
+ * - Updates auth.users password_hash
+ * - Invalidates all existing refresh tokens (forces re-login)
+ * - Deletes reset token (one-time use)
+ *
+ * @async
+ * @param {Object} req - Express request object
+ * @param {Object} req.validatedBody - { token: string, newPassword: string }
+ * @param {Object} res - Express response object
+ * @returns {Object} - { message: "Password successfully reset." }
+ * @throws {Error} - 400 if token invalid or expired
+ */
 exports.resetPassword = catchAsync(async (req, res) => {
   const { token, newPassword } = req.validatedBody || req.body;
 
@@ -532,6 +666,21 @@ exports.resetPassword = catchAsync(async (req, res) => {
   res.json({ message: "Password successfully reset." });
 });
 
+/**
+ * JWT Token Refresh Handler
+ * Rotates refresh token and issues new access/refresh pair
+ * - Validates refresh token and checks for reuse (security measure)
+ * - Generates new token pair with rotated refresh token
+ * - Logs token refresh event
+ * - Detects refresh token reuse and requires full re-login for security
+ *
+ * @async
+ * @param {Object} req - Express request object
+ * @param {Object} req.validatedBody - { refreshToken: string }
+ * @param {Object} res - Express response object
+ * @returns {Object} - { accessToken, refreshToken, expiresIn, role }
+ * @throws {Error} - 401 if token expired, reused, or invalid
+ */
 exports.refreshToken = catchAsync(async (req, res) => {
   const { refreshToken } = req.validatedBody || req.body;
 
@@ -567,6 +716,18 @@ exports.refreshToken = catchAsync(async (req, res) => {
   }
 });
 
+/**
+ * Logout Handler (Single Device)
+ * Revokes refresh token for current device
+ * - Invalidates single session token
+ * - Logs logout event
+ *
+ * @async
+ * @param {Object} req - Express request object
+ * @param {Object} req.validatedBody - { refreshToken: string }
+ * @param {Object} res - Express response object
+ * @returns {Object} - { message: "Logged out successfully" }
+ */
 exports.logout = catchAsync(async (req, res) => {
   const { refreshToken } = req.validatedBody || req.body;
 
@@ -579,6 +740,19 @@ exports.logout = catchAsync(async (req, res) => {
   res.json({ message: "Logged out successfully" });
 });
 
+/**
+ * Logout Handler (All Devices)
+ * Revokes all refresh tokens for user across all devices/sessions
+ * - Invalidates all active refresh tokens
+ * - Logs all-sessions-revoked event
+ * - Requires full re-login on all devices
+ *
+ * @async
+ * @param {Object} req - Express request object (requires auth)
+ * @param {Object} req.user - { auth_user_id }
+ * @param {Object} res - Express response object
+ * @returns {Object} - { message: "Logged out from all devices successfully" }
+ */
 exports.logoutAllDevices = catchAsync(async (req, res) => {
   const authUserId = req.user.auth_user_id;
 
@@ -589,12 +763,39 @@ exports.logoutAllDevices = catchAsync(async (req, res) => {
   res.json({ message: "Logged out from all devices successfully" });
 });
 
+/**
+ * Get Active Sessions Handler
+ * Returns list of all active sessions for current user
+ * - Lists device info, last activity, and session metadata
+ * - Useful for multi-device session management UI
+ *
+ * @async
+ * @param {Object} req - Express request object (requires auth)
+ * @param {Object} req.user - { auth_user_id }
+ * @param {Object} res - Express response object
+ * @returns {Array} - List of active session objects
+ */
 exports.getSessions = catchAsync(async (req, res) => {
   const authUserId = req.user.auth_user_id;
   const sessions = await getUserSessions(authUserId);
   res.json(sessions);
 });
 
+/**
+ * Revoke Specific Session Handler
+ * Invalidates a single session by ID (allows logout from specific device)
+ * - Validates session belongs to current user
+ * - Revokes specified session token
+ * - Logs session revocation
+ *
+ * @async
+ * @param {Object} req - Express request object (requires auth)
+ * @param {Object} req.user - { auth_user_id }
+ * @param {string} req.params.id - Session ID to revoke
+ * @param {Object} res - Express response object
+ * @returns {Object} - { message: "Session revoked successfully" }
+ * @throws {Error} - 404 if session not found
+ */
 exports.revokeSessionById = catchAsync(async (req, res) => {
   const authUserId = req.user.auth_user_id;
   const { id } = req.params;

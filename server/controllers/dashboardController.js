@@ -1,3 +1,19 @@
+/**
+ * Dashboard Controller
+ * Aggregates user progress, recommendations, feed, and activity metrics into a unified dashboard.
+ * Executed via parallel queries for performance optimization.
+ *
+ * Features:
+ * - Progress tracking (average roadmap completion percentage)
+ * - Next recommended step suggestion
+ * - Personalized resource recommendations
+ * - IT clubs discovery
+ * - Degree-based discussion feed
+ * - VXP activity history (recent gamification actions)
+ * - Discussion participation metrics
+ * - Comprehensive progress bar visualization
+ */
+
 const pool = require("../config/db");
 const catchAsync = require("../utils/catchAsync");
 
@@ -19,7 +35,6 @@ exports.getDashboard = catchAsync(async (req, res) => {
     vxpActivityRes,
     discussionCountRes,
   ] = await Promise.all([
-
     pool.query(
       `SELECT
           COALESCE(AVG(roadmap_percent), 0) AS percent

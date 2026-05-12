@@ -1,3 +1,16 @@
+/**
+ * User Controller
+ * Manages user account operations including profile retrieval, presence tracking, and statistics.
+ * Provides current user context and activity metrics.
+ *
+ * Features:
+ * - Current user profile retrieval with role and status information
+ * - Presence/activity tracking (last_seen_at updates)
+ * - User XP and level statistics
+ * - Badge retrieval for user profiles
+ * - Multi-schema data aggregation (auth + portal)
+ */
+
 const pool = require("../config/db");
 const XPService = require("../services/xpService");
 const { buildPresenceSelect } = require("../utils/presence");
@@ -76,7 +89,6 @@ exports.getUserStats = catchAsync(async (req, res) => {
   const stats = await XPService.getUserStats(userId);
 
   if (!stats) {
-
     return res.json({
       user_id: userId,
       total_xp: 0,

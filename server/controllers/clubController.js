@@ -1,3 +1,17 @@
+/**
+ * Club Controller
+ * Manages IT club discovery and detail retrieval.
+ * Integrates with recommendation engine for fallback suggestions.
+ *
+ * Features:
+ * - Club browsing with search and specialty filtering
+ * - Club detail retrieval (contact info, website, location)
+ * - Club discovery by institution
+ * - Distinct specialty list
+ * - Auto-recommendations on empty search results
+ * - Public club filtering
+ */
+
 const pool = require("../config/db");
 const catchAsync = require("../utils/catchAsync");
 const createError = require("http-errors");

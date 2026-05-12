@@ -1,12 +1,25 @@
+/**
+ * Resource Controller
+ * Manages learning resource lifecycle including uploads, approvals, and user interactions.
+ * Supports multiple resource types (notes, books, projects, links) with tagging and categorization.
+ *
+ * Features:
+ * - Resource upload with type validation and tag management (system + custom)
+ * - Approval workflow for resource vetting (pending → approved/rejected)
+ * - Admin approval/rejection with activity logging
+ * - Resource search with multi-dimensional filtering (program, semester, type, tags)
+ * - User's resource library browsing
+ * - Pending resource management for administrators
+ * - XP reward system for resource contributions (100 VXP on approval)
+ * - Hashtag auto-extraction from descriptions for semester inference
+ */
+
 const pool = require("../config/db");
 const { notify, feed } = require("../utils/activityService");
 const { successResponse, errorResponse } = require("../utils/response");
 const catchAsync = require("../utils/catchAsync");
 const logger = require("../utils/logger");
-const {
-  parsePagination,
-  buildPaginationMeta,
-} = require("../utils/pagination");
+const { parsePagination, buildPaginationMeta } = require("../utils/pagination");
 const { withTransaction } = require("../utils/withTransaction");
 
 async function getOrCreateCustomTag(db, name) {
@@ -33,6 +46,32 @@ async function getOrCreateCustomTag(db, name) {
   return result.rows[0].tag_id;
 }
 
+/**
+ * Upload new learning resource
+ * Creates resource with auto-approval pending review or immediate publication
+ * Supports multiple resource types with tag management and hashtag extraction for semester inference
+ *
+ * Resource Types: notes, book, project, link
+ * Tag Limits: Max 5 system tags + max 2 custom tags
+ *
+ * @async
+ * @param {Object} req - Express request (requires auth)
+ * @param {Object} req.user - { portal_user_id }
+ * @param {Object} req.body - {
+ *   title: string (required) - Resource title
+ *   description: string - Full description (hashtags extracted for semester)
+ *   resource_type: string (required) - notes|book|project|link
+ *   program_id?: number - Academic program
+ *   semester?: number - Semester (or extracted from hashtags)
+ *   degree_id?: number - Academic degree
+ *   url?: string - External link (for link type)
+ *   system_tags?: string - JSON array of tag IDs
+ *   custom_tags?: string - JSON array of tag names
+ * }
+ * @param {Object} res - Express response
+ * @returns {Object} - Created resource with { resource_id, status, created_at }
+ * @throws {Error} - 400 if validation fails, 409 if duplicate detected
+ */
 exports.uploadResource = catchAsync(async (req, res) => {
   const userId = req.user.portal_user_id;
   const {
@@ -127,11 +166,15 @@ exports.uploadResource = catchAsync(async (req, res) => {
   const resolvedDegreeId = degree_id || req.user.academic_degree_id;
 
   const parsedProgramId =
-    resolvedProgramId !== undefined && resolvedProgramId !== null && resolvedProgramId !== ""
+    resolvedProgramId !== undefined &&
+    resolvedProgramId !== null &&
+    resolvedProgramId !== ""
       ? Number.parseInt(resolvedProgramId, 10)
       : null;
   const parsedDegreeId =
-    resolvedDegreeId !== undefined && resolvedDegreeId !== null && resolvedDegreeId !== ""
+    resolvedDegreeId !== undefined &&
+    resolvedDegreeId !== null &&
+    resolvedDegreeId !== ""
       ? Number.parseInt(resolvedDegreeId, 10)
       : null;
 
@@ -172,7 +215,10 @@ exports.uploadResource = catchAsync(async (req, res) => {
   try {
     await client.query("BEGIN");
 
-    const finalStatus = (req.user.role === 'admin' && req.body.status === 'approved') ? 'approved' : 'pending';
+    const finalStatus =
+      req.user.role === "admin" && req.body.status === "approved"
+        ? "approved"
+        : "pending";
 
     const result = await client.query(
       `INSERT INTO portal.resources
@@ -239,12 +285,15 @@ exports.uploadResource = catchAsync(async (req, res) => {
        LEFT JOIN portal.academic_degrees ad ON ad.id = r.degree_id
        LEFT JOIN portal.programs p ON p.program_id = r.program_id
        WHERE r.resource_id = $1`,
-      [resourceId]
+      [resourceId],
     );
 
     res.status(201).json({
       success: true,
-      message: finalStatus === 'approved' ? "Resource created and approved" : "Resource submitted for review",
+      message:
+        finalStatus === "approved"
+          ? "Resource created and approved"
+          : "Resource submitted for review",
       data: fullResource.rows[0],
     });
   } catch (error) {
@@ -262,6 +311,26 @@ exports.uploadResource = catchAsync(async (req, res) => {
   }
 });
 
+/**
+ * Search and filter approved resources
+ * Retrieves published resources with multi-dimensional filtering
+ * Excludes resources linked to roadmap steps (those managed separately)
+ *
+ * @async
+ * @param {Object} req - Express request
+ * @param {string} [req.query.program_id] - Filter by program (1-5 = departments, others = specific programs)
+ * @param {string} [req.query.semester] - Filter by semester
+ * @param {string} [req.query.degree_id] - Filter by degree
+ * @param {string} [req.query.resource_type] - Filter by type (notes, book, project, link)
+ * @param {string} [req.query.search] - Full-text search in title/description
+ * @param {string} [req.query.program_tag] - Filter by single tag
+ * @param {string} [req.query.hashtags] - Filter by hashtag
+ * @param {string} [req.query.sort] - Sort order (latest, popular, trending)
+ * @param {string} [req.query.page] - Pagination (default: 1)
+ * @param {string} [req.query.limit] - Per-page limit (default: 20, max: 50)
+ * @param {Object} res - Express response
+ * @returns {Object} - { resources: [], pagination: { page, limit, total, totalPages } }
+ */
 exports.getResources = catchAsync(async (req, res) => {
   const {
     program_id,
@@ -274,7 +343,11 @@ exports.getResources = catchAsync(async (req, res) => {
     sort,
   } = req.query;
 
-  const { page: pageNum, limit: limitNum, offset } = parsePagination(req.query, {
+  const {
+    page: pageNum,
+    limit: limitNum,
+    offset,
+  } = parsePagination(req.query, {
     defaultLimit: 20,
     maxLimit: 50,
   });
@@ -292,7 +365,9 @@ exports.getResources = catchAsync(async (req, res) => {
     params.push(pId);
 
     if (pId >= 1 && pId <= 5) {
-      conditions.push(`(r.program_id = $${params.length} OR r.degree_id = $${params.length})`);
+      conditions.push(
+        `(r.program_id = $${params.length} OR r.degree_id = $${params.length})`,
+      );
     } else {
       conditions.push(`r.program_id = $${params.length}`);
     }
@@ -307,7 +382,6 @@ exports.getResources = catchAsync(async (req, res) => {
   }
   if (resource_type) {
     if (resource_type === "pdf") {
-
       conditions.push(
         `(r.file_url ILIKE '%.pdf%' OR r.file_url ILIKE '%/raw/upload/%' OR (r.resource_type IN ('notes', 'book', 'project') AND r.file_url IS NOT NULL))`,
       );
@@ -410,6 +484,18 @@ exports.getResources = catchAsync(async (req, res) => {
   });
 });
 
+/**
+ * Get user's uploaded resources
+ * Retrieves all resources submitted by the current user regardless of approval status
+ *
+ * @async
+ * @param {Object} req - Express request (requires auth)
+ * @param {Object} req.user - { portal_user_id }
+ * @param {string} [req.query.page] - Pagination
+ * @param {string} [req.query.limit] - Per-page limit
+ * @param {Object} res - Express response
+ * @returns {Object} - { resources: [], pagination: {} }
+ */
 exports.getMyResources = catchAsync(async (req, res) => {
   const userId = req.user.portal_user_id;
   const { status } = req.query;
@@ -449,9 +535,24 @@ exports.getMyResources = catchAsync(async (req, res) => {
   return res.json(result.rows);
 });
 
+/**
+ * Get pending resource reviews (admin endpoint)
+ * Lists resources awaiting approval or rejection
+ *
+ * @async
+ * @param {Object} req - Express request (requires admin auth)
+ * @param {string} [req.query.page] - Pagination
+ * @param {string} [req.query.limit] - Per-page limit
+ * @param {Object} res - Express response
+ * @returns {Object} - { resources: [], pagination: {} }
+ */
 exports.getPendingResources = catchAsync(async (req, res) => {
   const { search } = req.query;
-  const { page: pageNum, limit: limitNum, offset } = parsePagination(req.query, {
+  const {
+    page: pageNum,
+    limit: limitNum,
+    offset,
+  } = parsePagination(req.query, {
     defaultLimit: 10,
     maxLimit: 50,
   });
@@ -506,11 +607,23 @@ exports.getPendingResources = catchAsync(async (req, res) => {
   });
 });
 
+/**
+ * Approve pending resource (admin action)
+ * Publishes resource and awards uploader with 100 VXP + 10 reputation points
+ * Updates resource status and logs moderation action
+ *
+ * @async
+ * @param {Object} req - Express request (requires admin auth)
+ * @param {string} req.params.id - Resource ID
+ * @param {Object} req.user - { portal_user_id } - Admin ID
+ * @param {Object} res - Express response
+ * @returns {Object} - { message, resource_id }
+ * @throws {Error} - 404 if resource not found or already reviewed
+ */
 exports.approveResource = catchAsync(async (req, res) => {
   const { id } = req.params;
   const modId = req.user.portal_user_id;
   const { title, uploaderId } = await withTransaction(async (client) => {
-
     const resourceRes = await client.query(
       `UPDATE portal.resources
        SET status = 'approved'
@@ -577,6 +690,19 @@ exports.approveResource = catchAsync(async (req, res) => {
   });
 });
 
+/**
+ * Reject pending resource (admin action)
+ * Rejects resource with reason and notifies uploader
+ * Updates resource status to 'rejected'
+ *
+ * @async
+ * @param {Object} req - Express request (requires admin auth)
+ * @param {string} req.params.id - Resource ID
+ * @param {Object} req.body - { reason?: string } - Rejection reason
+ * @param {Object} res - Express response
+ * @returns {Object} - { message, resource_id }
+ * @throws {Error} - 404 if resource not found or already reviewed
+ */
 exports.rejectResource = catchAsync(async (req, res) => {
   const client = await pool.connect();
   try {
@@ -634,6 +760,19 @@ exports.rejectResource = catchAsync(async (req, res) => {
   }
 });
 
+/**
+ * Soft delete resource (user action)
+ * Marks resource as deleted with timestamp, preserves data for audit
+ * Only resource owner can delete their own resources
+ *
+ * @async
+ * @param {Object} req - Express request (requires auth)
+ * @param {string} req.params.id - Resource ID
+ * @param {Object} req.user - { portal_user_id } - Current user
+ * @param {Object} res - Express response
+ * @returns {Object} - { message }
+ * @throws {Error} - 403 if not resource owner, 404 if resource not found
+ */
 exports.softDeleteResource = catchAsync(async (req, res) => {
   const { id } = req.params;
   const userId = req.user.portal_user_id;

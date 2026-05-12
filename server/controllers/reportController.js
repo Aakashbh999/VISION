@@ -1,3 +1,18 @@
+/**
+ * Report Controller
+ * Handles user reporting of inappropriate content (discussions, comments).
+ * Auto-hides content after reaching report threshold (5 reports).
+ *
+ * Features:
+ * - Report creation with reason validation
+ * - Target type validation (discussions, comments, etc.)
+ * - Auto-hide threshold (content hidden after 5 reports)
+ * - Reporter identity tracking
+ * - Activity logging for moderation queue
+ * - Duplicate report prevention (same reporter + target)
+ * - Moderation dashboard integration
+ */
+
 const pool = require("../config/db");
 const XPService = require("../services/xpService");
 const logger = require("../utils/logger");

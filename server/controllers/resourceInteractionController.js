@@ -1,3 +1,24 @@
+/**
+ * Resource Interaction Controller
+ * Tracks user interactions with resources to build engagement metrics and recommendations.
+ * Supports multiple interaction types with uniqueness constraints for certain types.
+ *
+ * Interaction Types:
+ * - bookmark: Add to personal library (unique per user)
+ * - like: Positive feedback (unique per user)
+ * - dislike: Negative feedback (unique per user)
+ * - complete: Mark as completed (unique per user)
+ * - view: Page view tracking (allows multiple)
+ * - click: Link click tracking (allows multiple)
+ *
+ * Features:
+ * - Interaction type validation
+ * - Unique constraint enforcement (one bookmark/like/dislike/complete per resource per user)
+ * - Engagement metrics aggregation
+ * - Recommendation scoring input
+ * - Activity feed logging
+ */
+
 const pool = require("../config/db");
 const catchAsync = require("../utils/catchAsync");
 const createError = require("http-errors");
@@ -23,15 +44,12 @@ exports.interactWithResource = catchAsync(async (req, res) => {
   }
 
   if (!VALID_INTERACTION_TYPES.includes(type)) {
-    return res
-      .status(400)
-      .json({
-        error: `Invalid interaction type. Allowed: ${VALID_INTERACTION_TYPES.join(", ")}`,
-      });
+    return res.status(400).json({
+      error: `Invalid interaction type. Allowed: ${VALID_INTERACTION_TYPES.join(", ")}`,
+    });
   }
 
   if (UNIQUE_TYPES.includes(type)) {
-
     const existing = await pool.query(
       `SELECT id FROM portal.user_resource_interactions
          WHERE user_id = $1 AND resource_id = $2 AND interaction_type = $3`,
@@ -55,7 +73,6 @@ exports.interactWithResource = catchAsync(async (req, res) => {
       [portalUserId, id, type],
     );
   } else {
-
     await pool.query(
       `INSERT INTO portal.user_resource_interactions
          (user_id, resource_id, interaction_type)

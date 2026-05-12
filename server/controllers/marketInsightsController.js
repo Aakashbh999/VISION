@@ -1,4 +1,17 @@
-
+/**
+ * Market Insights Controller
+ * Provides job market analysis, salary data, and career trend information.
+ * Delivers insights on IT fields, skills demand, and market opportunities.
+ *
+ * Features:
+ * - IT fields overview (demand levels, growth trends)
+ * - Field-specific skill requirements
+ * - Salary distribution analysis by field
+ * - Trending fields identification
+ * - Job market search with filters (salary range, experience, skills, remote)
+ * - Skills catalog with market demand levels
+ * - Pagination support for large datasets
+ */
 
 const marketInsightsService = require("../services/marketInsightsService");
 const catchAsync = require("../utils/catchAsync");

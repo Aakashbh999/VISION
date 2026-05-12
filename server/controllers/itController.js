@@ -1,3 +1,18 @@
+/**
+ * IT Reference Data Controller
+ * Provides paginated browsing of IT industry catalogs including fields, degrees, jobs, and clubs.
+ * Used for career exploration and discovery features.
+ *
+ * Features:
+ * - IT fields catalog (paginated, with demand levels and tech stack hints)
+ * - Academic degrees catalog (paginated)
+ * - Job market insights (paginated with salary/experience data)
+ * - IT clubs directory (paginated)
+ * - Slug-based lookups for individual items
+ * - System tags retrieval for content tagging
+ * - Pagination support (default 9 items, max 50)
+ */
+
 const pool = require("../config/db");
 const catchAsync = require("../utils/catchAsync");
 
@@ -28,7 +43,6 @@ const COLUMNS = {
 };
 
 const fetchPaginatedData = async (req, res, tableName, orderColumn = "id") => {
-
   if (!COLUMNS[tableName]) {
     return res.status(400).json({ error: "Invalid table requested" });
   }
@@ -187,11 +201,11 @@ exports.getSystemTags = catchAsync(async (req, res) => {
     `SELECT tag_id, name, slug
      FROM portal.tags
      WHERE tag_type = 'system'
-     ORDER BY name ASC`
+     ORDER BY name ASC`,
   );
 
   res.json({
     success: true,
-    data: result.rows
+    data: result.rows,
   });
 });

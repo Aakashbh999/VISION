@@ -1,3 +1,17 @@
+/**
+ * Group CRUD Controller
+ * Manages study group creation, retrieval, and basic CRUD operations.
+ * Handles privacy filtering, permission checks, and VXP cost enforcement.
+ *
+ * Features:
+ * - Group creation with VXP cost deduction (500 VXP for public, 40 reputation for private)
+ * - Privacy-aware group browsing (filters restricted/private groups from non-members)
+ * - Group search with specialization and program filtering
+ * - Group detail fetching with member counts and configuration
+ * - Group updates with permission-based access control
+ * - Managed groups listing (user's owned/co-admin groups)
+ */
+
 const pool = require("../config/db");
 const XPService = require("../services/xpService");
 const { successResponse, errorResponse } = require("../utils/response");
@@ -75,7 +89,9 @@ exports.getGroups = catchAsync(async (req, res) => {
   const conditions = ["g.deleted_at IS NULL"];
 
   if (userId) {
-    conditions.push(`(g.privacy_type != 'private' OR EXISTS(SELECT 1 FROM portal.group_members WHERE group_id = g.group_id AND user_id = $1))`);
+    conditions.push(
+      `(g.privacy_type != 'private' OR EXISTS(SELECT 1 FROM portal.group_members WHERE group_id = g.group_id AND user_id = $1))`,
+    );
   } else {
     conditions.push(`g.privacy_type != 'private'`);
   }
@@ -85,7 +101,9 @@ exports.getGroups = catchAsync(async (req, res) => {
     const pId = parseInt(program);
     params.push(pId);
     if (pId >= 1 && pId <= 5) {
-      conditions.push(`(g.program_id = $${paramIndex} OR g.degree_id = $${paramIndex})`);
+      conditions.push(
+        `(g.program_id = $${paramIndex} OR g.degree_id = $${paramIndex})`,
+      );
     } else {
       conditions.push(`g.program_id = $${paramIndex}`);
     }
@@ -94,7 +112,9 @@ exports.getGroups = catchAsync(async (req, res) => {
     const dId = parseInt(degree);
     params.push(dId);
     if (dId >= 1 && dId <= 5) {
-      conditions.push(`(g.degree_id = $${paramIndex} OR g.program_id = $${paramIndex})`);
+      conditions.push(
+        `(g.degree_id = $${paramIndex} OR g.program_id = $${paramIndex})`,
+      );
     } else {
       conditions.push(`g.degree_id = $${paramIndex}`);
     }
@@ -124,7 +144,6 @@ exports.getGroups = catchAsync(async (req, res) => {
   } else if (sort === "popular") {
     query += ` ORDER BY members DESC, g.created_at DESC`;
   } else if (sort === "recommended" && userId) {
-
     query += ` ORDER BY
         (CASE WHEN g.degree_id = (SELECT academic_degree_id FROM portal.users WHERE user_id = $1) THEN 50 ELSE 0 END) +
         COUNT(DISTINCT gm.user_id) DESC,
@@ -270,7 +289,11 @@ exports.createGroup = catchAsync(async (req, res) => {
     return errorResponse(res, descCheck.error, 400);
   }
 
-  if (Array.isArray(system_tags) && system_tags.map(Number).filter((n) => Number.isInteger(n) && n > 0).length > 5) {
+  if (
+    Array.isArray(system_tags) &&
+    system_tags.map(Number).filter((n) => Number.isInteger(n) && n > 0).length >
+      5
+  ) {
     return errorResponse(res, "Maximum 5 system tags allowed.", 400);
   }
   if (Array.isArray(custom_tags) && custom_tags.length > 2) {
@@ -283,10 +306,15 @@ exports.createGroup = catchAsync(async (req, res) => {
 
     let rawTags = [];
     if (Array.isArray(system_tags) && system_tags.length > 0) {
-      const tagIds = system_tags.map(Number).filter((n) => Number.isInteger(n) && n > 0);
+      const tagIds = system_tags
+        .map(Number)
+        .filter((n) => Number.isInteger(n) && n > 0);
       if (tagIds.length > 0) {
-        const sysTagsQuery = await client.query("SELECT name FROM portal.tags WHERE tag_id = ANY($1::int[])", [tagIds]);
-        rawTags.push(...sysTagsQuery.rows.map(r => r.name));
+        const sysTagsQuery = await client.query(
+          "SELECT name FROM portal.tags WHERE tag_id = ANY($1::int[])",
+          [tagIds],
+        );
+        rawTags.push(...sysTagsQuery.rows.map((r) => r.name));
       }
     }
 

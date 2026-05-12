@@ -1,3 +1,18 @@
+/**
+ * Group Post Controller
+ * Manages content creation and moderation within study groups.
+ * Supports multiple post types with section-based permissions (general, Q&A, resources, notices).
+ *
+ * Features:
+ * - Post listing with section filtering (general, discussion, Q&A, resources, notice board)
+ * - Post creation with permission-based type restrictions
+ * - Post deletion with 24-hour soft delete window (can be restored)
+ * - Q&A answer editing with 30-minute edit window
+ * - Activity logging for all post operations
+ * - Presence indicators for post authors
+ * - Permission-based access control (group admins, moderators)
+ */
+
 const pool = require("../config/db");
 const { feed } = require("../utils/activityService");
 const { successResponse, errorResponse } = require("../utils/response");
@@ -81,9 +96,7 @@ exports.getPosts = catchAsync(async (req, res) => {
           ? finalMessages[finalMessages.length - 1].post_id
           : null,
       latestId:
-        finalMessages.length > 0 && !before
-          ? finalMessages[0].post_id
-          : null,
+        finalMessages.length > 0 && !before ? finalMessages[0].post_id : null,
     });
   }
 });
@@ -132,7 +145,11 @@ exports.createPost = catchAsync(async (req, res) => {
   if (!membership) {
     return errorResponse(res, "Only group members can post.", 403);
   }
-  const adminMode = isGroupAdmin(groupResult.rows[0].created_by, membership, userId);
+  const adminMode = isGroupAdmin(
+    groupResult.rows[0].created_by,
+    membership,
+    userId,
+  );
 
   const normalizedContent = typeof content === "string" ? content.trim() : "";
 
@@ -154,11 +171,15 @@ exports.createPost = catchAsync(async (req, res) => {
            AND qa_post_type = 'question'
            AND created_at >= NOW() - INTERVAL '7 days'
            AND deleted_at IS NULL`,
-        [id, userId]
+        [id, userId],
       );
 
       if (parseInt(recentQuestions.rows[0].count) >= 2) {
-        return errorResponse(res, "You have reached the limit of 2 questions per week in this group.", 429);
+        return errorResponse(
+          res,
+          "You have reached the limit of 2 questions per week in this group.",
+          429,
+        );
       }
     }
 
@@ -173,7 +194,11 @@ exports.createPost = catchAsync(async (req, res) => {
 
       normalizedQaQuestionId = Number.parseInt(qa_question_post_id, 10);
       if (!Number.isInteger(normalizedQaQuestionId)) {
-        return errorResponse(res, "A valid question ID is required for answers.", 400);
+        return errorResponse(
+          res,
+          "A valid question ID is required for answers.",
+          400,
+        );
       }
       if (!normalizedContent) {
         return errorResponse(res, "Answer text is required.", 400);
@@ -363,7 +388,11 @@ exports.updateQaAnswer = catchAsync(async (req, res) => {
     `SELECT created_by FROM portal.study_groups WHERE group_id = $1`,
     [answer.group_id],
   );
-  const adminMode = isGroupAdmin(groupMeta.rows[0]?.created_by, membership, userId);
+  const adminMode = isGroupAdmin(
+    groupMeta.rows[0]?.created_by,
+    membership,
+    userId,
+  );
 
   if (Number(answer.user_id) !== Number(userId) && !adminMode) {
     return errorResponse(res, "You cannot edit this answer.", 403);

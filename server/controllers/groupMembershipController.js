@@ -1,3 +1,19 @@
+/**
+ * Group Membership Controller
+ * Manages group member lifecycle: joining, invitations, requests, and role management.
+ * Handles permission-based access control and co-admin role assignments.
+ *
+ * Features:
+ * - Group member listing with role and permission information
+ * - Public group joining (instant membership)
+ * - Restricted group join requests (admin approval required)
+ * - Join request approval/rejection
+ * - Group invitations with acceptance workflow
+ * - Co-admin role assignment with permission templates
+ * - Member removal and role updates
+ * - Co-admin capacity limiting (MAX_CO_ADMINS = 5)
+ */
+
 const pool = require("../config/db");
 const XPService = require("../services/xpService");
 const { feed } = require("../utils/activityService");
@@ -76,7 +92,6 @@ exports.joinGroup = catchAsync(async (req, res) => {
       return errorResponse(res, "Invalid invite link", 403);
     }
   } else if (privacy_type === "request") {
-
     return errorResponse(
       res,
       "This group requires a join request. Use POST /request-join instead.",
@@ -295,14 +310,16 @@ exports.acceptInvitation = catchAsync(async (req, res) => {
   }
 
   if (new Date(invitation.rows[0].expires_at) < new Date()) {
-    await pool.query(`UPDATE portal.group_invitations SET status = 'expired' WHERE invitation_id = $1`, [invitationId]);
+    await pool.query(
+      `UPDATE portal.group_invitations SET status = 'expired' WHERE invitation_id = $1`,
+      [invitationId],
+    );
     return errorResponse(res, "This invitation has expired", 410);
   }
 
   const { group_id, sender_id, group_name } = invitation.rows[0];
 
   await withTransaction(async (client) => {
-
     await client.query(
       `INSERT INTO portal.group_members (group_id, user_id, role, status)
        VALUES ($1, $2, 'member', 'approved') ON CONFLICT DO NOTHING`,

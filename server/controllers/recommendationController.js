@@ -1,35 +1,68 @@
+/**
+ * Recommendation Controller
+ * Delivers personalized resource recommendations using weighted multi-factor scoring algorithm.
+ * Caches scoring results (6-hour TTL) to optimize performance on repeated requests.
+ *
+ * Scoring Factors:
+ * - User academic alignment (program, degree, semester)
+ * - Resource popularity (views, completions, interactions)
+ * - Recency bias (prefer newer resources)
+ * - User engagement history (previously completed similar resources)
+ * - Community voting (helpfulness ratings)
+ *
+ * Features:
+ * - Cache-aware recommendation fetching (6-hour TTL)
+ * - Auto-cache cleanup for expired scores
+ * - Top-10 recommendations per request
+ * - Scoring transparency (can expose score breakdown for analysis)
+ */
+
 const pool = require("../config/db");
 const catchAsync = require("../utils/catchAsync");
 
+/**
+ * Get personalized resource recommendations
+ * Retrieves top-10 recommended resources using multi-factor scoring with caching
+ * Returns cached scores if available (6-hour TTL), otherwise calculates fresh recommendations
+ *
+ * @async
+ * @param {Object} req - Express request (requires auth)
+ * @param {Object} req.user - { auth_user_id, portal_user_id, program_id }
+ * @param {Object} res - Express response
+ * @returns {Object} - { source: 'cache'|'computed', recommendations: Array }
+ */
 exports.getRecommendations = catchAsync(async (req, res) => {
-    const authUserId = req.user.auth_user_id;
+  const authUserId = req.user.auth_user_id;
 
-    const { portal_user_id: user_id, program_id } = req.user;
+  const { portal_user_id: user_id, program_id } = req.user;
 
-    await pool.query(`
+  await pool.query(
+    `
       DELETE FROM portal.resource_scores
       WHERE user_id = $1 AND calculated_at < NOW() - INTERVAL '6 hours'
-    `, [user_id]);
+    `,
+    [user_id],
+  );
 
-    const cached = await pool.query(
-      `SELECT r.resource_id, r.title, r.url, rs.score
+  const cached = await pool.query(
+    `SELECT r.resource_id, r.title, r.url, rs.score
        FROM portal.resource_scores rs
        JOIN portal.resources r ON r.resource_id = rs.resource_id
        WHERE rs.user_id = $1
        ORDER BY rs.score DESC
        LIMIT 10`,
-      [user_id],
-    );
+    [user_id],
+  );
 
-    if (cached.rows.length > 0) {
-      return res.json({
-        source: "cache",
-        recommendations: cached.rows,
-      });
-    }
+  if (cached.rows.length > 0) {
+    return res.json({
+      source: "cache",
+      recommendations: cached.rows,
+    });
+  }
 
-    const calculated = await pool.query(
-      `
+  const calculated = await pool.query(
+    `
       WITH RankedResources AS (
         SELECT
           $1::uuid AS user_id,
@@ -87,21 +120,21 @@ exports.getRecommendations = catchAsync(async (req, res) => {
         score = EXCLUDED.score,
         calculated_at = NOW()
       `,
-      [user_id, program_id],
-    );
+    [user_id, program_id],
+  );
 
-    const final = await pool.query(
-      `SELECT r.resource_id, r.title, r.url, rs.score
+  const final = await pool.query(
+    `SELECT r.resource_id, r.title, r.url, rs.score
        FROM portal.resource_scores rs
        JOIN portal.resources r ON r.resource_id = rs.resource_id
        WHERE rs.user_id = $1
        ORDER BY rs.score DESC
        LIMIT 10`,
-      [user_id],
-    );
+    [user_id],
+  );
 
-    res.json({
-      source: "calculated",
-      recommendations: final.rows,
-    });
+  res.json({
+    source: "calculated",
+    recommendations: final.rows,
+  });
 });

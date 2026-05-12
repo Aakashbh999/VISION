@@ -1,3 +1,18 @@
+/**
+ * Vote Controller
+ * Handles upvoting/downvoting discussions and discussion comments.
+ * Integrates with XP service for vote-based reputation rewards.
+ *
+ * Features:
+ * - Discussion voting (upvote: +1, downvote: -1, clear: 0)
+ * - Discussion comment voting
+ * - Vote state tracking and toggling
+ * - XP reward for discussion authors (10 XP per upvote)
+ * - Vote count aggregation
+ * - Activity logging for voting actions
+ * - User vote history tracking
+ */
+
 const discussionService = require("../services/discussionService");
 const pool = require("../config/db");
 const catchAsync = require("../utils/catchAsync");
@@ -57,7 +72,6 @@ exports.handleCommentVote = catchAsync(async (req, res) => {
 
   if (result.voteType === 1 && result.authorId && result.authorId !== userId) {
     try {
-
       const commentRes = await pool.query(
         "SELECT discussion_id, content FROM portal.discussion_comments WHERE comment_id = $1",
         [id],

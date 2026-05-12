@@ -1,3 +1,19 @@
+/**
+ * Profile Controller
+ * Manages user profile data including academic info, social links, bio, and image uploads.
+ * Supports public/private profile views with follower relationship tracking.
+ *
+ * Features:
+ * - Public profile retrieval with follower status and statistics
+ * - Personal profile with private field access (email, cooldowns, settings)
+ * - Profile updates (bio, academic info, social links)
+ * - Profile image/banner uploads with cooldown management
+ * - Word count validation for bio (MAX_BIO_WORDS limit)
+ * - Follower/following relationship tracking
+ * - Academic profile normalization (batch_year to semester calculation)
+ * - Badge display on profiles
+ */
+
 const pool = require("../config/db");
 const cloudinary = require("../config/cloudinary");
 const { feed } = require("../utils/activityService");
@@ -24,10 +40,7 @@ const {
 } = require("../utils/constants");
 const catchAsync = require("../utils/catchAsync");
 const logger = require("../utils/logger");
-const {
-  parsePagination,
-  buildPaginationMeta,
-} = require("../utils/pagination");
+const { parsePagination, buildPaginationMeta } = require("../utils/pagination");
 
 function normalizeAcademicProfile(profile) {
   if (!profile) return profile;
@@ -294,7 +307,9 @@ exports.updateProfile = catchAsync(async (req, res) => {
   const nextCareerScope =
     career_scope !== undefined ? career_scope : current.career_scope;
   const nextHideMemberSince =
-    hide_member_since !== undefined ? hide_member_since : current.hide_member_since;
+    hide_member_since !== undefined
+      ? hide_member_since
+      : current.hide_member_since;
 
   let nextSemester =
     semester !== undefined && semester !== null && semester !== ""
@@ -431,7 +446,6 @@ exports.updateProfileImage = catchAsync(async (req, res) => {
         );
       }
     } else if (spend_vxp === "true" || spend_vxp === true) {
-
     } else {
       const daysLeft = getCooldownDaysLeft(
         last_profile_pic_update,
@@ -489,7 +503,6 @@ exports.updateProfileBanner = catchAsync(async (req, res) => {
         );
       }
     } else if (spend_vxp === "true" || spend_vxp === true) {
-
     } else {
       const daysLeft = getCooldownDaysLeft(
         last_banner_update,
@@ -591,7 +604,14 @@ exports.followUser = catchAsync(async (req, res) => {
         `INSERT INTO portal.notifications
           (user_id, type, message, actor_user_id, reference_id, reference_type)
          VALUES ($1, $2, $3, $4, $5, $6)`,
-        [followingId, "new_follower", "started following you", followerId, followerId, "user"]
+        [
+          followingId,
+          "new_follower",
+          "started following you",
+          followerId,
+          followerId,
+          "user",
+        ],
       );
     } catch (err) {
       logger.warn({ err }, "Follow feed event or notification failed");
