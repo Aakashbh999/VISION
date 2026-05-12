@@ -210,6 +210,7 @@ exports.getRoadmapDetails = catchAsync(async (req, res) => {
 
 exports.getStepResources = catchAsync(async (req, res) => {
   const { stepId } = req.params;
+  const portalUserId = req.user.portal_user_id;
 
   const resources = await pool.query(
     `
