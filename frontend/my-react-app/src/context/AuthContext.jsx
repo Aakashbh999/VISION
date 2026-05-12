@@ -36,44 +36,33 @@ export const AuthProvider = ({ children }) => {
     localStorage.getItem("refreshToken"),
   );
 
-  // Ref to track the proactive refresh timer so we can cancel it on cleanup
   const refreshTimerRef = useRef(null);
 
-  // Fetch user profile if token exists.
-  // onError intentionally NOT set here — network errors or 500s from /me must
-  // never log the user out. True 401s are handled by the api.js interceptor
-  // which dispatches the "auth:logout" event.
   const { data, isLoading, refetch } = useQuery({
     queryKey: ["me", token],
     queryFn: () => getUserProfile(),
     enabled: !!token,
     retry: false,
-    staleTime: 5 * 60 * 1000, // Consider data fresh for 5 minutes
+    staleTime: 5 * 60 * 1000,
   });
 
-  // Logout function — clears all state and signals that the system is clean
   const logout = useCallback(() => {
     localStorage.removeItem("token");
     localStorage.removeItem("refreshToken");
 
-    // Cancel any pending proactive refresh timer
     if (refreshTimerRef.current) {
       clearTimeout(refreshTimerRef.current);
       refreshTimerRef.current = null;
     }
 
-    // Clear all cached data immediately so no data leaks between sessions
     queryClient.clear();
 
     setToken(null);
     setRefreshToken(null);
 
-    // Signal to api.js that the system is now clean, resetting the
-    // isLoggingOut guard so it doesn't block future logout events
     window.dispatchEvent(new CustomEvent("auth:loggedOut"));
   }, [queryClient]);
 
-  // Listen for logout events from the api interceptor
   useEffect(() => {
     const handleLogout = () => {
       logout();
@@ -85,8 +74,6 @@ export const AuthProvider = ({ children }) => {
     };
   }, [logout]);
 
-  // Proactive silent token refresh — refreshes the access token 5 minutes
-  // before it expires, instead of waiting for a reactive 401 error.
   useEffect(() => {
     if (!token || !refreshToken) return;
 
@@ -94,12 +81,10 @@ export const AuthProvider = ({ children }) => {
     if (!expiryMs) return;
 
     const msUntilExpiry = expiryMs - Date.now();
-    // Refresh 7 minutes before expiry to be safe against clock skew
+
     const REFRESH_THRESHOLD_MS = 7 * 60 * 1000;
     const msUntilRefresh = msUntilExpiry - REFRESH_THRESHOLD_MS;
 
-    // If already within the threshold, don't schedule — the reactive
-    // interceptor in api.js will handle the refresh on the next request.
     if (msUntilRefresh <= 0) return;
 
     refreshTimerRef.current = setTimeout(async () => {
@@ -115,8 +100,7 @@ export const AuthProvider = ({ children }) => {
         }
         setToken(tokens.accessToken);
       } catch {
-        // Silent refresh failed — the reactive 401 interceptor will handle it
-        // on the next API call. Do NOT log out proactively.
+
       }
     }, msUntilRefresh);
 
@@ -128,9 +112,6 @@ export const AuthProvider = ({ children }) => {
     };
   }, [token, refreshToken]);
 
-  // Presence ping — fire-and-forget heartbeat every 3 minutes.
-  // Deliberately does NOT call refetch() to avoid triggering a profile
-  // re-fetch that could cascade into a spurious logout on any server error.
   useEffect(() => {
     if (!token) return;
 
@@ -140,7 +121,7 @@ export const AuthProvider = ({ children }) => {
       try {
         await updatePresence();
       } catch {
-        // Presence updates are best-effort — never logout on failure
+
       }
     };
 
@@ -167,8 +148,6 @@ export const AuthProvider = ({ children }) => {
     };
   }, [token]);
 
-  // Sync token from localStorage (in case it was refreshed by the interceptor
-  // in another tab or the proactive refresh updated it)
   useEffect(() => {
     const handleStorageChange = () => {
       const newToken = localStorage.getItem("token");
@@ -190,7 +169,6 @@ export const AuthProvider = ({ children }) => {
   const login = async (tokens) => {
     let accessToken;
 
-    // Support both old format (string) and new format (object with tokens)
     if (typeof tokens === "string") {
       localStorage.setItem("token", tokens);
       accessToken = tokens;

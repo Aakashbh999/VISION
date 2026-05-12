@@ -81,7 +81,6 @@ const Register = () => {
     },
   });
 
-  // Auto-calculate semester logic
   useEffect(() => {
     if (formData.semester_is_manual || !formData.batch_year) return;
     const calculatedSemester = calculateSemesterFromBatch(formData.batch_year);
@@ -96,7 +95,6 @@ const Register = () => {
   const handleChange = (e) => {
     let { name, value, type, checked } = e.target;
 
-    // Special handling for semester limit and manual override
     if (name === "semester") {
       let numValue = parseInt(value, 10);
       if (!isNaN(numValue)) {
@@ -112,18 +110,16 @@ const Register = () => {
       return;
     }
 
-    // Special handling for batch year
     if (name === "batch_year") {
       const sanitizedValue = value.replace(/[^0-9]/g, "");
       setFormData((prev) => ({
         ...prev,
         batch_year: sanitizedValue,
-        semester_is_manual: false, // Reset manual override when batch changes
+        semester_is_manual: false,
       }));
       return;
     }
 
-    // Special handling for date of birth (Auto format YYYY-MM-DD)
     if (name === "date_of_birth") {
       let val = value.replace(/\D/g, "");
       if (val.length > 8) val = val.slice(0, 8);
@@ -142,9 +138,8 @@ const Register = () => {
       return;
     }
 
-    // Special handling for registration number
     if (name === "tu_registration_no") {
-      // Allow only numbers and hyphens, avoid consecutive hyphens
+
       let sanitizedValue = value.replace(/[^0-9-]/g, "").replace(/-+/g, "-");
       setFormData((prev) => ({
         ...prev,
@@ -269,7 +264,7 @@ const Register = () => {
   return (
     <div className="max-w-2xl mx-auto py-12 px-4 sm:px-6">
       <div className="bg-(--bg-card) rounded-sm sm:rounded-3xl border border-(--border-main) p-8 sm:p-10 shadow-xl shadow-purple-500/5 relative overflow-hidden">
-        {/* Progress bar */}
+        {}
         <div className="absolute top-0 left-0 w-full h-1.5 bg-(--bg-active)">
           <div
             className="h-full bg-purple-600 transition-all duration-500 ease-out"

@@ -24,7 +24,6 @@ const NotificationsPopup = ({ isOpen, onClose, toggleRef }) => {
   const queryClient = useQueryClient();
   const panelRef = useRef(null);
 
-  // Invitation Mutations
   const acceptMutation = useMutation({
     mutationFn: acceptInvitation,
     onSuccess: (data) => {
@@ -49,7 +48,7 @@ const NotificationsPopup = ({ isOpen, onClose, toggleRef }) => {
 
   useClickOutside(panelRef, (event) => {
     if (!isOpen) return;
-    // Don't close if we clicked the toggle button (it has its own toggle logic)
+
     if (toggleRef?.current?.contains(event.target)) return;
     onClose();
   });
@@ -99,7 +98,7 @@ const NotificationsPopup = ({ isOpen, onClose, toggleRef }) => {
       try {
         await markReadMutation.mutateAsync(notification.notification_id);
       } catch {
-        // navigation can still proceed even if read state update fails
+
       }
     }
 

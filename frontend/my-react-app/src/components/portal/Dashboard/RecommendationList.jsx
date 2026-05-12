@@ -31,7 +31,7 @@ const RecommendationList = ({ recommendations, progressPercent = 0 }) => {
 
     return (
       <div className="bg-white dark:bg-slate-900 rounded-2xl border border-gray-100 dark:border-slate-700 shadow-sm p-6 h-full flex flex-col">
-        {/* Header */}
+        {}
         <div className="flex items-center gap-2 mb-5">
           <div className="p-1.5 bg-violet-100 dark:bg-violet-900/40 rounded-lg">
             <TrendingUp className="w-4 h-4 text-violet-600 dark:text-violet-400" />
@@ -41,7 +41,7 @@ const RecommendationList = ({ recommendations, progressPercent = 0 }) => {
           </h3>
         </div>
 
-        {/* Circular progress — same library as old ProgressCard */}
+        {}
         <div className="flex flex-col items-center gap-2 flex-1 justify-center py-4">
           <div className="w-28 h-28">
             <CircularProgressbar
@@ -57,7 +57,7 @@ const RecommendationList = ({ recommendations, progressPercent = 0 }) => {
             />
           </div>
 
-          {/* Progress bar */}
+          {}
           <div className="w-full mt-3">
             <div className="flex justify-between text-xs text-slate-500 mb-1.5">
               <span className="font-medium">Roadmap Average</span>
@@ -73,7 +73,7 @@ const RecommendationList = ({ recommendations, progressPercent = 0 }) => {
             </div>
           </div>
 
-          {/* Contextual message */}
+          {}
           <p className="text-xs text-slate-500 dark:text-slate-400 text-center mt-3 leading-relaxed">
             {message}
           </p>
@@ -85,7 +85,7 @@ const RecommendationList = ({ recommendations, progressPercent = 0 }) => {
   return (
     <div className="bg-[var(--bg-card)] rounded-sm sm:rounded-3xl border border-[var(--border-main)] border-x-0 sm:border-x p-6 sm:p-8 relative overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-500">
       <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-purple-500 via-fuchsia-500 to-pink-500"></div>
-      
+
       <div className="flex items-center gap-3 mb-6">
         <div className="bg-purple-100 dark:bg-purple-900/40 p-2 rounded-xl">
           <Sparkles className="w-5 h-5 text-purple-600 dark:text-purple-400" />
@@ -100,7 +100,7 @@ const RecommendationList = ({ recommendations, progressPercent = 0 }) => {
         </div>
       </div>
 
-      <motion.div 
+      <motion.div
         variants={containerVariants}
         initial="hidden"
         animate="visible"
@@ -115,9 +115,9 @@ const RecommendationList = ({ recommendations, progressPercent = 0 }) => {
             rel="noopener noreferrer"
             className="group relative flex items-center justify-between p-4 rounded-2xl bg-[var(--bg-active)] border border-transparent hover:border-purple-200 dark:hover:border-purple-800/50 hover:bg-white dark:hover:bg-[var(--bg-card)] hover:shadow-[0_8px_30px_rgba(168,85,247,0.1)] transition-all duration-300 overflow-hidden"
           >
-            {/* Hover Glow Effect */}
+            {}
             <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 bg-gradient-to-r from-purple-500/5 to-transparent pointer-events-none" />
-            
+
             <div className="flex items-center gap-4 relative z-10 w-full pr-4">
               <div className="w-10 h-10 shrink-0 rounded-[10px] bg-gradient-to-br from-gray-100 to-gray-50 flex items-center justify-center text-gray-500 font-bold text-sm border border-gray-200 dark:from-gray-800 dark:to-gray-900 dark:border-gray-700 dark:text-gray-400 group-hover:scale-110 group-hover:text-purple-600 group-hover:border-purple-200 dark:group-hover:text-purple-400 dark:group-hover:border-purple-800/50 transition-all duration-300">
                 #{index + 1}

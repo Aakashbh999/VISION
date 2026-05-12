@@ -1,13 +1,22 @@
+/**
+ * Report Controller
+ * Handles user reporting of inappropriate content (discussions, comments).
+ * Auto-hides content after reaching report threshold (5 reports).
+ *
+ * Features:
+ * - Report creation with reason validation
+ * - Target type validation (discussions, comments, etc.)
+ * - Auto-hide threshold (content hidden after 5 reports)
+ * - Reporter identity tracking
+ * - Activity logging for moderation queue
+ * - Duplicate report prevention (same reporter + target)
+ * - Moderation dashboard integration
+ */
+
 const pool = require("../config/db");
 const XPService = require("../services/xpService");
 const logger = require("../utils/logger");
 
-/**
- * Report Controller
- * Handles universal reporting and auto-moderation.
- */
-
-// Create a report
 exports.createReport = async (req, res) => {
   const { target_type, target_id, reason } = req.body;
   const reporterUserId = req.user.portal_user_id;
@@ -25,9 +34,8 @@ exports.createReport = async (req, res) => {
   try {
     await client.query("BEGIN");
 
-    // 0. Check for self-reporting and duplicate reports
     const checkResult = await client.query(
-      `SELECT reporter_user_id, target_type, target_id FROM portal.reports 
+      `SELECT reporter_user_id, target_type, target_id FROM portal.reports
             WHERE reporter_user_id = $1 AND target_type = $2 AND target_id = $3`,
       [reporterUserId, target_type, normalizedTargetId],
     );
@@ -39,7 +47,6 @@ exports.createReport = async (req, res) => {
         .json({ error: "You have already reported this item" });
     }
 
-    // Check if user is reporting their own content
     let authorId;
     if (target_type === "discussion") {
       const discResult = await client.query(
@@ -62,7 +69,6 @@ exports.createReport = async (req, res) => {
         .json({ error: "You cannot report your own content" });
     }
 
-    // 1. Insert the report
     const reportResult = await client.query(
       `INSERT INTO portal.reports (reporter_user_id, target_type, target_id, reason)
              VALUES ($1, $2, $3, $4)
@@ -70,7 +76,6 @@ exports.createReport = async (req, res) => {
       [reporterUserId, target_type, normalizedTargetId, reason],
     );
 
-    // 2. Auto-Moderation Logic: Check report count for this target
     const countResult = await client.query(
       `SELECT COUNT(*) FROM portal.reports WHERE target_type = $1 AND target_id = $2 AND status = 'pending'`,
       [target_type, normalizedTargetId],
@@ -78,7 +83,6 @@ exports.createReport = async (req, res) => {
 
     const reportCount = parseInt(countResult.rows[0].count);
 
-    // 3. If 5+ reports, perform soft delete (set deleted_at)
     if (reportCount >= 5) {
       if (target_type === "discussion") {
         await client.query(
@@ -91,9 +95,7 @@ exports.createReport = async (req, res) => {
           [normalizedTargetId],
         );
       }
-      // Add other target types as needed (groups, resources)
 
-      // Mark reports as resolved/hidden
       await client.query(
         `UPDATE portal.reports SET status = 'hidden' WHERE target_type = $1 AND target_id = $2`,
         [target_type, normalizedTargetId],

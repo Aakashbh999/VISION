@@ -1,15 +1,6 @@
 import { useState } from "react";
 import Badge from "./Badge";
 
-/**
- * SkillTags - A reusable tag list for skills or similar items.
- * @param {object} props
- * @param {string[]|string} props.skills - Array or comma-separated string of skills/tags.
- * @param {number} [props.maxVisible=4] - Number of tags to show before "+more" button.
- * @param {string} [props.className] - Optional className for the wrapper div.
- * @param {string} [props.badgeVariant] - Badge color variant (e.g., "green", "purple").
- * @param {string} [props.badgeTone] - Badge tone ("soft", "solid", "outline").
- */
 const SkillTags = ({
   skills,
   maxVisible = 4,

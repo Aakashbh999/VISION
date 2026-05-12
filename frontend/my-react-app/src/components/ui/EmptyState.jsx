@@ -1,19 +1,6 @@
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
 
-/**
- * Reusable Empty State Component
- * Shows when no data is available with contextual message and optional CTA
- *
- * Props:
- * - icon: Lucide icon component (required)
- * - title: Main heading (required)
- * - description: Subtext explaining the empty state
- * - actionText: CTA button text (optional)
- * - actionHref: Link destination for CTA (optional)
- * - actionOnClick: Callback for CTA button (optional)
- * - className: Additional container classes
- */
 const EmptyState = ({
   icon: Icon,
   title,
@@ -50,7 +37,7 @@ const EmptyState = ({
       role="status"
       aria-live="polite"
     >
-      {/* Icon with animation */}
+      {}
       <motion.div
         variants={iconVariants}
         className="w-20 h-20 rounded-full bg-gradient-to-br from-purple-100 to-blue-100 dark:from-purple-900/30 dark:to-blue-900/30 flex items-center justify-center mb-6"
@@ -58,19 +45,19 @@ const EmptyState = ({
         <Icon className="w-10 h-10 text-purple-600 dark:text-purple-400" />
       </motion.div>
 
-      {/* Title */}
+      {}
       <h3 className="text-lg sm:text-xl font-black text-[var(--text-main)] text-center mb-2 uppercase">
         {title}
       </h3>
 
-      {/* Description */}
+      {}
       {description && (
         <p className="text-sm text-[var(--text-muted)] text-center max-w-sm mb-6">
           {description}
         </p>
       )}
 
-      {/* Action CTA */}
+      {}
       {actionText &&
         (actionHref ? (
           <Link

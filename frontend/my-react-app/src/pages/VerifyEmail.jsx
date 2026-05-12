@@ -12,6 +12,17 @@ const VerifyEmail = () => {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
+  const [cooldown, setCooldown] = useState(0);
+
+  useEffect(() => {
+    let timer;
+    if (cooldown > 0) {
+      timer = setInterval(() => {
+        setCooldown((prev) => prev - 1);
+      }, 1000);
+    }
+    return () => clearInterval(timer);
+  }, [cooldown]);
 
   useEffect(() => {
     if (!user) return;
@@ -31,6 +42,7 @@ const VerifyEmail = () => {
     try {
       const response = await api.post("/auth/resend-verification");
       setMessage(response.data.message || "Verification email sent!");
+      setCooldown(60);
     } catch (err) {
       setError(
         err.response?.data?.error || "Failed to resend verification email",
@@ -76,7 +88,7 @@ const VerifyEmail = () => {
 
         <button
           onClick={handleResend}
-          disabled={loading}
+          disabled={loading || cooldown > 0}
           className="w-full py-2.5 px-4 bg-gradient-to-r from-purple-600 to-purple-800 text-white font-medium rounded-lg hover:shadow-lg hover:shadow-purple-500/30 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
         >
           {loading ? (
@@ -87,7 +99,9 @@ const VerifyEmail = () => {
           ) : (
             <>
               <RefreshCw className="w-5 h-5" />
-              Resend Verification Email
+              {cooldown > 0
+                ? `Resend in ${cooldown}s`
+                : "Resend Verification Email"}
             </>
           )}
         </button>

@@ -1,8 +1,5 @@
 import { Loader2 } from "lucide-react";
 
-/**
- * Inline loading spinner for buttons and small actions
- */
 const ButtonLoader = ({ size = 16, className = "" }) => {
   return (
     <Loader2
@@ -12,9 +9,6 @@ const ButtonLoader = ({ size = 16, className = "" }) => {
   );
 };
 
-/**
- * Action button wrapper that handles loading state
- */
 export const ActionButton = ({
   onClick,
   isLoading = false,
@@ -34,9 +28,6 @@ export const ActionButton = ({
   );
 };
 
-/**
- * Like button with loading state – now uses purple theme
- */
 export const LikeButton = ({
   isLiked,
   isLoading,
@@ -72,9 +63,6 @@ export const LikeButton = ({
   );
 };
 
-/**
- * Save/Bookmark button with loading state – purple accent
- */
 export const SaveButton = ({
   isSaved,
   isLoading,
@@ -108,9 +96,6 @@ export const SaveButton = ({
   );
 };
 
-/**
- * Comment submit button with loading state – uses purple gradient
- */
 export const CommentButton = ({
   isLoading,
   onClick,

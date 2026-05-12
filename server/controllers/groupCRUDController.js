@@ -1,3 +1,17 @@
+/**
+ * Group CRUD Controller
+ * Manages study group creation, retrieval, and basic CRUD operations.
+ * Handles privacy filtering, permission checks, and VXP cost enforcement.
+ *
+ * Features:
+ * - Group creation with VXP cost deduction (500 VXP for public, 40 reputation for private)
+ * - Privacy-aware group browsing (filters restricted/private groups from non-members)
+ * - Group search with specialization and program filtering
+ * - Group detail fetching with member counts and configuration
+ * - Group updates with permission-based access control
+ * - Managed groups listing (user's owned/co-admin groups)
+ */
+
 const pool = require("../config/db");
 const XPService = require("../services/xpService");
 const { successResponse, errorResponse } = require("../utils/response");
@@ -10,14 +24,11 @@ const {
 } = require("../utils/groupPermissions");
 const catchAsync = require("../utils/catchAsync");
 
-/* ===============================
-   GET MANAGED GROUPS (Owner / Co-Admin)
-================================ */
 exports.getManagedGroups = catchAsync(async (req, res) => {
   const userId = req.user.portal_user_id;
 
   const query = `
-      SELECT 
+      SELECT
         g.group_id,
         g.name,
         g.description,
@@ -30,7 +41,7 @@ exports.getManagedGroups = catchAsync(async (req, res) => {
       FROM portal.study_groups g
       JOIN portal.group_members gm ON gm.group_id = g.group_id
       LEFT JOIN portal.group_members mem ON mem.group_id = g.group_id AND (mem.status = 'approved' OR mem.role = 'owner')
-      WHERE gm.user_id = $1 
+      WHERE gm.user_id = $1
         AND gm.role IN ('owner', 'co_admin')
         AND g.deleted_at IS NULL
       GROUP BY g.group_id, gm.role
@@ -41,17 +52,12 @@ exports.getManagedGroups = catchAsync(async (req, res) => {
   res.json(result.rows);
 });
 
-/* ===============================
-   GET ALL GROUPS
-================================ */
 exports.getGroups = catchAsync(async (req, res) => {
   const { search, sort, degree, program } = req.query;
   const userId = req.user?.portal_user_id;
-  
-  // ... (caching headers)
 
   let query = `
-      SELECT 
+      SELECT
         g.group_id,
         g.name,
         g.description,
@@ -82,20 +88,22 @@ exports.getGroups = catchAsync(async (req, res) => {
   let paramIndex = params.length;
   const conditions = ["g.deleted_at IS NULL"];
 
-  // Privacy Filter: Exclude private groups unless member
   if (userId) {
-    conditions.push(`(g.privacy_type != 'private' OR EXISTS(SELECT 1 FROM portal.group_members WHERE group_id = g.group_id AND user_id = $1))`);
+    conditions.push(
+      `(g.privacy_type != 'private' OR EXISTS(SELECT 1 FROM portal.group_members WHERE group_id = g.group_id AND user_id = $1))`,
+    );
   } else {
     conditions.push(`g.privacy_type != 'private'`);
   }
 
-  // Filter by program (with bridging logic)
   if (program) {
     paramIndex++;
     const pId = parseInt(program);
     params.push(pId);
     if (pId >= 1 && pId <= 5) {
-      conditions.push(`(g.program_id = $${paramIndex} OR g.degree_id = $${paramIndex})`);
+      conditions.push(
+        `(g.program_id = $${paramIndex} OR g.degree_id = $${paramIndex})`,
+      );
     } else {
       conditions.push(`g.program_id = $${paramIndex}`);
     }
@@ -104,13 +112,14 @@ exports.getGroups = catchAsync(async (req, res) => {
     const dId = parseInt(degree);
     params.push(dId);
     if (dId >= 1 && dId <= 5) {
-      conditions.push(`(g.degree_id = $${paramIndex} OR g.program_id = $${paramIndex})`);
+      conditions.push(
+        `(g.degree_id = $${paramIndex} OR g.program_id = $${paramIndex})`,
+      );
     } else {
       conditions.push(`g.degree_id = $${paramIndex}`);
     }
   }
 
-  // Filter by joined groups if requested
   if (sort === "joined" && userId) {
     conditions.push(
       `EXISTS(SELECT 1 FROM portal.group_members WHERE group_id = g.group_id AND user_id = $1 AND (status = 'approved' OR role = 'owner'))`,
@@ -135,10 +144,9 @@ exports.getGroups = catchAsync(async (req, res) => {
   } else if (sort === "popular") {
     query += ` ORDER BY members DESC, g.created_at DESC`;
   } else if (sort === "recommended" && userId) {
-    // Prioritize groups matching the user's degree, combined with popularity
-    query += ` ORDER BY 
+    query += ` ORDER BY
         (CASE WHEN g.degree_id = (SELECT academic_degree_id FROM portal.users WHERE user_id = $1) THEN 50 ELSE 0 END) +
-        COUNT(DISTINCT gm.user_id) DESC, 
+        COUNT(DISTINCT gm.user_id) DESC,
         g.created_at DESC`;
   } else {
     query += ` ORDER BY g.created_at DESC`;
@@ -146,7 +154,6 @@ exports.getGroups = catchAsync(async (req, res) => {
 
   const result = await pool.query(query, params);
 
-  // If searching and no results found, fetch recommendations
   if (search && result.rows.length === 0) {
     const { userSemester, userProgramId, userDegreeId } = req.user;
     const recommendationService = require("../services/recommendationService");
@@ -167,16 +174,13 @@ exports.getGroups = catchAsync(async (req, res) => {
   res.json(result.rows);
 });
 
-/* ===============================
-   GROUP DETAILS
-================================ */
 exports.getGroupDetails = catchAsync(async (req, res) => {
   const { id } = req.params;
-  const { invite } = req.query; // UUID invite token for private groups
+  const { invite } = req.query;
   const userId = req.user?.portal_user_id;
 
   const group = await pool.query(
-    `SELECT 
+    `SELECT
         g.group_id, g.name, g.description, g.created_at, g.created_by,
         g.group_image, g.banner_image, g.is_public, g.privacy_type,
         g.capacity, g.free_skips_remaining,
@@ -213,7 +217,6 @@ exports.getGroupDetails = catchAsync(async (req, res) => {
     g.member_permissions,
   );
 
-  // Private group: only accessible via valid invite token or if already a member
   if (g.privacy_type === "private" && !isMember) {
     if (!invite || invite !== g.invite_token) {
       return errorResponse(
@@ -224,7 +227,6 @@ exports.getGroupDetails = catchAsync(async (req, res) => {
     }
   }
 
-  // Strip invite_token for non-owners
   if (!isOwner) delete g.invite_token;
 
   const result = {
@@ -254,9 +256,6 @@ exports.getGroupDetails = catchAsync(async (req, res) => {
   return successResponse(res, result);
 });
 
-/* ===============================
-   CREATE GROUP
-================================ */
 exports.createGroup = catchAsync(async (req, res) => {
   const {
     name,
@@ -290,7 +289,11 @@ exports.createGroup = catchAsync(async (req, res) => {
     return errorResponse(res, descCheck.error, 400);
   }
 
-  if (Array.isArray(system_tags) && system_tags.map(Number).filter((n) => Number.isInteger(n) && n > 0).length > 5) {
+  if (
+    Array.isArray(system_tags) &&
+    system_tags.map(Number).filter((n) => Number.isInteger(n) && n > 0).length >
+      5
+  ) {
     return errorResponse(res, "Maximum 5 system tags allowed.", 400);
   }
   if (Array.isArray(custom_tags) && custom_tags.length > 2) {
@@ -301,25 +304,28 @@ exports.createGroup = catchAsync(async (req, res) => {
   try {
     await client.query("BEGIN");
 
-    // Process system and custom tags
     let rawTags = [];
     if (Array.isArray(system_tags) && system_tags.length > 0) {
-      const tagIds = system_tags.map(Number).filter((n) => Number.isInteger(n) && n > 0);
+      const tagIds = system_tags
+        .map(Number)
+        .filter((n) => Number.isInteger(n) && n > 0);
       if (tagIds.length > 0) {
-        const sysTagsQuery = await client.query("SELECT name FROM portal.tags WHERE tag_id = ANY($1::int[])", [tagIds]);
-        rawTags.push(...sysTagsQuery.rows.map(r => r.name));
+        const sysTagsQuery = await client.query(
+          "SELECT name FROM portal.tags WHERE tag_id = ANY($1::int[])",
+          [tagIds],
+        );
+        rawTags.push(...sysTagsQuery.rows.map((r) => r.name));
       }
     }
-    
+
     if (Array.isArray(custom_tags)) {
       rawTags.push(...custom_tags);
     }
-    
+
     if (Array.isArray(tags)) {
       rawTags.push(...tags);
     }
 
-    // Normalize tags: clean, lowercase, deduplicate
     let normalizedTags = null;
     if (rawTags.length > 0) {
       normalizedTags = [
@@ -367,9 +373,6 @@ exports.createGroup = catchAsync(async (req, res) => {
   }
 });
 
-/* ===============================
-   UPDATE GROUP (name/description/privacy)
-================================ */
 exports.updateGroup = catchAsync(async (req, res) => {
   const { id } = req.params;
   const userId = req.user.portal_user_id;
@@ -420,9 +423,6 @@ exports.updateGroup = catchAsync(async (req, res) => {
   return successResponse(res, result.rows[0], "Group updated successfully");
 });
 
-/* ===============================
-   SOFT DELETE GROUP (user-initiated)
-================================ */
 exports.softDeleteGroup = catchAsync(async (req, res) => {
   const { id } = req.params;
   const userId = req.user.portal_user_id;
@@ -437,9 +437,8 @@ exports.softDeleteGroup = catchAsync(async (req, res) => {
   if (group.rows[0].created_by !== userId)
     return errorResponse(res, "Only the owner can delete this group", 403);
 
-  // Soft delete: mark with deletion timestamp, user, and reason
   const result = await pool.query(
-    `UPDATE portal.study_groups 
+    `UPDATE portal.study_groups
        SET deleted_at = NOW(), deleted_by = $1, deletion_reason = $2
        WHERE group_id = $3
        RETURNING group_id, name, deleted_at`,

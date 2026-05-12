@@ -2,13 +2,13 @@ import React, { useState } from "react";
 import { Edit, Trash2, Search } from "lucide-react";
 import LoadingSpinner from "../ui/LoadingSpinner";
 
-const AdminTable = ({ 
-  columns, 
-  data = [], 
-  isLoading, 
-  error, 
+const AdminTable = ({
+  columns,
+  data = [],
+  isLoading,
+  error,
   onView,
-  onEdit, 
+  onEdit,
   onDelete,
   onSearchChange,
   value,
@@ -18,7 +18,6 @@ const AdminTable = ({
 }) => {
   const [internalSearchTerm, setInternalSearchTerm] = useState("");
 
-  // Use external value if provided, otherwise use internal state
   const searchTerm = value !== undefined ? value : internalSearchTerm;
 
   const handleSearch = (e) => {
@@ -53,13 +52,12 @@ const AdminTable = ({
       );
     }
 
-    // Local filtering logic (only if onSearchChange is not provided)
-    const filteredData = onSearchChange 
-      ? data 
+    const filteredData = onSearchChange
+      ? data
       : data.filter(row => {
           if (!searchTerm) return true;
           const searchStr = searchTerm.toLowerCase();
-          return Object.values(row).some(val => 
+          return Object.values(row).some(val =>
             val !== null && val !== undefined && String(val).toLowerCase().includes(searchStr)
           );
         });
@@ -124,7 +122,7 @@ const AdminTable = ({
 
   return (
     <div className="space-y-4">
-      {/* Search Bar - Always stays mounted */}
+      {}
       <div className="relative max-w-md">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-text-muted" />
         <input

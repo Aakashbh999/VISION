@@ -27,10 +27,8 @@ export const clearNotifications = async () => {
   return response.data;
 };
 
-// NEW: get unread count only
 export const getUnreadCount = async () => {
   const response = await api.get("/notifications?unreadOnly=true&limit=1");
-  // The backend returns { data: [...], pagination: { total: X } }
-  // We extract the total unread count from the pagination metadata
+
   return response.data?.pagination?.total ?? 0;
 };

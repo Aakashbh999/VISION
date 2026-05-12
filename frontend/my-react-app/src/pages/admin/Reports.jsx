@@ -67,7 +67,7 @@ const ExaminationModal = ({ isOpen, onClose, reportId }) => {
               </div>
             ) : (
               <div className="space-y-8">
-                {/* Meta Info */}
+                {}
                 <div className="grid grid-cols-2 gap-4">
                   <div className="p-4 bg-bg-active/40 rounded-2xl border border-border-main/50">
                     <p className="text-[10px] font-black text-text-muted uppercase mb-1">
@@ -93,7 +93,7 @@ const ExaminationModal = ({ isOpen, onClose, reportId }) => {
                   </div>
                 </div>
 
-                {/* Content Area */}
+                {}
                 <div className="space-y-4">
                   <div>
                     <p className="text-[10px] font-black text-text-muted uppercase mb-2 tracking-widest">
@@ -131,7 +131,7 @@ const ExaminationModal = ({ isOpen, onClose, reportId }) => {
                     </div>
                   </div>
 
-                  {/* Report Context */}
+                  {}
                   <div className="p-5 bg-rose-500/5 border border-rose-500/20 rounded-2xl">
                     <p className="text-[10px] font-black text-rose-600 uppercase mb-2">
                       Original Violation Report
@@ -174,14 +174,12 @@ const Reports = () => {
   const [examineId, setExamineId] = useState(null);
   const queryClient = useQueryClient();
 
-  // Sync state to URL
   useEffect(() => {
     const params = { page: page.toString() };
     if (debouncedSearchTerm) params.search = debouncedSearchTerm;
     setSearchParams(params, { replace: true });
   }, [page, debouncedSearchTerm, setSearchParams]);
 
-  // Reset page when search changes
   useEffect(() => {
     setPage(1);
   }, [debouncedSearchTerm]);
@@ -208,7 +206,6 @@ const Reports = () => {
 
   const reports = data?.data || [];
   const pagination = data?.pagination || { totalPages: 1 };
-
 
   const handleAction = (reportId, action) => {
     let title = "";

@@ -1,8 +1,23 @@
+/**
+ * Notifications Controller
+ * Manages user notification delivery, reading status, and cleanup.
+ * Supports pagination, filtering, and bulk operations.
+ *
+ * Features:
+ * - Notification retrieval with pagination (default 20, max 50 per page)
+ * - Unread-only filtering
+ * - Time-based filtering (last N days)
+ * - Read status tracking and marking
+ * - Bulk mark-as-read for all notifications
+ * - Individual notification deletion
+ * - Bulk cleanup (clear all notifications)
+ * - Notification type inference from activity metadata
+ */
+
 const pool = require("../config/db");
 const catchAsync = require("../utils/catchAsync");
 const createError = require("http-errors");
 
-// Get user notifications (paginated)
 exports.getNotifications = catchAsync(async (req, res) => {
   const portalUserId = req.user.portal_user_id;
   const page = Math.max(1, parseInt(req.query.page, 10) || 1);
@@ -37,9 +52,9 @@ exports.getNotifications = catchAsync(async (req, res) => {
             AND ($4::boolean = FALSE OR n.is_read = FALSE)
             AND ($5::int IS NULL OR n.created_at >= NOW() - ($5::int * INTERVAL '1 day'))
             AND (n.type != 'group_invite' OR EXISTS (
-                SELECT 1 FROM portal.group_invitations gi 
-                WHERE gi.invitation_id = n.related_id 
-                  AND gi.status = 'pending' 
+                SELECT 1 FROM portal.group_invitations gi
+                WHERE gi.invitation_id = n.related_id
+                  AND gi.status = 'pending'
                   AND gi.expires_at > NOW()
             ))
        ),
@@ -146,11 +161,9 @@ exports.getNotifications = catchAsync(async (req, res) => {
   });
 });
 
-// Mark notification as read
 exports.markRead = catchAsync(async (req, res) => {
   const { id } = req.params;
 
-  // Directly use portal_user_id from the authenticated user object
   const portalUserId = req.user.portal_user_id;
 
   if (!portalUserId) {
@@ -167,7 +180,6 @@ exports.markRead = catchAsync(async (req, res) => {
   res.json({ message: "Notification marked as read" });
 });
 
-// Mark all notifications as read
 exports.markAllRead = catchAsync(async (req, res) => {
   const portalUserId = req.user.portal_user_id;
   if (!portalUserId) {
@@ -187,7 +199,6 @@ exports.markAllRead = catchAsync(async (req, res) => {
   });
 });
 
-// Delete a specific notification
 exports.deleteNotification = catchAsync(async (req, res) => {
   const { id } = req.params;
 
@@ -205,7 +216,6 @@ exports.deleteNotification = catchAsync(async (req, res) => {
   res.json({ message: "Notification deleted successfully" });
 });
 
-// Clear all notifications for the user
 exports.clearAll = catchAsync(async (req, res) => {
   const portalUserId = req.user.portal_user_id;
   if (!portalUserId) {

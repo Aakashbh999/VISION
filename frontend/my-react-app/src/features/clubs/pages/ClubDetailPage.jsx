@@ -25,8 +25,6 @@ const RedditIcon = (props) => (
   </svg>
 );
 
-
-
 const ClubDetailPage = () => {
   const { slug } = useParams();
   const { data: club, isLoading, error } = useClub(slug);
@@ -118,7 +116,7 @@ const ClubDetailPage = () => {
       exit={{ opacity: 0, y: 15 }}
       className="max-w-5xl mx-auto space-y-6 pb-20 px-2 sm:px-6 lg:px-8 mt-6"
     >
-      {/* Top Nav */}
+      {}
       <div className="flex items-center justify-between">
         <Link
           to="/clubs"
@@ -143,9 +141,9 @@ const ClubDetailPage = () => {
         </button>
       </div>
 
-      {/* Hero Header Frame */}
+      {}
       <div className="bg-[var(--bg-card)] border border-[var(--border-main)] border-x-0 sm:border-x rounded-[2.5rem] overflow-hidden shadow-sm">
-        {/* Banner Cover Photo */}
+        {}
         <div className="h-64 sm:h-80 bg-slate-900 relative overflow-hidden group">
           <div className="absolute inset-0 bg-gradient-to-t from-slate-900/80 via-slate-900/20 to-transparent z-10" />
           {club.banner_url ? (
@@ -184,9 +182,9 @@ const ClubDetailPage = () => {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Left Column (Main Info) */}
+        {}
         <div className="lg:col-span-2 space-y-6">
-          {/* About */}
+          {}
           <div className="bg-[var(--bg-card)] border border-[var(--border-main)] border-x-0 sm:border-x rounded-[2.5rem] p-8 shadow-sm">
             <h2 className="text-lg sm:text-xl font-black text-[var(--text-main)] mb-6 flex items-center gap-2">
               <Building2 className="w-5 h-5 text-purple-500" /> About
@@ -208,9 +206,9 @@ const ClubDetailPage = () => {
           </div>
         </div>
 
-        {/* Right Sidebar (Quick Facts & Proof) */}
+        {}
         <div className="space-y-6">
-          {/* Quick Facts */}
+          {}
           <div className="bg-[var(--bg-card)] border border-[var(--border-main)] border-x-0 sm:border-x rounded-[2.5rem] p-6 shadow-sm">
             <h3 className="text-sm font-black text-[var(--text-muted)] uppercase tracking-widest mb-4 px-2">
               Key Intel
@@ -265,7 +263,7 @@ const ClubDetailPage = () => {
             </div>
           </div>
 
-          {/* Contact / Social Links Sidebar */}
+          {}
           {(socialLinks.length > 0 || parsedContact) && (
             <div className="bg-[var(--bg-card)] border border-[var(--border-main)] border-x-0 sm:border-x rounded-[2.5rem] p-6 shadow-sm">
               <h3 className="text-sm font-black text-[var(--text-muted)] uppercase tracking-widest mb-4 px-2">
@@ -292,7 +290,6 @@ const ClubDetailPage = () => {
           )}
         </div>
       </div>
-
 
     </motion.div>
   );

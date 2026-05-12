@@ -187,7 +187,7 @@ const CreateGroupPage = () => {
       </Link>
 
       <div className="relative bg-[var(--bg-card)]/70 backdrop-blur-2xl rounded-[2.5rem] border border-[var(--border-main)]/60 p-4 sm:p-8 lg:p-10 shadow-2xl shadow-purple-500/5 overflow-hidden">
-        {/* Progress Bar */}
+        {}
         <div className="absolute top-0 left-0 w-full h-1.5 bg-[var(--bg-active)] flex">
           <motion.div
             initial={{ width: "0%" }}

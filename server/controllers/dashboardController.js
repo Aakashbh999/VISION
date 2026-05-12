@@ -1,3 +1,19 @@
+/**
+ * Dashboard Controller
+ * Aggregates user progress, recommendations, feed, and activity metrics into a unified dashboard.
+ * Executed via parallel queries for performance optimization.
+ *
+ * Features:
+ * - Progress tracking (average roadmap completion percentage)
+ * - Next recommended step suggestion
+ * - Personalized resource recommendations
+ * - IT clubs discovery
+ * - Degree-based discussion feed
+ * - VXP activity history (recent gamification actions)
+ * - Discussion participation metrics
+ * - Comprehensive progress bar visualization
+ */
+
 const pool = require("../config/db");
 const catchAsync = require("../utils/catchAsync");
 
@@ -10,7 +26,6 @@ exports.getDashboard = catchAsync(async (req, res) => {
     u.full_name AS author_name, u.profile_image AS author_avatar
   `;
 
-  // Run all independent queries in parallel (single round-trip)
   const [
     progressRes,
     nextStepRes,
@@ -20,7 +35,6 @@ exports.getDashboard = catchAsync(async (req, res) => {
     vxpActivityRes,
     discussionCountRes,
   ] = await Promise.all([
-    // 1️⃣ ROADMAP PROGRESS (Aggregate average across all active roadmaps)
     pool.query(
       `SELECT
           COALESCE(AVG(roadmap_percent), 0) AS percent
@@ -41,7 +55,6 @@ exports.getDashboard = catchAsync(async (req, res) => {
       [user_id],
     ),
 
-    // 2️⃣ NEXT INCOMPLETE STEP
     pool.query(
       `SELECT rs.step_id, rs.title, rs.step_order, r.roadmap_id
        FROM portal.program_roadmaps pr
@@ -56,7 +69,6 @@ exports.getDashboard = catchAsync(async (req, res) => {
       [user_id, program_id],
     ),
 
-    // 3️⃣ PERSONALISED RECOMMENDATIONS
     pool.query(
       `SELECT r.resource_id, r.title, r.url, rs.score
        FROM portal.resource_scores rs
@@ -67,7 +79,6 @@ exports.getDashboard = catchAsync(async (req, res) => {
       [user_id],
     ),
 
-    // 4️⃣ ACTIVE CLUBS
     pool.query(
       `SELECT c.club_id, c.name, COUNT(cm.user_id) AS members
        FROM portal.clubs c
@@ -77,7 +88,6 @@ exports.getDashboard = catchAsync(async (req, res) => {
        LIMIT 5`,
     ),
 
-    // 5️⃣ DEGREE FEED (60/30/10 split)
     academic_degree_id
       ? Promise.all([
           pool.query(
@@ -110,7 +120,6 @@ exports.getDashboard = catchAsync(async (req, res) => {
         ])
       : Promise.resolve(null),
 
-    // 6️⃣ VXP ACTIVITY — last 7 days grouped by day
     pool.query(
       `SELECT
          TO_CHAR(DATE(created_at), 'Dy') AS day,
@@ -124,7 +133,6 @@ exports.getDashboard = catchAsync(async (req, res) => {
       [user_id],
     ),
 
-    // 7️⃣ DISCUSSION COUNT
     pool.query(
       `SELECT COUNT(*)::int AS count
        FROM portal.discussions
@@ -135,14 +143,12 @@ exports.getDashboard = catchAsync(async (req, res) => {
     ),
   ]);
 
-  // Merge degree feed slices
   let degreeFeed = [];
   if (degreeFeedResults) {
     const [sameDegree, noDegree, crossDegree] = degreeFeedResults;
     degreeFeed = [...sameDegree.rows, ...noDegree.rows, ...crossDegree.rows];
   }
 
-  // Build 7-day VXP activity array (fill zeros for missing days)
   const activityMap = {};
   vxpActivityRes.rows.forEach((r) => {
     activityMap[r.date.toISOString().split("T")[0]] = {

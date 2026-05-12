@@ -68,7 +68,6 @@ const MobileMenu = ({ isOpen, onClose, variant, user }) => {
     }
   };
 
-  // Public navigation items (icons removed)
   const publicNavItems = [
     { id: "home", label: "Home", href: "/" },
     { id: "it-fields", label: "IT Specializations", href: "/it-fields" },
@@ -77,7 +76,6 @@ const MobileMenu = ({ isOpen, onClose, variant, user }) => {
     { id: "it-clubs", label: "Community", href: "/it-clubs" },
   ];
 
-  // Portal navigation items (icons removed)
   const portalNavItems = [
     { id: "dashboard", label: "Dashboard", href: "/dashboard" },
     { id: "roadmaps", label: "Roadmaps", href: "/roadmaps" },
@@ -88,7 +86,6 @@ const MobileMenu = ({ isOpen, onClose, variant, user }) => {
     { id: "profile", label: "Profile", href: "/profile" },
   ];
 
-  // Admin navigation grouped by categories
   const adminNavCategories = [
     {
       title: "Core & Analytics",
@@ -127,7 +124,7 @@ const MobileMenu = ({ isOpen, onClose, variant, user }) => {
   ];
 
   if (authUser?.is_moderator || authUser?.role === "admin") {
-    // Insert resource queue dynamically
+
     adminNavCategories[2].items.push({
       id: "pending-resources",
       label: "Resource Queue",
@@ -162,7 +159,7 @@ const MobileMenu = ({ isOpen, onClose, variant, user }) => {
         </button>
 
         {variant === "admin" && user ? (
-          // Admin mobile menu
+
           <>
             <nav className="mt-8 space-y-6 pb-20">
               {adminNavCategories.map((category) => (
@@ -205,7 +202,7 @@ const MobileMenu = ({ isOpen, onClose, variant, user }) => {
             </nav>
           </>
         ) : variant === "portal" && user ? (
-          // Portal mobile menu
+
           <>
             <nav className="space-y-4 mt-8">
               {portalNavItems.map((item) => (
@@ -239,7 +236,7 @@ const MobileMenu = ({ isOpen, onClose, variant, user }) => {
             </div>
           </>
         ) : (
-          // Public mobile menu
+
           <>
             <nav className="space-y-4 mt-8">
               {publicNavItems.map((item) => (

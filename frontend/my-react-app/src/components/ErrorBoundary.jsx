@@ -2,14 +2,6 @@ import { Component } from "react";
 import { AlertTriangle, RefreshCw } from "lucide-react";
 import { motion } from "framer-motion";
 
-/**
- * ErrorBoundary - Catches React errors and displays fallback UI
- *
- * Usage:
- * <ErrorBoundary fallback={<CustomFallback />}>
- *   <YourComponent />
- * </ErrorBoundary>
- */
 class ErrorBoundary extends Component {
   constructor(props) {
     super(props);
@@ -26,19 +18,17 @@ class ErrorBoundary extends Component {
   }
 
   componentDidCatch(error, errorInfo) {
-    // Log error to console in development
+
     if (process.env.NODE_ENV === "development") {
       console.error("ErrorBoundary caught:", error, errorInfo);
     }
 
-    // Update error state
     this.setState((prevState) => ({
       error,
       errorInfo,
       errorCount: prevState.errorCount + 1,
     }));
 
-    // Log to error tracking service (e.g., Sentry)
     if (window._errorTracker) {
       window._errorTracker.captureException(error, { contexts: { errorInfo } });
     }
@@ -54,7 +44,7 @@ class ErrorBoundary extends Component {
 
   render() {
     if (this.state.hasError) {
-      // Custom fallback provided
+
       if (this.props.fallback) {
         return this.props.fallback({
           error: this.state.error,
@@ -62,7 +52,6 @@ class ErrorBoundary extends Component {
         });
       }
 
-      // Default fallback UI
       return (
         <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
@@ -70,7 +59,7 @@ class ErrorBoundary extends Component {
           className="min-h-screen flex items-center justify-center px-4 bg-[var(--bg-main)]"
         >
           <div className="max-w-md w-full space-y-6">
-            {/* Error Icon */}
+            {}
             <div className="flex justify-center">
               <motion.div
                 animate={{ rotate: [0, -5, 5, -5, 0] }}
@@ -81,7 +70,7 @@ class ErrorBoundary extends Component {
               </motion.div>
             </div>
 
-            {/* Error Message */}
+            {}
             <div className="text-center space-y-2">
               <h1 className="text-xl font-black text-[var(--text-main)] uppercase">
                 Something went wrong
@@ -92,7 +81,7 @@ class ErrorBoundary extends Component {
               </p>
             </div>
 
-            {/* Error Details (Development only) */}
+            {}
             {process.env.NODE_ENV === "development" && this.state.error && (
               <motion.details
                 initial={{ opacity: 0 }}
@@ -111,7 +100,7 @@ class ErrorBoundary extends Component {
               </motion.details>
             )}
 
-            {/* Action Buttons */}
+            {}
             <div className="flex gap-3">
               <motion.button
                 whileHover={{ scale: 1.02 }}

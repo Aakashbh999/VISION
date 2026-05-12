@@ -1,21 +1,32 @@
+/**
+ * Study Group Controller (Legacy)
+ * Simple study group operations for basic group functionality.
+ * Note: Primary group features are in groupCRUDController and related group modules.
+ *
+ * Features:
+ * - Group creation
+ * - Group joining
+ * - Group leaving
+ * - Member listing
+ * - Post creation within groups
+ * - Post retrieval from groups
+ *
+ * Status: Legacy implementation (newer groupCRUDController + group membership/post controllers recommended)
+ */
+
 const pool = require("../config/db");
 const catchAsync = require("../utils/catchAsync");
 const createError = require("http-errors");
 
-/* =====================================================
-   CREATE STUDY GROUP
-   ===================================================== */
 exports.createGroup = catchAsync(async (req, res) => {
   const { name, description, max_members = 8 } = req.body;
 
-  // Directly use portal_user_id from the authenticated user object
   const portalUserId = req.user.portal_user_id;
 
   if (!portalUserId) {
     throw createError(401, "User not found");
   }
 
-  // create group
   const groupRes = await pool.query(
     `INSERT INTO portal.groups (name, description, owner_id, max_members, created_at)
        VALUES ($1, $2, $3, $4, NOW())
@@ -25,7 +36,6 @@ exports.createGroup = catchAsync(async (req, res) => {
 
   const group = groupRes.rows[0];
 
-  // owner auto joins
   await pool.query(
     `INSERT INTO portal.group_members (group_id, user_id, role)
        VALUES ($1, $2, 'owner')`,
@@ -35,20 +45,15 @@ exports.createGroup = catchAsync(async (req, res) => {
   res.json({ message: "Study group created", group });
 });
 
-/* =====================================================
-   JOIN GROUP
-   ===================================================== */
 exports.joinGroup = catchAsync(async (req, res) => {
   const { groupId } = req.params;
 
-  // Directly use portal_user_id from the authenticated user object
   const portalUserId = req.user.portal_user_id;
 
   if (!portalUserId) {
     throw createError(401, "User not found");
   }
 
-  // check capacity
   const capacity = await pool.query(
     `SELECT max_members,
               (SELECT COUNT(*) FROM portal.group_members WHERE group_id=$1) AS total
@@ -74,13 +79,9 @@ exports.joinGroup = catchAsync(async (req, res) => {
   res.json({ message: "Joined group" });
 });
 
-/* =====================================================
-   LEAVE GROUP
-   ===================================================== */
 exports.leaveGroup = catchAsync(async (req, res) => {
   const { groupId } = req.params;
 
-  // Directly use portal_user_id from the authenticated user object
   const portalUserId = req.user.portal_user_id;
 
   if (!portalUserId) {
@@ -95,9 +96,6 @@ exports.leaveGroup = catchAsync(async (req, res) => {
   res.json({ message: "Left group" });
 });
 
-/* =====================================================
-   LIST GROUP MEMBERS
-   ===================================================== */
 exports.getMembers = catchAsync(async (req, res) => {
   const { groupId } = req.params;
 
@@ -112,14 +110,10 @@ exports.getMembers = catchAsync(async (req, res) => {
   res.json(members.rows);
 });
 
-/* =====================================================
-   SEND MESSAGE
-   ===================================================== */
 exports.createPost = catchAsync(async (req, res) => {
   const { groupId } = req.params;
   const { content } = req.body;
 
-  // Directly use portal_user_id from the authenticated user object
   const portalUserId = req.user.portal_user_id;
 
   if (!portalUserId) {
@@ -136,9 +130,6 @@ exports.createPost = catchAsync(async (req, res) => {
   res.json(post.rows[0]);
 });
 
-/* =====================================================
-   GET MESSAGES
-   ===================================================== */
 exports.getPosts = catchAsync(async (req, res) => {
   const { groupId } = req.params;
 

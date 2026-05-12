@@ -11,7 +11,7 @@ const SubmissionModal = ({ isOpen, onClose, onSubmit, stepTitle, isSubmitting })
     const uniqueChars = new Set(str.toLowerCase().replace(/\s/g, "")).size;
     const totalChars = str.replace(/\s/g, "").length;
     if (totalChars === 0) return 0;
-    // Basic variety score: Unique chars / Total chars (weighted)
+
     return (uniqueChars / Math.sqrt(totalChars)) * 10;
   };
 
@@ -28,7 +28,7 @@ const SubmissionModal = ({ isOpen, onClose, onSubmit, stepTitle, isSubmitting })
     <AnimatePresence>
       {isOpen && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6">
-          {/* Backdrop */}
+          {}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -37,14 +37,14 @@ const SubmissionModal = ({ isOpen, onClose, onSubmit, stepTitle, isSubmitting })
             className="fixed inset-0 bg-purple-950/40 backdrop-blur-md"
           />
 
-          {/* Modal Container */}
+          {}
           <motion.div
             initial={{ scale: 0.9, opacity: 0, y: 20 }}
             animate={{ scale: 1, opacity: 1, y: 0 }}
             exit={{ scale: 0.9, opacity: 0, y: 20 }}
             className="relative w-full max-w-lg bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl rounded-[2rem] border border-white/20 dark:border-white/10 shadow-2xl overflow-hidden"
           >
-            {/* Header / Banner */}
+            {}
             <div className="bg-gradient-to-br from-purple-600 to-indigo-700 p-8 text-white relative">
               <button
                 onClick={onClose}
@@ -52,7 +52,7 @@ const SubmissionModal = ({ isOpen, onClose, onSubmit, stepTitle, isSubmitting })
               >
                 <X className="w-5 h-5" />
               </button>
-              
+
               <div className="flex items-center gap-4 mb-2">
                 <div className="w-12 h-12 rounded-2xl bg-white/20 backdrop-blur-md flex items-center justify-center">
                   <Award className="w-7 h-7 text-yellow-300" />
@@ -63,7 +63,7 @@ const SubmissionModal = ({ isOpen, onClose, onSubmit, stepTitle, isSubmitting })
                 </div>
               </div>
 
-              {/* Reward Badge */}
+              {}
               <div className="mt-6 flex items-center gap-3 bg-black/20 backdrop-blur-md p-3 rounded-2xl border border-white/10">
                 <div className="flex-1">
                   <p className="text-[10px] font-bold uppercase tracking-wider text-purple-200">Standard Reward</p>
@@ -76,7 +76,7 @@ const SubmissionModal = ({ isOpen, onClose, onSubmit, stepTitle, isSubmitting })
                     {isQualifying ? "Insight Verified ✓" : "Writing quality low"}
                   </p>
                   <div className="w-24 h-1.5 bg-white/10 rounded-full mt-1 overflow-hidden">
-                    <motion.div 
+                    <motion.div
                       className={`h-full ${isQualifying ? 'bg-green-400' : 'bg-yellow-400'}`}
                       initial={{ width: 0 }}
                       animate={{ width: `${Math.min(100, (wordCount / 100) * 100)}%` }}
@@ -86,7 +86,7 @@ const SubmissionModal = ({ isOpen, onClose, onSubmit, stepTitle, isSubmitting })
               </div>
             </div>
 
-            {/* Form */}
+            {}
             <form onSubmit={handleSubmit} className="p-8 space-y-6">
               <div className="space-y-2">
                 <label className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-500 dark:text-gray-400 ml-1">

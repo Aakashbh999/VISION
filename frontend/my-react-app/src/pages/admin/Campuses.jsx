@@ -1,14 +1,14 @@
 import React, { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { 
-  getAdminCampuses, 
-  createAdminCampus, 
-  updateAdminCampus, 
-  deleteAdminCampus 
+import {
+  getAdminCampuses,
+  createAdminCampus,
+  updateAdminCampus,
+  deleteAdminCampus
 } from "../../services/admin";
 import { toast } from "react-toastify";
-import { 
-  Plus, Edit, Trash2, MapPin, School, Mail, CheckCircle, XCircle, Search 
+import {
+  Plus, Edit, Trash2, MapPin, School, Mail, CheckCircle, XCircle, Search
 } from "lucide-react";
 import LoadingSpinner from "../../components/ui/LoadingSpinner";
 import AdminConfirmModal from "../../components/ui/AdminConfirmModal";
@@ -144,8 +144,8 @@ const Campuses = () => {
       header: "Status",
       render: (row) => (
         <span className={`px-2.5 py-1 rounded-full text-xs font-bold flex items-center w-fit gap-1.5 border ${
-          row.is_active 
-            ? "bg-green-500/10 text-green-500 border-green-500/20" 
+          row.is_active
+            ? "bg-green-500/10 text-green-500 border-green-500/20"
             : "bg-text-muted/10 text-text-muted border-text-muted/20"
         }`}>
           {row.is_active ? <CheckCircle className="w-3.5 h-3.5" /> : <XCircle className="w-3.5 h-3.5" />}
@@ -189,7 +189,7 @@ const Campuses = () => {
                 {editingCampus ? "Edit Campus" : "Add Campus"}
               </h2>
             </div>
-            
+
             <form onSubmit={handleSubmit} className="p-5 space-y-4">
               <div>
                 <label className="text-xs font-bold text-text-muted mb-1 block">Campus Name *</label>

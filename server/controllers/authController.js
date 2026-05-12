@@ -1,3 +1,17 @@
+/**
+ * Authentication Controller
+ * Handles user registration, login, email verification, password reset, and JWT token management.
+ * Implements OAuth-style JWT token rotation, multi-device session tracking, and security features.
+ *
+ * Features:
+ * - User registration with academic certificate verification and email validation
+ * - Login with suspension and email verification checks
+ * - JWT access/refresh token management with rotation and reuse detection
+ * - Email-based password reset flow with one-time tokens
+ * - Multi-device session management with revocation capabilities
+ * - Comprehensive audit logging for all authentication actions
+ */
+
 const pool = require("../config/db");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
@@ -27,6 +41,12 @@ const catchAsync = require("../utils/catchAsync");
 const env = require("../config/env");
 const logger = require("../utils/logger");
 
+/**
+ * Resolves the API base URL for email verification links
+ * Prefers configured BASE_URL, falls back to request headers (for proxied environments), then defaults to localhost
+ * @param {Object} req - Express request object
+ * @returns {string} - Base URL for verification links
+ */
 const resolveApiBaseUrl = (req) => {
   const configuredBaseUrl = (env.BASE_URL || "").trim();
   if (configuredBaseUrl) {
@@ -40,12 +60,42 @@ const resolveApiBaseUrl = (req) => {
   const host = req.get("x-forwarded-host") || req.get("host");
 
   if (host) {
-    return `${protocol}://${host}`.replace(/\/+$/, "");
+    return `${protocol}://${host}`;
   }
 
   return `http://localhost:${env.PORT || 5000}`;
 };
 
+/**
+ * User Registration Handler
+ * Creates new student account with email verification workflow
+ * - Validates academic certificate upload
+ * - Creates separate auth (security) and portal (business) user records
+ * - Calculates semester from batch year if not manually specified
+ * - Associates user interests/career scope with system tags
+ * - Initializes user statistics (XP, level)
+ * - Sends verification email asynchronously (non-blocking)
+ *
+ * @async
+ * @param {Object} req - Express request object
+ * @param {Object} req.file - Academic certificate file
+ * @param {Object} req.validatedBody - Validated request body containing:
+ *   - email {string} - User email (unique)
+ *   - password {string} - Hashed with bcrypt (12 rounds)
+ *   - full_name {string}
+ *   - university {string}
+ *   - campus_id {number}
+ *   - program_id {number}
+ *   - semester {number} - Academic semester (optional, calculated from batch_year)
+ *   - batch_year {number} - Student batch year (optional)
+ *   - semester_is_manual {boolean} - Whether semester was manually entered
+ *   - tu_registration_no {string} - Unique registration number
+ *   - career_scope {string} - Comma-separated interests
+ *   - date_of_birth {string} - ISO date
+ * @param {Object} res - Express response object
+ * @returns {void} - Returns 201 with auth_user_id and success message
+ * @throws {Error} - 400 if email/registration number already exists, 400 if certificate missing
+ */
 exports.register = catchAsync(async (req, res) => {
   const input = req.validatedBody || req.body;
   const {
@@ -69,12 +119,13 @@ exports.register = catchAsync(async (req, res) => {
     throw createError(400, "Academic Certificate is required.");
   }
 
+  // Transaction-based approach to ensure atomic account creation
   const client = await pool.connect();
 
   try {
     await client.query("BEGIN");
 
-    // Check if email already exists
+    // Check for duplicate email
     const existing = await client.query(
       "SELECT 1 FROM auth.users WHERE email = $1",
       [email],
@@ -84,10 +135,8 @@ exports.register = catchAsync(async (req, res) => {
       throw createError(400, "Email already registered");
     }
 
-    // Hash password
     const hashedPassword = await bcrypt.hash(password, 12);
 
-    // 1. Insert into auth.users phase
     const authInsert = await client.query(
       `INSERT INTO auth.users (email, password_hash)
        VALUES ($1, $2)
@@ -97,7 +146,6 @@ exports.register = catchAsync(async (req, res) => {
 
     const authUserId = authInsert.rows[0].auth_user_id;
 
-    // 2. Normalize and compute academic data
     const normalizedBatchYear =
       batch_year === undefined || batch_year === null || batch_year === ""
         ? null
@@ -111,20 +159,17 @@ exports.register = catchAsync(async (req, res) => {
         ? null
         : Number.parseInt(semester, 10);
 
-    // Auto-calculate semester if not manual
     if (normalizedBatchYear && !normalizedManualSemester) {
       normalizedSemester = calculateSemesterFromBatch(normalizedBatchYear);
     }
 
     const academicCertificateUrl = req.file.path;
 
-    // All users start as pending_review for manual admin verification
     const studentStatus = "pending_review";
 
-    // 3. Insert into portal.users phase (atomic step)
     const portalInsert = await client.query(
       `INSERT INTO portal.users
-       (auth_user_id, full_name, university, campus_id, program_id, semester, batch_year, 
+       (auth_user_id, full_name, university, campus_id, program_id, semester, batch_year,
         semester_is_manual, tu_registration_no, academic_certificate_url, career_scope, date_of_birth, student_status)
        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
        RETURNING user_id`,
@@ -147,41 +192,36 @@ exports.register = catchAsync(async (req, res) => {
 
     const portalUserId = portalInsert.rows[0].user_id;
 
-    // 3.5 Populate Recommendation Engine (portal.user_interests)
     if (career_scope && typeof career_scope === "string") {
       const interests = career_scope
         .split(",")
         .map((t) => t.trim())
         .filter(Boolean);
       if (interests.length > 0) {
-        // Find matching system tag IDs based on name
         const tagsRes = await client.query(
           `SELECT tag_id FROM portal.tags WHERE name = ANY($1)`,
           [interests],
         );
 
-        // Insert into user_interests (which recommendation engine queries)
         if (tagsRes.rows.length > 0) {
           const insertVals = tagsRes.rows
             .map((r) => `(${portalUserId}, ${r.tag_id})`)
             .join(", ");
           await client.query(`
-            INSERT INTO portal.user_interests (user_id, tag_id) 
-            VALUES ${insertVals} 
+            INSERT INTO portal.user_interests (user_id, tag_id)
+            VALUES ${insertVals}
             ON CONFLICT DO NOTHING
           `);
         }
       }
     }
 
-    // 4. Initialize User Stats (VisionXP)
     await client.query(
       `INSERT INTO portal.user_stats (user_id, total_xp, current_level)
        VALUES ($1, 0, 1)`,
       [portalUserId],
     );
 
-    // 5. Verification token generation
     const emailToken = jwt.sign({ auth_user_id: authUserId }, env.JWT_SECRET, {
       expiresIn: "24h",
     });
@@ -201,7 +241,6 @@ exports.register = catchAsync(async (req, res) => {
 
     await client.query("COMMIT");
 
-    // 5. Post-commit: Notification / Verification Email
     const apiBaseUrl = resolveApiBaseUrl(req);
     const verificationLink = `${apiBaseUrl}/api/auth/verify-email?token=${emailToken}`;
 
@@ -229,7 +268,6 @@ exports.register = catchAsync(async (req, res) => {
   } catch (err) {
     await client.query("ROLLBACK");
 
-    // Specific handling for DB unique constraint violations
     if (err.code === "23505") {
       if (err.detail.includes("tu_registration_no")) {
         err.message = "Registration Number already in use.";
@@ -245,10 +283,26 @@ exports.register = catchAsync(async (req, res) => {
   }
 });
 
+/**
+ * User Login Handler
+ * Validates credentials and issues JWT access/refresh token pair
+ * - Verifies email exists in system
+ * - Performs password comparison (bcrypt)
+ * - Checks if account is suspended
+ * - Logs authentication event to audit trail
+ * - Updates last_login timestamp
+ * - Returns JWT tokens with 15-minute expiry and 7-day refresh rotation
+ *
+ * @async
+ * @param {Object} req - Express request object
+ * @param {Object} req.validatedBody - { email: string, password: string }
+ * @param {Object} res - Express response object
+ * @returns {Object} - { accessToken, refreshToken, expiresIn, role }
+ * @throws {Error} - 400 if user not found or invalid credentials, 403 if suspended
+ */
 exports.login = catchAsync(async (req, res) => {
   const { email, password } = req.validatedBody || req.body;
 
-  // Single query fetches auth + portal user data atomically
   const result = await pool.query(
     `SELECT
          a.auth_user_id,
@@ -264,7 +318,6 @@ exports.login = catchAsync(async (req, res) => {
   );
 
   if (result.rows.length === 0) {
-    // Log failed login attempt
     await logAuthEvent(
       req,
       AuditActions.LOGIN_FAILED,
@@ -276,7 +329,6 @@ exports.login = catchAsync(async (req, res) => {
 
   const user = result.rows[0];
 
-  // Check password
   const isMatch = await bcrypt.compare(password, user.password_hash);
   if (!isMatch) {
     await logAuthEvent(
@@ -288,7 +340,6 @@ exports.login = catchAsync(async (req, res) => {
     throw createError(400, "Invalid credentials");
   }
 
-  // 🚫 Block suspended users
   if (user.is_suspended) {
     await logAuthEvent(
       req,
@@ -299,10 +350,8 @@ exports.login = catchAsync(async (req, res) => {
     throw createError(403, "Your account is suspended.");
   }
 
-  // ✅ Create tokens with refresh token rotation
   const tokens = await createTokens(user, req);
 
-  // Log successful login and update last_login in parallel
   await Promise.all([
     logAuthEvent(req, AuditActions.LOGIN_SUCCESS, {
       authUserId: user.auth_user_id,
@@ -321,6 +370,23 @@ exports.login = catchAsync(async (req, res) => {
   });
 });
 
+/**
+ * Email Verification Handler
+ * Validates one-time email verification token and activates user account
+ * - Checks token existence and expiration (24h window)
+ * - Decodes JWT to extract auth_user_id
+ * - Updates email_status to 'verified' in auth.users
+ * - Sets is_verified flag in portal.users
+ * - Sends welcome email asynchronously
+ * - Deletes token after use (one-time use)
+ *
+ * @async
+ * @param {Object} req - Express request object
+ * @param {string} req.query.token - Signed JWT email verification token
+ * @param {Object} res - Express response object
+ * @returns {Object} - { message: "Email successfully verified" }
+ * @throws {Error} - 400 if token missing, invalid, or expired
+ */
 exports.verifyEmail = catchAsync(async (req, res) => {
   const { token } = req.query;
 
@@ -328,7 +394,6 @@ exports.verifyEmail = catchAsync(async (req, res) => {
     throw createError(400, "Token missing");
   }
 
-  // Check token exists in DB
   const tokenCheck = await pool.query(
     `SELECT * FROM auth.email_verification_tokens
        WHERE token = $1`,
@@ -341,15 +406,12 @@ exports.verifyEmail = catchAsync(async (req, res) => {
 
   const tokenData = tokenCheck.rows[0];
 
-  // Check expiration
   if (new Date(tokenData.expires_at) < new Date()) {
     throw createError(400, "Token expired");
   }
 
-  // Verify JWT
   const decoded = jwt.verify(token, env.JWT_SECRET);
 
-  // Update email status in auth.users
   await pool.query(
     `UPDATE auth.users
        SET email_status = 'verified'
@@ -357,7 +419,6 @@ exports.verifyEmail = catchAsync(async (req, res) => {
     [decoded.auth_user_id],
   );
 
-  // \u2705 Sync portal.users.is_verified
   await pool.query(
     `UPDATE portal.users
        SET is_verified = true
@@ -365,14 +426,12 @@ exports.verifyEmail = catchAsync(async (req, res) => {
     [decoded.auth_user_id],
   );
 
-  // Delete token (replay protection)
   await pool.query(
     `DELETE FROM auth.email_verification_tokens
        WHERE token = $1`,
     [token],
   );
 
-  // Get user info to send welcome email
   const userInfo = await pool.query(
     `SELECT a.email, p.full_name
        FROM auth.users a
@@ -403,10 +462,24 @@ exports.verifyEmail = catchAsync(async (req, res) => {
   res.json({ message: "Email successfully verified" });
 });
 
+/**
+ * Resend Verification Email Handler
+ * Generates new verification token and sends email to unverified users
+ * - Checks if user exists and account is not already verified
+ * - Invalidates previous tokens
+ * - Creates new 24h JWT token
+ * - Sends email with verification link (non-blocking)
+ *
+ * @async
+ * @param {Object} req - Express request object (requires auth)
+ * @param {Object} req.user - { auth_user_id }
+ * @param {Object} res - Express response object
+ * @returns {Object} - { message: "Verification email sent successfully" }
+ * @throws {Error} - 400 if already verified, 404 if user not found
+ */
 exports.resendVerificationEmail = catchAsync(async (req, res) => {
   const { auth_user_id } = req.user;
 
-  // Get user info
   const userResult = await pool.query(
     `SELECT a.email, a.email_status, p.full_name
        FROM auth.users a
@@ -421,23 +494,19 @@ exports.resendVerificationEmail = catchAsync(async (req, res) => {
 
   const { email, email_status, full_name } = userResult.rows[0];
 
-  // Check if already verified
   if (email_status === "verified") {
     throw createError(400, "Email is already verified");
   }
 
-  // Delete any existing tokens for this user
   await pool.query(
     `DELETE FROM auth.email_verification_tokens WHERE auth_user_id = $1`,
     [auth_user_id],
   );
 
-  // Generate new verification token
   const emailToken = jwt.sign({ auth_user_id }, env.JWT_SECRET, {
     expiresIn: "24h",
   });
 
-  // Save token in DB
   await pool.query(
     `INSERT INTO auth.email_verification_tokens
        (auth_user_id, token, expires_at)
@@ -445,11 +514,9 @@ exports.resendVerificationEmail = catchAsync(async (req, res) => {
     [auth_user_id, emailToken],
   );
 
-  // Send verification email with timeout
   const apiBaseUrl = resolveApiBaseUrl(req);
   const verificationLink = `${apiBaseUrl}/api/auth/verify-email?token=${emailToken}`;
 
-  // Wrap with timeout promise to catch hanging Gmail SMTP
   const emailTimeout = new Promise((_, reject) =>
     setTimeout(() => reject(new Error("Email sending timeout")), 15000),
   );
@@ -466,6 +533,23 @@ exports.resendVerificationEmail = catchAsync(async (req, res) => {
   res.json({ message: "Verification email sent successfully" });
 });
 
+/**
+ * Forgot Password Handler
+ * Initiates password reset flow via email
+ * - Checks if email exists (does not reveal email status for security)
+ * - Generates cryptographically secure random token (32 bytes hex)
+ * - Hashes token for database storage
+ * - Creates 1-hour expiring reset token
+ * - Sends password reset email with raw token in link
+ * - Non-blocking email send (logs timeout warnings)
+ *
+ * @async
+ * @param {Object} req - Express request object
+ * @param {Object} req.validatedBody - { email: string }
+ * @param {Object} res - Express response object
+ * @returns {Object} - Generic message (same for existing/non-existing emails for security)
+ * @throws {Error} - None (always returns success message)
+ */
 exports.forgotPassword = catchAsync(async (req, res) => {
   const { email } = req.validatedBody || req.body;
 
@@ -474,7 +558,6 @@ exports.forgotPassword = catchAsync(async (req, res) => {
     [email],
   );
 
-  // Always respond the same (prevent email enumeration)
   if (!userResult.rows.length) {
     return res.json({
       message:
@@ -484,20 +567,16 @@ exports.forgotPassword = catchAsync(async (req, res) => {
 
   const authUserId = userResult.rows[0].auth_user_id;
 
-  // Generate secure random token
   const rawToken = crypto.randomBytes(32).toString("hex");
 
-  // Hash the token for storage (raw token sent to user, hash stored in DB)
   const tokenHash = hashToken(rawToken);
 
-  // Remove previous tokens for this user (only one active at a time)
   await pool.query(
     `DELETE FROM auth.password_reset_tokens
        WHERE auth_user_id = $1`,
     [authUserId],
   );
 
-  // Store HASHED token in DB (never store raw token)
   await pool.query(
     `INSERT INTO auth.password_reset_tokens
        (auth_user_id, token, expires_at)
@@ -507,7 +586,6 @@ exports.forgotPassword = catchAsync(async (req, res) => {
 
   const resetLink = `${env.FRONTEND_URL || "http://localhost:5173"}/reset-password?token=${rawToken}`;
 
-  // Get request info for security context
   const ipAddress = req.ip || req.connection.remoteAddress;
   const userAgent = req.headers["user-agent"];
 
@@ -519,7 +597,7 @@ exports.forgotPassword = catchAsync(async (req, res) => {
     await Promise.race([
       sendPasswordResetEmail({
         to: email,
-        userName: null, // Don't expose name in password reset for privacy
+        userName: null,
         resetLink,
         ipAddress,
         userAgent,
@@ -528,7 +606,6 @@ exports.forgotPassword = catchAsync(async (req, res) => {
     ]);
   } catch (emailErr) {
     logger.warn({ err: emailErr }, "Password reset email timeout");
-    // Still respond success to prevent user enumeration
   }
 
   res.json({
@@ -537,10 +614,25 @@ exports.forgotPassword = catchAsync(async (req, res) => {
   });
 });
 
+/**
+ * Reset Password Handler
+ * Completes password reset using one-time token from email
+ * - Validates token and checks expiration (1 hour window)
+ * - Hashes new password with bcrypt (12 rounds)
+ * - Updates auth.users password_hash
+ * - Invalidates all existing refresh tokens (forces re-login)
+ * - Deletes reset token (one-time use)
+ *
+ * @async
+ * @param {Object} req - Express request object
+ * @param {Object} req.validatedBody - { token: string, newPassword: string }
+ * @param {Object} res - Express response object
+ * @returns {Object} - { message: "Password successfully reset." }
+ * @throws {Error} - 400 if token invalid or expired
+ */
 exports.resetPassword = catchAsync(async (req, res) => {
   const { token, newPassword } = req.validatedBody || req.body;
 
-  // Hash the incoming token and compare with stored hash
   const tokenHash = hashToken(token);
 
   const tokenResult = await pool.query(
@@ -565,7 +657,6 @@ exports.resetPassword = catchAsync(async (req, res) => {
     [hashedPassword, auth_user_id],
   );
 
-  // Delete used token
   await pool.query(
     `DELETE FROM auth.password_reset_tokens
        WHERE auth_user_id = $1`,
@@ -575,6 +666,21 @@ exports.resetPassword = catchAsync(async (req, res) => {
   res.json({ message: "Password successfully reset." });
 });
 
+/**
+ * JWT Token Refresh Handler
+ * Rotates refresh token and issues new access/refresh pair
+ * - Validates refresh token and checks for reuse (security measure)
+ * - Generates new token pair with rotated refresh token
+ * - Logs token refresh event
+ * - Detects refresh token reuse and requires full re-login for security
+ *
+ * @async
+ * @param {Object} req - Express request object
+ * @param {Object} req.validatedBody - { refreshToken: string }
+ * @param {Object} res - Express response object
+ * @returns {Object} - { accessToken, refreshToken, expiresIn, role }
+ * @throws {Error} - 401 if token expired, reused, or invalid
+ */
 exports.refreshToken = catchAsync(async (req, res) => {
   const { refreshToken } = req.validatedBody || req.body;
 
@@ -585,7 +691,6 @@ exports.refreshToken = catchAsync(async (req, res) => {
   try {
     const tokens = await rotateRefreshToken(refreshToken, req);
 
-    // Log token refresh
     await logAuthEvent(req, AuditActions.TOKEN_REFRESH, {
       authUserId: tokens.authUserId,
     });
@@ -611,6 +716,18 @@ exports.refreshToken = catchAsync(async (req, res) => {
   }
 });
 
+/**
+ * Logout Handler (Single Device)
+ * Revokes refresh token for current device
+ * - Invalidates single session token
+ * - Logs logout event
+ *
+ * @async
+ * @param {Object} req - Express request object
+ * @param {Object} req.validatedBody - { refreshToken: string }
+ * @param {Object} res - Express response object
+ * @returns {Object} - { message: "Logged out successfully" }
+ */
 exports.logout = catchAsync(async (req, res) => {
   const { refreshToken } = req.validatedBody || req.body;
 
@@ -618,29 +735,67 @@ exports.logout = catchAsync(async (req, res) => {
     await revokeRefreshToken(refreshToken);
   }
 
-  // Log logout
   await logAuthEvent(req, AuditActions.LOGOUT);
 
   res.json({ message: "Logged out successfully" });
 });
 
+/**
+ * Logout Handler (All Devices)
+ * Revokes all refresh tokens for user across all devices/sessions
+ * - Invalidates all active refresh tokens
+ * - Logs all-sessions-revoked event
+ * - Requires full re-login on all devices
+ *
+ * @async
+ * @param {Object} req - Express request object (requires auth)
+ * @param {Object} req.user - { auth_user_id }
+ * @param {Object} res - Express response object
+ * @returns {Object} - { message: "Logged out from all devices successfully" }
+ */
 exports.logoutAllDevices = catchAsync(async (req, res) => {
   const authUserId = req.user.auth_user_id;
 
   await revokeAllUserTokens(authUserId);
 
-  // Log logout all
   await logAuthEvent(req, AuditActions.ALL_SESSIONS_REVOKED);
 
   res.json({ message: "Logged out from all devices successfully" });
 });
 
+/**
+ * Get Active Sessions Handler
+ * Returns list of all active sessions for current user
+ * - Lists device info, last activity, and session metadata
+ * - Useful for multi-device session management UI
+ *
+ * @async
+ * @param {Object} req - Express request object (requires auth)
+ * @param {Object} req.user - { auth_user_id }
+ * @param {Object} res - Express response object
+ * @returns {Array} - List of active session objects
+ */
 exports.getSessions = catchAsync(async (req, res) => {
   const authUserId = req.user.auth_user_id;
   const sessions = await getUserSessions(authUserId);
   res.json(sessions);
 });
 
+/**
+ * Revoke Specific Session Handler
+ * Invalidates a single session by ID (allows logout from specific device)
+ * - Validates session belongs to current user
+ * - Revokes specified session token
+ * - Logs session revocation
+ *
+ * @async
+ * @param {Object} req - Express request object (requires auth)
+ * @param {Object} req.user - { auth_user_id }
+ * @param {string} req.params.id - Session ID to revoke
+ * @param {Object} res - Express response object
+ * @returns {Object} - { message: "Session revoked successfully" }
+ * @throws {Error} - 404 if session not found
+ */
 exports.revokeSessionById = catchAsync(async (req, res) => {
   const authUserId = req.user.auth_user_id;
   const { id } = req.params;
@@ -651,7 +806,6 @@ exports.revokeSessionById = catchAsync(async (req, res) => {
     throw createError(404, "Session not found");
   }
 
-  // Log session revocation
   await logAuthEvent(req, AuditActions.SESSION_REVOKED, { sessionId: id });
 
   res.json({ message: "Session revoked successfully" });

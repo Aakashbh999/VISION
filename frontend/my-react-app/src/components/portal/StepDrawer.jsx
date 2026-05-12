@@ -5,9 +5,6 @@ import SubmissionModal from "./Roadmaps/SubmissionModal";
 import { trackStepResourceVisit } from "../../services/roadmap";
 import { toast } from "react-toastify";
 
-/**
- * ResourceCard Component
- */
 const ResourceCard = ({ resource, onVisit }) => {
   return (
     <a
@@ -16,8 +13,8 @@ const ResourceCard = ({ resource, onVisit }) => {
       rel="noopener noreferrer"
       onClick={() => onVisit(resource.resource_id)}
       className={`group block p-4 bg-[var(--bg-card)] border border-[var(--border-main)] rounded-xl transition-all relative overflow-hidden ${
-        resource.is_visited 
-          ? "border-green-200 dark:border-green-900/30 bg-green-50/10" 
+        resource.is_visited
+          ? "border-green-200 dark:border-green-900/30 bg-green-50/10"
           : "hover:border-purple-300 hover:shadow-md"
       }`}
     >
@@ -52,8 +49,8 @@ const ResourceCard = ({ resource, onVisit }) => {
           </div>
         </div>
         <div className={`w-8 h-8 rounded-full flex items-center justify-center transition-colors ${
-          resource.is_visited 
-            ? "bg-green-100 dark:bg-green-900/40 text-green-600" 
+          resource.is_visited
+            ? "bg-green-100 dark:bg-green-900/40 text-green-600"
             : "bg-[var(--bg-active)] text-[var(--text-muted)] group-hover:bg-purple-100 group-hover:text-purple-600"
         }`}>
           <ExternalLink className="w-3.5 h-3.5" />
@@ -63,10 +60,6 @@ const ResourceCard = ({ resource, onVisit }) => {
   );
 };
 
-/**
- * StepDrawer Component
- * A slide-over drawer for roadmap step details and resources
- */
 const StepDrawer = ({ isOpen, onClose, step, onComplete }) => {
   const [isModalOpen, setIsModalOpen] = React.useState(false);
   const [isSubmitting, setIsSubmitting] = React.useState(false);
@@ -80,25 +73,23 @@ const StepDrawer = ({ isOpen, onClose, step, onComplete }) => {
 
   if (!step) return null;
 
-  // Requirements Check
   const totalRequired = step.resources?.length || 0;
   const visitedCount = localVisited.length;
   const allResourcesVisited = visitedCount >= totalRequired;
 
-  // 24h Lockout Check
   const waitPeriod = 24 * 60 * 60 * 1000;
   const firstViewAt = step.first_viewed_at ? new Date(step.first_viewed_at).getTime() : null;
   const timePassed = firstViewAt ? Date.now() - firstViewAt : 0;
   const isTimeLocked = firstViewAt ? timePassed < waitPeriod : true;
   const canMarkComplete = allResourcesVisited && !isTimeLocked;
 
-  const hoursRemaining = firstViewAt 
-    ? Math.max(0, Math.ceil((waitPeriod - timePassed) / (1000 * 60 * 60))) 
+  const hoursRemaining = firstViewAt
+    ? Math.max(0, Math.ceil((waitPeriod - timePassed) / (1000 * 60 * 60)))
     : 24;
 
   const handleResourceVisit = async (resourceId) => {
     if (localVisited.includes(resourceId)) return;
-    
+
     try {
       await trackStepResourceVisit(step.step_id, resourceId);
       setLocalVisited(prev => [...prev, resourceId]);
@@ -123,7 +114,7 @@ const StepDrawer = ({ isOpen, onClose, step, onComplete }) => {
     <AnimatePresence>
       {isOpen && (
         <>
-          {/* Backdrop */}
+          {}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -132,7 +123,7 @@ const StepDrawer = ({ isOpen, onClose, step, onComplete }) => {
             className="fixed inset-0 bg-black/30 backdrop-blur-xs z-50 lg:ml-64"
           />
 
-          {/* Drawer */}
+          {}
           <motion.div
             initial={{ x: "100%" }}
             animate={{ x: 0 }}
@@ -140,7 +131,7 @@ const StepDrawer = ({ isOpen, onClose, step, onComplete }) => {
             transition={{ type: "spring", damping: 25, stiffness: 200 }}
             className="fixed right-0 top-0 h-full w-full max-w-md bg-[var(--bg-card)] border-l border-[var(--border-main)] shadow-2xl z-51 overflow-y-auto"
           >
-            {/* Header */}
+            {}
             <div className="sticky top-0 bg-[var(--bg-card)]/80 backdrop-blur-md border-b border-[var(--border-main)] p-6 flex items-center justify-between z-10">
               <div className="flex items-center gap-3 min-w-0">
                 <div className="w-10 h-10 rounded-lg bg-purple-100 flex items-center justify-center text-purple-600">
@@ -158,9 +149,9 @@ const StepDrawer = ({ isOpen, onClose, step, onComplete }) => {
               </button>
             </div>
 
-            {/* Content */}
+            {}
             <div className="p-6 space-y-8">
-              {/* Description */}
+              {}
               <section>
                 <h3 className="text-xs font-bold text-purple-600 uppercase tracking-widest mb-2 flex items-center gap-2">
                   <span className="w-1 h-1 bg-purple-600 rounded-full" />
@@ -176,11 +167,11 @@ const StepDrawer = ({ isOpen, onClose, step, onComplete }) => {
                 )}
               </section>
 
-              {/* Requirements Banner */}
+              {}
               {!step.is_completed && (
                 <div className={`p-5 rounded-2xl border flex items-start gap-4 transition-all ${
-                  canMarkComplete 
-                    ? "bg-green-50/50 border-green-200 dark:bg-green-900/10 dark:border-green-800/30" 
+                  canMarkComplete
+                    ? "bg-green-50/50 border-green-200 dark:bg-green-900/10 dark:border-green-800/30"
                     : "bg-amber-50/50 border-amber-200 dark:bg-amber-900/10 dark:border-amber-800/30"
                 }`}>
                   <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${
@@ -199,8 +190,8 @@ const StepDrawer = ({ isOpen, onClose, step, onComplete }) => {
                       </li>
                       <li className="flex items-center gap-1.5">
                         <div className={`w-1 h-1 rounded-full ${!isTimeLocked ? "bg-green-500" : "bg-[var(--text-muted)]"}`} />
-                        {isTimeLocked 
-                          ? `Unlock in approx. ${hoursRemaining}h (24h learning rule)` 
+                        {isTimeLocked
+                          ? `Unlock in approx. ${hoursRemaining}h (24h learning rule)`
                           : "Learning period completed"}
                       </li>
                     </ul>
@@ -208,7 +199,7 @@ const StepDrawer = ({ isOpen, onClose, step, onComplete }) => {
                 </div>
               )}
 
-              {/* Status Section */}
+              {}
               <section className="bg-[var(--bg-active)] p-5 rounded-2xl border border-[var(--border-main)]">
                 <div className="flex items-center justify-between">
                   <div>
@@ -243,7 +234,7 @@ const StepDrawer = ({ isOpen, onClose, step, onComplete }) => {
                 </div>
               </section>
 
-              {/* Resources */}
+              {}
               <section>
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-widest flex items-center gap-2">

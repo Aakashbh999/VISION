@@ -90,7 +90,7 @@ const updateCommentVoteTree = (comments, targetCommentId, nextVoteType) => {
 export const useDiscussions = (filters = {}) => {
   return useQuery({
     queryKey: ["discussions", filters],
-    queryFn: () => getDiscussions(filters),
+    queryFn: ({ signal }) => getDiscussions(filters, signal),
     staleTime: 2 * 60 * 1000,
   });
 };
@@ -99,7 +99,7 @@ export const useDiscussionTags = () => {
   return useQuery({
     queryKey: ["discussion-tags"],
     queryFn: () => getTags(),
-    staleTime: 30 * 60 * 1000, // 30 minutes - tags don't change often
+    staleTime: 30 * 60 * 1000,
   });
 };
 
@@ -191,7 +191,7 @@ export const useTrendingDiscussions = (limit = 10) => {
   return useQuery({
     queryKey: ["trending-discussions", limit],
     queryFn: () => getTrendingDiscussions(limit),
-    staleTime: 5 * 60 * 1000, // 5 minutes
+    staleTime: 5 * 60 * 1000,
   });
 };
 
@@ -280,8 +280,6 @@ export const useVote = (discussionId) => {
         },
       );
 
-      // Avoid immediate refetch here; it can briefly re-apply stale server payloads
-      // and visually reset the counter right after an optimistic update.
     },
   });
 };
@@ -309,7 +307,6 @@ export const useCommentVote = (discussionId) => {
         },
       );
 
-      // Keep optimistic state and let normal query lifecycle refresh later.
     },
   });
 };

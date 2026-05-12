@@ -161,8 +161,8 @@ const PendingStudents = () => {
         onCancel={() => setModalConfig({ isOpen: false })}
         isLoading={approveMutation.isPending || rejectMutation.isPending}
       />
-      
-      <StudentReviewModal 
+
+      <StudentReviewModal
         isOpen={!!reviewStudent}
         student={reviewStudent}
         onClose={() => setReviewStudent(null)}

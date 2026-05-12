@@ -7,7 +7,6 @@ const {
 } = require("../middleware/authMiddleware");
 const sanitizeInput = require("../middleware/sanitizeInput");
 
-// create
 router.post(
   "/",
   verifyJWT,
@@ -16,7 +15,6 @@ router.post(
   ctrl.createGroup,
 );
 
-// join / leave
 router.post(
   "/:groupId/join",
   verifyJWT,
@@ -32,7 +30,6 @@ router.delete(
   ctrl.leaveGroup,
 );
 
-// members
 router.get(
   "/:groupId/members",
   verifyJWT,
@@ -40,7 +37,6 @@ router.get(
   ctrl.getMembers,
 );
 
-// messages
 router.post(
   "/:groupId/posts",
   verifyJWT,

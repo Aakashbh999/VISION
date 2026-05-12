@@ -34,11 +34,9 @@ exports.verifyJWT = async (req, res, next) => {
   }
 };
 
-// 🔐 Restrict Portal Access Until Approved
 exports.requireApprovedStudent = (req, res, next) => {
   const { email_status, student_status, role, is_moderator } = req.user;
 
-  // Admins and Moderators bypass student-specific approval logic
   if (role === "admin" || is_moderator) {
     return next();
   }
@@ -54,13 +52,12 @@ exports.requireApprovedStudent = (req, res, next) => {
   next();
 };
 
-// 🔓 Optional JWT - continues without auth if no token provided
 exports.optionalJWT = async (req, res, next) => {
   try {
     const authHeader = req.headers.authorization;
 
     if (!authHeader || !authHeader.startsWith("Bearer ")) {
-      // No token provided - continue as unauthenticated
+
       req.user = null;
       return next();
     }
@@ -78,7 +75,7 @@ exports.optionalJWT = async (req, res, next) => {
 
     next();
   } catch (err) {
-    // Token invalid - continue as unauthenticated
+
     req.user = null;
     next();
   }

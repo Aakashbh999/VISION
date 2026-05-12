@@ -1,3 +1,18 @@
+/**
+ * Group Post Controller
+ * Manages content creation and moderation within study groups.
+ * Supports multiple post types with section-based permissions (general, Q&A, resources, notices).
+ *
+ * Features:
+ * - Post listing with section filtering (general, discussion, Q&A, resources, notice board)
+ * - Post creation with permission-based type restrictions
+ * - Post deletion with 24-hour soft delete window (can be restored)
+ * - Q&A answer editing with 30-minute edit window
+ * - Activity logging for all post operations
+ * - Presence indicators for post authors
+ * - Permission-based access control (group admins, moderators)
+ */
+
 const pool = require("../config/db");
 const { feed } = require("../utils/activityService");
 const { successResponse, errorResponse } = require("../utils/response");
@@ -17,9 +32,6 @@ const isGroupAdmin = (groupOwnerId, membership, userId) =>
   hasGroupPermission(membership, "manage_users") ||
   hasGroupPermission(membership, "moderate_content");
 
-/* ===============================
-   GET GROUP POSTS (with pagination)
- ================================ */
 exports.getPosts = catchAsync(async (req, res) => {
   const { id } = req.params;
   const { limit = 30, before, after, section = "general" } = req.query;
@@ -49,17 +61,15 @@ exports.getPosts = catchAsync(async (req, res) => {
   if (after) {
     params.push(after);
     query += ` AND gp.post_id > $${params.length}`;
-    query += ` ORDER BY gp.post_id ASC`; // fetch newest from the `after` id upwards
-    
-    // When doing delta polling, we don't necessarily need the strict limit, but we'll apply it just in case
+    query += ` ORDER BY gp.post_id ASC`;
+
     const posts = await pool.query(query, params);
-    
-    // If we fetched ASC, we reverse so the newest is first as expected by the frontend
+
     const finalMessages = posts.rows.reverse();
-    
+
     return successResponse(res, {
       messages: finalMessages,
-      hasMore: false, // delta polling doesn't use hasMore backwards
+      hasMore: false,
       oldestId: null,
       latestId: finalMessages.length > 0 ? finalMessages[0].post_id : null,
     });
@@ -86,16 +96,11 @@ exports.getPosts = catchAsync(async (req, res) => {
           ? finalMessages[finalMessages.length - 1].post_id
           : null,
       latestId:
-        finalMessages.length > 0 && !before
-          ? finalMessages[0].post_id
-          : null,
+        finalMessages.length > 0 && !before ? finalMessages[0].post_id : null,
     });
   }
 });
 
-/* ===============================
-   CREATE POST
- ================================ */
 exports.createPost = catchAsync(async (req, res) => {
   const { id } = req.params;
   const {
@@ -117,7 +122,6 @@ exports.createPost = catchAsync(async (req, res) => {
     return errorResponse(res, "Invalid section", 400);
   }
 
-  // Notice board: only owner or co-admin with official voice permission can post
   if (section === "notice_board") {
     const membership = await getMembership(id, userId);
     if (!hasGroupPermission(membership, "post_notice")) {
@@ -141,7 +145,11 @@ exports.createPost = catchAsync(async (req, res) => {
   if (!membership) {
     return errorResponse(res, "Only group members can post.", 403);
   }
-  const adminMode = isGroupAdmin(groupResult.rows[0].created_by, membership, userId);
+  const adminMode = isGroupAdmin(
+    groupResult.rows[0].created_by,
+    membership,
+    userId,
+  );
 
   const normalizedContent = typeof content === "string" ? content.trim() : "";
 
@@ -154,21 +162,24 @@ exports.createPost = catchAsync(async (req, res) => {
       if (!normalizedContent) {
         return errorResponse(res, "Question text is required.", 400);
       }
-      
-      // Rate limiting check: max 2 questions per week per group
+
       const recentQuestions = await pool.query(
-        `SELECT COUNT(*) FROM portal.group_posts 
-         WHERE group_id = $1 
-           AND user_id = $2 
-           AND section = 'qa' 
-           AND qa_post_type = 'question' 
+        `SELECT COUNT(*) FROM portal.group_posts
+         WHERE group_id = $1
+           AND user_id = $2
+           AND section = 'qa'
+           AND qa_post_type = 'question'
            AND created_at >= NOW() - INTERVAL '7 days'
            AND deleted_at IS NULL`,
-        [id, userId]
+        [id, userId],
       );
-      
+
       if (parseInt(recentQuestions.rows[0].count) >= 2) {
-        return errorResponse(res, "You have reached the limit of 2 questions per week in this group.", 429);
+        return errorResponse(
+          res,
+          "You have reached the limit of 2 questions per week in this group.",
+          429,
+        );
       }
     }
 
@@ -183,7 +194,11 @@ exports.createPost = catchAsync(async (req, res) => {
 
       normalizedQaQuestionId = Number.parseInt(qa_question_post_id, 10);
       if (!Number.isInteger(normalizedQaQuestionId)) {
-        return errorResponse(res, "A valid question ID is required for answers.", 400);
+        return errorResponse(
+          res,
+          "A valid question ID is required for answers.",
+          400,
+        );
       }
       if (!normalizedContent) {
         return errorResponse(res, "Answer text is required.", 400);
@@ -228,7 +243,7 @@ exports.createPost = catchAsync(async (req, res) => {
         403,
       );
     }
-    
+
     if (!req.file) {
       return errorResponse(
         res,
@@ -285,16 +300,11 @@ exports.createPost = catchAsync(async (req, res) => {
   return successResponse(res, result.rows[0], "Post created successfully");
 });
 
-/* ===============================
-   SOFT DELETE POST (user-initiated)
-   \u2014 records deletion + reason for moderation
- ================================ */
 exports.softDeletePost = catchAsync(async (req, res) => {
   const { postId } = req.params;
   const userId = req.user.portal_user_id;
   const { reason } = req.body;
 
-  // Verify post exists and is not already deleted
   const post = await pool.query(
     `SELECT user_id, group_id, section FROM portal.group_posts WHERE post_id = $1 AND deleted_at IS NULL`,
     [postId],
@@ -332,9 +342,8 @@ exports.softDeletePost = catchAsync(async (req, res) => {
     return errorResponse(res, "You cannot delete this post", 403);
   }
 
-  // Soft delete: mark with deletion timestamp, user, and reason
   const result = await pool.query(
-    `UPDATE portal.group_posts 
+    `UPDATE portal.group_posts
        SET deleted_at = NOW(), deleted_by = $1, deletion_reason = $2
        WHERE post_id = $3
        RETURNING post_id, content, deleted_at`,
@@ -379,7 +388,11 @@ exports.updateQaAnswer = catchAsync(async (req, res) => {
     `SELECT created_by FROM portal.study_groups WHERE group_id = $1`,
     [answer.group_id],
   );
-  const adminMode = isGroupAdmin(groupMeta.rows[0]?.created_by, membership, userId);
+  const adminMode = isGroupAdmin(
+    groupMeta.rows[0]?.created_by,
+    membership,
+    userId,
+  );
 
   if (Number(answer.user_id) !== Number(userId) && !adminMode) {
     return errorResponse(res, "You cannot edit this answer.", 403);

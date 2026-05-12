@@ -1,22 +1,4 @@
-/**
- * VisionImageEditor
- * ─────────────────
- * Reusable image-picker → crop → compress → upload component.
- *
- * Props
- * ──────
- * aspect      {number}   Crop aspect ratio. 1 = circle (avatar), 16/9 = banner.
- * onDone      {fn}       Called with a FormData ready to POST. Receives (formData).
- * onCancel    {fn}       Called when the user dismisses without saving.
- * isLoading   {bool}     Disables the confirm button while parent is mutating.
- * fieldName   {string}   FormData field name (default "image").
- * extraFields {object}   Extra key/value pairs appended to the FormData.
- *
- * Limits
- * ──────
- * • Client-side 1 MB size guard before opening the cropper.
- * • Canvas → Blob at image/jpeg quality 0.8.
- */
+
 
 import { useState, useCallback, useRef, useEffect } from "react";
 import Cropper from "react-easy-crop";
@@ -25,9 +7,8 @@ import { X, ZoomIn, ZoomOut, Check, Upload } from "lucide-react";
 import { showToast } from "../utils/toast";
 import Button from "./ui/Button";
 
-const MAX_BYTES = 1 * 1024 * 1024; // 1 MB
+const MAX_BYTES = 1 * 1024 * 1024;
 
-// ─── Canvas crop helper ────────────────────────────────────────────────────
 async function getCroppedBlob(imageSrc, pixelCrop) {
   return new Promise((resolve, reject) => {
     const image = new Image();
@@ -55,7 +36,7 @@ async function getCroppedBlob(imageSrc, pixelCrop) {
           resolve(blob);
         },
         "image/jpeg",
-        0.8, // quality — reduces file size further
+        0.8,
       );
     };
     image.onerror = reject;
@@ -63,7 +44,6 @@ async function getCroppedBlob(imageSrc, pixelCrop) {
   });
 }
 
-// ─── Main component ────────────────────────────────────────────────────────
 export default function VisionImageEditor({
   aspect = 1,
   onDone,
@@ -74,7 +54,7 @@ export default function VisionImageEditor({
   asModal = false,
   initialImageSrc = null,
 }) {
-  const [imageSrc, setImageSrc] = useState(null); // data-URL of selected file
+  const [imageSrc, setImageSrc] = useState(null);
   const [crop, setCrop] = useState({ x: 0, y: 0 });
   const [zoom, setZoom] = useState(1);
   const [croppedAreaPixels, setCroppedAreaPixels] = useState(null);
@@ -91,13 +71,11 @@ export default function VisionImageEditor({
     }
   }, [initialImageSrc]);
 
-  // ── Step 1: file selected from OS picker ─────────────────────────────────
   const handleFileChange = (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
     setErrorMsg("");
 
-    // 1 MB guard
     if (file.size > MAX_BYTES) {
       const msg = "File too large — maximum size is 1 MB.";
       setErrorMsg(msg);
@@ -109,21 +87,19 @@ export default function VisionImageEditor({
     const reader = new FileReader();
     reader.onload = () => setImageSrc(reader.result);
     reader.readAsDataURL(file);
-    e.target.value = ""; // reset so same file can be re-selected
+    e.target.value = "";
   };
 
   const onCropComplete = useCallback((_croppedArea, pixels) => {
     setCroppedAreaPixels(pixels);
   }, []);
 
-  // ── Step 2: user confirms crop ────────────────────────────────────────────
   const handleConfirm = async () => {
     if (!croppedAreaPixels || !imageSrc) return;
     setProcessing(true);
     try {
       const blob = await getCroppedBlob(imageSrc, croppedAreaPixels);
 
-      // Extra guard: compressed result should still be ≤ 1 MB
       if (blob.size > MAX_BYTES) {
         const msg = "Cropped image is still too large. Try a smaller section.";
         setErrorMsg(msg);
@@ -134,12 +110,11 @@ export default function VisionImageEditor({
 
       const formData = new FormData();
       formData.append(fieldName, blob, "image.jpg");
-      // Append any extra fields (e.g. use_skip)
+
       Object.entries(extraFields).forEach(([k, v]) => formData.append(k, v));
 
       onDone(formData);
-      // Removed setImageSrc(null) to prevent premature reset to the "Choose Image" screen.
-      // The parent component is responsible for closing the editor on success.
+
     } catch (err) {
       console.error(err);
       const msg = "Failed to process image.";
@@ -158,7 +133,6 @@ export default function VisionImageEditor({
     onCancel?.();
   };
 
-  // ── No image selected yet — show file picker trigger ─────────────────────
   if (!imageSrc) {
     if (asModal) {
       return (
@@ -226,10 +200,9 @@ export default function VisionImageEditor({
     );
   }
 
-  // ── Cropper overlay ───────────────────────────────────────────────────────
   return (
     <div className="fixed inset-0 z-50 flex flex-col bg-black/90 backdrop-blur-sm">
-      {/* Header */}
+      {}
       <div className="flex items-center justify-between px-5 py-4 border-b border-white/10">
         <p className="text-white font-semibold text-sm">
           {isCircle ? "Crop Profile Picture" : "Crop Banner Image"}
@@ -242,7 +215,7 @@ export default function VisionImageEditor({
         </button>
       </div>
 
-      {/* Cropper canvas */}
+      {}
       <div className="relative flex-1">
         <Cropper
           image={imageSrc}
@@ -265,9 +238,9 @@ export default function VisionImageEditor({
         )}
       </div>
 
-      {/* Footer controls */}
+      {}
       <div className="flex flex-col sm:flex-row items-center gap-4 px-5 py-4 border-t border-white/10 bg-black/60">
-        {/* Zoom slider */}
+        {}
         <div className="flex items-center gap-3 flex-1 w-full sm:w-auto">
           <ZoomOut className="w-4 h-4 text-white/60 shrink-0" />
           <input
@@ -282,7 +255,7 @@ export default function VisionImageEditor({
           <ZoomIn className="w-4 h-4 text-white/60 shrink-0" />
         </div>
 
-        {/* Confirm / Cancel */}
+        {}
         <div className="flex gap-3 shrink-0">
           <Button
             variant="outline"

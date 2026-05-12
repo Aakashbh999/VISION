@@ -9,26 +9,23 @@ const MainLayoutContent = () => {
   const { isCollapsed, isMobile } = useSidebar();
   const location = useLocation();
 
-  // Hide footer on discussion and group pages
   const hideFooter =
     location.pathname.startsWith("/discussions") ||
     location.pathname.startsWith("/groups");
 
-  // Library page manages its own padding/height for the sidebar layout
   const isLibraryRoute = location.pathname.startsWith("/resources");
 
-  // Check if it's the specific group detail page (e.g. /groups/123)
   const isGroupDetailRoute = /^\/groups\/[^/]+$/.test(location.pathname);
 
   return (
     <div className="min-h-screen flex flex-col bg-[var(--bg-main)] transition-colors duration-300">
-      {/* Top Navigation */}
+      {}
       <TopNavBar />
 
-      {/* Sidebar */}
+      {}
       <PortalSidebarNew />
 
-      {/* Main Content Area */}
+      {}
       <main
         className={`
           flex-1 pt-16 layout-transition flex flex-col min-h-0
@@ -49,11 +46,11 @@ const MainLayoutContent = () => {
           </div>
         )}
 
-        {/* Footer: no sidebar offset needed here because main already has the margin */}
+        {}
         {!hideFooter && <Footer withSidebarOffset={false} />}
       </main>
 
-      {/* Mobile bottom navigation — rendered outside <main> so it sits fixed at viewport bottom */}
+      {}
       <MobileBottomNav />
     </div>
   );

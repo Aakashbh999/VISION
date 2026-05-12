@@ -1,9 +1,21 @@
+/**
+ * IT Reference Data Controller
+ * Provides paginated browsing of IT industry catalogs including fields, degrees, jobs, and clubs.
+ * Used for career exploration and discovery features.
+ *
+ * Features:
+ * - IT fields catalog (paginated, with demand levels and tech stack hints)
+ * - Academic degrees catalog (paginated)
+ * - Job market insights (paginated with salary/experience data)
+ * - IT clubs directory (paginated)
+ * - Slug-based lookups for individual items
+ * - System tags retrieval for content tagging
+ * - Pagination support (default 9 items, max 50)
+ */
+
 const pool = require("../config/db");
 const catchAsync = require("../utils/catchAsync");
 
-/* ============================================
-   Pagination Helper
- ============================================ */
 const parsePagination = (req) => {
   let page = parseInt(req.query.page);
   let limit = parseInt(req.query.limit);
@@ -16,10 +28,6 @@ const parsePagination = (req) => {
   return { page, limit, offset };
 };
 
-/* ============================================
-   Explicit Column Definitions
-   (Never allow SELECT *)
- ============================================ */
 const COLUMNS = {
   it_fields:
     "id, slug, field_name, short_description, description_full, tech_stack_hint, demand_level, icon_name",
@@ -34,11 +42,7 @@ const COLUMNS = {
     "id, slug, club_name, location, institution, specialty, contact_info, logo_url, website_url, facebook_url, linkedin_url, discord_url, github_url, banner_url, founded_year, description_full",
 };
 
-/* ============================================
-   Reusable Paginated Fetch Helper
- ============================================ */
 const fetchPaginatedData = async (req, res, tableName, orderColumn = "id") => {
-  // Validate table name
   if (!COLUMNS[tableName]) {
     return res.status(400).json({ error: "Invalid table requested" });
   }
@@ -78,9 +82,6 @@ const fetchPaginatedData = async (req, res, tableName, orderColumn = "id") => {
   });
 };
 
-/* ============================================
-   Reusable Slug-Based Fetch Helper
- ============================================ */
 const fetchBySlug = async (req, res, tableName, labelName) => {
   if (!COLUMNS[tableName]) {
     return res.status(400).json({ error: "Invalid table requested" });
@@ -105,53 +106,30 @@ const fetchBySlug = async (req, res, tableName, labelName) => {
   return res.json(result.rows[0]);
 };
 
-/* ============================================
-   IT FIELDS
- ============================================ */
-
-// GET /api/it-fields?page=1&limit=9
 exports.getItFields = catchAsync(async (req, res) =>
   fetchPaginatedData(req, res, "it_fields"),
 );
 
-// GET /api/it-fields/:slug
 exports.getItFieldBySlug = catchAsync(async (req, res) =>
   fetchBySlug(req, res, "it_fields", "IT Field"),
 );
 
-/* ============================================
-   ACADEMIC DEGREES
- ============================================ */
-
-// GET /api/academic-degrees?page=1&limit=9
 exports.getDegrees = catchAsync(async (req, res) =>
   fetchPaginatedData(req, res, "academic_degrees"),
 );
 
-// GET /api/academic-degrees/:slug
 exports.getDegreeBySlug = catchAsync(async (req, res) =>
   fetchBySlug(req, res, "academic_degrees", "Academic Degree"),
 );
 
-/* ============================================
-   JOB MARKET
- ============================================ */
-
-// GET /api/job-market?page=1&limit=9
 exports.getJobMarket = catchAsync(async (req, res) =>
   fetchPaginatedData(req, res, "job_market_insights"),
 );
 
-// GET /api/job-market/:slug
 exports.getJobMarketBySlug = catchAsync(async (req, res) =>
   fetchBySlug(req, res, "job_market_insights", "Job Market Insight"),
 );
 
-/* ============================================
-   IT CLUBS
- ============================================ */
-
-// GET /api/it-clubs?page=1&limit=9&search=...&specialty=...&institution=...
 exports.getItClubs = catchAsync(async (req, res) => {
   const { page, limit, offset } = parsePagination(req);
   const { search, specialty, institution } = req.query;
@@ -161,7 +139,6 @@ exports.getItClubs = catchAsync(async (req, res) => {
   let values = [];
   let i = 1;
 
-  // Filtering logic
   if (search) {
     whereClauses.push(`(club_name ILIKE $${i} OR club_name % $${i})`);
     values.push(`%${search}%`);
@@ -215,26 +192,20 @@ exports.getItClubs = catchAsync(async (req, res) => {
   });
 });
 
-// GET /api/it-clubs/:slug
 exports.getItClubBySlug = catchAsync(async (req, res) =>
   fetchBySlug(req, res, "it_clubs", "IT Club"),
 );
 
-/* ============================================
-   TAGS
- ============================================ */
-
-// GET /api/tags/system
 exports.getSystemTags = catchAsync(async (req, res) => {
   const result = await pool.query(
-    `SELECT tag_id, name, slug 
-     FROM portal.tags 
-     WHERE tag_type = 'system' 
-     ORDER BY name ASC`
+    `SELECT tag_id, name, slug
+     FROM portal.tags
+     WHERE tag_type = 'system'
+     ORDER BY name ASC`,
   );
-  
+
   res.json({
     success: true,
-    data: result.rows
+    data: result.rows,
   });
 });

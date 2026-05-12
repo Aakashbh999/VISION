@@ -19,14 +19,12 @@ const PendingResources = () => {
   const debouncedSearchTerm = useDebounce(searchTerm, 500);
   const [modalConfig, setModalConfig] = useState({ isOpen: false });
 
-  // Sync state to URL
   useEffect(() => {
     const params = { page: page.toString() };
     if (debouncedSearchTerm) params.search = debouncedSearchTerm;
     setSearchParams(params, { replace: true });
   }, [page, debouncedSearchTerm, setSearchParams]);
 
-  // Reset page when search changes
   useEffect(() => {
     setPage(1);
   }, [debouncedSearchTerm]);
@@ -105,7 +103,7 @@ const PendingResources = () => {
             Curate and verify community-submitted learning materials.
           </p>
         </div>
-        
+
         <div className="flex flex-col sm:flex-row items-center gap-4">
           <div className="relative w-full sm:w-64">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-text-muted" />
@@ -169,7 +167,7 @@ const PendingResources = () => {
               >
                 Previous
               </button>
-              
+
               <div className="flex items-center gap-2">
                 <span className="text-sm font-bold text-text-muted">PAGE</span>
                 <span className="w-10 h-10 flex items-center justify-center bg-text-main text-bg-main rounded-xl font-bold">

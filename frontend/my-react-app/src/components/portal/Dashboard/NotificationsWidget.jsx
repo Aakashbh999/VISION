@@ -89,7 +89,7 @@ const NotificationsWidget = ({ notifications }) => {
               )}
             </div>
 
-            {/* Delete button (shows on hover) */}
+            {}
             <button
               onClick={() => deleteMutation.mutate(notif.notification_id)}
               className="absolute top-2 right-2 p-1 text-[var(--text-muted)] hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30 rounded-md opacity-0 group-hover:opacity-100 transition-all"

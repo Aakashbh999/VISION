@@ -1,4 +1,4 @@
-import { useState } from "react"; // used by NavItem for sub-menu expand state
+import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -13,7 +13,6 @@ import {
 import { useSidebar } from "../../hooks/useSidebar";
 import { useQueryClient } from "@tanstack/react-query";
 
-// Navigation items with sub-menu support (children expand inline)
 const navItems = [
   {
     id: "dashboard",
@@ -60,7 +59,6 @@ const NavItem = ({ item, isCollapsed, depth = 0 }) => {
   const hasChildren = item.children && item.children.length > 0;
   const Icon = item.icon;
 
-  // Check if current item or any child is active
   const isActive = hasChildren
     ? item.children.some(
         (child) => location.pathname === child.href?.split("?")[0],
@@ -111,7 +109,7 @@ const NavItem = ({ item, isCollapsed, depth = 0 }) => {
   );
 
   const handleMouseEnter = () => {
-    // Only prefetch main resource-heavy pages
+
     if (item.href === "/resources") {
       queryClient.prefetchQuery({
         queryKey: ["resources"],
@@ -152,7 +150,7 @@ const NavItem = ({ item, isCollapsed, depth = 0 }) => {
         </button>
       )}
 
-      {/* Children (sub-menu) */}
+      {}
       {hasChildren && !isCollapsed && (
         <AnimatePresence>
           {isExpanded && (
@@ -186,7 +184,7 @@ const PortalSidebarNew = () => {
 
   const sidebarContent = (
     <div className="flex flex-col h-full">
-      {/* Navigation links */}
+      {}
       <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto overflow-x-hidden sidebar-scrollbar">
         {navItems.map((item) => (
           <NavItem
@@ -199,10 +197,8 @@ const PortalSidebarNew = () => {
     </div>
   );
 
-  // Mobile: bottom nav handles navigation — sidebar not rendered
   if (isMobile) return null;
 
-  // Desktop: Fixed sidebar with collapse
   return (
     <motion.aside
       layout

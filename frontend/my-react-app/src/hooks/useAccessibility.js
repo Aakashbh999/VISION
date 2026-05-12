@@ -1,7 +1,4 @@
-/**
- * Accessibility Utilities Hook
- * Provides common accessibility patterns and utilities
- */
+
 
 export const useFocusVisible = () => {
   return {

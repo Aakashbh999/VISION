@@ -37,7 +37,6 @@ import { useAuth } from "../../../context/AuthContext";
 import { motion as Motion } from "framer-motion";
 import LoadingSpinner from "../../../components/ui/LoadingSpinner";
 
-// Role display config: owner = full access, co_admin = moderator, member = read-only
 const ROLE_CONFIG = {
   owner: {
     label: "Admin",
@@ -76,7 +75,6 @@ export default function GroupProfilePage() {
   } = useGroup(id);
   const { data: members } = useGroupMembers(id);
 
-  // Derive permission level
   const isOwner = group?.is_owner;
   const isCoAdmin = group?.is_co_admin;
   const { user } = useAuth();
@@ -84,13 +82,11 @@ export default function GroupProfilePage() {
   const canEditImages = Boolean(group?.can_edit_profile || isOwner);
   const canManageUsers = Boolean(group?.can_manage_users || isOwner);
 
-  // Local edit state
   const [isEditMode, setIsEditMode] = useState(false);
   const [draftGroup, setDraftGroup] = useState({ name: "", description: "" });
   const [memberSearch, setMemberSearch] = useState("");
   const [visibleMembersCount, setVisibleMembersCount] = useState(5);
 
-  // Which image editor is open: null | 'avatar' | 'banner'
   const [activeEditor, setActiveEditor] = useState(null);
 
   const handleEditStart = () => {
@@ -124,7 +120,6 @@ export default function GroupProfilePage() {
     setIsEditMode(false);
   };
 
-  // ── Mutations ───────────────────────────────
   const updateGroupMut = useMutation({
     mutationFn: (data) => groupService.updateGroup(id, data),
     onSuccess: () => {
@@ -190,7 +185,6 @@ export default function GroupProfilePage() {
       showToast.error(err.response?.data?.error || "Failed to remove member"),
   });
 
-  // ── File handlers ───────────────────────────
   const handleAvatarDone = (formData) => {
     formData.append("use_skip", "true");
     updateImageMut.mutate(formData, { onSettled: () => setActiveEditor(null) });
@@ -203,7 +197,6 @@ export default function GroupProfilePage() {
     });
   };
 
-  // ── Loading / Error states ──────────────────
   if (groupLoading) {
     return <LoadingSpinner label="Accessing circle workspace..." className="min-h-screen" />;
   }
@@ -234,7 +227,7 @@ export default function GroupProfilePage() {
 
   return (
     <div className="px-2 sm:px-6 lg:px-8 py-5 sm:py-8 space-y-6 sm:space-y-8 max-w-5xl mx-auto">
-      {/* Back navigation */}
+      {}
       <div className="flex items-center gap-3">
         <button
           onClick={() => navigate(-1)}
@@ -251,9 +244,9 @@ export default function GroupProfilePage() {
         </Link>
       </div>
 
-      {/* ── Hero Card ───────────────────────── */}
+      {}
       <div className="bg-[var(--bg-card)] rounded-sm sm:rounded-2xl border border-[var(--border-main)] border-x-0 sm:border-x shadow-sm overflow-hidden relative">
-        {/* Banner */}
+        {}
         <div className="h-52 relative bg-gradient-to-r from-slate-900 to-purple-900 overflow-hidden">
           {group.banner_image && (
             <img
@@ -265,7 +258,7 @@ export default function GroupProfilePage() {
           {!group.banner_image && (
             <div className="absolute inset-0 opacity-30 bg-[radial-gradient(at_top_right,rgba(124,58,237,0.8),transparent_50%),radial-gradient(at_bottom_left,rgba(59,130,246,0.8),transparent_50%)]" />
           )}
-          {/* Three dots menu for edit */}
+          {}
           {canEditDescription && (
             <div className="absolute top-4 right-4 z-20">
               <ActionMenu
@@ -303,7 +296,7 @@ export default function GroupProfilePage() {
               )}
             </div>
           )}
-          {/* Save/Cancel buttons in edit mode */}
+          {}
           {canEditDescription && isEditMode && (
             <div className="absolute top-4 left-4 z-20 flex gap-2">
               <button
@@ -331,10 +324,10 @@ export default function GroupProfilePage() {
           )}
         </div>
 
-        {/* Info row */}
+        {}
         <div className="px-4 sm:px-6 pb-5 sm:pb-6 lg:px-10 pt-2 sm:pt-4">
           <div className="flex flex-col sm:flex-row sm:items-end gap-4 sm:gap-6 -mt-10 sm:-mt-14">
-            {/* Avatar */}
+            {}
             <div className="relative group/av">
               <div className="w-32 h-32 sm:w-40 sm:h-40 rounded-sm sm:rounded-2xl border-4 border-[var(--bg-card)] shadow-xl flex items-center justify-center bg-slate-900 overflow-hidden">
                 {group.group_image ? (
@@ -373,9 +366,9 @@ export default function GroupProfilePage() {
                   </button>
                 ))}
             </div>
-            {/* Name + meta */}
+            {}
             <div className="flex-1 pb-2 sm:pb-4 space-y-1">
-              {/* Editable name */}
+              {}
               {canEditDescription && isEditMode ? (
                 <div className="space-y-2 mb-3">
                   <label className="block text-xs font-bold uppercase tracking-[0.24em] text-[var(--text-muted)]">
@@ -397,7 +390,7 @@ export default function GroupProfilePage() {
               )}
 
               <div className="flex flex-wrap items-center gap-3 text-sm text-[var(--text-muted)]">
-                {/* Privacy badge */}
+                {}
                 <span
                   className={`flex items-center gap-1.5 font-semibold ${privacyCfg.color}`}
                 >
@@ -411,7 +404,7 @@ export default function GroupProfilePage() {
                 )}
               </div>
 
-              {/* Viewer's own role badge */}
+              {}
               {group.member_role &&
                 ROLE_CONFIG[group.member_role] &&
                 (() => {
@@ -426,7 +419,7 @@ export default function GroupProfilePage() {
                 })()}
             </div>
 
-            {/* Action buttons */}
+            {}
             <div className="pb-2 sm:pb-4 flex gap-2 sm:gap-3 flex-wrap">
               {!group.is_member &&
                 (group.has_pending_request ? (
@@ -477,11 +470,10 @@ export default function GroupProfilePage() {
                 </button>
               )}
 
-
             </div>
           </div>
 
-          {/* Stats strip */}
+          {}
           <div className="mt-6 sm:mt-8 flex flex-wrap gap-4 sm:gap-6 text-sm border-t border-[var(--border-main)] pt-4 sm:pt-6">
             <div className="flex items-center gap-2 text-[var(--text-muted)]">
               <Users className="w-4 h-4 text-[var(--text-muted)]" />
@@ -522,11 +514,11 @@ export default function GroupProfilePage() {
         </div>
       </div>
 
-      {/* ── Two-column body ─────────────────── */}
+      {}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-8">
-        {/* Left — Description + Creator */}
+        {}
         <div className="lg:col-span-2 space-y-6 sm:space-y-8">
-          {/* Description */}
+          {}
           <div className="bg-[var(--bg-card)] rounded-sm sm:rounded-2xl border border-[var(--border-main)] border-x-0 sm:border-x shadow-sm p-5 sm:p-8">
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-base sm:text-lg font-bold text-[var(--text-main)] flex items-center gap-2">
@@ -568,7 +560,7 @@ export default function GroupProfilePage() {
             )}
           </div>
 
-          {/* Creator card */}
+          {}
           <div className="bg-[var(--bg-card)] rounded-sm sm:rounded-2xl border border-[var(--border-main)] border-x-0 sm:border-x shadow-sm p-5 sm:p-8">
             <h3 className="text-base sm:text-lg font-bold text-[var(--text-main)] mb-4 sm:mb-6">
               Admin
@@ -603,9 +595,9 @@ export default function GroupProfilePage() {
           </div>
         </div>
 
-        {/* Right — Members preview + Edit settings (owner) */}
+        {}
         <div className="space-y-6 sm:space-y-8">
-          {/* Moderator roles + members preview */}
+          {}
           <div className="bg-[var(--bg-card)] rounded-sm sm:rounded-2xl border border-[var(--border-main)] border-x-0 sm:border-x shadow-sm p-4 sm:p-6">
             <h3 className="text-sm font-black text-[var(--text-main)] uppercase tracking-wider mb-5 flex items-center gap-2">
               <Users className="w-4 h-4 text-purple-600" /> Members
@@ -725,7 +717,7 @@ export default function GroupProfilePage() {
             </div>
           </div>
 
-          {/* Owner-only settings panel */}
+          {}
           {isOwner && (
             <Motion.div
               initial={{ opacity: 0, y: 8 }}
@@ -777,7 +769,7 @@ export default function GroupProfilePage() {
             </Motion.div>
           )}
 
-          {/* Moderator info panel */}
+          {}
           {isCoAdmin && !isOwner && (
             <div className="bg-purple-50 border border-purple-100 rounded-2xl p-4 sm:p-6">
               <h3 className="text-sm font-black text-purple-700 uppercase tracking-wider mb-2">
@@ -826,7 +818,7 @@ export default function GroupProfilePage() {
         </div>
       </div>
 
-      {/* Removed bottom Save/Cancel bar in edit mode */}
+      {}
     </div>
   );
 }

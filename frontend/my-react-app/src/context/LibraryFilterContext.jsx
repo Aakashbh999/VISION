@@ -16,7 +16,7 @@ const initialFilters = {
   program_id: "",
   semester: "",
   degree_id: "",
-  view: "all", // "all" or "my"
+  view: "all",
   status: "all",
   page: 1,
   limit: 12,
@@ -26,7 +26,13 @@ export const FilterProvider = ({ children, initialFilters: propInitialFilters = 
   const [filters, setFilters] = useState(propInitialFilters);
 
   const updateFilter = (key, value) => {
-    setFilters((prev) => ({ ...prev, [key]: value }));
+    setFilters((prev) => {
+      const next = { ...prev, [key]: value };
+      if (key !== "page") {
+        next.page = 1;
+      }
+      return next;
+    });
   };
 
   const resetFilters = () => {

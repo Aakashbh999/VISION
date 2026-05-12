@@ -4,16 +4,6 @@ import UniversalSearch from "../../../components/ui/UniversalSearch";
 import ForYouBadge from "./ForYouBadge";
 import { AcademicProgramFilter } from "../../../components/lib";
 
-/**
- * Props:
- * - user: authenticated user object (or null)
- * - filters: current discussions filters
- * - programs: program options list
- * - isLoading: discussions loading state
- * - showFilters: filter panel toggle flag
- * - onToggleFilters: callback to toggle filters row
- * - onUpdateFilter: callback to update a specific filter
- */
 const DiscussionsHeader = ({
   user,
   filters,

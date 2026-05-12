@@ -19,7 +19,6 @@ import {
 import { Link } from "react-router-dom";
 import { formatDistanceToNow } from "date-fns";
 
-// Check if URL is an image (supported for preview on free tier)
 const isImageUrl = (url) => {
   if (!url) return false;
   const imageExtensions = [".jpg", ".jpeg", ".png", ".gif", ".webp"];
@@ -27,14 +26,12 @@ const isImageUrl = (url) => {
   return imageExtensions.some((ext) => lowerUrl.includes(ext));
 };
 
-// Check if URL is a PDF
 const isPdfUrl = (url) => {
   if (!url) return false;
   const lowerUrl = url.toLowerCase();
   return lowerUrl.includes(".pdf") || lowerUrl.includes("/pdf/upload/");
 };
 
-// Get Cloudinary optimized thumbnail URL (images only - available on free tier)
 const getThumbnailUrl = (url, width = 300) => {
   if (!url || !url.includes("cloudinary.com")) return url;
   if (!isImageUrl(url)) return null;
@@ -179,14 +176,14 @@ const ResourceCard = ({
 
   return (
     <>
-      {/* Rejection Reason Modal */}
+      {}
       <AnimatePresence>
         {showRejectionModal && (
-          <div 
+          <div
             className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
             onClick={() => setShowRejectionModal(false)}
           >
-            <motion.div 
+            <motion.div
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.9, opacity: 0 }}
@@ -202,7 +199,7 @@ const ResourceCard = ({
               <p className="text-gray-600 text-sm italic mb-6 leading-relaxed bg-red-50/50 p-4 rounded-xl border border-red-50">
                 "{rejection_reason}"
               </p>
-              <button 
+              <button
                 onClick={() => setShowRejectionModal(false)}
                 className="w-full py-3 bg-gray-900 text-white rounded-xl font-bold text-sm hover:bg-gray-800 transition-colors"
               >
@@ -213,7 +210,7 @@ const ResourceCard = ({
         )}
       </AnimatePresence>
 
-      {/* Preview Modal */}
+      {}
       {showPreview && file_url && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4"
@@ -285,7 +282,7 @@ const ResourceCard = ({
       )}
 
       <div className="w-full mx-0 bg-[var(--bg-card)] rounded-xl shadow-sm border border-[var(--border-main)] border-x-0 sm:border-x hover:shadow-md transition-all duration-300 overflow-hidden flex flex-col h-full group">
-        {/* Image Thumbnail Preview */}
+        {}
         {hasImagePreview && thumbnailUrl ? (
           <div
             className="relative h-32 bg-[var(--bg-active)] overflow-hidden cursor-pointer"
@@ -332,7 +329,7 @@ const ResourceCard = ({
         )}
 
         <div className="p-3 sm:p-4 flex-1 flex flex-col">
-          {/* Header: Type and Status */}
+          {}
           <div className="flex justify-between items-start mb-3">
             <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-purple-50 text-purple-600 text-xs font-semibold capitalize border border-purple-100">
               {getResourceIcon(resource_type)}
@@ -348,7 +345,7 @@ const ResourceCard = ({
             )}
           </div>
 
-          {/* Title & Description */}
+          {}
           <h3 className="font-bold text-[var(--text-main)] text-base mb-1.5 line-clamp-1">
             {title}
           </h3>
@@ -356,9 +353,9 @@ const ResourceCard = ({
             {description || "No description provided."}
           </p>
 
-          {/* Rejection Note Button */}
+          {}
           {status === "rejected" && rejection_reason && (
-            <button 
+            <button
               onClick={() => setShowRejectionModal(true)}
               className="mt-2 mb-4 w-full flex items-center justify-center gap-2 px-3 py-2 bg-red-50 text-red-600 border border-red-100 rounded-lg text-xs font-bold hover:bg-red-100 transition-colors"
             >
@@ -367,7 +364,7 @@ const ResourceCard = ({
             </button>
           )}
 
-          {/* Meta info */}
+          {}
           <div className="mt-auto space-y-2">
             <div className="flex flex-wrap gap-2">
               {program_name && (
@@ -421,7 +418,7 @@ const ResourceCard = ({
           </div>
         </div>
 
-        {/* Footer / Actions */}
+        {}
         <div className="border-t border-[var(--border-main)] bg-[var(--bg-active)]/50 p-3 sm:p-4">
           {isModeratorView ? (
             <div className="space-y-2">

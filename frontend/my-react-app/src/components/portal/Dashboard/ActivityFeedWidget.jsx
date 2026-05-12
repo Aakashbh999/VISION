@@ -67,7 +67,7 @@ const ActivityFeedWidget = ({ feed }) => {
                 <div className="p-2.5 rounded-xl bg-(--bg-active) border border-(--border-main) shrink-0 group-hover:scale-110 transition-transform">
                   <Icon className={`w-4 h-4 ${config.iconClass}`} />
                 </div>
-                
+
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between gap-2 mb-0.5">
                     <p className="text-xs font-black text-(--text-main) truncate transition-colors">
@@ -77,7 +77,7 @@ const ActivityFeedWidget = ({ feed }) => {
                       {new Date(item.created_at).toLocaleDateString()}
                     </span>
                   </div>
-                  
+
                   <p className="text-[13px] text-(--text-muted) line-clamp-1 leading-snug">
                     {config.label} •{" "}
                     {item.entity_title || item.metadata?.title || "New update"}

@@ -43,11 +43,11 @@ const GroupDetailHeader = ({
         <div className="absolute inset-0 bg-slate-800 dark:bg-slate-950 bg-[radial-gradient(circle_at_top_left,rgba(168,85,247,0.35),transparent_40%),radial-gradient(circle_at_top_right,rgba(59,130,246,0.25),transparent_35%)]" />
       )}
 
-      {/* Unified Responsive Layout */}
+      {}
       <div className="relative flex flex-col gap-3 sm:gap-5 p-3 sm:p-5 lg:p-7">
         <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
           <div className="flex items-center sm:items-start justify-between gap-3 w-full md:w-auto">
-            {/* Avatar and Title */}
+            {}
             <div className="flex min-w-0 items-center sm:items-start gap-3 sm:gap-5">
               <Link
                 to={`/groups/${id}/profile`}
@@ -84,7 +84,7 @@ const GroupDetailHeader = ({
               </div>
             </div>
 
-            {/* Mobile Actions - only on small screens */}
+            {}
             <div className="flex sm:hidden shrink-0 items-center gap-1.5">
               {isMember ? (
                 <>
@@ -145,7 +145,7 @@ const GroupDetailHeader = ({
             </div>
           </div>
 
-          {/* Tablet/Desktop Right side buttons */}
+          {}
           <div className="hidden sm:flex flex-wrap items-center gap-2 sm:gap-3 md:justify-end shrink-0">
             {isMember ? (
               <>
@@ -213,7 +213,7 @@ const GroupDetailHeader = ({
           </div>
         </div>
 
-        {/* Section navigation */}
+        {}
         <div className="flex overflow-x-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] gap-2 sm:gap-3 pb-1 -mx-3 px-3 sm:mx-0 sm:px-0">
           {SECTIONS.map((section) => {
             const SectionIcon = getSectionIcon(section.icon);

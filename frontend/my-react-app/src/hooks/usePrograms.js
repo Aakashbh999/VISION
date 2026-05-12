@@ -10,6 +10,6 @@ export const usePrograms = () => {
   return useQuery({
     queryKey: ["programs"],
     queryFn: fetchPrograms,
-    staleTime: 10 * 60 * 1000, // 10 minutes
+    staleTime: 10 * 60 * 1000,
   });
 };

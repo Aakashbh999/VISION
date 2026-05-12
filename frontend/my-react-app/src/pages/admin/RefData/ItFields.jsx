@@ -12,7 +12,7 @@ const ItFields = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingItem, setEditingItem] = useState(null);
   const [formData, setFormData] = useState({
-    field_name: "", short_description: "", description_full: "", 
+    field_name: "", short_description: "", description_full: "",
     tech_stack_hint: "", demand_level: "", icon_name: "", is_public: true
   });
   const [confirmModal, setConfirmModal] = useState({ isOpen: false });
@@ -59,7 +59,7 @@ const ItFields = () => {
     } else {
       setEditingItem(null);
       setFormData({
-        field_name: "", short_description: "", description_full: "", 
+        field_name: "", short_description: "", description_full: "",
         tech_stack_hint: "", demand_level: "", icon_name: "", is_public: true
       });
     }
@@ -88,10 +88,10 @@ const ItFields = () => {
     { header: "Short Desc", accessor: "short_description" },
     { header: "Demand", accessor: "demand_level" },
     { header: "Status", accessor: "is_public", render: (row) => (
-        row.is_public ? 
-        <span className="text-green-500 flex items-center gap-1"><CheckCircle className="w-4 h-4"/> Public</span> : 
+        row.is_public ?
+        <span className="text-green-500 flex items-center gap-1"><CheckCircle className="w-4 h-4"/> Public</span> :
         <span className="text-gray-400 flex items-center gap-1"><XCircle className="w-4 h-4"/> Hidden</span>
-      ) 
+      )
     }
   ];
 
@@ -110,13 +110,13 @@ const ItFields = () => {
         </button>
       </div>
 
-      <AdminTable 
-        columns={columns} 
-        data={data.data || data} 
-        isLoading={isLoading} 
-        error={error} 
-        onEdit={handleOpenModal} 
-        onDelete={confirmDelete} 
+      <AdminTable
+        columns={columns}
+        data={data.data || data}
+        isLoading={isLoading}
+        error={error}
+        onEdit={handleOpenModal}
+        onDelete={confirmDelete}
       />
 
       {isModalOpen && (
@@ -126,7 +126,7 @@ const ItFields = () => {
             <div className="flex items-center justify-between p-5 border-b border-border-main bg-bg-active/30">
               <h2 className="text-lg font-bold text-text-main">{editingItem ? "Edit IT Field" : "Add IT Field"}</h2>
             </div>
-            
+
             <form onSubmit={handleSubmit} className="p-5 space-y-4 overflow-y-auto">
               <div className="grid grid-cols-2 gap-4">
                 <div>

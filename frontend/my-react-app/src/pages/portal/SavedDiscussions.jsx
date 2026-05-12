@@ -35,7 +35,7 @@ const SavedDiscussions = () => {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
+      {}
       <div className="flex items-center gap-4">
         <Link
           to="/discussions"
@@ -49,7 +49,7 @@ const SavedDiscussions = () => {
         </h1>
       </div>
 
-      {/* Posts list */}
+      {}
       <div className="space-y-4">
         {discussions.length === 0 ? (
           <div className="text-center py-12 bg-[var(--bg-card)] rounded-xl border border-[var(--border-main)] border-x-0 sm:border-x">

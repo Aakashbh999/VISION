@@ -1,16 +1,4 @@
-/**
- * Accessible Form Field Wrapper
- * Provides consistent labeling, error handling, and ARIA attributes
- *
- * Props:
- * - label: Field label text (required)
- * - error: Error message (optional)
- * - helperText: Additional context text
- * - required: Whether field is required
- * - disabled: Whether field is disabled
- * - children: FormInput component
- * - id: Field ID (required for accessibility)
- */
+
 const AccessibleFormField = ({
   label,
   error,
@@ -27,7 +15,7 @@ const AccessibleFormField = ({
 
   return (
     <div className={`space-y-2 ${className}`}>
-      {/* Label */}
+      {}
       <label
         htmlFor={id}
         className="block text-sm font-black text-[var(--text-main)] uppercase tracking-wider"
@@ -44,14 +32,14 @@ const AccessibleFormField = ({
         )}
       </label>
 
-      {/* Input Field - Clone to add accessibility props */}
+      {}
       {children && typeof children.type !== "string" ? (
         children
       ) : (
         <>{children}</>
       )}
 
-      {/* Helper Text */}
+      {}
       {helperText && !error && (
         <p
           id={helperId}
@@ -61,7 +49,7 @@ const AccessibleFormField = ({
         </p>
       )}
 
-      {/* Error Message */}
+      {}
       {error && (
         <p
           id={errorId}

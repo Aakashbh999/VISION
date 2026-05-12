@@ -1,7 +1,4 @@
-/**
- * VISION - Branded HTML Email Templates
- * Uses Handlebars templates for base and email bodies.
- */
+
 const fs = require("node:fs");
 const path = require("node:path");
 const Handlebars = require("handlebars");

@@ -1,25 +1,17 @@
-/**
- * Shared constants used across multiple controllers.
- * Centralized to follow DRY — previously duplicated in groupController + profileController.
- */
 
-// Image cooldown periods
+
 const PROFILE_PIC_COOLDOWN_DAYS = 7;
 const BANNER_COOLDOWN_DAYS = 14;
 
-// VXP costs
-const VXP_BYPASS_COST = 200;       // VXP to skip cooldown
-const VXP_EXPAND_COST = 100;       // VXP per +2 capacity slots
+const VXP_BYPASS_COST = 200;
+const VXP_EXPAND_COST = 100;
 
-// Group limits
 const MAX_CAPACITY = 25;
 const MAX_CO_ADMINS = 4;
 
-// Content limits
 const MAX_DESCRIPTION_WORDS = 130;
 const MAX_BIO_WORDS = 130;
 
-// Group default permissions
 const EMPTY_GROUP_PERMISSIONS = {
   manage_users: false,
   moderate_content: false,

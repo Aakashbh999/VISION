@@ -2,9 +2,8 @@
 @import "tailwindcss";
 @custom-variant dark (&:where(.dark, .dark *));
 
-/* ===== Tailwind 4 Theme: Shades of Purple ===== */
 @theme {
-  /* Primary Purple Palette */
+
   --color-purple-50: #faf5ff;
   --color-purple-100: #f3e8ff;
   --color-purple-200: #e9d5ff;
@@ -17,18 +16,15 @@
   --color-purple-900: #581c87;
   --color-purple-950: #3b0764;
 
-  /* Neon Purple for accents */
   --color-neon-purple: #a855f7;
   --color-neon-purple-glow: #c084fc;
 
-  /* Brand colors */
   --color-brand-primary: #7c3aed;
   --color-brand-secondary: #a855f7;
   --color-brand-accent: #c084fc;
   --color-brand-dark: #4c1d95;
   --color-brand-light: #ede9fe;
 
-  /* Semantic Theme Variables */
   --color-bg-main: var(--bg-main);
   --color-bg-card: var(--bg-card);
   --color-bg-active: var(--bg-active);
@@ -36,21 +32,18 @@
   --color-text-muted: var(--text-muted);
   --color-border-main: var(--border-main);
 
-  /* Sidebar specific */
   --color-sidebar-bg: var(--sidebar-bg);
   --color-sidebar-border: var(--border-main);
   --color-sidebar-active-bg: var(--sidebar-active-bg);
   --color-sidebar-active-border: #a855f7;
   --color-sidebar-hover-bg: var(--sidebar-hover-bg);
 
-  /* Documentation/MDN-inspired grays */
   --color-doc-bg: var(--bg-main);
   --color-doc-border: var(--border-main);
   --color-doc-text: var(--text-main);
   --color-doc-text-muted: var(--text-muted);
   --color-doc-text-heading: var(--text-main);
 
-  /* Sidebar dimensions */
   --sidebar-width-expanded: 16rem;
   --sidebar-width-collapsed: 4.5rem;
 }
@@ -69,24 +62,23 @@
 }
 
 .dark {
-  --bg-main: #0b0f1a; /* Deep Navy Level 0 */
-  --bg-card: #161e2e; /* Surface Navy Level 1 */
-  --bg-active: #1f2937; /* Elevated Navy Level 2 */
-  --text-main: #f8fafc; /* Soft White */
-  --text-muted: #94a3b8; /* Slate 400 */
-  --border-main: #1e293b; /* Subtle Border */
+  --bg-main: #0b0f1a;
+  --bg-card: #161e2e;
+  --bg-active: #1f2937;
+  --text-main: #f8fafc;
+  --text-muted: #94a3b8;
+  --border-main: #1e293b;
 
   --sidebar-bg: #161e2e;
   --sidebar-active-bg: #1f2937;
   --sidebar-hover-bg: #1f2937;
 }
 
-/* Base styles */
 html,
 body {
   background-color: var(--bg-main);
   color: var(--text-main);
-  /* Resetting overscroll to default 'auto' to allow the bounce, but background-color above ensures it's themed */
+
   overscroll-behavior-y: auto;
 }
 
@@ -96,7 +88,6 @@ body {
   min-height: 100vh;
 }
 
-/* Custom Text Gradients */
 .gradient-text {
   background: linear-gradient(135deg, #7c3aed 0%, #a855f7 100%);
   -webkit-background-clip: text;
@@ -104,7 +95,6 @@ body {
   background-clip: text;
 }
 
-/* Mobile Menu */
 .mobile-menu {
   transform: translateX(-100%);
   transition: transform 0.3s ease-in-out;
@@ -113,20 +103,16 @@ body {
   transform: translateX(0);
 }
 
-/* ===== Hero Road Animations ===== */
-
 .road-container {
   position: relative;
   width: 100%;
   height: 100%;
 }
 
-/* Glow effect on hover over the road area */
 .road-container:hover .road-path {
   filter: drop-shadow(0 0 8px #8b5cf6);
 }
 
-/* Subtle floating animation for icons */
 @keyframes subtle-float {
   0%,
   100% {
@@ -141,7 +127,6 @@ body {
   animation: subtle-float 5s ease-in-out infinite;
 }
 
-/* Ensure icons are above the path */
 .road-container .group {
   z-index: 10;
 }
@@ -175,7 +160,6 @@ body {
   animation: glow 2s ease-in-out infinite;
 }
 
-/* ===== Sidebar Styles ===== */
 .sidebar-scrollbar::-webkit-scrollbar {
   width: 4px;
 }
@@ -193,24 +177,20 @@ body {
   background: var(--color-purple-300);
 }
 
-/* Sidebar backdrop for mobile */
 .sidebar-backdrop {
   background: rgba(0, 0, 0, 0.4);
   backdrop-filter: blur(2px);
 }
 
-/* Active nav link neon border */
 .nav-link-active {
   border-left: 3px solid var(--color-neon-purple);
   background: var(--color-sidebar-active-bg);
 }
 
-/* Smooth layout transitions */
 .layout-transition {
   transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* Chat Message Tails */
 .marker-tail-right::after {
   content: "";
   position: absolute;
@@ -232,9 +212,9 @@ body {
   left: -8px;
   width: 12px;
   height: 12px;
-  background: #f9fafb; /* gray-50 */
-  border-left: 1px solid #e5e7eb; /* gray-200 */
-  border-top: 1px solid #e5e7eb; /* gray-200 */
+  background: #f9fafb;
+  border-left: 1px solid #e5e7eb;
+  border-top: 1px solid #e5e7eb;
   clip-path: polygon(0 0, 100% 100%, 100% 0);
 }
 
@@ -251,7 +231,6 @@ body {
   border-radius: 10px;
 }
 
-/* Shimmer Animation */
 @keyframes shimmer {
   0% {
     background-position: -200% 0;
@@ -265,7 +244,25 @@ body {
   animation: shimmer 1.5s infinite linear;
 }
 
-/* ===== Toastify Theme (Brand Aligned) ===== */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(5px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.4s ease-out forwards;
+}
+
+.text-justify {
+  text-align: justify;
+}
+
 :root {
   --toastify-color-light: var(--bg-card);
   --toastify-text-color-light: var(--text-main);

@@ -251,7 +251,7 @@ const GroupDetailSidebar = ({
         groupId={id}
         members={members}
         onMemberAdded={() => {
-          // Parent state should ideally refresh via react-query
+
         }}
       />
     </>

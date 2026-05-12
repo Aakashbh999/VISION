@@ -98,13 +98,13 @@ const Tags = () => {
         </button>
       </div>
 
-      <AdminTable 
-        columns={columns} 
-        data={data.data || data} 
-        isLoading={isLoading} 
-        error={error} 
-        onEdit={handleOpenModal} 
-        onDelete={confirmDelete} 
+      <AdminTable
+        columns={columns}
+        data={data.data || data}
+        isLoading={isLoading}
+        error={error}
+        onEdit={handleOpenModal}
+        onDelete={confirmDelete}
       />
 
       {isModalOpen && (
@@ -114,16 +114,16 @@ const Tags = () => {
             <div className="flex items-center justify-between p-5 border-b border-border-main bg-bg-active/30">
               <h2 className="text-lg font-bold text-text-main">{editingItem ? "Edit Tag" : "Add Tag"}</h2>
             </div>
-            
+
             <form onSubmit={handleSubmit} className="p-5 space-y-4">
               <div>
                 <label className="text-xs font-bold text-text-muted mb-1 block">Tag Name *</label>
-                <input 
-                  required 
-                  value={formData.name} 
-                  onChange={(e) => setFormData({name: e.target.value})} 
-                  className="w-full px-3 py-2 bg-bg-active border border-border-main rounded-xl text-sm outline-none focus:border-blue-500" 
-                  placeholder="e.g. React" 
+                <input
+                  required
+                  value={formData.name}
+                  onChange={(e) => setFormData({name: e.target.value})}
+                  className="w-full px-3 py-2 bg-bg-active border border-border-main rounded-xl text-sm outline-none focus:border-blue-500"
+                  placeholder="e.g. React"
                 />
                 <p className="text-xs text-text-muted mt-2">Duplicate tags (case-insensitive) are not allowed.</p>
               </div>

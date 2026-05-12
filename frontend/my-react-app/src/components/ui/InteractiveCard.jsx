@@ -1,16 +1,5 @@
 import { motion } from "framer-motion";
 
-/**
- * Interactive Card Component with Micro-interactions
- * Provides consistent hover, focus, and click animations
- *
- * Props:
- * - children: Card content
- * - onClick: Click handler (optional, removes interactivity if missing)
- * - className: Additional Tailwind classes
- * - variant: "default" | "elevated" | "outlined" (default: "default")
- * - disabled: If true, removes interactions
- */
 const InteractiveCard = ({
   children,
   onClick,

@@ -2,12 +2,6 @@ import { Link } from "react-router-dom";
 import { Sparkles } from "lucide-react";
 import ClubAvatarLogo from "../../../components/ui/ClubAvatarLogo";
 
-/**
- * ForYouCarousel — horizontal scrolling "For You" club strip.
- *
- * Props:
- *  clubs – array of club objects to display (max 4 already sliced by parent)
- */
 const ForYouCarousel = ({ clubs = [] }) => {
   if (!clubs.length) return null;
 

@@ -2,7 +2,7 @@ import api from "./api";
 
 export const login = async (email, password) => {
   const response = await api.post("/auth/login", { email, password });
-  // Backend returns { accessToken, refreshToken, expiresIn, role }
+
   return {
     accessToken: response.data.accessToken,
     refreshToken: response.data.refreshToken,
@@ -47,7 +47,7 @@ export const logout = async () => {
     }
   } catch (error) {
     console.error(error);
-    // Ignore logout API errors
+
   }
   localStorage.removeItem("token");
   localStorage.removeItem("refreshToken");

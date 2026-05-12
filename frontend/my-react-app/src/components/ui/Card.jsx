@@ -39,13 +39,13 @@ const Card = ({ title, description, icon, color = "blue", link, linkText }) => {
   const variant = colorVariants[color] || colorVariants.blue;
 
   return (
-    /* h-full here ensures the glow wrapper fills the grid height */
+
     <div className="group relative h-full">
       <div
         className={`absolute -inset-0.5 bg-linear-to-r ${variant.gradient} rounded-2xl blur opacity-0 group-hover:opacity-30 transition duration-500`}
       ></div>
 
-      {/* Deep Navy theme-aware card */}
+      {}
       <div
         className={`relative h-full flex flex-col bg-bg-card dark:bg-bg-card p-5 sm:p-6 lg:p-7 rounded-sm sm:rounded-2xl border border-border-main border-x-0 sm:border-x dark:border-border-main hover:shadow-xl hover:-translate-y-2 transform transition-all duration-500 ${variant.border} hover:bg-bg-active dark:hover:bg-bg-active`}
       >

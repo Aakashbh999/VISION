@@ -12,8 +12,8 @@ export const useDiscussionFilters = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const [filters, setFilters] = useState({
     specialization: searchParams.get("specialization") || "",
-    program: searchParams.has("program") 
-      ? searchParams.get("program") 
+    program: searchParams.has("program")
+      ? searchParams.get("program")
       : (user?.program_id?.toString() || ""),
     tag: searchParams.get("tag") || "",
     sort: searchParams.get("sort") || "latest",

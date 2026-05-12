@@ -1,13 +1,4 @@
-/**
- * SegmentedControl — pill-style tab/toggle switcher.
- *
- * Props:
- *  options  – array of { value, label, icon? } objects
- *  value    – currently selected value
- *  onChange – called with the new value when a tab is clicked
- *  size     – 'sm' | 'md' (default 'md')
- *  className – extra classes for the outer wrapper
- */
+
 const SegmentedControl = ({
   options = [],
   value,

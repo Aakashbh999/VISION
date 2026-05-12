@@ -29,8 +29,8 @@ export const useCreateDiscussionState = () => {
     content: "",
     imageCaption: "",
     specializationId: "",
-    system_tags: [], // Array of system tag IDs (max 5)
-    custom_tags: [], // Array of custom tag strings (max 2)
+    system_tags: [],
+    custom_tags: [],
     username_verification: "",
   });
   const [selectedFile, setSelectedFile] = useState(null);
@@ -41,7 +41,7 @@ export const useCreateDiscussionState = () => {
   const { systemTagOptions, isLoadingTags } = useSystemTags(true);
 
   useEffect(() => {
-    // Fetch specializations
+
     api
       .get("/discussions/specializations")
       .then((response) => setSpecializations(response.data || []));
@@ -103,7 +103,6 @@ export const useCreateDiscussionState = () => {
     toast.error("Drop an image file");
   };
 
-  // Toggle a system tag on/off (respects cap)
   const toggleSystemTag = (tagId) => {
     setFormData((prev) => {
       const nextSystemTags = toggleCappedSelection(

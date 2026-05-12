@@ -3,9 +3,6 @@ import { animate } from "framer-motion";
 import { useUserStats } from "../../hooks/useUserStats";
 import { Zap } from "lucide-react";
 
-/**
- * AnimatedCounter component for the XP number
- */
 const AnimatedCounter = ({ value }) => {
   const [count, setCount] = useState(0);
   const previousValueRef = useRef(0);
@@ -34,9 +31,6 @@ const AnimatedCounter = ({ value }) => {
   return <span>{count.toLocaleString()}</span>;
 };
 
-/**
- * XpWidget - HUD for VisionXP Gamification
- */
 const XpWidget = () => {
   const { data: stats, isLoading } = useUserStats();
 
@@ -48,10 +42,6 @@ const XpWidget = () => {
 
   const { total_xp, current_level } = stats;
 
-  // Calculate progress to next level
-  // Level Formula: Level = floor(sqrt(total_xp / 100)) + 1
-  // To reach next level (L+1): total_xp = ((L+1 - 1)^2) * 100 = (L^2) * 100
-  // Current Level thresholds:
   const currentLevelXP = Math.pow(current_level - 1, 2) * 100;
   const nextLevelXP = Math.pow(current_level, 2) * 100;
   const xpInCurrentLevel = total_xp - currentLevelXP;
@@ -63,7 +53,7 @@ const XpWidget = () => {
 
   return (
     <div className="flex items-center gap-4 bg-[var(--bg-card)] px-4 py-2 rounded-sm sm:rounded-2xl border border-[var(--border-main)] shadow-sm hover:shadow-md transition-shadow group">
-      {/* Level Badge (Hexagon-like) */}
+      {}
       <div className="relative flex items-center justify-center">
         <div className="w-10 h-10 bg-purple-600 rotate-45 rounded-lg shadow-lg shadow-purple-500/20" />
         <div className="absolute inset-0 flex flex-col items-center justify-center text-white">
@@ -75,11 +65,11 @@ const XpWidget = () => {
           </span>
         </div>
 
-        {/* Glow Effect */}
+        {}
         <div className="absolute inset-0 bg-amber-400 blur-xl opacity-0 group-hover:opacity-20 transition-opacity rounded-full" />
       </div>
 
-      {/* XP Info & Progress */}
+      {}
       <div className="flex flex-col gap-1.5 min-w-[120px]">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-1.5 text-purple-600">
@@ -93,7 +83,7 @@ const XpWidget = () => {
           </span>
         </div>
 
-        {/* Progress Bar */}
+        {}
         <div className="relative h-1.5 w-full bg-[var(--bg-active)] rounded-full overflow-hidden border border-[var(--border-main)]">
           <div
             style={{ width: `${progressPercent}%` }}

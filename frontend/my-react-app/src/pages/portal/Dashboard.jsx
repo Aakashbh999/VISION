@@ -35,7 +35,6 @@ const CardSkeleton = ({ className = "" }) => (
   </SurfaceCard>
 );
 
-// ─── Quick Actions ───────────────────────────────────────────
 const quickActions = [
   {
     label: "Browse Roadmaps",
@@ -57,7 +56,6 @@ const quickActions = [
   },
 ];
 
-// ─── Main Dashboard ──────────────────────────────────────────
 const Dashboard = () => {
   const { data: dashboard, isLoading: dashLoading, error } = useDashboard();
   const { data: stats, isLoading: statsLoading } = useUserStats();
@@ -103,7 +101,7 @@ const Dashboard = () => {
     <div className="space-y-6 bg-[var(--bg-main)] text-[var(--text-main)]">
       <PrimaryPortalTabs activeTab="dashboard" />
 
-      {/* Stats */}
+      {}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {statCards.map((stat, i) =>
           stat.value === null ? (
@@ -114,7 +112,7 @@ const Dashboard = () => {
         )}
       </div>
 
-      {/* Graph + Recommendations */}
+      {}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2">
           <VXPActivityGraph
@@ -135,7 +133,7 @@ const Dashboard = () => {
         </div>
       </div>
 
-      {/* Row 3: Left stack (Milestones + Quick Actions) + Notifications */}
+      {}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="space-y-6">
           <SurfaceCard>

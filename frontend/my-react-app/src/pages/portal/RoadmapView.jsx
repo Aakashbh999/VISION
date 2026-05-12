@@ -28,10 +28,6 @@ import Button from "../../components/ui/Button";
 import LoadingSpinner from "../../components/ui/LoadingSpinner";
 import LoadingState from "../../components/ui/LoadingState";
 
-/**
- * Icon Mapper
- * Dynamically picks an icon based on step title
- */
 const getStepIcon = (title = "") => {
   const t = title.toLowerCase();
   if (t.includes("frontend") || t.includes("html") || t.includes("css"))
@@ -59,7 +55,6 @@ const getStepIcon = (title = "") => {
   return Code2;
 };
 
-/* ─── Helpers ─────────────────────────────────────────────────── */
 const get4DayCooldown = (leftAt) => {
   if (!leftAt) return null;
   const FOUR_DAYS_MS = 4 * 24 * 60 * 60 * 1000;
@@ -73,7 +68,6 @@ const get4DayCooldown = (leftAt) => {
   return `${mins}m`;
 };
 
-/* ─── Leave Confirmation Modal ─────────────────────────────────── */
 const LeaveModal = ({ roadmapTitle, onConfirm, onCancel, isLeaving }) => (
   <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
     <div className="bg-[var(--bg-card)] border border-[var(--border-main)] rounded-3xl shadow-2xl max-w-md w-full p-8 space-y-6 animate-in fade-in zoom-in-95 duration-200">
@@ -135,10 +129,6 @@ const LeaveModal = ({ roadmapTitle, onConfirm, onCancel, isLeaving }) => (
   </div>
 );
 
-/**
- * StationNode Component
- * 64px circular node positioned on the track
- */
 const StationNode = ({ step, isActive, isLocked, onClick }) => {
   const Icon = getStepIcon(step.title);
 
@@ -146,14 +136,14 @@ const StationNode = ({ step, isActive, isLocked, onClick }) => {
     <div
       className={`relative flex flex-col items-center group ${isLocked ? "pointer-events-none" : ""}`}
     >
-      {/* Node Circle */}
+      {}
       <motion.button
         whileHover={isLocked ? {} : { scale: 1.1 }}
         whileTap={isLocked ? {} : { scale: 0.95 }}
         onClick={() => !isLocked && onClick(step)}
         disabled={isLocked}
         className={`
-          w-16 h-16 rounded-full flex items-center justify-center z-10 
+          w-16 h-16 rounded-full flex items-center justify-center z-10
           transition-all duration-500 relative
           ${
             step.is_completed
@@ -195,7 +185,7 @@ const StationNode = ({ step, isActive, isLocked, onClick }) => {
           )}
         </AnimatePresence>
 
-        {/* Locked Overlay */}
+        {}
         {isLocked && (
           <div className="absolute inset-0 bg-slate-900/5 rounded-full flex items-center justify-center">
             <Lock className="w-4 h-4 text-slate-400" />
@@ -203,7 +193,7 @@ const StationNode = ({ step, isActive, isLocked, onClick }) => {
         )}
       </motion.button>
 
-      {/* Label/Tooltip */}
+      {}
       {!isLocked && (
         <div className="absolute top-20 text-center w-48 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
           <div className="bg-[var(--bg-card)] text-[var(--text-main)] text-[10px] font-black uppercase tracking-[0.2em] px-3 py-1.5 rounded-lg shadow-xl border border-[var(--border-main)]">
@@ -212,7 +202,7 @@ const StationNode = ({ step, isActive, isLocked, onClick }) => {
         </div>
       )}
 
-      {/* Static Label below */}
+      {}
       <div className="mt-4 text-center max-w-[120px]">
         <p
           className={`text-[11px] font-black uppercase tracking-tighter leading-tight ${
@@ -228,9 +218,6 @@ const StationNode = ({ step, isActive, isLocked, onClick }) => {
   );
 };
 
-/**
- * RoadmapView (Modern Linear Path)
- */
 const RoadmapView = () => {
   const { id } = useParams();
   const { data, isLoading, error } = useRoadmapPath(id);
@@ -287,7 +274,7 @@ const RoadmapView = () => {
           });
         }
       }
-      // Auto-reload after a short delay to ensure everything is in sync
+
       setTimeout(() => window.location.reload(), 2000);
     } catch (error) {
       console.error("Completion failed:", error);
@@ -315,7 +302,7 @@ const RoadmapView = () => {
         />
       )}
 
-      {/* Header */}
+      {}
       <div className="max-w-7xl mx-auto pt-10 sm:pt-12 mb-12 sm:mb-16 px-4">
         <Link
           to="/roadmaps"
@@ -336,9 +323,9 @@ const RoadmapView = () => {
           </div>
           {!isLoading && (
             <div className="flex flex-col items-stretch sm:items-end gap-5 min-w-[280px]">
-              {/* ACTION AREA (LOCK/LEAVE) */}
+              {}
               <div className="w-full sm:w-auto">
-                {/* LOCK BUTTON */}
+                {}
                 {!isActiveRoadmap && !isCompleted && !isInCooldown && (
                   <Button
                     variant="primary"
@@ -351,7 +338,7 @@ const RoadmapView = () => {
                   </Button>
                 )}
 
-                {/* LEAVE BUTTON */}
+                {}
                 {isActiveRoadmap && (
                   <Button
                     variant="outline"
@@ -366,7 +353,7 @@ const RoadmapView = () => {
                 )}
               </div>
 
-              {/* PROGRESS CARD */}
+              {}
               <div className="w-full bg-[var(--bg-card)] p-4 rounded-sm sm:rounded-2xl border border-[var(--border-main)] border-x-0 sm:border-x shadow-sm">
                 <div className="flex items-center justify-between mb-2">
                   <span className="text-[10px] font-black uppercase text-[var(--text-muted)]">
@@ -390,7 +377,7 @@ const RoadmapView = () => {
         </div>
       </div>
 
-      {/* Linear Track Area */}
+      {}
       <div className="max-w-7xl mx-auto px-4 sm:px-0">
         {isInCooldown && (
           <div className="mb-8 p-6 bg-amber-500/5 border border-amber-500/20 rounded-2xl flex flex-col sm:flex-row items-center justify-between gap-4">
@@ -434,7 +421,7 @@ const RoadmapView = () => {
                   : "flex-row min-w-max justify-center items-center py-14 sm:py-20 px-6 sm:px-10"
               }`}
             >
-              {/* The Track (Pipe) */}
+              {}
               <div
                 className={`
                     absolute bg-white border border-[var(--border-main)] rounded-full overflow-hidden
@@ -448,7 +435,7 @@ const RoadmapView = () => {
                   isMobile ? { left: "50%", transform: "translateX(-50%)" } : {}
                 }
               >
-                {/* Progress Fill */}
+                {}
                 <motion.div
                   initial={isMobile ? { height: 0 } : { width: 0 }}
                   animate={
@@ -461,7 +448,7 @@ const RoadmapView = () => {
                 />
               </div>
 
-              {/* Station Nodes */}
+              {}
               <div
                 className={`relative flex ${
                   isMobile ? "flex-col gap-24" : "flex-row gap-16 sm:gap-32"
@@ -484,7 +471,7 @@ const RoadmapView = () => {
         </div>
       </div>
 
-      {/* Drawer */}
+      {}
       <StepDrawer
         isOpen={isDrawerOpen}
         onClose={() => setIsDrawerOpen(false)}

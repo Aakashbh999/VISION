@@ -4,7 +4,7 @@ import { cn } from "../../../utils/cn";
 const Logo = ({ className, textClassName, variant = "full" }) => {
   return (
     <div className={cn("flex items-center gap-2", className)}>
-      {/* The Glassmorphic Eye Graphic */}
+      {}
       <div className="w-10 h-10 flex-shrink-0 relative group">
         <svg
           viewBox="0 0 100 100"
@@ -26,7 +26,7 @@ const Logo = ({ className, textClassName, variant = "full" }) => {
             </filter>
           </defs>
 
-          {/* Background Circle (The Pulse) */}
+          {}
           <circle
             cx="50"
             cy="50"
@@ -36,7 +36,7 @@ const Logo = ({ className, textClassName, variant = "full" }) => {
             className="animate-pulse"
           />
 
-          {/* Outer Ring */}
+          {}
           <circle
             cx="50"
             cy="50"
@@ -47,7 +47,7 @@ const Logo = ({ className, textClassName, variant = "full" }) => {
             strokeDasharray="180 60"
           />
 
-          {/* Glass Layer */}
+          {}
           <circle
             cx="50"
             cy="50"
@@ -60,7 +60,7 @@ const Logo = ({ className, textClassName, variant = "full" }) => {
             filter="url(#glassBlur)"
           />
 
-          {/* The Pupil (Core Vision) */}
+          {}
           <circle cx="50" cy="50" r="14" fill="url(#eyeGradient)">
             <animate
               attributeName="r"
@@ -70,12 +70,12 @@ const Logo = ({ className, textClassName, variant = "full" }) => {
             />
           </circle>
 
-          {/* Highlight */}
+          {}
           <circle cx="44" cy="44" r="4" fill="white" fillOpacity="0.6" />
         </svg>
       </div>
 
-      {/* The Text - Hidden if variant is 'glyph' */}
+      {}
       {variant !== "glyph" && (
         <span
           className={cn(

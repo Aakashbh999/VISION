@@ -1,11 +1,7 @@
 const pool = require("../config/db");
 
-/**
- * Shared Recommendation Service
- */
-
 const buildResourceQueryBase = () => `
-SELECT 
+SELECT
   r.resource_id as id,
   r.title,
   r.description,
@@ -14,10 +10,10 @@ SELECT
   COALESCE(rs.avg_score, 0) as avg_score,
   COUNT(rs_all.score) as review_count,
   COALESCE(
-    (SELECT array_agg(t.name) 
-      FROM portal.resource_tags rt 
-      JOIN portal.tags t ON t.tag_id = rt.tag_id 
-      WHERE rt.resource_id = r.resource_id), 
+    (SELECT array_agg(t.name)
+      FROM portal.resource_tags rt
+      JOIN portal.tags t ON t.tag_id = rt.tag_id
+      WHERE rt.resource_id = r.resource_id),
     ARRAY[]::text[]
   ) as tags,
   -- tag_count: number of intentional tags linked via resource_tags (used in scoring)
@@ -25,15 +21,15 @@ SELECT
   'resource' as type
 FROM portal.resources r
 LEFT JOIN (
-  SELECT resource_id, AVG(score)::numeric(4,2) as avg_score 
-  FROM portal.resource_scores 
+  SELECT resource_id, AVG(score)::numeric(4,2) as avg_score
+  FROM portal.resource_scores
   GROUP BY resource_id
 ) rs ON rs.resource_id = r.resource_id
 LEFT JOIN portal.resource_scores rs_all ON rs_all.resource_id = r.resource_id
 `;
 
 const buildGroupQueryBase = (userId, paramIndexForUser) => `
-SELECT 
+SELECT
   g.group_id as id,
   g.name,
   g.description,
@@ -64,7 +60,6 @@ exports.getRecommendations = async (
   };
 
   try {
-    // 1. Resources
     if (userSemester || userProgramId) {
       let resourceQuery = `${buildResourceQueryBase()} WHERE r.status = 'approved' AND r.deleted_at IS NULL`;
       const params = [];
@@ -77,33 +72,34 @@ exports.getRecommendations = async (
         resourceQuery += ` AND (r.program_id = $${params.length} OR r.program_id IS NULL)`;
       }
       params.push(limit);
-      // Composite score: review quality (60%) + tag coverage bonus (5 pts/tag) + popularity (2 pts/review, capped at 10)
+
       resourceQuery += ` GROUP BY r.resource_id, r.title, r.description, r.semester, r.program_id, rs.avg_score ORDER BY (
         COALESCE(rs.avg_score, 0) * 0.6
         + (SELECT COUNT(*) FROM portal.resource_tags rt2 WHERE rt2.resource_id = r.resource_id) * 5
         + LEAST(COUNT(rs_all.score), 10) * 2
       ) DESC LIMIT $${params.length}`;
-      
+
       const res = await pool.query(resourceQuery, params);
       recommendations.resources = res.rows;
     }
 
-    // 2. Groups (Exclude private if not member)
     const baseCondition = `WHERE g.privacy_type != 'private' AND g.deleted_at IS NULL AND g.degree_id = $1`;
-    const groupQuery = userId 
+    const groupQuery = userId
       ? `${buildGroupQueryBase(userId, 2)} ${baseCondition} GROUP BY g.group_id, g.name, g.description, g.group_image, g.is_public, g.degree_id, ad.full_name ORDER BY member_count DESC LIMIT $3`
       : `${buildGroupQueryBase(userId, 1)} WHERE g.privacy_type != 'private' AND g.deleted_at IS NULL GROUP BY g.group_id, g.name, g.description, g.group_image, g.is_public, g.degree_id, ad.full_name ORDER BY member_count DESC LIMIT $1`;
-    
+
     const groupParams = userId ? [userDegreeId, userId, limit] : [limit];
     const groupRes = await pool.query(groupQuery, groupParams);
     recommendations.groups = groupRes.rows;
 
-    // 3. Roadmaps
-    const roadmapRes = await pool.query(`SELECT roadmap_id as id, title, description, 'roadmap' as type FROM portal.roadmaps WHERE is_active = TRUE LIMIT $1`, [limit]);
+    const roadmapRes = await pool.query(
+      `SELECT roadmap_id as id, title, description, 'roadmap' as type FROM portal.roadmaps WHERE is_active = TRUE LIMIT $1`,
+      [limit],
+    );
     recommendations.roadmaps = roadmapRes.rows;
 
-    // 4. Discussions (Trending/Popular)
-    const discussionRes = await pool.query(`
+    const discussionRes = await pool.query(
+      `
       SELECT d.discussion_id as id, d.title, d.like_count, d.comment_count, u.full_name as author,
       (d.like_count * 2 + d.comment_count) as score
       FROM portal.discussions d
@@ -111,12 +107,13 @@ exports.getRecommendations = async (
       WHERE d.deleted_at IS NULL AND d.is_deleted = FALSE AND u.status = 'active'
       ORDER BY score DESC
       LIMIT $1
-    `, [limit]);
+    `,
+      [limit],
+    );
     recommendations.discussions = discussionRes.rows;
 
     return recommendations;
   } catch (err) {
-    console.error("Shared recommendations error:", err);
     return recommendations;
   }
 };

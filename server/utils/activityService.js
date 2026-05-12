@@ -1,9 +1,6 @@
 const pool = require("../config/db");
 const logger = require("./logger");
 
-/* ------------------------------
-   Create Notification
------------------------------- */
 exports.notify = async ({
   userId,
   actorId = null,
@@ -13,7 +10,7 @@ exports.notify = async ({
   relatedType = null,
   relatedId = null,
 }) => {
-  if (!userId) return; // guard: skip if no target user
+  if (!userId) return;
   try {
     await pool.query(
       `INSERT INTO portal.notifications
@@ -26,9 +23,6 @@ exports.notify = async ({
   }
 };
 
-/* ------------------------------
-   Add Activity Feed Entry
------------------------------- */
 exports.feed = async ({
   actorId,
   actionType,

@@ -6,11 +6,11 @@ const StudentReviewModal = ({ isOpen, student, onClose, onApprove, onReject }) =
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div 
+      <div
         className="absolute inset-0 bg-black/60 backdrop-blur-sm"
         onClick={onClose}
       />
-      
+
       <div className="relative bg-bg-card border border-border-main rounded-2xl w-full max-w-3xl max-h-[90vh] overflow-hidden flex flex-col shadow-2xl">
         <div className="flex items-center justify-between p-5 border-b border-border-main bg-bg-active/30">
           <h2 className="text-lg font-bold text-text-main">Review Student Registration</h2>
@@ -69,9 +69,9 @@ const StudentReviewModal = ({ isOpen, student, onClose, onApprove, onReject }) =
               <h3 className="text-sm font-black uppercase tracking-widest text-text-muted">Academic Certificate</h3>
               <div className="bg-bg-active/30 p-2 rounded-xl border border-border-main h-[400px] flex items-center justify-center overflow-hidden">
                 {student.academic_certificate_url ? (
-                  <img 
-                    src={student.academic_certificate_url} 
-                    alt="Academic Certificate constraint" 
+                  <img
+                    src={student.academic_certificate_url}
+                    alt="Academic Certificate constraint"
                     className="max-w-full max-h-full object-contain rounded-lg"
                   />
                 ) : (
@@ -83,13 +83,13 @@ const StudentReviewModal = ({ isOpen, student, onClose, onApprove, onReject }) =
         </div>
 
         <div className="p-5 border-t border-border-main bg-bg-active/30 flex justify-end gap-3">
-          <button 
+          <button
             onClick={() => { onClose(); onReject(student.user_id, student.full_name); }}
             className="px-4 py-2 text-sm font-bold text-red-500 bg-red-500/10 hover:bg-red-500/20 rounded-xl transition-colors border border-transparent flex items-center gap-2"
           >
             <X className="w-4 h-4" /> Reject Registration
           </button>
-          <button 
+          <button
             onClick={() => { onClose(); onApprove(student.user_id, student.full_name); }}
             className="px-4 py-2 text-sm font-bold text-white bg-green-600 hover:bg-green-700 rounded-xl transition-colors shadow-lg flex items-center gap-2"
           >

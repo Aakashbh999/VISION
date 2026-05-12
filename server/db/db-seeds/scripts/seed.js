@@ -1,12 +1,12 @@
 const fs = require("fs");
 const path = require("path");
 const csv = require("csv-parser");
-const pool = require("../../pool"); // Import the shared connection
+const pool = require("../../pool");
 
 async function ensureTablesExist() {
   console.log("🏗️ Building tables in the cloud...");
   const queries = [
-    // 1. IT FIELDS
+
     `CREATE TABLE IF NOT EXISTS portal.it_fields (
     id SERIAL PRIMARY KEY,
     slug TEXT UNIQUE,
@@ -19,7 +19,6 @@ async function ensureTablesExist() {
     is_public BOOLEAN DEFAULT true
   );`,
 
-    // 2. ACADEMIC DEGREES
     `CREATE TABLE IF NOT EXISTS portal.academic_degrees (
     id SERIAL PRIMARY KEY,
     slug TEXT UNIQUE,
@@ -33,7 +32,6 @@ async function ensureTablesExist() {
     is_public BOOLEAN DEFAULT true
   );`,
 
-    // 3. JOB MARKET INSIGHTS
     `CREATE TABLE IF NOT EXISTS portal.job_market_insights (
     id SERIAL PRIMARY KEY,
     slug TEXT UNIQUE,
@@ -46,7 +44,6 @@ async function ensureTablesExist() {
     is_public BOOLEAN DEFAULT true
   );`,
 
-    // 4. IT CLUBS
     `CREATE TABLE IF NOT EXISTS portal.it_clubs (
     id SERIAL PRIMARY KEY,
     slug TEXT UNIQUE,
@@ -54,11 +51,10 @@ async function ensureTablesExist() {
     location TEXT,
     institution TEXT,
     specialty TEXT,
-    is_public BOOLEAN DEFAULT true, 
+    is_public BOOLEAN DEFAULT true,
     contact_info TEXT
   );`,
 
-    // 5. IT CLUB MEMBERS
     `CREATE TABLE IF NOT EXISTS portal.it_club_members (
     club_id INTEGER NOT NULL REFERENCES portal.it_clubs(id) ON DELETE CASCADE,
     user_id INTEGER NOT NULL REFERENCES portal.users(user_id) ON DELETE CASCADE,
@@ -93,9 +89,9 @@ async function seedTable(fileName, tableName) {
             const placeholders = values.map((_, i) => `$${i + 1}`).join(", ");
 
             const query = `
-              INSERT INTO ${tableName} (${columns}) 
-              VALUES (${placeholders}) 
-              ON CONFLICT (slug) DO UPDATE SET 
+              INSERT INTO ${tableName} (${columns})
+              VALUES (${placeholders})
+              ON CONFLICT (slug) DO UPDATE SET
               ${Object.keys(row)
                 .map((col) => `${col} = EXCLUDED.${col}`)
                 .join(", ")};
@@ -115,7 +111,7 @@ async function seedTable(fileName, tableName) {
 async function run() {
   console.log("🚀 Starting Cloud Data Sync...");
   try {
-    // THIS IS THE MISSING STEP: Create the "rooms" before moving in the "furniture"
+
     await ensureTablesExist();
 
     await seedTable("it_fields.csv", "portal.it_fields");

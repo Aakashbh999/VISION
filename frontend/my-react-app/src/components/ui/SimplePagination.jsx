@@ -1,8 +1,4 @@
-/**
- * SimplePagination — lightweight Prev / Next paginator.
- * Use this when you only need previous/next navigation without numbered page buttons.
- * For numbered-page pagination use the existing `Pagination.jsx`.
- */
+
 const SimplePagination = ({ page, totalPages, onPageChange }) => {
   if (!totalPages || totalPages <= 1) return null;
 

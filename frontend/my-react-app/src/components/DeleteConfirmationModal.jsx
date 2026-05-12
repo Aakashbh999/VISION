@@ -89,19 +89,19 @@ export default function DeleteConfirmationModal({
 
   const modalContent = (
     <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto p-4 py-6 sm:items-center">
-      {/* Backdrop */}
+      {}
       <div
         onClick={handleClose}
         className="absolute inset-0 bg-black/60 backdrop-blur-sm"
       />
 
-      {/* Modal Surface – increased width */}
+      {}
       <div
         onClick={(e) => e.stopPropagation()}
         className={`relative flex w-full max-w-lg max-h-[calc(100vh-3rem)] flex-col overflow-visible rounded-sm sm:rounded-2xl border border-[var(--border-main)] bg-[var(--bg-card)] shadow-2xl ${surfaceClassName}`}
       >
         <div className="p-7">
-          {/* Header Section */}
+          {}
           <div className="flex gap-4 mb-6">
             <div className="w-10 h-10 rounded-xl bg-red-50 flex items-center justify-center flex-shrink-0">
               <AlertTriangle className="w-5 h-5 text-red-600" />
@@ -122,7 +122,7 @@ export default function DeleteConfirmationModal({
             </button>
           </div>
 
-          {/* Dropdown Logic – wider container */}
+          {}
           <div className="space-y-4 mb-10 flex flex-col items-center">
             <label className="text-[12px] font-bold text-[var(--text-muted)] uppercase tracking-wider self-start">
               Reason for removal
@@ -169,7 +169,7 @@ export default function DeleteConfirmationModal({
               )}
             </div>
 
-            {/* Custom Reason Box */}
+            {}
             {isCustom && (
               <div className="overflow-hidden w-full">
                 <textarea
@@ -191,7 +191,7 @@ export default function DeleteConfirmationModal({
             )}
           </div>
 
-          {/* Footer Actions – removed shadow/glow from delete button */}
+          {}
           <div className="flex gap-6 justify-center items-center mt-8">
             <button
               type="button"

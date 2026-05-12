@@ -12,20 +12,18 @@ const AcademicDegrees = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [viewingItem, setViewingItem] = useState(null);
   const [editingItem, setEditingItem] = useState(null);
-  
-  // Basic Form State
+
   const [formData, setFormData] = useState({
-    degree_code: "", full_name: "", university: "", duration: "", 
+    degree_code: "", full_name: "", university: "", duration: "",
     focus_area: "", is_public: true
   });
 
-  // Structured Form States
   const [eligibilityData, setEligibilityData] = useState({
     level: "", stream: "", subjects: "", minAggregate: "", aLevelEquivalent: ""
   });
   const [legacyEligibility, setLegacyEligibility] = useState("");
   const [isLegacyEligibility, setIsLegacyEligibility] = useState(false);
-  
+
   const [admissionSteps, setAdmissionSteps] = useState([{ id: Date.now(), text: "" }]);
   const [confirmModal, setConfirmModal] = useState({ isOpen: false });
 
@@ -76,13 +74,12 @@ const AcademicDegrees = () => {
         is_public: item.is_public ?? true
       });
 
-      // Parse Eligibility
       if (item.eligibility) {
         try {
-          const parsed = typeof item.eligibility === 'string' 
-            ? JSON.parse(item.eligibility) 
+          const parsed = typeof item.eligibility === 'string'
+            ? JSON.parse(item.eligibility)
             : item.eligibility;
-            
+
           setEligibilityData({
             level: parsed.level || "",
             stream: parsed.stream || "",
@@ -103,7 +100,6 @@ const AcademicDegrees = () => {
         setEligibilityData({ level: "", stream: "", subjects: "", minAggregate: "", aLevelEquivalent: "" });
       }
 
-      // Parse Admissions
       if (item.admission_process) {
         const steps = item.admission_process.split(' | ').map((text, i) => ({ id: Date.now() + i, text: text.trim() }));
         setAdmissionSteps(steps.length > 0 ? steps : [{ id: Date.now(), text: "" }]);
@@ -114,7 +110,7 @@ const AcademicDegrees = () => {
     } else {
       setEditingItem(null);
       setFormData({
-        degree_code: "", full_name: "", university: "", duration: "", 
+        degree_code: "", full_name: "", university: "", duration: "",
         focus_area: "", is_public: true
       });
       setEligibilityData({ level: "", stream: "", subjects: "", minAggregate: "", aLevelEquivalent: "" });
@@ -141,8 +137,7 @@ const AcademicDegrees = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    
-    // Process Eligibility Data
+
     const processedEligibility = {
       level: eligibilityData.level.trim(),
       stream: eligibilityData.stream.trim(),
@@ -150,8 +145,7 @@ const AcademicDegrees = () => {
       minAggregate: eligibilityData.minAggregate ? Number(eligibilityData.minAggregate) : null,
       aLevelEquivalent: eligibilityData.aLevelEquivalent.trim()
     };
-    
-    // Remove empty keys
+
     Object.keys(processedEligibility).forEach(key => {
       if (processedEligibility[key] === "" || processedEligibility[key] === null || (Array.isArray(processedEligibility[key]) && processedEligibility[key].length === 0)) {
         delete processedEligibility[key];
@@ -162,10 +156,9 @@ const AcademicDegrees = () => {
     if (Object.keys(processedEligibility).length > 0) {
       finalEligibility = JSON.stringify(processedEligibility);
     } else if (isLegacyEligibility && legacyEligibility) {
-      finalEligibility = legacyEligibility; // Keep legacy if user didn't enter structured data
+      finalEligibility = legacyEligibility;
     }
 
-    // Process Admission Steps
     const finalAdmissionProcess = admissionSteps
       .map(s => s.text.trim())
       .filter(Boolean)
@@ -192,17 +185,16 @@ const AcademicDegrees = () => {
     });
   };
 
-  // Simplified Columns
   const columns = [
     { header: "Code", accessor: "degree_code", render: (row) => <span className="font-bold text-blue-400">{row.degree_code}</span> },
     { header: "Full Name", accessor: "full_name", render: (row) => <span className="font-medium">{row.full_name}</span> },
     { header: "University", accessor: "university", render: (row) => <span className="px-2 py-1 bg-purple-500/10 text-purple-400 rounded-md text-xs">{row.university}</span> },
     { header: "Duration", accessor: "duration" },
     { header: "Status", accessor: "is_public", render: (row) => (
-        row.is_public ? 
-        <span className="text-green-500 flex items-center gap-1 text-xs"><CheckCircle className="w-3 h-3"/> Public</span> : 
+        row.is_public ?
+        <span className="text-green-500 flex items-center gap-1 text-xs"><CheckCircle className="w-3 h-3"/> Public</span> :
         <span className="text-gray-400 flex items-center gap-1 text-xs"><XCircle className="w-3 h-3"/> Hidden</span>
-      ) 
+      )
     }
   ];
 
@@ -221,18 +213,18 @@ const AcademicDegrees = () => {
         </button>
       </div>
 
-      <AdminTable 
-        columns={columns} 
-        data={data.data || data} 
-        isLoading={isLoading} 
-        error={error} 
+      <AdminTable
+        columns={columns}
+        data={data.data || data}
+        isLoading={isLoading}
+        error={error}
         onView={(item) => setViewingItem(item)}
-        onEdit={handleOpenModal} 
-        onDelete={confirmDelete} 
+        onEdit={handleOpenModal}
+        onDelete={confirmDelete}
         searchPlaceholder="Search degrees, universities..."
       />
 
-      {/* VIEW MODAL */}
+      {}
       {viewingItem && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setViewingItem(null)} />
@@ -246,7 +238,7 @@ const AcademicDegrees = () => {
                 <X className="w-5 h-5 text-text-muted" />
               </button>
             </div>
-            
+
             <div className="p-6 overflow-y-auto space-y-8 text-left">
               <div className="grid grid-cols-2 gap-6">
                 <div>
@@ -320,7 +312,7 @@ const AcademicDegrees = () => {
         </div>
       )}
 
-      {/* EDIT MODAL */}
+      {}
       {isModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setIsModalOpen(false)} />
@@ -331,10 +323,10 @@ const AcademicDegrees = () => {
                 <X className="w-5 h-5 text-text-muted" />
               </button>
             </div>
-            
+
             <form onSubmit={handleSubmit} className="p-6 space-y-8 overflow-y-auto">
-              
-              {/* SECTION 1: Basic Info */}
+
+              {}
               <section>
                 <h3 className="font-bold text-text-main border-b border-border-main pb-2 mb-4">1. Basic Information</h3>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -361,7 +353,7 @@ const AcademicDegrees = () => {
                 </div>
               </section>
 
-              {/* SECTION 2: Eligibility */}
+              {}
               <section>
                 <div className="flex items-center justify-between border-b border-border-main pb-2 mb-4">
                   <h3 className="font-bold text-text-main">2. Eligibility Criteria</h3>
@@ -407,7 +399,7 @@ const AcademicDegrees = () => {
                 </div>
               </section>
 
-              {/* SECTION 3: Admission Process */}
+              {}
               <section>
                 <div className="flex items-center justify-between border-b border-border-main pb-2 mb-4">
                   <h3 className="font-bold text-text-main">3. Admission Process Steps</h3>
@@ -415,7 +407,7 @@ const AcademicDegrees = () => {
                     <Plus className="w-3 h-3" /> Add Step
                   </button>
                 </div>
-                
+
                 <div className="space-y-3">
                   {admissionSteps.map((step, index) => (
                     <div key={step.id} className="flex items-start gap-3">
@@ -423,15 +415,15 @@ const AcademicDegrees = () => {
                         {index + 1}
                       </div>
                       <div className="flex-1">
-                        <input 
-                          value={step.text} 
-                          onChange={(e) => handleStepChange(step.id, e.target.value)} 
-                          className="w-full px-3 py-2.5 bg-bg-active border border-border-main rounded-xl text-sm" 
-                          placeholder={`Step ${index + 1} description (e.g. Entrance Exam Conducted by TU)`} 
+                        <input
+                          value={step.text}
+                          onChange={(e) => handleStepChange(step.id, e.target.value)}
+                          className="w-full px-3 py-2.5 bg-bg-active border border-border-main rounded-xl text-sm"
+                          placeholder={`Step ${index + 1} description (e.g. Entrance Exam Conducted by TU)`}
                         />
                       </div>
-                      <button 
-                        type="button" 
+                      <button
+                        type="button"
                         onClick={() => handleRemoveStep(step.id)}
                         disabled={admissionSteps.length === 1}
                         className="p-2.5 mt-0.5 text-text-muted hover:text-red-500 hover:bg-red-500/10 rounded-xl transition-colors disabled:opacity-30 disabled:hover:bg-transparent"
@@ -443,7 +435,7 @@ const AcademicDegrees = () => {
                 </div>
               </section>
 
-              {/* Visibility Options */}
+              {}
               <section className="pt-2">
                 <div className="flex items-center gap-3 p-4 bg-bg-active/50 rounded-xl border border-border-main">
                   <div className="flex-1">
@@ -457,7 +449,7 @@ const AcademicDegrees = () => {
                 </div>
               </section>
 
-              {/* Submit Area */}
+              {}
               <div className="flex justify-end gap-3 sticky bottom-0 bg-bg-card pt-4 border-t border-border-main -mx-6 px-6 -mb-6 pb-6">
                 <Button type="button" variant="secondary" onClick={() => setIsModalOpen(false)} className="rounded-xl">Cancel</Button>
                 <Button type="submit" variant="shiny" isLoading={createMutation.isPending || updateMutation.isPending} className="rounded-xl">
@@ -474,7 +466,6 @@ const AcademicDegrees = () => {
   );
 };
 
-// Helper component since Badge isn't directly imported in this file and we need a simple one
 const Badge = ({ children, variant, className }) => {
   const colors = {
     yellow: "bg-yellow-500/10 text-yellow-600 border-yellow-500/20",

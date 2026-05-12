@@ -178,7 +178,6 @@ export const useGroupDetailState = () => {
       showToast.error(error.response?.data?.error || "Update failed"),
   });
 
-  // Handle delta polling
   useGroupPostPolling(isMember ? id : null, activeSection);
 
   const feedPosts = useMemo(() => {
@@ -234,15 +233,14 @@ export const useGroupDetailState = () => {
   const handlePostSubmit = (event) => {
     event.preventDefault();
     if (!isMember) return;
-    
-    // Prevent fast double-clicks on mobile from submitting multiple times
+
     if (createPostMutation.isPending) return;
 
     if (activeSection === "notice_board" && !canPostNotice) {
       showToast.error("You do not have notice board permission.");
       return;
     }
-    
+
     if (activeSection === "resources" && !isAdmin) {
       showToast.error("Only group admins and moderators can upload resources.");
       return;

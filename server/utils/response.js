@@ -1,7 +1,4 @@
-/**
- * Standardizes API responses across the platform.
- * Follows the 'Bulletproof' standard: { success, data, error, message }
- */
+
 const sendResponse = (res, statusCode, { success = true, data = null, error = null, message = null }) => {
   return res.status(statusCode).json({
     success,

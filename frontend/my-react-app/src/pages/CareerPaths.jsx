@@ -296,7 +296,7 @@ const CareerPaths = () => {
 
   return (
     <div className="space-y-10 px-3 sm:px-6 lg:px-8 py-5 sm:py-8 lg:py-10">
-      {/* Header */}
+      {}
       <div className="text-center max-w-3xl mx-auto">
         <h1 className="text-3xl sm:text-4xl font-bold text-[var(--text-main)] mb-4">
           Your Career Path in{" "}
@@ -312,7 +312,7 @@ const CareerPaths = () => {
         </p>
       </div>
 
-      {/* Specialization selector */}
+      {}
       <div className="flex flex-wrap justify-center gap-3">
         {Object.entries(careerPaths).map(([key, p]) => {
           const IconComponent = p.icon;
@@ -338,9 +338,9 @@ const CareerPaths = () => {
         })}
       </div>
 
-      {/* Path steps visual */}
+      {}
       <div className="relative mt-12">
-        {/* Desktop horizontal timeline */}
+        {}
         <div className="hidden md:block">
           <div className="flex items-center justify-between relative">
             <div className="absolute top-8 left-0 right-0 h-0.5 bg-[var(--border-main)] -z-10" />
@@ -392,7 +392,7 @@ const CareerPaths = () => {
           </div>
         </div>
 
-        {/* Mobile vertical stack */}
+        {}
         <div className="md:hidden space-y-6">
           {path.steps.map((step) => {
             const isHovered = hoveredStep === step.id;
@@ -435,7 +435,7 @@ const CareerPaths = () => {
           })}
         </div>
 
-        {/* Detail panel for selected step */}
+        {}
         <AnimatePresence mode="wait">
           {selectedStep && (
             <motion.div
@@ -465,7 +465,7 @@ const CareerPaths = () => {
         </AnimatePresence>
       </div>
 
-      {/* Bottom CTA */}
+      {}
       <div className="text-center mt-12">
         <p className="text-[var(--text-muted)] mb-4">
           Ready to follow this path? Create a free account to track your

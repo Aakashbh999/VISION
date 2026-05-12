@@ -97,7 +97,6 @@ const handleCommentVote = async (commentId, userId, voteType) => {
     );
     const authorId = authorRes.rows[0]?.user_id;
 
-    // Allow voting on own comment but skip XP gain
     const isSelfVote = authorId && Number(authorId) === Number(uId);
 
     const existingRes = await client.query(

@@ -19,8 +19,8 @@ const FeedTabs = ({ activeTab, onTabChange }) => {
             onClick={() => onTabChange(tab.id)}
             className={`
               relative flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all duration-200 flex-1 sm:flex-initial
-              ${isActive 
-                ? "bg-[var(--bg-card)] text-purple-600 shadow-sm border border-[var(--border-main)]" 
+              ${isActive
+                ? "bg-[var(--bg-card)] text-purple-600 shadow-sm border border-[var(--border-main)]"
                 : "text-[var(--text-muted)] hover:text-[var(--text-main)] hover:bg-[var(--bg-card)]/50"
               }
             `}

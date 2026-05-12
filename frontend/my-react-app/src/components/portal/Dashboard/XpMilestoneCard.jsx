@@ -10,7 +10,6 @@ import {
 } from "lucide-react";
 import Skeleton from "../../ui/Skeleton";
 
-// VXP Milestone definitions — with dark mode colors
 const MILESTONES = [
   {
     xp: 50,
@@ -69,7 +68,6 @@ const XpMilestoneCard = ({ compact = false }) => {
 
   const { total_xp = 0 } = stats;
 
-  // Progress to next milestone
   const nextMilestone = MILESTONES.find((m) => m.xp > total_xp);
   const prevMilestoneXp = (() => {
     const prev = [...MILESTONES].reverse().find((m) => m.xp <= total_xp);

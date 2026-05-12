@@ -1,7 +1,4 @@
-/**
- * errorHandler.js
- * Centralized error handling middleware.
- */
+
 const logger = require("../utils/logger");
 const env = require("../config/env");
 
@@ -12,7 +9,7 @@ module.exports = (err, req, res, next) => {
   if (statusCode >= 500) {
     logger.error(logContext, "Global error caught");
   } else {
-    // 4xx responses are expected request failures, not server faults.
+
     logger.warn(logContext, "Request failed");
   }
 
@@ -23,7 +20,7 @@ module.exports = (err, req, res, next) => {
 
   res.status(statusCode).json({
     error: message,
-    // Provide stack trace only in development
+
     ...(env.NODE_ENV === "development" && { stack: err.stack }),
   });
 };

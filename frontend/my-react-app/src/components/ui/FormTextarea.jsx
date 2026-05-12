@@ -2,21 +2,6 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { AlertCircle, CheckCircle2 } from "lucide-react";
 
-/**
- * FormTextarea - Advanced textarea with character count and validation
- *
- * Props:
- * - label: Field label
- * - value: Current value
- * - onChange: Change handler
- * - error: Error message
- * - success: Success message
- * - hint: Helper text
- * - maxLength: Maximum characters
- * - rows: Number of rows (default: 4)
- * - required: Required indicator
- * - disabled: Disable input
- */
 const FormTextarea = ({
   label,
   value = "",
@@ -82,7 +67,7 @@ const FormTextarea = ({
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.2 }}
     >
-      {/* Label with char count */}
+      {}
       <div className="flex items-center justify-between">
         {label && (
           <label
@@ -108,7 +93,7 @@ const FormTextarea = ({
         )}
       </div>
 
-      {/* Textarea */}
+      {}
       <div className="relative">
         <textarea
           id={id}
@@ -145,7 +130,7 @@ const FormTextarea = ({
           {...props}
         />
 
-        {/* Progress bar for character limit */}
+        {}
         {maxLength && (
           <motion.div
             className="absolute bottom-0 left-0 right-0 h-1 rounded-b-xl bg-[var(--bg-active)] overflow-hidden"
@@ -166,7 +151,7 @@ const FormTextarea = ({
         )}
       </div>
 
-      {/* Error Message */}
+      {}
       <AnimatePresence mode="wait">
         {displayError && (
           <motion.p
@@ -183,7 +168,7 @@ const FormTextarea = ({
         )}
       </AnimatePresence>
 
-      {/* Success Message */}
+      {}
       <AnimatePresence mode="wait">
         {success && !displayError && (
           <motion.p
@@ -199,7 +184,7 @@ const FormTextarea = ({
         )}
       </AnimatePresence>
 
-      {/* Helper Text */}
+      {}
       {hint && !displayError && (
         <motion.p
           initial={{ opacity: 0 }}

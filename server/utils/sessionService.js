@@ -1,13 +1,4 @@
-/**
- * Session Service
- * Handles JWT token management with DB-backed refresh token storage
- *
- * SECURITY FEATURES:
- * - Refresh tokens are stored as SHA256 hashes (raw token never stored)
- * - Token rotation with reuse detection
- * - Proper revocation support
- * - Device tracking
- */
+
 
 const pool = require("../config/db");
 const crypto = require("crypto");
@@ -17,21 +8,14 @@ const { UAParser } = require("ua-parser-js");
 const logger = require("./logger");
 const env = require("../config/env");
 
-// Token expiry times
-const ACCESS_TOKEN_EXPIRY = "30m"; // Extended: reduces refresh churn for active sessions
-const REFRESH_TOKEN_EXPIRY_DAYS = 7; // Refresh token valid for 7 days
+const ACCESS_TOKEN_EXPIRY = "30m";
+const REFRESH_TOKEN_EXPIRY_DAYS = 7;
 const REFRESH_TOKEN_EXPIRY = `${REFRESH_TOKEN_EXPIRY_DAYS}d`;
 
-/**
- * Hash a token using SHA256 (for secure storage)
- */
 const hashToken = (token) => {
   return crypto.createHash("sha256").update(token).digest("hex");
 };
 
-/**
- * Parse user agent to extract device info
- */
 const parseUserAgent = (userAgent) => {
   if (!userAgent) {
     return { deviceType: "unknown", browser: "Unknown", os: "Unknown" };
@@ -45,9 +29,6 @@ const parseUserAgent = (userAgent) => {
   return { deviceType, browser, os };
 };
 
-/**
- * Generate device ID from request fingerprint
- */
 const generateDeviceId = (req) => {
   const userAgent = req.headers["user-agent"] || "";
   const acceptLanguage = req.headers["accept-language"] || "";
@@ -59,9 +40,6 @@ const generateDeviceId = (req) => {
     .substring(0, 16);
 };
 
-/**
- * Create tokens (access + refresh) - DB-backed approach with hashing
- */
 const createTokens = async (user, req) => {
   const deviceId = generateDeviceId(req);
   const deviceInfo = parseUserAgent(req.headers["user-agent"]);
@@ -69,7 +47,6 @@ const createTokens = async (user, req) => {
     req.ip || req.connection?.remoteAddress || req.headers["x-forwarded-for"];
   const userAgent = req.headers["user-agent"] || "";
 
-  // Generate access token (short-lived JWT)
   const accessToken = jwt.sign(
     {
       auth_user_id: user.auth_user_id,
@@ -80,18 +57,15 @@ const createTokens = async (user, req) => {
     { expiresIn: ACCESS_TOKEN_EXPIRY },
   );
 
-  // Generate secure random refresh token (NOT a JWT - just random bytes)
   const rawRefreshToken = crypto.randomBytes(64).toString("hex");
   const tokenHash = hashToken(rawRefreshToken);
 
-  // Calculate expiry
   const expiresAt = new Date();
   expiresAt.setDate(expiresAt.getDate() + REFRESH_TOKEN_EXPIRY_DAYS);
 
-  // Store hashed refresh token in DB
   try {
     await pool.query(
-      `INSERT INTO auth.refresh_tokens 
+      `INSERT INTO auth.refresh_tokens
        (auth_user_id, token_hash, device_id, device_info, ip_address, user_agent, expires_at, last_used_at)
        VALUES ($1, $2, $3, $4, $5, $6, $7, NOW())`,
       [
@@ -105,7 +79,7 @@ const createTokens = async (user, req) => {
       ],
     );
   } catch (err) {
-    // If table doesn't exist yet, fall back to JWT-only (for migration compatibility)
+
     if (err.code === "42P01") {
       logger.warn("auth.refresh_tokens table not found, using JWT-only mode");
       const jwtRefreshToken = jwt.sign(
@@ -123,23 +97,18 @@ const createTokens = async (user, req) => {
     throw err;
   }
 
-  // Return raw token to client (will be hashed for comparison later)
   return {
     accessToken,
     refreshToken: rawRefreshToken,
-    expiresIn: 15 * 60, // 15 minutes in seconds
+    expiresIn: 15 * 60,
   };
 };
 
-/**
- * Rotate refresh token - validates old token and issues new pair
- * Implements token rotation with reuse detection
- */
 const rotateRefreshToken = async (refreshToken, req) => {
   const tokenHash = hashToken(refreshToken);
 
   try {
-    // Look up the hashed token in DB
+
     const tokenResult = await pool.query(
       `SELECT rt.*, a.role, a.email_status, p.is_suspended
        FROM auth.refresh_tokens rt
@@ -150,31 +119,27 @@ const rotateRefreshToken = async (refreshToken, req) => {
     );
 
     if (!tokenResult.rows.length) {
-      // Token not found - could be JWT fallback mode or invalid
+
       return await rotateRefreshTokenJWT(refreshToken, req);
     }
 
     const token = tokenResult.rows[0];
 
-    // Check if token was revoked (REUSE DETECTION)
     if (token.revoked) {
-      // Security breach! Someone is trying to reuse an old token
-      // Revoke ALL tokens for this user as a precaution
+
       await pool.query(
-        `UPDATE auth.refresh_tokens 
-         SET revoked = true, revoked_at = NOW() 
+        `UPDATE auth.refresh_tokens
+         SET revoked = true, revoked_at = NOW()
          WHERE auth_user_id = $1`,
         [token.auth_user_id],
       );
       throw createError(401, "Token reuse detected - all sessions revoked");
     }
 
-    // Check expiration
     if (new Date(token.expires_at) < new Date()) {
       throw createError(401, "Refresh token expired");
     }
 
-    // Check user status
     if (token.is_suspended) {
       throw createError(403, "Account suspended");
     }
@@ -183,15 +148,13 @@ const rotateRefreshToken = async (refreshToken, req) => {
       throw createError(403, "Email not verified");
     }
 
-    // ROTATE: Mark old token as revoked
     await pool.query(
-      `UPDATE auth.refresh_tokens 
-       SET revoked = true, revoked_at = NOW() 
+      `UPDATE auth.refresh_tokens
+       SET revoked = true, revoked_at = NOW()
        WHERE token_hash = $1`,
       [tokenHash],
     );
 
-    // Generate new token pair
     const user = { auth_user_id: token.auth_user_id, role: token.role };
     const tokens = await createTokens(user, req);
 
@@ -201,7 +164,7 @@ const rotateRefreshToken = async (refreshToken, req) => {
       role: token.role,
     };
   } catch (err) {
-    // If table doesn't exist, fall back to JWT-only
+
     if (err.code === "42P01") {
       return await rotateRefreshTokenJWT(refreshToken, req);
     }
@@ -209,9 +172,6 @@ const rotateRefreshToken = async (refreshToken, req) => {
   }
 };
 
-/**
- * Fallback: JWT-only rotation (for backwards compatibility)
- */
 const rotateRefreshTokenJWT = async (refreshToken, req) => {
   try {
     const decoded = jwt.verify(refreshToken, env.JWT_SECRET);
@@ -244,17 +204,14 @@ const rotateRefreshTokenJWT = async (refreshToken, req) => {
   }
 };
 
-/**
- * Get user's active sessions from DB
- */
 const getUserSessions = async (authUserId) => {
   try {
     const result = await pool.query(
-      `SELECT id, device_id, device_info, ip_address, 
+      `SELECT id, device_id, device_info, ip_address,
               created_at, last_used_at, user_agent
        FROM auth.refresh_tokens
-       WHERE auth_user_id = $1 
-       AND revoked = false 
+       WHERE auth_user_id = $1
+       AND revoked = false
        AND expires_at > NOW()
        ORDER BY last_used_at DESC`,
       [authUserId],
@@ -274,21 +231,18 @@ const getUserSessions = async (authUserId) => {
     }));
   } catch (err) {
     if (err.code === "42P01") {
-      return []; // Table doesn't exist yet
+      return [];
     }
     logger.error({ err }, "getUserSessions error");
     return [];
   }
 };
 
-/**
- * Revoke a specific session by ID
- */
 const revokeSession = async (authUserId, sessionId) => {
   try {
     const result = await pool.query(
-      `UPDATE auth.refresh_tokens 
-       SET revoked = true, revoked_at = NOW() 
+      `UPDATE auth.refresh_tokens
+       SET revoked = true, revoked_at = NOW()
        WHERE id = $1 AND auth_user_id = $2
        RETURNING id`,
       [sessionId, authUserId],
@@ -301,14 +255,11 @@ const revokeSession = async (authUserId, sessionId) => {
   }
 };
 
-/**
- * Revoke all refresh tokens for a user (logout all devices)
- */
 const revokeAllUserTokens = async (authUserId) => {
   try {
     const result = await pool.query(
-      `UPDATE auth.refresh_tokens 
-       SET revoked = true, revoked_at = NOW() 
+      `UPDATE auth.refresh_tokens
+       SET revoked = true, revoked_at = NOW()
        WHERE auth_user_id = $1 AND revoked = false
        RETURNING id`,
       [authUserId],
@@ -325,16 +276,13 @@ const revokeAllUserTokens = async (authUserId) => {
   }
 };
 
-/**
- * Revoke a specific refresh token
- */
 const revokeRefreshToken = async (refreshToken) => {
   try {
     const tokenHash = hashToken(refreshToken);
 
     const result = await pool.query(
-      `UPDATE auth.refresh_tokens 
-       SET revoked = true, revoked_at = NOW() 
+      `UPDATE auth.refresh_tokens
+       SET revoked = true, revoked_at = NOW()
        WHERE token_hash = $1
        RETURNING id`,
       [tokenHash],
@@ -347,13 +295,10 @@ const revokeRefreshToken = async (refreshToken) => {
   }
 };
 
-/**
- * Clean up expired tokens (call periodically)
- */
 const cleanupExpiredTokens = async () => {
   try {
     const result = await pool.query(
-      `DELETE FROM auth.refresh_tokens 
+      `DELETE FROM auth.refresh_tokens
        WHERE expires_at < NOW() OR (revoked = true AND revoked_at < NOW() - INTERVAL '7 days')
        RETURNING id`,
     );

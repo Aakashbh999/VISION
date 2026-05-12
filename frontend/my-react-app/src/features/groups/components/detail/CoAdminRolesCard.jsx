@@ -24,7 +24,7 @@ const CoAdminRolesCard = ({
           <h3 className="text-xs font-black uppercase text-[var(--text-muted)] tracking-wider">
             Moderator Roles
           </h3>
-          <button 
+          <button
             onClick={() => setShowPromoteModal(true)}
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-purple-600 text-white text-[10px] font-black uppercase tracking-wider hover:bg-purple-700 transition-colors shadow-sm"
           >
@@ -118,7 +118,7 @@ const CoAdminRolesCard = ({
         )}
       </div>
 
-      <PromoteMemberModal 
+      <PromoteMemberModal
         isOpen={showPromoteModal}
         onClose={() => setShowPromoteModal(false)}
         members={members}

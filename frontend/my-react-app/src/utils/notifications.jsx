@@ -2,11 +2,6 @@ import { toast } from "react-toastify";
 import { AlertCircle, CheckCircle2, Info, AlertTriangle } from "lucide-react";
 import { createElement } from "react";
 
-/**
- * Enhanced Toast System
- * Provides consistent, accessible toast notifications with proper styling
- */
-
 const toastConfig = {
   position: "bottom-right",
   autoClose: 4000,
@@ -46,9 +41,6 @@ const CustomToastContent = ({ icon: Icon, title, message, type }) => (
   </div>
 );
 
-/**
- * Show success toast
- */
 export const showSuccess = (message, options = {}) => {
   const { title = "Success", ...restOptions } = options;
   return toast.success(
@@ -62,9 +54,6 @@ export const showSuccess = (message, options = {}) => {
   );
 };
 
-/**
- * Show error toast
- */
 export const showError = (message, options = {}) => {
   const { title = "Error", ...restOptions } = options;
   return toast.error(
@@ -78,9 +67,6 @@ export const showError = (message, options = {}) => {
   );
 };
 
-/**
- * Show warning toast
- */
 export const showWarning = (message, options = {}) => {
   const { title = "Warning", ...restOptions } = options;
   return toast.warning(
@@ -94,9 +80,6 @@ export const showWarning = (message, options = {}) => {
   );
 };
 
-/**
- * Show info toast
- */
 export const showInfo = (message, options = {}) => {
   const { title = "Info", ...restOptions } = options;
   return toast.info(
@@ -110,9 +93,6 @@ export const showInfo = (message, options = {}) => {
   );
 };
 
-/**
- * Show loading toast (doesn't auto-close)
- */
 export const showLoading = (title, message) => {
   return toast.loading(
     createElement(CustomToastContent, {
@@ -123,16 +103,10 @@ export const showLoading = (title, message) => {
   );
 };
 
-/**
- * Update a toast
- */
 export const updateToast = (toastId, options) => {
   return toast.update(toastId, { ...toastConfig, ...options });
 };
 
-/**
- * Dismiss a toast by ID or all toasts
- */
 export const dismissToast = (toastId) => {
   if (toastId) {
     toast.dismiss(toastId);
@@ -141,9 +115,6 @@ export const dismissToast = (toastId) => {
   }
 };
 
-/**
- * Unified toast API
- */
 export const showNotification = {
   success: showSuccess,
   error: showError,
@@ -154,5 +125,4 @@ export const showNotification = {
   dismiss: dismissToast,
 };
 
-// Default export for backward compatibility
 export default showNotification;

@@ -14,7 +14,6 @@ const {
   logoutSchema,
 } = require("../validation/registerSchema");
 
-// Public routes
 router.post(
   "/register",
   upload.single("academic_certificate"),
@@ -42,17 +41,14 @@ router.post(
   authController.resetPassword,
 );
 
-// Token refresh (no auth required, but needs valid refresh token)
 router.post(
   "/refresh-token",
   validateBody(refreshTokenSchema),
   authController.refreshToken,
 );
 
-// Logout (works with or without auth)
 router.post("/logout", validateBody(logoutSchema), authController.logout);
 
-// Protected routes (require valid access token)
 router.post(
   "/resend-verification",
   verifyJWT,

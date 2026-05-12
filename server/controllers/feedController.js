@@ -1,3 +1,16 @@
+/**
+ * Feed Controller
+ * Delivers personalized, ranked activity feeds to users based on engagement metrics and relationship factors.
+ * Uses sophisticated scoring algorithm combining action type, follow status, group membership, and academic alignment.
+ *
+ * Features:
+ * - Multi-tab ranked feed (for-you, discussions, groups, resources, people)
+ * - Weighted scoring across 7 dimensions (action, follow, group, degree, program, recency, recommendation)
+ * - Configurable weights for A/B testing and tuning
+ * - Debug endpoint for score breakdown and ranking analysis
+ * - Pagination support for efficient feed delivery
+ */
+
 const pool = require("../config/db");
 const { resolveFeedRankingConfig } = require("../utils/feedRankingConfig");
 const catchAsync = require("../utils/catchAsync");
@@ -103,7 +116,7 @@ const buildRankedFeedQuery = ({ config, includeBreakdown = false }) => {
         )
         -- For You specific: Filter out noisy audit logs like 'followed' or 'joined' unless specifically requested
         AND (
-          $6::text <> 'for-you' OR 
+          $6::text <> 'for-you' OR
           af.action_type NOT IN ('group_join_approved', 'group_joined', 'user_followed', 'completed_step')
         )
         -- Privacy: Hide all messages from groups unless user is an approved member
@@ -236,7 +249,7 @@ const fetchRankedFeed = async ({
   search,
   limit,
   offset,
-  tab, // Pass tab to the query
+  tab,
   config,
   includeBreakdown = false,
 }) => {
@@ -244,6 +257,31 @@ const fetchRankedFeed = async ({
   return pool.query(sql, [viewerId, actionType, search, limit, offset, tab]);
 };
 
+/**
+ * Get personalized activity feed with multi-tab support
+ * Fetches ranked feed combining discussions, groups, resources, and user activities
+ * Ranks items using 7-factor weighted scoring algorithm:
+ * - Action type weight (discussion vs group vs resource)
+ * - Follow relationship weight (activities from followed users)
+ * - Group membership weight (activities in user's groups)
+ * - Academic alignment (degree/program matching)
+ * - Recency weight (exponential decay based on time)
+ * - Recommendation weight (integration with recommendation engine)
+ *
+ * @async
+ * @param {Object} req - Express request
+ * @param {Object} req.user - { portal_user_id } (optional for anonymous feed)
+ * @param {string} [req.query.tab] - Feed tab: 'for-you', 'discussions', 'groups', 'resources', 'people' (default: for-you)
+ * @param {string} [req.query.actionType] - Filter by activity type
+ * @param {string} [req.query.search] - Search within feed content
+ * @param {string} [req.query.page] - Page number (default: 1)
+ * @param {string} [req.query.limit] - Items per page (default: 20, max: 50)
+ * @param {string} [req.query.debug] - Set to '1' to include score breakdown
+ * @param {string} [req.query.followWeight] - Custom follow weight multiplier
+ * @param {string} [req.query.groupWeight] - Custom group weight multiplier
+ * @param {Object} res - Express response
+ * @returns {Object} - { data: [], pagination: {}, meta: { actionTypes, weights } }
+ */
 exports.getFeed = catchAsync(async (req, res) => {
   const viewerId = req.user?.portal_user_id;
   const page = Math.max(1, parseInt(req.query.page, 10) || 1);
@@ -287,6 +325,20 @@ exports.getFeed = catchAsync(async (req, res) => {
   });
 });
 
+/**
+ * Get feed with detailed ranking score breakdown (debug/analysis endpoint)
+ * Returns same feed structure as getFeed but includes score components for each item
+ * Useful for A/B testing feed weights and analyzing ranking decisions
+ *
+ * @async
+ * @param {Object} req - Express request
+ * @param {Object} req.user - { portal_user_id }
+ * @param {string} [req.query.tab] - Feed tab for filtering
+ * @param {string} [req.query.page] - Page number
+ * @param {string} [req.query.limit] - Items per page
+ * @param {Object} res - Express response
+ * @returns {Object} - Feed data with actionType breakdown and scoring details
+ */
 exports.getFeedEvaluation = catchAsync(async (req, res) => {
   const viewerId = req.user?.portal_user_id;
   const page = Math.max(1, parseInt(req.query.page, 10) || 1);

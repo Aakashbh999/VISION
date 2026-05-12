@@ -35,7 +35,7 @@ const PendingApproval = () => {
             <p className="text-(--text-muted) mb-8">
               Unfortunately, your student registration was not approved at this time.
             </p>
-            
+
             <div className="bg-red-500/5 border border-red-500/10 rounded-2xl p-6 text-left mb-8">
               <div className="flex items-center gap-2 mb-3">
                 <AlertCircle className="w-4 h-4 text-red-500" />
@@ -46,7 +46,7 @@ const PendingApproval = () => {
               </p>
             </div>
 
-            <button 
+            <button
               onClick={() => navigate("/register")}
               className="w-full py-3 bg-(--text-main) text-(--bg-main) rounded-2xl font-bold hover:opacity-90 transition-opacity"
             >
@@ -62,7 +62,7 @@ const PendingApproval = () => {
               Awaiting Approval
             </h1>
             <p className="text-(--text-muted) mb-6">
-              Your email is verified! Your account is now pending review by our 
+              Your email is verified! Your account is now pending review by our
               academic administrators. You'll be notified via email once approved.
             </p>
             <div className="p-4 bg-bg-active/50 rounded-2xl border border-border-main">

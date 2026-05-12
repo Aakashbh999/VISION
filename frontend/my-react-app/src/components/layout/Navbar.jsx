@@ -80,7 +80,7 @@ const Navbar = ({ onMobileMenuToggle, variant, user }) => {
 
   return (
     <header className="fixed top-0 left-0 right-0 h-16 bg-(--bg-main)/90 backdrop-blur-sm border-b border-(--border-main) z-50 flex items-center justify-between px-4 shadow-sm transition-colors duration-300">
-      {/* Left: logo + mobile menu button */}
+      {}
       <div className="flex items-center gap-2">
   <button
     onClick={onMobileMenuToggle}
@@ -95,14 +95,14 @@ const Navbar = ({ onMobileMenuToggle, variant, user }) => {
   </Link>
 </div>
 
-      {/* Right side: all items together */}
+      {}
       <div className="flex items-center gap-4">
-        {/* Theme Toggle – always visible */}
+        {}
         <ThemeToggle />
 
         {authUser ? (
           <>
-            {/* Explore dropdown – hidden on mobile and in admin portal */}
+            {}
             {variant !== "admin" && (
               <div className="relative hidden sm:block" ref={resourcesRef}>
                 <button
@@ -128,7 +128,7 @@ const Navbar = ({ onMobileMenuToggle, variant, user }) => {
               </div>
             )}
 
-            {/* Notification bell */}
+            {}
             <div className="relative">
               <button
                 ref={notificationsButtonRef}
@@ -152,7 +152,7 @@ const Navbar = ({ onMobileMenuToggle, variant, user }) => {
               />
             </div>
 
-            {/* User avatar dropdown */}
+            {}
             <div className="relative" ref={profileRef}>
               <button
                 onClick={() => setProfileMenuOpen(!profileMenuOpen)}
@@ -234,7 +234,7 @@ const Navbar = ({ onMobileMenuToggle, variant, user }) => {
             </div>
           </>
         ) : (
-          // Public variant: login and register buttons
+
           <div className="flex items-center gap-2">
             {isLoggedIn ? (
               <>

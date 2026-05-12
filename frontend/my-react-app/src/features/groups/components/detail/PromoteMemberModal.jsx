@@ -12,7 +12,7 @@ const PromoteMemberModal = ({ isOpen, onClose, members = [], user, appointCoAdmi
     const isSelf = String(member.user_id) === String(user?.portal_user_id);
     const isAlreadyMod = member.role === "co_admin" || member.role === "owner" || member.role === "admin";
     const matchesSearch = (member.full_name || "").toLowerCase().includes(query.toLowerCase());
-    
+
     return !isSelf && !isAlreadyMod && matchesSearch;
   });
 
@@ -27,7 +27,7 @@ const PromoteMemberModal = ({ isOpen, onClose, members = [], user, appointCoAdmi
             className="absolute inset-0 bg-slate-950/60 backdrop-blur-md"
             onClick={onClose}
           />
-          
+
           <motion.div
             initial={{ opacity: 0, scale: 0.9, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -35,13 +35,13 @@ const PromoteMemberModal = ({ isOpen, onClose, members = [], user, appointCoAdmi
             transition={{ type: "spring", damping: 25, stiffness: 300 }}
             className="relative w-full max-w-lg bg-[var(--bg-card)] rounded-[2.5rem] shadow-2xl border border-[var(--border-main)] overflow-hidden flex flex-col max-h-[80vh]"
           >
-            {/* Header */}
+            {}
             <div className="px-8 pt-8 pb-4 flex items-center justify-between">
               <div>
                 <h2 className="text-2xl font-black text-[var(--text-main)] tracking-tight">Add Moderator</h2>
                 <p className="text-sm text-[var(--text-muted)] font-medium">Promote a member to help manage the circle</p>
               </div>
-              <button 
+              <button
                 onClick={onClose}
                 className="p-2 rounded-2xl bg-[var(--bg-active)] text-[var(--text-muted)] hover:text-[var(--text-main)] transition-colors"
               >
@@ -49,7 +49,7 @@ const PromoteMemberModal = ({ isOpen, onClose, members = [], user, appointCoAdmi
               </button>
             </div>
 
-            {/* Search Input */}
+            {}
             <div className="px-8 py-4">
               <div className="relative group">
                 <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[var(--text-muted)] group-focus-within:text-purple-500 transition-colors" />
@@ -64,18 +64,18 @@ const PromoteMemberModal = ({ isOpen, onClose, members = [], user, appointCoAdmi
               </div>
             </div>
 
-            {/* Results */}
+            {}
             <div className="flex-1 overflow-y-auto px-4 pb-8 min-h-[300px]">
               {eligibleMembers.length > 0 ? (
                 <div className="space-y-2">
                   {eligibleMembers.map((member) => (
-                    <div 
+                    <div
                       key={member.user_id}
                       className="flex items-center gap-4 p-4 rounded-3xl hover:bg-[var(--bg-active)] transition-all group"
                     >
-                      <Avatar 
-                        src={member.profile_image} 
-                        name={member.full_name} 
+                      <Avatar
+                        src={member.profile_image}
+                        name={member.full_name}
                         size="md"
                         className="border border-[var(--border-main)] shadow-sm"
                         status={member.is_online ? "online" : null}

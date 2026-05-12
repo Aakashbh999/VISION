@@ -1,8 +1,8 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Mail, ArrowLeft, Send } from "lucide-react";
+import { Mail, ArrowLeft, Send, RefreshCw, CheckCircle2 } from "lucide-react";
 import Button from "../components/ui/Button";
 import { forgotPasswordSchema } from "../validation/registerSchema";
 import { forgotPassword as apiForgotPassword } from "../services/auth";
@@ -11,6 +11,17 @@ const ForgotPassword = () => {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [loading, setLoading] = useState(false);
+  const [cooldown, setCooldown] = useState(0);
+
+  useEffect(() => {
+    let timer;
+    if (cooldown > 0) {
+      timer = setInterval(() => {
+        setCooldown((prev) => prev - 1);
+      }, 1000);
+    }
+    return () => clearInterval(timer);
+  }, [cooldown]);
 
   const { register, handleSubmit, formState: { errors } } = useForm({
     resolver: zodResolver(forgotPasswordSchema),
@@ -27,6 +38,7 @@ const ForgotPassword = () => {
     try {
       const response = await apiForgotPassword(email);
       setSuccess(response.message || "A reset link has been sent to your email.");
+      setCooldown(60);
     } catch (err) {
       setError(err.response?.data?.error || "Something went wrong. Please try again.");
     } finally {
@@ -69,63 +81,89 @@ const ForgotPassword = () => {
           )}
 
           {success && (
-            <div
-              role="alert"
-              className="mb-4 rounded-2xl border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-700 dark:border-emerald-800 dark:bg-emerald-950/30 dark:text-emerald-300"
-            >
-              {success}
+            <div className="mb-6 text-center animate-fade-in">
+              <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-emerald-100 dark:bg-emerald-900/30 mb-4">
+                <CheckCircle2 className="h-6 w-6 text-emerald-600 dark:text-emerald-400" />
+              </div>
+              <h3 className="text-lg font-bold text-[var(--text-main)]">Check your inbox</h3>
+              <p className="mt-2 text-sm text-[var(--text-muted)] leading-relaxed">
+                {success}
+              </p>
+
+              <div className="mt-6 flex flex-col gap-3">
+                <Button
+                  onClick={handleSubmit(onSubmit)}
+                  variant="outline"
+                  size="sm"
+                  isLoading={loading}
+                  disabled={loading || cooldown > 0}
+                  className="w-full justify-center"
+                >
+                  <RefreshCw className="h-4 w-4" />
+                  {cooldown > 0 ? `Resend in ${cooldown}s` : "Resend Reset Link"}
+                </Button>
+
+                <button
+                  onClick={() => {
+                    setSuccess("");
+                    setError("");
+                  }}
+                  className="text-xs font-semibold text-purple-600 hover:text-purple-800 transition-colors"
+                >
+                  Try another email address
+                </button>
+              </div>
             </div>
           )}
-
-          <form
-            onSubmit={handleSubmit(onSubmit)}
-            className="space-y-5"
-            aria-busy={loading}
-          >
-            <div>
-              <label className="mb-1 block text-sm font-medium text-[var(--text-main)]">
-                Email Address
-              </label>
-              <div className="relative">
-                <Mail className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-[var(--text-muted)]" />
-                <input
-                  type="email"
-                  required
-                  autoComplete="email"
-                  {...register("email")}
-                  className={`w-full rounded-xl border ${errors.email ? 'border-red-500' : 'border-[var(--border-main)]'} bg-[var(--bg-main)] py-3 pl-10 pr-4 text-[var(--text-main)] outline-none transition-all focus:border-purple-500 focus:ring-4 focus:ring-purple-500/10`}
-                  placeholder="you@example.com"
-                />
-              </div>
-              {errors.email && (
-                <p className="mt-1 text-xs text-red-500">{errors.email.message}</p>
-              )}
-            </div>
-
-            <Button
-              type="submit"
-              variant="shiny"
-              size="lg"
-              className="w-full justify-center"
-              isLoading={loading}
-              disabled={loading || !!success}
-            >
-              <Send className="h-5 w-5" />
-              Send Reset Link
-            </Button>
-          </form>
 
           {!success && (
-            <p className="mt-6 text-center text-sm text-[var(--text-muted)]">
-              Wait, I remember it now!{" "}
-              <Link
-                to="/login"
-                className="font-medium text-purple-600 hover:text-purple-800 dark:text-purple-300 dark:hover:text-purple-200"
+            <form
+              onSubmit={handleSubmit(onSubmit)}
+              className="space-y-5"
+              aria-busy={loading}
+            >
+              <div>
+                <label className="mb-1 block text-sm font-medium text-[var(--text-main)]">
+                  Email Address
+                </label>
+                <div className="relative">
+                  <Mail className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-[var(--text-muted)]" />
+                  <input
+                    type="email"
+                    required
+                    autoComplete="email"
+                    {...register("email")}
+                    className={`w-full rounded-xl border ${errors.email ? 'border-red-500' : 'border-[var(--border-main)]'} bg-[var(--bg-main)] py-3 pl-10 pr-4 text-[var(--text-main)] outline-none transition-all focus:border-purple-500 focus:ring-4 focus:ring-purple-500/10`}
+                    placeholder="you@example.com"
+                  />
+                </div>
+                {errors.email && (
+                  <p className="mt-1 text-xs text-red-500">{errors.email.message}</p>
+                )}
+              </div>
+
+              <Button
+                type="submit"
+                variant="shiny"
+                size="lg"
+                className="w-full justify-center"
+                isLoading={loading}
               >
-                Log In
-              </Link>
-            </p>
+                <Send className="h-5 w-5" />
+                Send Reset Link
+              </Button>
+            </form>
           )}
+
+          <p className="mt-6 text-center text-sm text-[var(--text-muted)]">
+            Wait, I remember it now!{" "}
+            <Link
+              to="/login"
+              className="font-medium text-purple-600 hover:text-purple-800 dark:text-purple-300 dark:hover:text-purple-200"
+            >
+              Log In
+            </Link>
+          </p>
         </div>
       </div>
     </div>

@@ -6,7 +6,6 @@ const {
   requireApprovedStudent,
 } = require("../middleware/authMiddleware");
 
-// Dashboard endpoint
 router.get("/", verifyJWT, requireApprovedStudent, controller.getDashboard);
 
 module.exports = router;

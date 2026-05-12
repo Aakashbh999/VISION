@@ -17,7 +17,6 @@ const specialtiesList = [
   "All", "Web", "AI", "Cyber", "Cloud", "Data", "Robotics", "Open Source",
 ];
 
-// Grid animation constants
 const GRID_ANIMATION_DELAY = 0.05;
 const GRID_ANIMATION_DURATION = 0.4;
 
@@ -67,7 +66,7 @@ const Clubs = () => {
 
   return (
     <div className="max-w-6xl mx-auto space-y-6 sm:space-y-8 pb-20">
-      {/* Header */}
+      {}
       <SurfaceCard className="relative bg-[var(--bg-card)]/40 backdrop-blur-xl border-[var(--border-main)]/40 p-5 sm:p-8 shadow-2xl shadow-purple-500/5 overflow-hidden">
         <div className="absolute top-0 right-0 -mr-20 -mt-20 w-64 h-64 bg-purple-500/10 rounded-full blur-3xl pointer-events-none" />
         <div className="absolute bottom-0 left-0 -ml-20 -mb-20 w-64 h-64 bg-purple-500/10 rounded-full blur-3xl pointer-events-none" />
@@ -101,12 +100,12 @@ const Clubs = () => {
         </div>
       </SurfaceCard>
 
-      {/* For You carousel */}
+      {}
       {!isLoading && !error && !filters.search && (
         <ForYouCarousel clubs={forYouClubs} />
       )}
 
-      {/* Specialty filter pills */}
+      {}
       <div className="flex items-center gap-2 overflow-x-auto pb-4 pt-2 -mx-4 px-4 sm:mx-0 sm:px-0 hide-scrollbar">
         {specialtiesList.map((s) => (
           <button
@@ -123,7 +122,7 @@ const Clubs = () => {
         ))}
       </div>
 
-      {/* Main grid */}
+      {}
       <div className="min-h-[400px]">
         {isLoading ? (
           <SurfaceCard className="flex flex-col items-center justify-center py-24">
