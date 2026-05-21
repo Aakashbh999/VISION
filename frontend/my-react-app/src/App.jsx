@@ -48,8 +48,9 @@ const AdminDashboard = lazy(() => import("./pages/admin/Dashboard"));
 const AdminPending = lazy(() => import("./pages/admin/PendingStudents"));
 const AdminStudents = lazy(() => import("./pages/admin/StudentsList"));
 const AdminReports = lazy(() => import("./pages/admin/Reports"));
-const AdminPendingResources = lazy(() => import("./pages/admin/PendingResources"));
 const AdminLogs = lazy(() => import("./pages/admin/AdminLogs"));
+const AdminPendingResources = lazy(() => import("./pages/admin/PendingResources"));
+const AdminResourcesList = lazy(() => import("./pages/admin/ResourcesList"));
 const AdminRoadmapManagement = lazy(() => import("./pages/admin/Roadmaps/RoadmapManagement"));
 const AdminRoadmapBuilder = lazy(() => import("./pages/admin/Roadmaps/RoadmapBuilder"));
 const AdminRegistrationWhitelist = lazy(() => import("./pages/admin/RegistrationWhitelist"));
@@ -107,6 +108,7 @@ const adminRoutes = [
   { path: "/admin/roadmaps/:id/builder", element: <AdminRoadmapBuilder /> },
   { path: "/admin/registration-whitelist", element: <AdminRegistrationWhitelist /> },
   { path: "/admin/campuses", element: <AdminCampuses /> },
+  { path: "/admin/resources", element: <AdminResourcesList /> },
   { path: "/admin", element: <Navigate to="/admin/dashboard" replace /> },
 
   { path: "/admin/reference/it-fields", element: <ItFieldsAdmin /> },

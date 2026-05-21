@@ -806,3 +806,520 @@ exports.softDeleteResource = catchAsync(async (req, res) => {
     "Resource deleted successfully (soft delete)",
   );
 });
+
+exports.getAllResourcesAdmin = catchAsync(async (req, res) => {
+  const {
+    search,
+    status,
+    resource_type,
+    program_id,
+    semester,
+    deleted, // 'all', 'exclude', 'only'
+    sort = 'created_at_desc',
+  } = req.query;
+
+  const { page, limit, offset } = parsePagination(req.query, {
+    defaultLimit: 20,
+    maxLimit: 100,
+  });
+
+  const conditions = [];
+  const params = [];
+
+  // Deleted filter
+  const delVal = deleted || 'all';
+  if (delVal === 'exclude') {
+    conditions.push("r.deleted_at IS NULL");
+  } else if (delVal === 'only') {
+    conditions.push("r.deleted_at IS NOT NULL");
+  }
+
+  // Status filter
+  if (status && status !== 'all') {
+    params.push(status);
+    conditions.push(`r.status = $${params.length}`);
+  }
+
+  // Type filter
+  if (resource_type && resource_type !== 'all') {
+    params.push(resource_type);
+    conditions.push(`r.resource_type = $${params.length}`);
+  }
+
+  // Program filter
+  if (program_id && program_id !== 'all') {
+    params.push(parseInt(program_id));
+    conditions.push(`r.program_id = $${params.length}`);
+  }
+
+  // Semester filter
+  if (semester && semester !== 'all') {
+    params.push(parseInt(semester));
+    conditions.push(`r.semester = $${params.length}`);
+  }
+
+  // Search filter
+  if (search) {
+    params.push(`%${search}%`);
+    conditions.push(`(r.title ILIKE $${params.length} OR r.description ILIKE $${params.length} OR u.full_name ILIKE $${params.length})`);
+  }
+
+  const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(" AND ")}` : "";
+
+  // Sort order
+  let sortColumn = "r.created_at DESC";
+  if (sort === "created_at_asc") sortColumn = "r.created_at ASC";
+  else if (sort === "title_asc") sortColumn = "r.title ASC";
+  else if (sort === "title_desc") sortColumn = "r.title DESC";
+
+  const countQuery = `
+    SELECT COUNT(*) FROM portal.resources r
+    LEFT JOIN portal.users u ON u.user_id = r.created_by
+    ${whereClause}
+  `;
+
+  const dataQuery = `
+    SELECT
+      r.*,
+      u.user_id AS uploader_id,
+      u.full_name AS uploader_name,
+      a.email AS uploader_email,
+      ad.degree_code AS degree_name,
+      p.program_name
+    FROM portal.resources r
+    LEFT JOIN portal.users u ON u.user_id = r.created_by
+    LEFT JOIN auth.users a ON a.auth_user_id = u.auth_user_id
+    LEFT JOIN portal.academic_degrees ad ON ad.id = r.degree_id
+    LEFT JOIN portal.programs p ON p.program_id = r.program_id
+    ${whereClause}
+    ORDER BY ${sortColumn}
+    LIMIT $${params.length + 1} OFFSET $${params.length + 2}
+  `;
+
+  const [countRes, dataRes] = await Promise.all([
+    pool.query(countQuery, params),
+    pool.query(dataQuery, [...params, limit, offset]),
+  ]);
+
+  // Fetch tags for these resources
+  const resources = dataRes.rows;
+  if (resources.length > 0) {
+    const resourceIds = resources.map(r => r.resource_id);
+    const tagsRes = await pool.query(
+      `SELECT rt.resource_id, t.tag_id, t.name, t.slug, t.tag_type
+       FROM portal.resource_tags rt
+       JOIN portal.tags t ON t.tag_id = rt.tag_id
+       WHERE rt.resource_id = ANY($1)`,
+      [resourceIds]
+    );
+
+    // Map tags back to resources
+    const tagsMap = {};
+    tagsRes.rows.forEach(row => {
+      if (!tagsMap[row.resource_id]) tagsMap[row.resource_id] = [];
+      tagsMap[row.resource_id].push({
+        tag_id: row.tag_id,
+        name: row.name,
+        slug: row.slug,
+        tag_type: row.tag_type
+      });
+    });
+
+    resources.forEach(r => {
+      r.tags = tagsMap[r.resource_id] || [];
+    });
+  }
+
+  const total = parseInt(countRes.rows[0].count);
+
+  return res.json({
+    success: true,
+    data: resources,
+    pagination: buildPaginationMeta({ total, page, limit }),
+    totalPages: Math.ceil(total / limit),
+  });
+});
+
+exports.createResourceAdmin = catchAsync(async (req, res) => {
+  const adminId = req.user.portal_user_id;
+  const {
+    title,
+    description,
+    resource_type,
+    program_id,
+    semester,
+    degree_id,
+    url,
+    difficulty_level = "beginner",
+    status = "approved",
+    system_tags: systemTagsRaw,
+    custom_tags: customTagsRaw,
+  } = req.body;
+
+  let systemTagIds = [];
+  if (systemTagsRaw) {
+    try {
+      const parsed = typeof systemTagsRaw === "string" ? JSON.parse(systemTagsRaw) : systemTagsRaw;
+      systemTagIds = Array.isArray(parsed) ? parsed.map(Number).filter(Boolean) : [];
+    } catch (_) {}
+  }
+
+  let customTagNames = [];
+  if (customTagsRaw) {
+    try {
+      const parsed = typeof customTagsRaw === "string" ? JSON.parse(customTagsRaw) : customTagsRaw;
+      customTagNames = Array.isArray(parsed) ? parsed.map(String).map(s => s.trim()).filter(Boolean) : [];
+    } catch (_) {}
+  }
+
+  const normalizedTitle = typeof title === "string" ? title.trim() : "";
+  const normalizedResourceType = typeof resource_type === "string" ? resource_type.trim().toLowerCase() : "";
+  const normalizedUrl = typeof url === "string" ? url.trim() : "";
+
+  if (!normalizedTitle || !normalizedResourceType) {
+    return errorResponse(res, "title and resource_type are required", 400);
+  }
+
+  const parsedSemester = semester ? parseInt(semester) : null;
+  const parsedProgramId = program_id ? parseInt(program_id) : null;
+  const parsedDegreeId = degree_id ? parseInt(degree_id) : null;
+
+  let fileUrl = null;
+  let filePublicId = null;
+  let originalFilename = null;
+
+  if (normalizedResourceType === "link") {
+    if (!normalizedUrl) {
+      return errorResponse(res, "URL is required for link type", 400);
+    }
+    fileUrl = normalizedUrl;
+  } else {
+    if (req.file) {
+      fileUrl = req.file.path;
+      filePublicId = req.file.filename;
+      originalFilename = req.file.originalname;
+    } else if (normalizedUrl) {
+      fileUrl = normalizedUrl;
+    } else {
+      return errorResponse(res, "File or URL is required", 400);
+    }
+  }
+
+  const client = await pool.connect();
+  try {
+    await client.query("BEGIN");
+
+    const result = await client.query(
+      `INSERT INTO portal.resources
+         (title, description, resource_type, program_id, semester, degree_id, url,
+          file_url, file_public_id, original_filename, status, difficulty_level, created_by, created_at)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, NOW())
+       RETURNING *`,
+      [
+        normalizedTitle,
+        description || null,
+        normalizedResourceType,
+        parsedProgramId,
+        parsedSemester,
+        parsedDegreeId,
+        normalizedResourceType === "link" ? normalizedUrl : null,
+        fileUrl,
+        filePublicId,
+        originalFilename,
+        status || "approved",
+        difficulty_level || "beginner",
+        adminId,
+      ]
+    );
+
+    const resourceId = result.rows[0].resource_id;
+
+    if (systemTagIds.length > 0) {
+      const validCheck = await client.query(
+        `SELECT tag_id FROM portal.tags WHERE tag_id = ANY($1) AND tag_type = 'system'`,
+        [systemTagIds],
+      );
+      const validSystemIds = validCheck.rows.map((r) => r.tag_id);
+      if (validSystemIds.length > 0) {
+        const tagValues = validSystemIds
+          .map((_, i) => `($1, $${i + 2})`)
+          .join(", ");
+        await client.query(
+          `INSERT INTO portal.resource_tags (resource_id, tag_id) VALUES ${tagValues} ON CONFLICT DO NOTHING`,
+          [resourceId, ...validSystemIds],
+        );
+      }
+    }
+
+    for (const name of customTagNames) {
+      const tagId = await getOrCreateCustomTag(client, name);
+      if (tagId) {
+        await client.query(
+          `INSERT INTO portal.resource_tags (resource_id, tag_id) VALUES ($1, $2) ON CONFLICT DO NOTHING`,
+          [resourceId, tagId],
+        );
+      }
+    }
+
+    await client.query("COMMIT");
+
+    return res.status(201).json({
+      success: true,
+      message: "Resource created successfully by Admin",
+      data: result.rows[0]
+    });
+  } catch (error) {
+    await client.query("ROLLBACK");
+    logger.error({ err: error }, "Admin Resource upload failed");
+    return errorResponse(res, "Failed to upload resource", 500);
+  } finally {
+    client.release();
+  }
+});
+
+exports.updateResourceAdmin = catchAsync(async (req, res) => {
+  const { id } = req.params;
+  const {
+    title,
+    description,
+    resource_type,
+    program_id,
+    semester,
+    degree_id,
+    url,
+    difficulty_level,
+    status,
+    rejection_reason,
+    system_tags: systemTagsRaw,
+    custom_tags: customTagsRaw,
+  } = req.body;
+
+  let systemTagIds = [];
+  if (systemTagsRaw) {
+    try {
+      const parsed = typeof systemTagsRaw === "string" ? JSON.parse(systemTagsRaw) : systemTagsRaw;
+      systemTagIds = Array.isArray(parsed) ? parsed.map(Number).filter(Boolean) : [];
+    } catch (_) {}
+  }
+
+  let customTagNames = [];
+  if (customTagsRaw) {
+    try {
+      const parsed = typeof customTagsRaw === "string" ? JSON.parse(customTagsRaw) : customTagsRaw;
+      customTagNames = Array.isArray(parsed) ? parsed.map(String).map(s => s.trim()).filter(Boolean) : [];
+    } catch (_) {}
+  }
+
+  // Get current resource state
+  const currentRes = await pool.query(
+    "SELECT * FROM portal.resources WHERE resource_id = $1",
+    [id]
+  );
+  if (currentRes.rows.length === 0) {
+    return errorResponse(res, "Resource not found", 404);
+  }
+
+  const current = currentRes.rows[0];
+
+  let fileUrl = current.file_url;
+  let filePublicId = current.file_public_id;
+  let originalFilename = current.original_filename;
+
+  const normalizedResourceType = resource_type || current.resource_type;
+
+  if (normalizedResourceType === "link") {
+    fileUrl = url || current.url || fileUrl;
+  } else if (req.file) {
+    fileUrl = req.file.path;
+    filePublicId = req.file.filename;
+    originalFilename = req.file.originalname;
+
+    // Delete old Cloudinary file if it exists
+    if (current.file_public_id) {
+      try {
+        const cloudinary = require("../config/cloudinary");
+        await cloudinary.uploader.destroy(current.file_public_id);
+      } catch (err) {
+        logger.error({ err, pid: current.file_public_id }, "Cloudinary file replacement cleanup failed");
+      }
+    }
+  } else if (url) {
+    fileUrl = url;
+  }
+
+  const client = await pool.connect();
+  try {
+    await client.query("BEGIN");
+
+    const result = await client.query(
+      `UPDATE portal.resources
+       SET title = COALESCE($1, title),
+           description = $2,
+           resource_type = $3,
+           program_id = $4,
+           semester = $5,
+           degree_id = $6,
+           url = $7,
+           file_url = $8,
+           file_public_id = $9,
+           original_filename = $10,
+           status = COALESCE($11, status),
+           difficulty_level = COALESCE($12, difficulty_level),
+           rejection_reason = $13
+       WHERE resource_id = $14
+       RETURNING *`,
+      [
+        title || current.title,
+        description !== undefined ? description : current.description,
+        normalizedResourceType,
+        program_id !== undefined ? (program_id ? parseInt(program_id) : null) : current.program_id,
+        semester !== undefined ? (semester ? parseInt(semester) : null) : current.semester,
+        degree_id !== undefined ? (degree_id ? parseInt(degree_id) : null) : current.degree_id,
+        normalizedResourceType === "link" ? (url || current.url) : null,
+        fileUrl,
+        filePublicId,
+        originalFilename,
+        status || current.status,
+        difficulty_level || current.difficulty_level,
+        rejection_reason !== undefined ? rejection_reason : current.rejection_reason,
+        id
+      ]
+    );
+
+    // Update tags mapping
+    // 1. Delete existing resource tags
+    await client.query("DELETE FROM portal.resource_tags WHERE resource_id = $1", [id]);
+
+    // 2. Insert system tags
+    if (systemTagIds.length > 0) {
+      const validCheck = await client.query(
+        `SELECT tag_id FROM portal.tags WHERE tag_id = ANY($1) AND tag_type = 'system'`,
+        [systemTagIds],
+      );
+      const validSystemIds = validCheck.rows.map((r) => r.tag_id);
+      if (validSystemIds.length > 0) {
+        const tagValues = validSystemIds
+          .map((_, i) => `($1, $${i + 2})`)
+          .join(", ");
+        await client.query(
+          `INSERT INTO portal.resource_tags (resource_id, tag_id) VALUES ${tagValues} ON CONFLICT DO NOTHING`,
+          [id, ...validSystemIds],
+        );
+      }
+    }
+
+    // 3. Insert custom tags
+    for (const name of customTagNames) {
+      const tagId = await getOrCreateCustomTag(client, name);
+      if (tagId) {
+        await client.query(
+          `INSERT INTO portal.resource_tags (resource_id, tag_id) VALUES ($1, $2) ON CONFLICT DO NOTHING`,
+          [id, tagId],
+        );
+      }
+    }
+
+    await client.query("COMMIT");
+
+    return res.json({
+      success: true,
+      message: "Resource updated successfully by Admin",
+      data: result.rows[0]
+    });
+  } catch (error) {
+    await client.query("ROLLBACK");
+    logger.error({ err: error }, "Admin Resource update failed");
+    return errorResponse(res, "Failed to update resource", 500);
+  } finally {
+    client.release();
+  }
+});
+
+exports.deleteResourceAdmin = catchAsync(async (req, res) => {
+  const { id } = req.params;
+  const adminId = req.user.portal_user_id;
+  const { hard } = req.query; // 'true' for hard delete, otherwise soft delete
+  const { reason } = req.body;
+
+  const currentRes = await pool.query(
+    "SELECT * FROM portal.resources WHERE resource_id = $1",
+    [id]
+  );
+  if (currentRes.rows.length === 0) {
+    return errorResponse(res, "Resource not found", 404);
+  }
+
+  const current = currentRes.rows[0];
+
+  if (hard === "true") {
+    // Permanent deletion
+    const client = await pool.connect();
+    try {
+      await client.query("BEGIN");
+
+      // Delete tags mapping
+      await client.query("DELETE FROM portal.resource_tags WHERE resource_id = $1", [id]);
+
+      // Delete roadmap mappings
+      await client.query("DELETE FROM portal.step_resource_map WHERE resource_id = $1", [id]);
+
+      // Delete resource scores
+      await client.query("DELETE FROM portal.resource_scores WHERE resource_id = $1", [id]);
+
+      // Delete interactions
+      await client.query("DELETE FROM portal.user_resource_interactions WHERE resource_id = $1", [id]);
+
+      // Delete resource itself
+      await client.query("DELETE FROM portal.resources WHERE resource_id = $1", [id]);
+
+      // Delete from Cloudinary
+      if (current.file_public_id) {
+        try {
+          const cloudinary = require("../config/cloudinary");
+          await cloudinary.uploader.destroy(current.file_public_id);
+        } catch (cloudinaryErr) {
+          logger.error({ err: cloudinaryErr, pid: current.file_public_id }, "Cloudinary file cleanup failed in hard delete");
+        }
+      }
+
+      await client.query("COMMIT");
+
+      return successResponse(res, null, "Resource permanently hard deleted");
+    } catch (err) {
+      await client.query("ROLLBACK");
+      throw err;
+    } finally {
+      client.release();
+    }
+  } else {
+    // Soft deletion
+    const result = await pool.query(
+      `UPDATE portal.resources
+       SET deleted_at = NOW(), deleted_by = $1, deletion_reason = $2
+       WHERE resource_id = $3
+       RETURNING *`,
+      [adminId, reason || "Soft-deleted by administrator", id]
+    );
+
+    return successResponse(res, result.rows[0], "Resource successfully soft-deleted");
+  }
+});
+
+exports.restoreResourceAdmin = catchAsync(async (req, res) => {
+  const { id } = req.params;
+
+  const result = await pool.query(
+    `UPDATE portal.resources
+     SET deleted_at = NULL, deleted_by = NULL, deletion_reason = NULL
+     WHERE resource_id = $1
+     RETURNING *`,
+    [id]
+  );
+
+  if (result.rows.length === 0) {
+    return errorResponse(res, "Resource not found", 404);
+  }
+
+  return successResponse(res, result.rows[0], "Resource successfully restored");
+});
+

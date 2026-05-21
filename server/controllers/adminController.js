@@ -663,7 +663,12 @@ exports.hardDeleteUser = catchAsync(async (req, res) => {
     });
   }
 
+  // Collect Cloudinary public IDs before the transaction so we can destroy
+  // them after the DB commit (Cloudinary calls should not block the rollback path).
+  let cloudinaryPublicIds = [];
+
   const message = await withTransaction(async (client) => {
+    // ── 1. Verify the user exists ────────────────────────────────────────
     const userRes = await client.query(
       `SELECT auth_user_id FROM portal.users WHERE user_id = $1`,
       [user_id],
@@ -675,6 +680,56 @@ exports.hardDeleteUser = catchAsync(async (req, res) => {
 
     const authUserId = userRes.rows[0].auth_user_id;
 
+    // ── 2. Fetch all resources uploaded by this user ─────────────────────
+    const resourcesRes = await client.query(
+      `SELECT resource_id, file_public_id
+       FROM portal.resources
+       WHERE created_by = $1`,
+      [user_id],
+    );
+
+    const userResources = resourcesRes.rows;
+
+    if (userResources.length > 0) {
+      const resourceIds = userResources.map((r) => r.resource_id);
+      // Collect cloud IDs for cleanup after commit
+      cloudinaryPublicIds = userResources
+        .map((r) => r.file_public_id)
+        .filter(Boolean);
+
+      const idArray = `{${resourceIds.join(",")}}`;
+
+      // Delete all child-table rows for the user's resources
+      await client.query(
+        "DELETE FROM portal.resource_tags WHERE resource_id = ANY($1::int[])",
+        [idArray],
+      );
+      await client.query(
+        "DELETE FROM portal.step_resource_map WHERE resource_id = ANY($1::int[])",
+        [idArray],
+      );
+      await client.query(
+        "DELETE FROM portal.resource_scores WHERE resource_id = ANY($1::int[])",
+        [idArray],
+      );
+      await client.query(
+        "DELETE FROM portal.user_resource_interactions WHERE resource_id = ANY($1::int[])",
+        [idArray],
+      );
+
+      // Delete the resource rows themselves
+      await client.query(
+        "DELETE FROM portal.resources WHERE resource_id = ANY($1::int[])",
+        [idArray],
+      );
+
+      logger.info(
+        { user_id, resourceCount: resourceIds.length },
+        "Hard-deleted user resources before user removal",
+      );
+    }
+
+    // ── 3. Delete the portal and auth user records ───────────────────────
     await client.query(`DELETE FROM portal.users WHERE user_id = $1`, [
       user_id,
     ]);
@@ -691,14 +746,35 @@ exports.hardDeleteUser = catchAsync(async (req, res) => {
       {
         permanent: true,
         auth_user_id: authUserId,
+        resources_deleted: userResources.length,
       },
     );
 
-    return "User account and all data permanently deleted";
+    return `User account permanently deleted along with ${userResources.length} uploaded resource(s)`;
   }).catch((err) => {
     logger.error({ err }, "Hard delete user error");
     throw err;
   });
+
+  // ── 4. Destroy Cloudinary assets (best-effort, outside DB transaction) ──
+  if (cloudinaryPublicIds.length > 0) {
+    const cloudinary = require("../config/cloudinary");
+    for (const publicId of cloudinaryPublicIds) {
+      try {
+        await cloudinary.uploader.destroy(publicId);
+      } catch (cloudErr) {
+        logger.error(
+          { err: cloudErr, publicId },
+          "Cloudinary cleanup failed during user hard-delete",
+        );
+        // Non-fatal – DB records are already purged
+      }
+    }
+    logger.info(
+      { count: cloudinaryPublicIds.length },
+      "Cloudinary assets destroyed after user hard-delete",
+    );
+  }
 
   res.json({ message });
 });
