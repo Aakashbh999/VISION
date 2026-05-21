@@ -109,3 +109,64 @@ export const jobMarketApi = createReferenceApi("job-market");
 export const itClubsApi = createReferenceApi("it-clubs");
 export const programsApi = createReferenceApi("programs");
 export const tagsApi = createReferenceApi("tags");
+
+export const getAdminResources = async (params) => {
+  return httpGet("/admin/resources", params);
+};
+
+export const createAdminResource = async (formData) => {
+  return httpPost("/admin/resources", formData);
+};
+
+export const updateAdminResource = async (resourceId, formData) => {
+  return httpPut(`/admin/resources/${resourceId}`, formData);
+};
+
+export const deleteAdminResource = async (resourceId, hardDelete = false, reason = "") => {
+  return httpDelete(`/admin/resources/${resourceId}?hard=${hardDelete}`, {
+    data: { reason }
+  });
+};
+
+export const restoreAdminResource = async (resourceId) => {
+  return httpPatch(`/admin/resources/${resourceId}/restore`);
+};
+
+export const bulkDeleteAdminResources = async (resourceIds, hardDelete = false, reason = "") => {
+  const results = [];
+  // Execute sequentially to avoid overwhelming the database or Cloudinary API
+  for (const id of resourceIds) {
+    try {
+      const result = await deleteAdminResource(id, hardDelete, reason);
+      results.push({ id, success: true, result });
+    } catch (error) {
+      results.push({ id, success: false, error });
+    }
+  }
+  
+  const failed = results.filter(r => !r.success);
+  if (failed.length > 0) {
+    throw new Error(`Failed to process ${failed.length} out of ${resourceIds.length} resources.`);
+  }
+  
+  return results;
+};
+
+export const bulkRestoreAdminResources = async (resourceIds) => {
+  const results = [];
+  for (const id of resourceIds) {
+    try {
+      const result = await restoreAdminResource(id);
+      results.push({ id, success: true, result });
+    } catch (error) {
+      results.push({ id, success: false, error });
+    }
+  }
+  
+  const failed = results.filter(r => !r.success);
+  if (failed.length > 0) {
+    throw new Error(`Failed to restore ${failed.length} out of ${resourceIds.length} resources.`);
+  }
+  
+  return results;
+};

@@ -47,6 +47,7 @@ const AdminSidebar = () => {
       items: [
         { id: "campuses", label: "Campuses", icon: LayoutDashboard, href: "/admin/campuses" },
         { id: "roadmaps", label: "Roadmap Builder", icon: FileText, href: "/admin/roadmaps" },
+        { id: "resources", label: "All Resources", icon: BookOpen, href: "/admin/resources" },
       ]
     },
     {

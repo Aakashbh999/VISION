@@ -10,6 +10,7 @@ const { verifyModerator } = require("../middleware/moderatorMiddleware");
 const sanitizeInput = require("../middleware/sanitizeInput");
 const campusController = require("../controllers/campusController");
 const adminReferenceController = require("../controllers/adminReferenceController");
+const upload = require("../middleware/uploadMiddleware");
 
 router.get(
   "/admin/campuses",
@@ -363,5 +364,45 @@ router.get("/admin/reference/tags", verifyJWT, verifyAdmin, adminReferenceContro
 router.post("/admin/reference/tags", verifyJWT, verifyAdmin, sanitizeInput, adminReferenceController.tags.create);
 router.put("/admin/reference/tags/:id", verifyJWT, verifyAdmin, sanitizeInput, adminReferenceController.tags.update);
 router.delete("/admin/reference/tags/:id", verifyJWT, verifyAdmin, adminReferenceController.tags.delete);
+
+router.get(
+  "/admin/resources",
+  verifyJWT,
+  verifyAdmin,
+  resourceController.getAllResourcesAdmin,
+);
+
+router.post(
+  "/admin/resources",
+  verifyJWT,
+  verifyAdmin,
+  upload.single("file"),
+  sanitizeInput,
+  resourceController.createResourceAdmin,
+);
+
+router.put(
+  "/admin/resources/:id",
+  verifyJWT,
+  verifyAdmin,
+  upload.single("file"),
+  sanitizeInput,
+  resourceController.updateResourceAdmin,
+);
+
+router.delete(
+  "/admin/resources/:id",
+  verifyJWT,
+  verifyAdmin,
+  sanitizeInput,
+  resourceController.deleteResourceAdmin,
+);
+
+router.patch(
+  "/admin/resources/:id/restore",
+  verifyJWT,
+  verifyAdmin,
+  resourceController.restoreResourceAdmin,
+);
 
 module.exports = router;

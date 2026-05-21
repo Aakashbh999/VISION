@@ -40,7 +40,7 @@ const StepResourceLinkerModal = ({ stepId, roadmapId, onClose, existingResourceI
         status: "approved",
       });
 
-      const newResourceId = resourceResponse.data.resource_id;
+      const newResourceId = resourceResponse.resource_id;
 
       return addResourceToStep(stepId, {
         resource_id: newResourceId,
