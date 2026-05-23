@@ -13,28 +13,59 @@ const Login = () => {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+
   const navigate = useNavigate();
   const { login } = useAuth();
-  const { register, handleSubmit, control } = useForm({
+
+  const {
+    register,
+    handleSubmit,
+    control,
+    formState: { errors }, // 👈 Fixed: Destructured to surface client-side schema issues
+  } = useForm({
     resolver: zodResolver(loginSchema),
     defaultValues: {
       email: "",
       password: "",
     },
   });
-  const loginEmail = useWatch({ control, name: "email" })?.trim() || "";
+
+  // Track field state to inject query parameters into the forgot password handler route
+  const rawEmail = useWatch({ control, name: "email" });
+  const loginEmail = typeof rawEmail === "string" ? rawEmail.trim() : "";
 
   const onSubmit = async ({ email, password }) => {
     setError("");
     setLoading(true);
 
+    // Sanitize values to prevent structural mismatches from trailing copy-paste whitespaces
+    const sanitizedEmail = email.trim();
+
     try {
-      const tokenData = await apiLogin(email, password);
+      const tokenData = await apiLogin(sanitizedEmail, password);
       const currentUser = await login(tokenData);
       const nextPath = getUserLandingPath(currentUser) || "/dashboard";
       navigate(nextPath, { replace: true });
     } catch (err) {
-      setError(err.response?.data?.error || "Invalid email or password");
+      // 👈 Fixed: Defensive production-grade error differentiation
+      if (err.response) {
+        const status = err.response.status;
+        if (status >= 500) {
+          setError(
+            "Our servers are experiencing issues. Please try again shortly.",
+          );
+        } else if (status === 401 || status === 400) {
+          setError(err.response.data?.error || "Incorrect email or password.");
+        } else {
+          setError(err.response.data?.error || `Login failed (${status}).`);
+        }
+      } else if (err.request) {
+        setError(
+          "Network error. Please verify your connection status and retry.",
+        );
+      } else {
+        setError("An unexpected setup error occurred.");
+      }
     } finally {
       setLoading(false);
     }
@@ -42,6 +73,7 @@ const Login = () => {
 
   return (
     <div className="relative isolate px-4 py-8 sm:px-6 sm:py-12 lg:py-16">
+      {/* Decorative Blur Backdrops */}
       <div className="absolute inset-0 -z-10 overflow-hidden">
         <div className="absolute -top-24 left-1/2 h-72 w-72 -translate-x-1/2 rounded-full bg-purple-500/10 blur-3xl" />
         <div className="absolute bottom-0 right-0 h-80 w-80 rounded-full bg-blue-500/10 blur-3xl" />
@@ -72,6 +104,7 @@ const Login = () => {
             className="space-y-5"
             aria-busy={loading}
           >
+            {/* Email Field Node */}
             <div>
               <label className="mb-1 block text-sm font-medium text-[var(--text-main)]">
                 Email Address
@@ -83,12 +116,22 @@ const Login = () => {
                   required
                   autoComplete="email"
                   {...register("email")}
-                  className="w-full rounded-xl border border-[var(--border-main)] bg-[var(--bg-main)] py-3 pl-10 pr-4 text-[var(--text-main)] outline-none transition-all focus:border-purple-500 focus:ring-4 focus:ring-purple-500/10"
+                  className={`w-full rounded-xl border ${
+                    errors.email
+                      ? "border-red-500"
+                      : "border-[var(--border-main)]"
+                  } bg-[var(--bg-main)] py-3 pl-10 pr-4 text-[var(--text-main)] outline-none transition-all focus:border-purple-500 focus:ring-4 focus:ring-purple-500/10`}
                   placeholder="you@example.com"
                 />
               </div>
+              {errors.email && (
+                <p className="mt-1 text-xs text-red-500">
+                  {errors.email.message}
+                </p>
+              )}
             </div>
 
+            {/* Password Field Node */}
             <div>
               <label className="mb-1 block text-sm font-medium text-[var(--text-main)]">
                 Password
@@ -100,7 +143,11 @@ const Login = () => {
                   required
                   autoComplete="current-password"
                   {...register("password")}
-                  className="w-full rounded-xl border border-[var(--border-main)] bg-[var(--bg-main)] py-3 pl-10 pr-12 text-[var(--text-main)] outline-none transition-all focus:border-purple-500 focus:ring-4 focus:ring-purple-500/10"
+                  className={`w-full rounded-xl border ${
+                    errors.password
+                      ? "border-red-500"
+                      : "border-[var(--border-main)]"
+                  } bg-[var(--bg-main)] py-3 pl-10 pr-12 text-[var(--text-main)] outline-none transition-all focus:border-purple-500 focus:ring-4 focus:ring-purple-500/10`}
                   placeholder="••••••••"
                 />
                 <button
@@ -116,6 +163,12 @@ const Login = () => {
                   )}
                 </button>
               </div>
+              {errors.password && (
+                <p className="mt-1 text-xs text-red-500">
+                  {errors.password.message}
+                </p>
+              )}
+
               <div className="mt-2 flex justify-end">
                 <Link
                   to={
@@ -130,15 +183,16 @@ const Login = () => {
               </div>
             </div>
 
+            {/* Form Actions Node */}
             <Button
               type="submit"
               variant="shiny"
               size="lg"
-              className="w-full justify-center"
+              className="w-full justify-center gap-2"
               isLoading={loading}
               disabled={loading}
             >
-              <LogIn className="h-5 w-5" />
+              {!loading && <LogIn className="h-5 w-5" />}
               Log In
             </Button>
           </form>
