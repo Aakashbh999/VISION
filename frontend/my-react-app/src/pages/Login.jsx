@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { useForm } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useAuth } from "../context/AuthContext";
 import { login as apiLogin } from "../services/auth";
@@ -15,13 +15,14 @@ const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
   const { login } = useAuth();
-  const { register, handleSubmit } = useForm({
+  const { register, handleSubmit, control } = useForm({
     resolver: zodResolver(loginSchema),
     defaultValues: {
       email: "",
       password: "",
     },
   });
+  const loginEmail = useWatch({ control, name: "email" })?.trim() || "";
 
   const onSubmit = async ({ email, password }) => {
     setError("");
@@ -117,7 +118,11 @@ const Login = () => {
               </div>
               <div className="mt-2 flex justify-end">
                 <Link
-                  to="/forgot-password"
+                  to={
+                    loginEmail
+                      ? `/forgot-password?email=${encodeURIComponent(loginEmail)}`
+                      : "/forgot-password"
+                  }
                   className="text-xs font-semibold text-purple-600 hover:text-purple-800 dark:text-purple-300 dark:hover:text-purple-200"
                 >
                   Forgot Password?
