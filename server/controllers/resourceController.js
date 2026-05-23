@@ -21,30 +21,12 @@ const catchAsync = require("../utils/catchAsync");
 const logger = require("../utils/logger");
 const { parsePagination, buildPaginationMeta } = require("../utils/pagination");
 const { withTransaction } = require("../utils/withTransaction");
-
-async function getOrCreateCustomTag(db, name) {
-  const clean = String(name).trim().slice(0, 50);
-  if (!clean) return null;
-  const slug = clean
-    .toLowerCase()
-    .replace(/\s+/g, "-")
-    .replace(/[^a-z0-9-]/g, "");
-  if (!slug) return null;
-
-  const existing = await db.query(
-    `SELECT tag_id FROM portal.tags WHERE slug = $1 OR LOWER(name) = LOWER($2) LIMIT 1`,
-    [slug, clean],
-  );
-  if (existing.rows.length > 0) return existing.rows[0].tag_id;
-
-  const result = await db.query(
-    `INSERT INTO portal.tags (name, slug, tag_type) VALUES ($1, $2, 'custom')
-     ON CONFLICT (slug) DO UPDATE SET name = EXCLUDED.name
-     RETURNING tag_id`,
-    [clean, slug],
-  );
-  return result.rows[0].tag_id;
-}
+const {
+  parseSystemTagIds,
+  parseCustomTagNames,
+  insertSystemTags,
+  insertCustomTags,
+} = require("../utils/tagUtils");
 
 /**
  * Upload new learning resource
@@ -90,32 +72,8 @@ exports.uploadResource = catchAsync(async (req, res) => {
   const { semester: extractedSemester } =
     extractHashtagsAndSemester(description);
 
-  let systemTagIds = [];
-  if (systemTagsRaw) {
-    try {
-      const parsed = JSON.parse(systemTagsRaw);
-      systemTagIds = Array.isArray(parsed)
-        ? parsed.map(Number).filter((n) => Number.isInteger(n) && n > 0)
-        : [];
-    } catch (_) {
-      systemTagIds = [];
-    }
-  }
-
-  let customTagNames = [];
-  if (customTagsRaw) {
-    try {
-      const parsed = JSON.parse(customTagsRaw);
-      customTagNames = Array.isArray(parsed)
-        ? parsed
-            .map(String)
-            .map((s) => s.trim())
-            .filter(Boolean)
-        : [];
-    } catch (_) {
-      customTagNames = [];
-    }
-  }
+  const systemTagIds = parseSystemTagIds(systemTagsRaw);
+  const customTagNames = parseCustomTagNames(customTagsRaw);
 
   if (systemTagIds.length > 5) {
     return errorResponse(res, "You can select at most 5 system tags.", 400);
@@ -244,32 +202,8 @@ exports.uploadResource = catchAsync(async (req, res) => {
 
     const resourceId = result.rows[0].resource_id;
 
-    if (systemTagIds.length > 0) {
-      const validCheck = await client.query(
-        `SELECT tag_id FROM portal.tags WHERE tag_id = ANY($1) AND tag_type = 'system'`,
-        [systemTagIds],
-      );
-      const validSystemIds = validCheck.rows.map((r) => r.tag_id);
-      if (validSystemIds.length > 0) {
-        const tagValues = validSystemIds
-          .map((_, i) => `($1, $${i + 2})`)
-          .join(", ");
-        await client.query(
-          `INSERT INTO portal.resource_tags (resource_id, tag_id) VALUES ${tagValues} ON CONFLICT DO NOTHING`,
-          [resourceId, ...validSystemIds],
-        );
-      }
-    }
-
-    for (const name of customTagNames) {
-      const tagId = await getOrCreateCustomTag(client, name);
-      if (tagId) {
-        await client.query(
-          `INSERT INTO portal.resource_tags (resource_id, tag_id) VALUES ($1, $2) ON CONFLICT DO NOTHING`,
-          [resourceId, tagId],
-        );
-      }
-    }
+    await insertSystemTags(client, resourceId, systemTagIds);
+    await insertCustomTags(client, resourceId, customTagNames);
 
     await client.query("COMMIT");
 
@@ -704,14 +638,11 @@ exports.approveResource = catchAsync(async (req, res) => {
  * @throws {Error} - 404 if resource not found or already reviewed
  */
 exports.rejectResource = catchAsync(async (req, res) => {
-  const client = await pool.connect();
-  try {
-    const { id } = req.params;
-    const modId = req.user.portal_user_id;
-    const { reason } = req.body;
+  const { id } = req.params;
+  const modId = req.user.portal_user_id;
+  const { reason } = req.body;
 
-    await client.query("BEGIN");
-
+  const { title, uploaderId } = await withTransaction(async (client) => {
     const resourceRes = await client.query(
       `UPDATE portal.resources
        SET status = 'rejected', rejection_reason = $2
@@ -721,8 +652,9 @@ exports.rejectResource = catchAsync(async (req, res) => {
     );
 
     if (resourceRes.rowCount === 0) {
-      await client.query("ROLLBACK");
-      return errorResponse(res, "Resource not found or already reviewed", 404);
+      const error = new Error("Resource not found or already reviewed");
+      error.statusCode = 404;
+      throw error;
     }
 
     const { title, created_by: uploaderId } = resourceRes.rows[0];
@@ -734,30 +666,25 @@ exports.rejectResource = catchAsync(async (req, res) => {
       [modId, id],
     );
 
-    await client.query("COMMIT");
+    return { title, uploaderId };
+  });
 
-    try {
-      const reasonText = reason ? ` Reason: ${reason}` : "";
-      await notify({
-        userId: uploaderId,
-        actorId: modId,
-        type: "resource_rejected",
-        title: "Resource Not Approved",
-        message: `Your resource "${title}" was not approved.${reasonText}`,
-        relatedType: "resource",
-        relatedId: parseInt(id),
-      });
-    } catch (notifErr) {
-      logger.warn({ err: notifErr }, "Resource rejection notification failed");
-    }
-
-    return res.json({ message: "Resource rejected" });
-  } catch (err) {
-    await client.query("ROLLBACK");
-    throw err;
-  } finally {
-    client.release();
+  try {
+    const reasonText = reason ? ` Reason: ${reason}` : "";
+    await notify({
+      userId: uploaderId,
+      actorId: modId,
+      type: "resource_rejected",
+      title: "Resource Not Approved",
+      message: `Your resource "${title}" was not approved.${reasonText}`,
+      relatedType: "resource",
+      relatedId: parseInt(id),
+    });
+  } catch (notifErr) {
+    logger.warn({ err: notifErr }, "Resource rejection notification failed");
   }
+
+  return res.json({ message: "Resource rejected" });
 });
 
 /**
@@ -956,21 +883,8 @@ exports.createResourceAdmin = catchAsync(async (req, res) => {
     custom_tags: customTagsRaw,
   } = req.body;
 
-  let systemTagIds = [];
-  if (systemTagsRaw) {
-    try {
-      const parsed = typeof systemTagsRaw === "string" ? JSON.parse(systemTagsRaw) : systemTagsRaw;
-      systemTagIds = Array.isArray(parsed) ? parsed.map(Number).filter(Boolean) : [];
-    } catch (_) {}
-  }
-
-  let customTagNames = [];
-  if (customTagsRaw) {
-    try {
-      const parsed = typeof customTagsRaw === "string" ? JSON.parse(customTagsRaw) : customTagsRaw;
-      customTagNames = Array.isArray(parsed) ? parsed.map(String).map(s => s.trim()).filter(Boolean) : [];
-    } catch (_) {}
-  }
+  const systemTagIds = parseSystemTagIds(systemTagsRaw);
+  const customTagNames = parseCustomTagNames(customTagsRaw);
 
   const normalizedTitle = typeof title === "string" ? title.trim() : "";
   const normalizedResourceType = typeof resource_type === "string" ? resource_type.trim().toLowerCase() : "";
@@ -1034,32 +948,8 @@ exports.createResourceAdmin = catchAsync(async (req, res) => {
 
     const resourceId = result.rows[0].resource_id;
 
-    if (systemTagIds.length > 0) {
-      const validCheck = await client.query(
-        `SELECT tag_id FROM portal.tags WHERE tag_id = ANY($1) AND tag_type = 'system'`,
-        [systemTagIds],
-      );
-      const validSystemIds = validCheck.rows.map((r) => r.tag_id);
-      if (validSystemIds.length > 0) {
-        const tagValues = validSystemIds
-          .map((_, i) => `($1, $${i + 2})`)
-          .join(", ");
-        await client.query(
-          `INSERT INTO portal.resource_tags (resource_id, tag_id) VALUES ${tagValues} ON CONFLICT DO NOTHING`,
-          [resourceId, ...validSystemIds],
-        );
-      }
-    }
-
-    for (const name of customTagNames) {
-      const tagId = await getOrCreateCustomTag(client, name);
-      if (tagId) {
-        await client.query(
-          `INSERT INTO portal.resource_tags (resource_id, tag_id) VALUES ($1, $2) ON CONFLICT DO NOTHING`,
-          [resourceId, tagId],
-        );
-      }
-    }
+    await insertSystemTags(client, resourceId, systemTagIds);
+    await insertCustomTags(client, resourceId, customTagNames);
 
     await client.query("COMMIT");
 
@@ -1094,21 +984,8 @@ exports.updateResourceAdmin = catchAsync(async (req, res) => {
     custom_tags: customTagsRaw,
   } = req.body;
 
-  let systemTagIds = [];
-  if (systemTagsRaw) {
-    try {
-      const parsed = typeof systemTagsRaw === "string" ? JSON.parse(systemTagsRaw) : systemTagsRaw;
-      systemTagIds = Array.isArray(parsed) ? parsed.map(Number).filter(Boolean) : [];
-    } catch (_) {}
-  }
-
-  let customTagNames = [];
-  if (customTagsRaw) {
-    try {
-      const parsed = typeof customTagsRaw === "string" ? JSON.parse(customTagsRaw) : customTagsRaw;
-      customTagNames = Array.isArray(parsed) ? parsed.map(String).map(s => s.trim()).filter(Boolean) : [];
-    } catch (_) {}
-  }
+  const systemTagIds = parseSystemTagIds(systemTagsRaw);
+  const customTagNames = parseCustomTagNames(customTagsRaw);
 
   // Get current resource state
   const currentRes = await pool.query(
@@ -1186,38 +1063,10 @@ exports.updateResourceAdmin = catchAsync(async (req, res) => {
       ]
     );
 
-    // Update tags mapping
-    // 1. Delete existing resource tags
+    // Update tags: replace all existing with the new set
     await client.query("DELETE FROM portal.resource_tags WHERE resource_id = $1", [id]);
-
-    // 2. Insert system tags
-    if (systemTagIds.length > 0) {
-      const validCheck = await client.query(
-        `SELECT tag_id FROM portal.tags WHERE tag_id = ANY($1) AND tag_type = 'system'`,
-        [systemTagIds],
-      );
-      const validSystemIds = validCheck.rows.map((r) => r.tag_id);
-      if (validSystemIds.length > 0) {
-        const tagValues = validSystemIds
-          .map((_, i) => `($1, $${i + 2})`)
-          .join(", ");
-        await client.query(
-          `INSERT INTO portal.resource_tags (resource_id, tag_id) VALUES ${tagValues} ON CONFLICT DO NOTHING`,
-          [id, ...validSystemIds],
-        );
-      }
-    }
-
-    // 3. Insert custom tags
-    for (const name of customTagNames) {
-      const tagId = await getOrCreateCustomTag(client, name);
-      if (tagId) {
-        await client.query(
-          `INSERT INTO portal.resource_tags (resource_id, tag_id) VALUES ($1, $2) ON CONFLICT DO NOTHING`,
-          [id, tagId],
-        );
-      }
-    }
+    await insertSystemTags(client, id, systemTagIds);
+    await insertCustomTags(client, id, customTagNames);
 
     await client.query("COMMIT");
 

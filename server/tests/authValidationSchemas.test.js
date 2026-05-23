@@ -17,6 +17,8 @@ test("registerSchema accepts valid payload and normalizes fields", () => {
     semester: "4",
     batch_year: "2023",
     semester_is_manual: "true",
+    tu_registration_no: "2021-2-45-0001",
+    date_of_birth: "2003-05-15",
     career_scope: "  Web Development  ",
   });
 
@@ -25,6 +27,8 @@ test("registerSchema accepts valid payload and normalizes fields", () => {
   assert.equal(parsed.semester, 4);
   assert.equal(parsed.batch_year, 2023);
   assert.equal(parsed.semester_is_manual, true);
+  assert.equal(parsed.tu_registration_no, "2021-2-45-0001");
+  assert.equal(parsed.date_of_birth, "2003-05-15");
   assert.equal(parsed.career_scope, "Web Development");
 });
 
