@@ -334,7 +334,7 @@ const ResourceUploadModal = ({ isOpen, onClose }) => {
             <p>
               Your resource will be reviewed by moderators before becoming
               public. Approved resources earn you{" "}
-              <strong>10 reputation points</strong>! Well-tagged resources are
+              <strong>50 VXP and 10 reputation points</strong>! Well-tagged resources are
               recommended more often.
             </p>
           </div>

@@ -10,7 +10,7 @@
  * - Resource search with multi-dimensional filtering (program, semester, type, tags)
  * - User's resource library browsing
  * - Pending resource management for administrators
- * - XP reward system for resource contributions (100 VXP on approval)
+ * - XP reward system for resource contributions (50 VXP on approval)
  * - Hashtag auto-extraction from descriptions for semester inference
  */
 
@@ -21,6 +21,7 @@ const catchAsync = require("../utils/catchAsync");
 const logger = require("../utils/logger");
 const { parsePagination, buildPaginationMeta } = require("../utils/pagination");
 const { withTransaction } = require("../utils/withTransaction");
+const XPService = require("../services/xpService");
 const {
   parseSystemTagIds,
   parseCustomTagNames,
@@ -218,12 +219,12 @@ exports.uploadResource = catchAsync(async (req, res) => {
     if (finalStatus === "pending") {
       notifyAdmins({
         actorId: userId,
-        type: 'new_resource_pending',
-        title: 'New Resource Uploaded',
-        message: `${fullResource.rows[0].uploader_name || 'A user'} uploaded a new resource "${normalizedTitle}" that requires approval`,
-        relatedType: 'resource',
+        type: "new_resource_pending",
+        title: "New Resource Uploaded",
+        message: `${fullResource.rows[0].uploader_name || "A user"} uploaded a new resource "${normalizedTitle}" that requires approval`,
+        relatedType: "resource",
         relatedId: resourceId,
-      }).catch(err => logger.error({ err }, "Admin notification failed"));
+      }).catch((err) => logger.error({ err }, "Admin notification failed"));
     }
 
     res.status(201).json({
@@ -547,7 +548,7 @@ exports.getPendingResources = catchAsync(async (req, res) => {
 
 /**
  * Approve pending resource (admin action)
- * Publishes resource and awards uploader with 100 VXP + 10 reputation points
+ * Publishes resource and awards uploader with 50 VXP + 10 reputation points
  * Updates resource status and logs moderation action
  *
  * @async
@@ -561,6 +562,8 @@ exports.getPendingResources = catchAsync(async (req, res) => {
 exports.approveResource = catchAsync(async (req, res) => {
   const { id } = req.params;
   const modId = req.user.portal_user_id;
+
+  // Step 1: Approve resource, update reputation, and log moderation — all atomic
   const { title, uploaderId } = await withTransaction(async (client) => {
     const resourceRes = await client.query(
       `UPDATE portal.resources
@@ -594,13 +597,29 @@ exports.approveResource = catchAsync(async (req, res) => {
     return { title, uploaderId };
   });
 
+  // Step 2: Award VXP separately (outside transaction) so a failure here
+  // cannot roll back the resource approval or reputation update.
+  try {
+    const actualTitle = title || "Resource";
+    const safeTitle = actualTitle.length > 40 ? actualTitle.substring(0, 40) + "..." : actualTitle;
+    await XPService.updateUserXP(
+      uploaderId,
+      50,
+      `Resource approved: ${safeTitle} (ID: ${id})`,
+      null,
+    );
+  } catch (xpErr) {
+    require('fs').appendFileSync('vxp-error.log', new Date().toISOString() + '\\n' + xpErr.stack + '\\n\\n');
+    logger.error({ err: xpErr }, "VXP award failed after resource approval — reputation was still granted");
+  }
+
   try {
     await notify({
       userId: uploaderId,
       actorId: modId,
       type: "resource_approved",
       title: "Resource Approved",
-      message: `Your resource "${title}" was approved. You earned 10 reputation points!`,
+      message: `Your resource "${title}" was approved. You earned 50 VXP and 10 reputation points!`,
       relatedType: "resource",
       relatedId: parseInt(id),
     });
@@ -624,7 +643,8 @@ exports.approveResource = catchAsync(async (req, res) => {
   }
 
   return res.json({
-    message: "Resource approved and uploader awarded 10 reputation points",
+    message:
+      "Resource approved and uploader awarded 50 VXP plus 10 reputation points",
   });
 });
 
@@ -746,7 +766,7 @@ exports.getAllResourcesAdmin = catchAsync(async (req, res) => {
     program_id,
     semester,
     deleted, // 'all', 'exclude', 'only'
-    sort = 'created_at_desc',
+    sort = "created_at_desc",
   } = req.query;
 
   const { page, limit, offset } = parsePagination(req.query, {
@@ -758,33 +778,33 @@ exports.getAllResourcesAdmin = catchAsync(async (req, res) => {
   const params = [];
 
   // Deleted filter
-  const delVal = deleted || 'all';
-  if (delVal === 'exclude') {
+  const delVal = deleted || "all";
+  if (delVal === "exclude") {
     conditions.push("r.deleted_at IS NULL");
-  } else if (delVal === 'only') {
+  } else if (delVal === "only") {
     conditions.push("r.deleted_at IS NOT NULL");
   }
 
   // Status filter
-  if (status && status !== 'all') {
+  if (status && status !== "all") {
     params.push(status);
     conditions.push(`r.status = $${params.length}`);
   }
 
   // Type filter
-  if (resource_type && resource_type !== 'all') {
+  if (resource_type && resource_type !== "all") {
     params.push(resource_type);
     conditions.push(`r.resource_type = $${params.length}`);
   }
 
   // Program filter
-  if (program_id && program_id !== 'all') {
+  if (program_id && program_id !== "all") {
     params.push(parseInt(program_id));
     conditions.push(`r.program_id = $${params.length}`);
   }
 
   // Semester filter
-  if (semester && semester !== 'all') {
+  if (semester && semester !== "all") {
     params.push(parseInt(semester));
     conditions.push(`r.semester = $${params.length}`);
   }
@@ -792,10 +812,13 @@ exports.getAllResourcesAdmin = catchAsync(async (req, res) => {
   // Search filter
   if (search) {
     params.push(`%${search}%`);
-    conditions.push(`(r.title ILIKE $${params.length} OR r.description ILIKE $${params.length} OR u.full_name ILIKE $${params.length})`);
+    conditions.push(
+      `(r.title ILIKE $${params.length} OR r.description ILIKE $${params.length} OR u.full_name ILIKE $${params.length})`,
+    );
   }
 
-  const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(" AND ")}` : "";
+  const whereClause =
+    conditions.length > 0 ? `WHERE ${conditions.join(" AND ")}` : "";
 
   // Sort order
   let sortColumn = "r.created_at DESC";
@@ -835,28 +858,28 @@ exports.getAllResourcesAdmin = catchAsync(async (req, res) => {
   // Fetch tags for these resources
   const resources = dataRes.rows;
   if (resources.length > 0) {
-    const resourceIds = resources.map(r => r.resource_id);
+    const resourceIds = resources.map((r) => r.resource_id);
     const tagsRes = await pool.query(
       `SELECT rt.resource_id, t.tag_id, t.name, t.slug, t.tag_type
        FROM portal.resource_tags rt
        JOIN portal.tags t ON t.tag_id = rt.tag_id
        WHERE rt.resource_id = ANY($1)`,
-      [resourceIds]
+      [resourceIds],
     );
 
     // Map tags back to resources
     const tagsMap = {};
-    tagsRes.rows.forEach(row => {
+    tagsRes.rows.forEach((row) => {
       if (!tagsMap[row.resource_id]) tagsMap[row.resource_id] = [];
       tagsMap[row.resource_id].push({
         tag_id: row.tag_id,
         name: row.name,
         slug: row.slug,
-        tag_type: row.tag_type
+        tag_type: row.tag_type,
       });
     });
 
-    resources.forEach(r => {
+    resources.forEach((r) => {
       r.tags = tagsMap[r.resource_id] || [];
     });
   }
@@ -889,7 +912,8 @@ exports.createResourceAdmin = catchAsync(async (req, res) => {
   const systemTagIds = parseSystemTagIds(systemTagsRaw);
 
   const normalizedTitle = typeof title === "string" ? title.trim() : "";
-  const normalizedResourceType = typeof resource_type === "string" ? resource_type.trim().toLowerCase() : "";
+  const normalizedResourceType =
+    typeof resource_type === "string" ? resource_type.trim().toLowerCase() : "";
   const normalizedUrl = typeof url === "string" ? url.trim() : "";
 
   if (!normalizedTitle || !normalizedResourceType) {
@@ -945,7 +969,7 @@ exports.createResourceAdmin = catchAsync(async (req, res) => {
         status || "approved",
         difficulty_level || "beginner",
         adminId,
-      ]
+      ],
     );
 
     const resourceId = result.rows[0].resource_id;
@@ -957,7 +981,7 @@ exports.createResourceAdmin = catchAsync(async (req, res) => {
     return res.status(201).json({
       success: true,
       message: "Resource created successfully by Admin",
-      data: result.rows[0]
+      data: result.rows[0],
     });
   } catch (error) {
     await client.query("ROLLBACK");
@@ -989,7 +1013,7 @@ exports.updateResourceAdmin = catchAsync(async (req, res) => {
   // Get current resource state
   const currentRes = await pool.query(
     "SELECT * FROM portal.resources WHERE resource_id = $1",
-    [id]
+    [id],
   );
   if (currentRes.rows.length === 0) {
     return errorResponse(res, "Resource not found", 404);
@@ -1016,7 +1040,10 @@ exports.updateResourceAdmin = catchAsync(async (req, res) => {
         const cloudinary = require("../config/cloudinary");
         await cloudinary.uploader.destroy(current.file_public_id);
       } catch (err) {
-        logger.error({ err, pid: current.file_public_id }, "Cloudinary file replacement cleanup failed");
+        logger.error(
+          { err, pid: current.file_public_id },
+          "Cloudinary file replacement cleanup failed",
+        );
       }
     }
   } else if (url) {
@@ -1048,30 +1075,79 @@ exports.updateResourceAdmin = catchAsync(async (req, res) => {
         title || current.title,
         description !== undefined ? description : current.description,
         normalizedResourceType,
-        program_id !== undefined ? (program_id ? parseInt(program_id) : null) : current.program_id,
-        semester !== undefined ? (semester ? parseInt(semester) : null) : current.semester,
-        degree_id !== undefined ? (degree_id ? parseInt(degree_id) : null) : current.degree_id,
-        normalizedResourceType === "link" ? (url || current.url) : null,
+        program_id !== undefined
+          ? program_id
+            ? parseInt(program_id)
+            : null
+          : current.program_id,
+        semester !== undefined
+          ? semester
+            ? parseInt(semester)
+            : null
+          : current.semester,
+        degree_id !== undefined
+          ? degree_id
+            ? parseInt(degree_id)
+            : null
+          : current.degree_id,
+        normalizedResourceType === "link" ? url || current.url : null,
         fileUrl,
         filePublicId,
         originalFilename,
         status || current.status,
         difficulty_level || current.difficulty_level,
-        rejection_reason !== undefined ? rejection_reason : current.rejection_reason,
-        id
-      ]
+        rejection_reason !== undefined
+          ? rejection_reason
+          : current.rejection_reason,
+        id,
+      ],
     );
 
+    // Check if this is a pending → approved transition (capture before COMMIT)
+    const isApproval = current.status === "pending" && (status || current.status) === "approved";
+    const uploaderId = isApproval ? current.created_by : null;
+
+    // Reputation is atomic with the resource update
+    if (isApproval && uploaderId) {
+      await client.query(
+        `UPDATE portal.users
+         SET reputation_points = COALESCE(reputation_points, 0) + 10
+         WHERE user_id = $1`,
+        [uploaderId]
+      );
+    }
+
     // Update tags: replace all existing with the new set
-    await client.query("DELETE FROM portal.resource_tags WHERE resource_id = $1", [id]);
+    await client.query(
+      "DELETE FROM portal.resource_tags WHERE resource_id = $1",
+      [id],
+    );
     await insertSystemTags(client, id, systemTagIds);
 
     await client.query("COMMIT");
 
+    // Award VXP AFTER commit, using pool (not client) so a failure here
+    // cannot roll back the resource update or reputation award.
+    if (isApproval && uploaderId) {
+      try {
+        const actualTitle = title || current.title || "Resource";
+        const safeTitle = actualTitle.length > 40 ? actualTitle.substring(0, 40) + "..." : actualTitle;
+        await XPService.updateUserXP(
+          uploaderId,
+          50,
+          `Resource approved: ${safeTitle} (ID: ${id})`,
+          null // use pool directly
+        );
+      } catch (xpErr) {
+        require('fs').appendFileSync('vxp-error.log', new Date().toISOString() + '\\n' + xpErr.stack + '\\n\\n');
+        logger.error({ err: xpErr }, "VXP award failed after admin resource approval — reputation was still granted");
+      }
+    }
+
     return res.json({
       success: true,
       message: "Resource updated successfully by Admin",
-      data: result.rows[0]
+      data: result.rows[0],
     });
   } catch (error) {
     await client.query("ROLLBACK");
@@ -1090,7 +1166,7 @@ exports.deleteResourceAdmin = catchAsync(async (req, res) => {
 
   const currentRes = await pool.query(
     "SELECT * FROM portal.resources WHERE resource_id = $1",
-    [id]
+    [id],
   );
   if (currentRes.rows.length === 0) {
     return errorResponse(res, "Resource not found", 404);
@@ -1105,19 +1181,34 @@ exports.deleteResourceAdmin = catchAsync(async (req, res) => {
       await client.query("BEGIN");
 
       // Delete tags mapping
-      await client.query("DELETE FROM portal.resource_tags WHERE resource_id = $1", [id]);
+      await client.query(
+        "DELETE FROM portal.resource_tags WHERE resource_id = $1",
+        [id],
+      );
 
       // Delete roadmap mappings
-      await client.query("DELETE FROM portal.step_resource_map WHERE resource_id = $1", [id]);
+      await client.query(
+        "DELETE FROM portal.step_resource_map WHERE resource_id = $1",
+        [id],
+      );
 
       // Delete resource scores
-      await client.query("DELETE FROM portal.resource_scores WHERE resource_id = $1", [id]);
+      await client.query(
+        "DELETE FROM portal.resource_scores WHERE resource_id = $1",
+        [id],
+      );
 
       // Delete interactions
-      await client.query("DELETE FROM portal.user_resource_interactions WHERE resource_id = $1", [id]);
+      await client.query(
+        "DELETE FROM portal.user_resource_interactions WHERE resource_id = $1",
+        [id],
+      );
 
       // Delete resource itself
-      await client.query("DELETE FROM portal.resources WHERE resource_id = $1", [id]);
+      await client.query(
+        "DELETE FROM portal.resources WHERE resource_id = $1",
+        [id],
+      );
 
       // Delete from Cloudinary
       if (current.file_public_id) {
@@ -1125,7 +1216,10 @@ exports.deleteResourceAdmin = catchAsync(async (req, res) => {
           const cloudinary = require("../config/cloudinary");
           await cloudinary.uploader.destroy(current.file_public_id);
         } catch (cloudinaryErr) {
-          logger.error({ err: cloudinaryErr, pid: current.file_public_id }, "Cloudinary file cleanup failed in hard delete");
+          logger.error(
+            { err: cloudinaryErr, pid: current.file_public_id },
+            "Cloudinary file cleanup failed in hard delete",
+          );
         }
       }
 
@@ -1145,10 +1239,14 @@ exports.deleteResourceAdmin = catchAsync(async (req, res) => {
        SET deleted_at = NOW(), deleted_by = $1, deletion_reason = $2
        WHERE resource_id = $3
        RETURNING *`,
-      [adminId, reason || "Soft-deleted by administrator", id]
+      [adminId, reason || "Soft-deleted by administrator", id],
     );
 
-    return successResponse(res, result.rows[0], "Resource successfully soft-deleted");
+    return successResponse(
+      res,
+      result.rows[0],
+      "Resource successfully soft-deleted",
+    );
   }
 });
 
@@ -1160,7 +1258,7 @@ exports.restoreResourceAdmin = catchAsync(async (req, res) => {
      SET deleted_at = NULL, deleted_by = NULL, deletion_reason = NULL
      WHERE resource_id = $1
      RETURNING *`,
-    [id]
+    [id],
   );
 
   if (result.rows.length === 0) {
@@ -1169,4 +1267,3 @@ exports.restoreResourceAdmin = catchAsync(async (req, res) => {
 
   return successResponse(res, result.rows[0], "Resource successfully restored");
 });
-

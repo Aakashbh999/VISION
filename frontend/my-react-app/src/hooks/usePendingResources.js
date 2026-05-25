@@ -22,6 +22,9 @@ export const useApproveResource = () => {
       toast.success(data?.message || "Resource approved.");
       queryClient.invalidateQueries({ queryKey: ["pending-resources"] });
       queryClient.invalidateQueries({ queryKey: ["resources"] });
+      queryClient.invalidateQueries({ queryKey: ["userStats"] });
+      queryClient.invalidateQueries({ queryKey: ["profile", "me"] });
+      queryClient.invalidateQueries({ queryKey: ["me"] });
     },
     onError: (error) => {
       toast.error(
