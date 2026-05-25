@@ -12,6 +12,7 @@ import { useSystemTags } from "../../hooks/useSystemTags";
 import { useDiscussionReferenceData } from "../../features/discussions/hooks/useDiscussionReferenceData";
 import { AcademicProgramFilter } from "../lib";
 import { toggleCappedSelection } from "../../utils/tagSelection";
+import { getApiErrorMessage } from "../../utils/apiError";
 
 const SYSTEM_TAG_CAP = 5;
 
@@ -57,7 +58,6 @@ const ResourceUploadModal = ({ isOpen, onClose }) => {
     });
   };
 
-
   const resetForm = () => {
     setFormData({
       title: "",
@@ -100,7 +100,8 @@ const ResourceUploadModal = ({ isOpen, onClose }) => {
     submitData.append("resource_type", formData.resource_type);
 
     if (formData.semester) submitData.append("semester", formData.semester);
-    if (formData.program_id) submitData.append("program_id", formData.program_id);
+    if (formData.program_id)
+      submitData.append("program_id", formData.program_id);
 
     if (formData.system_tags.length > 0) {
       submitData.append("system_tags", JSON.stringify(formData.system_tags));
