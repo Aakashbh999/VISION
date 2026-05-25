@@ -140,7 +140,6 @@ const Register = () => {
     }
 
     if (name === "tu_registration_no") {
-
       let sanitizedValue = value.replace(/[^0-9-]/g, "").replace(/-+/g, "-");
       setFormData((prev) => ({
         ...prev,
@@ -448,7 +447,9 @@ const Register = () => {
                     className="w-full pl-12 pr-4 py-3.5 bg-(--bg-active) border border-(--border-main) rounded-2xl focus:bg-(--bg-card) focus:ring-4 focus:ring-purple-500/10 focus:border-purple-500 outline-none transition-all font-bold text-(--text-main) appearance-none"
                   >
                     <option value="TU">Tribhuvan University (TU)</option>
-                    <option value="PU">Pokhara University (PU)</option>
+                    <option value="PU">Purbanchal University (PU)</option>
+                    <option value="Pokhara University (PU)">Pokhara University (PU)</option>
+                    <option value="FWU">Far Western University (FWU)</option>
                     <option value="KU">Kathmandu University (KU)</option>
                   </select>
                 </div>
@@ -565,7 +566,7 @@ const Register = () => {
 
             <div>
               <label className="text-[10px] font-black uppercase text-(--text-muted) tracking-widest mb-2 block">
-                Registration Number
+                Registration Number (Optional)
               </label>
               <div className="relative group">
                 <FileText className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-(--text-muted)" />
@@ -573,13 +574,16 @@ const Register = () => {
                   type="text"
                   inputMode="numeric"
                   name="tu_registration_no"
-                  required
                   value={formData.tu_registration_no}
                   onChange={handleChange}
                   className="w-full pl-12 pr-4 py-3.5 bg-(--bg-active) border border-(--border-main) rounded-2xl focus:bg-(--bg-card) focus:ring-4 focus:ring-purple-500/10 focus:border-purple-500 outline-none transition-all font-medium text-(--text-main)"
                   placeholder="5-2-37-123-2019"
                 />
               </div>
+              <p className="mt-2 text-[10px] text-(--text-muted) font-medium">
+                First-year students can leave this blank and update it later
+                from Profile - Academic Background.
+              </p>
             </div>
 
             <div>

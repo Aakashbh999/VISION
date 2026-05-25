@@ -21,6 +21,7 @@ export const buildDraftProfile = (profile) => ({
   batch_year: profile?.batch_year ? String(profile.batch_year) : "",
   semester: profile?.semester ? String(profile.semester) : "",
   semester_is_manual: Boolean(profile?.semester_is_manual),
+  tu_registration_no: profile?.tu_registration_no || "",
   linkedin_url: profile?.linkedin_url || "",
   facebook_url: profile?.facebook_url || "",
   instagram_url: profile?.instagram_url || "",
@@ -33,4 +34,5 @@ export const buildDraftProfile = (profile) => ({
   university: profile?.university || "",
   career_scope: profile?.career_scope || "",
   hide_member_since: Boolean(profile?.hide_member_since),
+  hide_registration_number: Boolean(profile?.hide_registration_number),
 });

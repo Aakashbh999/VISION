@@ -60,7 +60,12 @@ const AcademicBackgroundCard = ({
               Studying at (Campus/University)
             </label>
             <input
-              value={profile.campus_name || profile.campus || profile.university || "Not specified"}
+              value={
+                profile.campus_name ||
+                profile.campus ||
+                profile.university ||
+                "Not specified"
+              }
               disabled
               readOnly
               title="Studying at cannot be changed after registration"
@@ -116,7 +121,50 @@ const AcademicBackgroundCard = ({
                 </option>
               ))}
             </select>
+          </div>
 
+          <div className="space-y-3 sm:col-span-2">
+            <div className="flex items-center justify-between gap-4">
+              <label className="text-xs text-[var(--text-muted)] uppercase tracking-widest font-black">
+                Registration Number (Optional)
+              </label>
+              <label className="inline-flex items-center gap-2.5 text-xs font-bold text-[var(--text-main)] cursor-pointer select-none">
+                <div className="relative inline-flex items-center">
+                  <input
+                    type="checkbox"
+                    className="sr-only peer"
+                    checked={draftProfile.hide_registration_number}
+                    onChange={(e) =>
+                      handleDraftChange(
+                        "hide_registration_number",
+                        e.target.checked,
+                      )
+                    }
+                  />
+                  <div className="w-10 h-5 bg-slate-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-purple-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-[var(--border-main)] after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-purple-600"></div>
+                </div>
+                Hide from profile
+              </label>
+            </div>
+            <input
+              type="text"
+              inputMode="numeric"
+              value={draftProfile.tu_registration_no || ""}
+              onChange={(event) =>
+                handleDraftChange(
+                  "tu_registration_no",
+                  event.target.value
+                    .replace(/[^0-9-]/g, "")
+                    .replace(/-+/g, "-"),
+                )
+              }
+              className="w-full px-4 py-3 rounded-sm sm:rounded-2xl border-2 border-[var(--border-main)] bg-[var(--bg-active)] focus:bg-[var(--bg-card)] focus:ring-4 focus:ring-purple-500/10 focus:border-purple-500 transition-all text-[var(--text-main)]"
+              placeholder="e.g. 5-2-37-123-2019"
+            />
+            <p className="text-xs text-[var(--text-muted)]">
+              If you are in first year and do not have one yet, leave this blank
+              and add it later.
+            </p>
           </div>
 
           <div className="bg-[var(--bg-active)] p-6 rounded-sm sm:rounded-2xl border border-[var(--border-main)] sm:col-span-2">
@@ -139,7 +187,9 @@ const AcademicBackgroundCard = ({
                     type="checkbox"
                     className="sr-only peer"
                     checked={draftProfile.hide_member_since}
-                    onChange={(e) => handleDraftChange("hide_member_since", e.target.checked)}
+                    onChange={(e) =>
+                      handleDraftChange("hide_member_since", e.target.checked)
+                    }
                   />
                   <div className="w-10 h-5 bg-slate-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-purple-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-[var(--border-main)] after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-purple-600"></div>
                 </div>
@@ -171,7 +221,10 @@ const AcademicBackgroundCard = ({
               Studying at
             </p>
             <p className="text-lg font-bold text-[var(--text-main)]">
-              {profile.campus_name || profile.campus || profile.university || "Not specified"}
+              {profile.campus_name ||
+                profile.campus ||
+                profile.university ||
+                "Not specified"}
             </p>
           </div>
           <div className="bg-[var(--bg-active)] p-4 sm:p-5 rounded-sm sm:rounded-2xl border border-[var(--border-main)]">
@@ -182,6 +235,16 @@ const AcademicBackgroundCard = ({
               {profile.batch_year || "N/A"}
             </p>
           </div>
+          {!profile.hide_registration_number && (
+            <div className="bg-[var(--bg-active)] p-4 sm:p-5 rounded-sm sm:rounded-2xl border border-[var(--border-main)]">
+              <p className="text-sm font-medium text-[var(--text-muted)] mb-1">
+                Registration Number
+              </p>
+              <p className="text-lg font-bold text-[var(--text-main)]">
+                {profile.tu_registration_no || "Not added yet"}
+              </p>
+            </div>
+          )}
           {!profile.hide_member_since && (
             <div className="bg-[var(--bg-active)] p-4 sm:p-5 rounded-sm sm:rounded-2xl border border-[var(--border-main)]">
               <p className="text-sm font-medium text-[var(--text-muted)] mb-1">

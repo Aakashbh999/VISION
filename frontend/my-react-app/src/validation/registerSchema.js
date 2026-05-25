@@ -61,11 +61,18 @@ export const registerStep2Schema = z.object({
     .int()
     .min(2000, "Batch year is invalid.")
     .max(2100, "Batch year cannot be in the future (B.S.)."),
-  tu_registration_no: z.string().trim().min(3, "TU registration number is required."),
+  tu_registration_no: z.preprocess((value) => {
+    if (value === undefined || value === null) return null;
+    const trimmed = String(value).trim();
+    return trimmed === "" ? null : trimmed;
+  }, z.string().min(3, "Registration number must be at least 3 characters.").max(50, "Registration number is too long.").nullable()),
   date_of_birth: z
     .string()
     .trim()
-    .regex(/^\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[012])$/, "Invalid date format. Use YYYY-MM-DD (B.S.)."),
+    .regex(
+      /^\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[012])$/,
+      "Invalid date format. Use YYYY-MM-DD (B.S.).",
+    ),
   career_scope: z.array(z.string()).max(5, "You can select up to 5 interests."),
 });
 

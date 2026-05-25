@@ -17,4 +17,10 @@ SET client_min_messages TO WARNING;
 \echo 'Step 05: Engagement & Reference (XP, Stats, IT Fields)'
 \i 005_engagement_and_reference.sql
 
-\echo '--- ✅ Consolidated Migrations Completed Successfully ---'
+\echo 'Step 06: Registration Number Optionality'
+\i 006_make_registration_number_optional.sql
+
+\echo 'Step 07: Profile Registration Visibility Flag'
+\i 007_add_hide_registration_number_flag.sql
+
+\echo '--- ✅ Consolidated Migrations Completed Successfully ---'
