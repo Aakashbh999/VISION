@@ -16,21 +16,36 @@ class XPService {
       [userId],
     );
 
+    if (res.rows.length === 0) return 0;
     const dates = res.rows.map((r) => new Date(r.activity_date));
-    if (!dates.length) return 0;
 
     let streak = 0;
     const today = new Date();
-    today.setUTCHours(0, 0, 0, 0);
+    today.setHours(0, 0, 0, 0);
+
+    const yesterday = new Date(today);
+    yesterday.setDate(today.getDate() - 1);
+
+    const firstActivityDate = new Date(dates[0]);
+    firstActivityDate.setHours(0, 0, 0, 0);
+
+    let expected = new Date(today);
+
+    // If last activity was yesterday, shift expectation back by 1 day
+    if (firstActivityDate.getTime() === yesterday.getTime()) {
+      expected = new Date(yesterday);
+    } else if (firstActivityDate.getTime() !== today.getTime()) {
+      // Last activity is older than yesterday, streak is 0
+      return 0;
+    }
 
     for (let i = 0; i < dates.length; i++) {
-      const expected = new Date(today);
-      expected.setUTCDate(today.getUTCDate() - i);
       const actual = new Date(dates[i]);
-      actual.setUTCHours(0, 0, 0, 0);
+      actual.setHours(0, 0, 0, 0);
 
       if (actual.getTime() === expected.getTime()) {
         streak++;
+        expected.setDate(expected.getDate() - 1); // Step back 1 day
       } else {
         break;
       }
@@ -40,7 +55,7 @@ class XPService {
   }
 
   static async checkAndAwardStreakBonus(userId, streak, db) {
-    if (streak < 7) return;
+    if (streak === 0 || streak % 7 !== 0) return;
 
     const alreadyAwarded = await db.query(
       `SELECT 1 FROM portal.xp_activity_log
