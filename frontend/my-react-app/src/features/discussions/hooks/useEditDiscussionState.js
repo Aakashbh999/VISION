@@ -6,9 +6,7 @@ import {
 } from "../../../hooks/useDiscussionHooks";
 import api from "../../../services/api";
 import { useSystemTags } from "../../../hooks/useSystemTags";
-import {
-  toggleCappedSelection,
-} from "../../../utils/tagSelection";
+import { toggleCappedSelection } from "../../../utils/tagSelection";
 import { getApiErrorMessage } from "../../../utils/apiError";
 
 export const useEditDiscussionState = () => {
@@ -24,7 +22,11 @@ export const useEditDiscussionState = () => {
       content: discussion?.content || "",
       specializationId: discussion?.specialization_id?.toString() || "",
       degreeId: discussion?.degree_id?.toString() || "",
-      system_tags: discussion?.tags?.filter((t) => t.tag_type === "system").map((t) => t.tag_id) || [],
+      system_tags:
+        discussion?.tags
+          ?.filter((t) => t.tag_type === "system")
+          .map((t) => t.tag_id) || [],
+    }),
     [discussion],
   );
 
@@ -77,7 +79,6 @@ export const useEditDiscussionState = () => {
     });
   };
 
-
   const validate = () => {
     const nextErrors = {};
 
@@ -120,7 +121,10 @@ export const useEditDiscussionState = () => {
       onSuccess: () => navigate(`/discussions/${id}`),
       onError: (mutationError) => {
         setErrors({
-          submit: getApiErrorMessage(mutationError, "Failed to update discussion"),
+          submit: getApiErrorMessage(
+            mutationError,
+            "Failed to update discussion",
+          ),
         });
       },
     });
