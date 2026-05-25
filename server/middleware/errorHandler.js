@@ -1,20 +1,24 @@
-
+const multer = require("multer");
 const logger = require("../utils/logger");
 const env = require("../config/env");
 
 module.exports = (err, req, res, next) => {
-  const statusCode = err.statusCode || err.status || 500;
+  const isMulterSizeError =
+    err instanceof multer.MulterError && err.code === "LIMIT_FILE_SIZE";
+  const statusCode = isMulterSizeError
+    ? 413
+    : err.statusCode || err.status || 500;
   const logContext = { err, path: req.originalUrl, method: req.method };
 
   if (statusCode >= 500) {
     logger.error(logContext, "Global error caught");
   } else {
-
     logger.warn(logContext, "Request failed");
   }
 
-  const message =
-    statusCode >= 500 && env.NODE_ENV === "production"
+  const message = isMulterSizeError
+    ? "File is too large. Please upload a smaller file."
+    : statusCode >= 500 && env.NODE_ENV === "production"
       ? "Server Failure"
       : err.message || "Internal Server Error";
 
