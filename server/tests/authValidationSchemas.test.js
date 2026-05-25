@@ -32,6 +32,22 @@ test("registerSchema accepts valid payload and normalizes fields", () => {
   assert.equal(parsed.career_scope, "Web Development");
 });
 
+test("registerSchema allows missing registration number", () => {
+  const parsed = registerSchema.parse({
+    email: "firstyear@example.com",
+    password: "Password1",
+    full_name: "First Year",
+    semester: "1",
+    batch_year: "2081",
+    semester_is_manual: "false",
+    tu_registration_no: "",
+    date_of_birth: "2060-01-01",
+    career_scope: "",
+  });
+
+  assert.equal(parsed.tu_registration_no, null);
+});
+
 test("loginSchema rejects malformed email", () => {
   const result = loginSchema.safeParse({
     email: "not-an-email",

@@ -81,6 +81,7 @@ exports.getPublicProfile = catchAsync(async (req, res) => {
         u.semester,
         u.batch_year,
         u.semester_is_manual,
+        u.tu_registration_no,
         u.program_id,
         u.is_moderator,
         ${buildPresenceSelect("u")},
@@ -103,6 +104,7 @@ exports.getPublicProfile = catchAsync(async (req, res) => {
         u.university,
         u.career_scope,
         u.hide_member_since,
+        u.hide_registration_number,
         c_rel.campus_name
         ${
           viewerId
@@ -165,6 +167,7 @@ exports.getOwnProfile = catchAsync(async (req, res) => {
         u.semester,
         u.batch_year,
         u.semester_is_manual,
+        u.tu_registration_no,
         u.program_id,
         u.is_moderator,
         u.last_profile_pic_update,
@@ -193,6 +196,7 @@ exports.getOwnProfile = catchAsync(async (req, res) => {
         u.university,
         u.career_scope,
         u.hide_member_since,
+        u.hide_registration_number,
         c_rel.campus_name
        FROM portal.users u
        JOIN auth.users a               ON a.auth_user_id = u.auth_user_id
@@ -238,6 +242,7 @@ exports.updateProfile = catchAsync(async (req, res) => {
     batch_year,
     semester,
     semester_is_manual,
+    tu_registration_no,
     linkedin_url,
     facebook_url,
     instagram_url,
@@ -250,12 +255,13 @@ exports.updateProfile = catchAsync(async (req, res) => {
     university,
     career_scope,
     hide_member_since,
+    hide_registration_number,
   } = req.body;
 
   const currentResult = await pool.query(
-    `SELECT full_name, bio, program_id, semester, batch_year, semester_is_manual,
+    `SELECT full_name, bio, program_id, semester, batch_year, semester_is_manual, tu_registration_no,
               linkedin_url, facebook_url, instagram_url, youtube_url, reddit_url, twitter_url, github_url, website_url,
-              campus, university, career_scope, hide_member_since
+          campus, university, career_scope, hide_member_since, hide_registration_number
        FROM portal.users
        WHERE user_id = $1`,
     [userId],
@@ -286,6 +292,10 @@ exports.updateProfile = catchAsync(async (req, res) => {
     semester_is_manual !== undefined
       ? semester_is_manual === true || semester_is_manual === "true"
       : current.semester_is_manual;
+  const nextTuRegistrationNo =
+    tu_registration_no !== undefined
+      ? String(tu_registration_no).trim() || null
+      : current.tu_registration_no;
 
   const nextLinkedin =
     linkedin_url !== undefined ? linkedin_url : current.linkedin_url;
@@ -310,6 +320,10 @@ exports.updateProfile = catchAsync(async (req, res) => {
     hide_member_since !== undefined
       ? hide_member_since
       : current.hide_member_since;
+  const nextHideRegistrationNumber =
+    hide_registration_number !== undefined
+      ? hide_registration_number
+      : current.hide_registration_number;
 
   let nextSemester =
     semester !== undefined && semester !== null && semester !== ""
@@ -327,6 +341,17 @@ exports.updateProfile = catchAsync(async (req, res) => {
   }
   if (nextProgramId !== null && !Number.isFinite(nextProgramId)) {
     return errorResponse(res, "Invalid program", 400);
+  }
+  if (
+    nextTuRegistrationNo !== null &&
+    typeof nextTuRegistrationNo === "string" &&
+    nextTuRegistrationNo.length < 3
+  ) {
+    return errorResponse(
+      res,
+      "Registration number must be at least 3 characters",
+      400,
+    );
   }
   if (
     nextBatchYear !== null &&
@@ -351,6 +376,7 @@ exports.updateProfile = catchAsync(async (req, res) => {
            batch_year = $4,
            semester = $5,
            semester_is_manual = $6,
+           tu_registration_no = $20,
            linkedin_url = $8,
            facebook_url = $9,
            instagram_url = $10,
@@ -362,11 +388,12 @@ exports.updateProfile = catchAsync(async (req, res) => {
            campus = $16,
            university = $17,
            career_scope = $18,
-           hide_member_since = $19
+               hide_member_since = $19,
+               hide_registration_number = $21
        WHERE user_id = $7
-       RETURNING user_id, full_name, bio, program_id, semester, batch_year, semester_is_manual,
+      RETURNING user_id, full_name, bio, program_id, semester, batch_year, semester_is_manual, tu_registration_no,
                  linkedin_url, facebook_url, instagram_url, youtube_url, reddit_url, twitter_url, github_url, website_url,
-                 campus, university, career_scope, hide_member_since`,
+                 campus, university, career_scope, hide_member_since, hide_registration_number`,
     [
       nextFullName,
       nextBio,
@@ -387,6 +414,8 @@ exports.updateProfile = catchAsync(async (req, res) => {
       nextUniversity,
       nextCareerScope,
       nextHideMemberSince,
+      nextTuRegistrationNo,
+      nextHideRegistrationNumber,
     ],
   );
 

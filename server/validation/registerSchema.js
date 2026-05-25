@@ -63,16 +63,17 @@ const registerSchema = z.object({
     z.number().int().min(1900).max(2100).nullable().optional(),
   ),
   semester_is_manual: z.preprocess(toBoolean, z.boolean().optional()),
-  tu_registration_no: z
-    .string({ required_error: "TU registration number is required." })
-    .trim()
-    .min(1, "TU registration number is required.")
-    .transform((value) => (value ? value : null)),
+  tu_registration_no: z.preprocess((value) => {
+    if (value === undefined || value === null) return null;
+    const trimmed = String(value).trim();
+    return trimmed === "" ? null : trimmed;
+  }, z.string().min(3, "Registration number must be at least 3 characters.").max(50, "Registration number is too long.").nullable()),
   date_of_birth: z
     .string()
     .trim()
     .regex(/^\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[012])$/, {
-      message: "Please enter a valid date of birth in YYYY-MM-DD format (B.S.).",
+      message:
+        "Please enter a valid date of birth in YYYY-MM-DD format (B.S.).",
     }),
   career_scope: z
 
