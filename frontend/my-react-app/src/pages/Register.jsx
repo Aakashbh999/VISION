@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -71,6 +71,7 @@ const Register = () => {
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const isSubmittingRef = useRef(false);
   const { register: registerField, handleSubmit: handleStep1Submit } = useForm({
     resolver: zodResolver(registerStep1Schema),
     defaultValues: {
@@ -191,8 +192,11 @@ const Register = () => {
 
   const handleFinalSubmit = async (e) => {
     e.preventDefault();
+    if (loading || isSubmittingRef.current) return;
+
     setError("");
     setLoading(true);
+    isSubmittingRef.current = true;
 
     const step2Validation = registerStep2Schema.safeParse({
       university: formData.university,
@@ -256,6 +260,7 @@ const Register = () => {
       toast.error(err.response?.data?.error || "Registration failed.");
     } finally {
       setLoading(false);
+      isSubmittingRef.current = false;
     }
   };
 

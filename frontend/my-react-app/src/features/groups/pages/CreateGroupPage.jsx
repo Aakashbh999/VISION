@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import { useCreateGroup } from "../../../hooks/useGroupHooks";
 import { useNavigate } from "react-router-dom";
 import {
@@ -21,14 +21,9 @@ import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "react-toastify";
 import TagSelectorSection from "../../../components/ui/TagSelectorSection";
 import { useSystemTags } from "../../../hooks/useSystemTags";
-import {
-  addUniqueCappedTag,
-  removeTag,
-  toggleCappedSelection,
-} from "../../../utils/tagSelection";
+import { toggleCappedSelection } from "../../../utils/tagSelection";
 
 const SYSTEM_TAG_CAP = 5;
-const CUSTOM_TAG_CAP = 2;
 
 const MAX_GROUP_DESCRIPTION_WORDS = 130;
 
@@ -92,10 +87,9 @@ const CreateGroupPage = () => {
     icon: "terminal",
     privacy_type: "public",
     system_tags: [],
-    custom_tags: [],
   });
 
-  const [customTagInput, setCustomTagInput] = useState("");
+  const isSubmittingRef = useRef(false);
   const { systemTagOptions, isLoadingTags } = useSystemTags(true);
 
   const toggleSystemTag = (tagId) => {
@@ -109,30 +103,6 @@ const CreateGroupPage = () => {
     });
   };
 
-  const addCustomTag = () => {
-    const nextCustomTags = addUniqueCappedTag(
-      formData.custom_tags,
-      customTagInput,
-      CUSTOM_TAG_CAP,
-    );
-    if (nextCustomTags.length === formData.custom_tags.length) return;
-    setFormData((prev) => ({ ...prev, custom_tags: nextCustomTags }));
-    setCustomTagInput("");
-  };
-
-  const removeCustomTag = (tag) => {
-    setFormData((prev) => ({
-      ...prev,
-      custom_tags: removeTag(prev.custom_tags, tag),
-    }));
-  };
-
-  const handleCustomTagKeyDown = (e) => {
-    if (e.key === "Enter") {
-      e.preventDefault();
-      addCustomTag();
-    }
-  };
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -141,6 +111,8 @@ const CreateGroupPage = () => {
   const handleSubmit = (e) => {
     e.preventDefault();
 
+    if (mutation.isPending || isSubmittingRef.current) return;
+
     if (countWords(formData.description) > MAX_GROUP_DESCRIPTION_WORDS) {
       toast.error(
         `Description cannot exceed ${MAX_GROUP_DESCRIPTION_WORDS} words.`,
@@ -148,18 +120,21 @@ const CreateGroupPage = () => {
       return;
     }
 
+    isSubmittingRef.current = true;
     mutation.mutate(
       {
         name: formData.name,
         description: formData.description,
         privacy_type: formData.privacy_type,
         system_tags: formData.system_tags,
-        custom_tags: formData.custom_tags,
       },
       {
         onSuccess: (data) => {
           toast.success("Node Initialized!");
           navigate(`/groups/${data.group_id || data.id}`);
+        },
+        onSettled: () => {
+          isSubmittingRef.current = false;
         },
       },
     );
@@ -271,19 +246,11 @@ const CreateGroupPage = () => {
 
                 <div className="pt-2">
                   <TagSelectorSection
-                    customTags={formData.custom_tags}
                     systemTags={formData.system_tags}
-                    customTagInput={customTagInput}
-                    setCustomTagInput={setCustomTagInput}
-                    customTagCap={CUSTOM_TAG_CAP}
                     systemTagCap={SYSTEM_TAG_CAP}
                     systemTagOptions={systemTagOptions}
                     isLoadingTags={isLoadingTags}
-                    customTagPlaceholder="e.g. quantum-computing..."
-                    onAddCustomTag={addCustomTag}
-                    onRemoveCustomTag={removeCustomTag}
                     onToggleSystemTag={toggleSystemTag}
-                    onCustomTagKeyDown={handleCustomTagKeyDown}
                   />
                 </div>
 

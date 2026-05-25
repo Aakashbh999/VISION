@@ -518,11 +518,35 @@ const GroupDetailFeed = ({
                                     </Badge>
                                   )}
                                 </div>
-                                <span className="text-[10px] text-(--text-muted) font-bold">
-                                  {new Date(
-                                    post.created_at,
-                                  ).toLocaleDateString()}
-                                </span>
+                                <div className="flex items-center gap-2">
+                                  <span className="text-[10px] text-(--text-muted) font-bold">
+                                    {new Date(
+                                      post.created_at,
+                                    ).toLocaleDateString()}
+                                  </span>
+                                  {activeSection === "notice_board" &&
+                                    (isAdmin ||
+                                      String(post.user_id) ===
+                                        String(currentUserId) ||
+                                      post.user_id === group.created_by) && (
+                                      <button
+                                        type="button"
+                                        onClick={() =>
+                                          confirmAndDeletePost(
+                                            post.post_id,
+                                            isAdmin
+                                              ? "Deleted by group admin"
+                                              : "Deleted by author",
+                                            "this notice",
+                                          )
+                                        }
+                                        className="text-(--text-muted) hover:text-red-500 transition-colors"
+                                        title="Delete notice"
+                                      >
+                                        <Trash2 className="w-4 h-4 pointer-events-none" />
+                                      </button>
+                                    )}
+                                </div>
                               </header>
                               <div className="text-(--text-muted) text-sm whitespace-pre-wrap leading-relaxed">
                                 {post.content}
@@ -593,9 +617,12 @@ const GroupDetailFeed = ({
                 size="md"
                 type="submit"
                 disabled={!newPost.trim() || createPostMutation.isPending}
+                isLoading={createPostMutation.isPending}
                 className="w-12 h-12 p-0 rounded-2xl flex items-center justify-center"
               >
-                <Send className="w-4 h-4 translate-x-0.5 -translate-y-0.5" />
+                {!createPostMutation.isPending && (
+                  <Send className="w-4 h-4 translate-x-0.5 -translate-y-0.5" />
+                )}
               </Button>
             </form>
           </div>

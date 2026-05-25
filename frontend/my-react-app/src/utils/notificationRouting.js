@@ -53,6 +53,9 @@ export const formatNotificationMessage = (notification) => {
 };
 
 export const resolveNotificationPath = (notification) => {
+  if (notification.type === "new_student_pending") return "/admin/pending";
+  if (notification.type === "new_resource_pending") return "/admin/resources/pending";
+
   if (notification.type === "group_invite" && notification.group_id) {
     return `/groups/${notification.group_id}/profile`;
   }

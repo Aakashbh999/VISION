@@ -30,14 +30,14 @@ export const useCreateDiscussionState = () => {
     imageCaption: "",
     specializationId: "",
     system_tags: [],
-    custom_tags: [],
     username_verification: "",
   });
   const [selectedFile, setSelectedFile] = useState(null);
   const [previewUrl, setPreviewUrl] = useState(null);
   const [specializations, setSpecializations] = useState([]);
-  const [customTagInput, setCustomTagInput] = useState("");
+
   const [uploading, setUploading] = useState(false);
+  const isSubmittingRef = useRef(false);
   const { systemTagOptions, isLoadingTags } = useSystemTags(true);
 
   useEffect(() => {
@@ -58,6 +58,9 @@ export const useCreateDiscussionState = () => {
     onError: (error) => {
       toast.error(getApiErrorMessage(error, "Failed to create post"));
     },
+    onSettled: () => {
+      isSubmittingRef.current = false;
+    }
   });
 
   const handleFileSelect = (event) => {
@@ -114,33 +117,10 @@ export const useCreateDiscussionState = () => {
     });
   };
 
-  const addCustomTag = () => {
-    const nextCustomTags = addUniqueCappedTag(
-      formData.custom_tags,
-      customTagInput,
-      CUSTOM_TAG_CAP,
-    );
-    if (nextCustomTags.length === formData.custom_tags.length) return;
-    setFormData((prev) => ({ ...prev, custom_tags: nextCustomTags }));
-    setCustomTagInput("");
-  };
-
-  const removeCustomTag = (tag) => {
-    setFormData((prev) => ({
-      ...prev,
-      custom_tags: removeTag(prev.custom_tags, tag),
-    }));
-  };
-
-  const handleCustomTagKeyDown = (e) => {
-    if (e.key === "Enter") {
-      e.preventDefault();
-      addCustomTag();
-    }
-  };
-
   const handleSubmit = async (event) => {
     event.preventDefault();
+
+    if (uploading || createMutation.isPending || isSubmittingRef.current) return;
 
     if (formData.username_verification) {
       return;
@@ -162,6 +142,7 @@ export const useCreateDiscussionState = () => {
     }
 
     setUploading(true);
+    isSubmittingRef.current = true;
 
     try {
       let imageUrl = null;
@@ -183,6 +164,7 @@ export const useCreateDiscussionState = () => {
     } catch (error) {
       console.error(error);
       toast.error("Upload failed. Try again.");
+      isSubmittingRef.current = false;
     } finally {
       setUploading(false);
     }
@@ -199,12 +181,7 @@ export const useCreateDiscussionState = () => {
     specializations,
     systemTagOptions,
     isLoadingTags,
-    customTagInput,
-    setCustomTagInput,
     toggleSystemTag,
-    addCustomTag,
-    removeCustomTag,
-    handleCustomTagKeyDown,
     uploading,
     createMutation,
     handleFileSelect,

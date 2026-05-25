@@ -23,8 +23,6 @@ const isRawFile = (mimetype) => {
     "application/vnd.openxmlformats-officedocument.presentationml.presentation",
     "application/vnd.ms-excel",
     "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-    "application/zip",
-    "application/x-rar-compressed",
   ];
   return rawMimes.includes(mimetype);
 };
@@ -36,8 +34,7 @@ const storage = new CloudinaryStorage({
     const timestamp = Date.now();
     const publicId = `${originalName}_${timestamp}`;
 
-    let resourceType = "auto";
-
+    let resourceType = "raw";
     if (file.mimetype.startsWith("image/")) {
       resourceType = "image";
     }
@@ -52,23 +49,6 @@ const storage = new CloudinaryStorage({
       access_mode: "public",
       use_filename: true,
       unique_filename: false,
-      allowed_formats: [
-        "jpg",
-        "jpeg",
-        "png",
-        "webp",
-        "gif",
-        "pdf",
-        "doc",
-        "docx",
-        "txt",
-        "ppt",
-        "pptx",
-        "xls",
-        "xlsx",
-        "zip",
-        "rar",
-      ],
     };
   },
 });
@@ -87,8 +67,6 @@ const fileFilter = (req, file, cb) => {
     "application/vnd.openxmlformats-officedocument.presentationml.presentation",
     "application/vnd.ms-excel",
     "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-    "application/zip",
-    "application/x-rar-compressed",
   ];
 
   const allowedExtensions = [
@@ -105,8 +83,6 @@ const fileFilter = (req, file, cb) => {
     ".pptx",
     ".xls",
     ".xlsx",
-    ".zip",
-    ".rar",
   ];
 
   const extension = path.extname(file.originalname || "").toLowerCase();
@@ -121,7 +97,7 @@ const fileFilter = (req, file, cb) => {
     cb(
       createError(
         400,
-        "Invalid file type. Allowed: images, PDF, DOC, DOCX, TXT, PPT, XLS, ZIP",
+        "Invalid file type. Allowed: images, PDF, DOC, DOCX, TXT, PPT, XLS",
       ),
       false,
     );

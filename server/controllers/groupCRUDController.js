@@ -261,9 +261,7 @@ exports.createGroup = catchAsync(async (req, res) => {
     name,
     description,
     privacy_type = "public",
-    tags,
     system_tags,
-    custom_tags,
     degree_id,
     program_id,
   } = req.body;
@@ -296,9 +294,7 @@ exports.createGroup = catchAsync(async (req, res) => {
   ) {
     return errorResponse(res, "Maximum 5 system tags allowed.", 400);
   }
-  if (Array.isArray(custom_tags) && custom_tags.length > 2) {
-    return errorResponse(res, "Maximum 2 custom tags allowed.", 400);
-  }
+
 
   const client = await pool.connect();
   try {
@@ -318,9 +314,7 @@ exports.createGroup = catchAsync(async (req, res) => {
       }
     }
 
-    if (Array.isArray(custom_tags)) {
-      rawTags.push(...custom_tags);
-    }
+
 
     if (Array.isArray(tags)) {
       rawTags.push(...tags);

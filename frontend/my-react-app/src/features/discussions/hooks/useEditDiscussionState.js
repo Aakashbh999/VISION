@@ -7,8 +7,6 @@ import {
 import api from "../../../services/api";
 import { useSystemTags } from "../../../hooks/useSystemTags";
 import {
-  addUniqueCappedTag,
-  removeTag,
   toggleCappedSelection,
 } from "../../../utils/tagSelection";
 import { getApiErrorMessage } from "../../../utils/apiError";
@@ -27,15 +25,12 @@ export const useEditDiscussionState = () => {
       specializationId: discussion?.specialization_id?.toString() || "",
       degreeId: discussion?.degree_id?.toString() || "",
       system_tags: discussion?.tags?.filter((t) => t.tag_type === "system").map((t) => t.tag_id) || [],
-      custom_tags: discussion?.tags?.filter((t) => t.tag_type === "custom").map((t) => t.name) || [],
-    }),
     [discussion],
   );
 
   const [draftFormData, setDraftFormData] = useState(null);
   const formData = draftFormData || initialFormData;
   const [errors, setErrors] = useState({});
-  const [customTagInput, setCustomTagInput] = useState("");
   const [specializations, setSpecializations] = useState([]);
   const [degrees, setDegrees] = useState([]);
   const { systemTagOptions, isLoadingTags } = useSystemTags(true);
@@ -82,29 +77,6 @@ export const useEditDiscussionState = () => {
     });
   };
 
-  const addCustomTag = () => {
-    setDraftFormData((prev) => {
-      const base = prev || initialFormData;
-      const nextCustomTags = addUniqueCappedTag(base.custom_tags, customTagInput, 2);
-      if (nextCustomTags.length === base.custom_tags.length) return base;
-      return { ...base, custom_tags: nextCustomTags };
-    });
-    setCustomTagInput("");
-  };
-
-  const removeCustomTag = (tag) => {
-    setDraftFormData((prev) => {
-      const base = prev || initialFormData;
-      return { ...base, custom_tags: removeTag(base.custom_tags, tag) };
-    });
-  };
-
-  const handleCustomTagKeyDown = (e) => {
-    if (e.key === "Enter") {
-      e.preventDefault();
-      addCustomTag();
-    }
-  };
 
   const validate = () => {
     const nextErrors = {};
@@ -128,6 +100,8 @@ export const useEditDiscussionState = () => {
   const handleSubmit = (event) => {
     event.preventDefault();
 
+    if (updateMutation.isPending) return;
+
     if (!validate()) {
       return;
     }
@@ -140,7 +114,6 @@ export const useEditDiscussionState = () => {
         ? Number.parseInt(formData.degreeId, 10)
         : null,
       system_tags: formData.system_tags,
-      custom_tags: formData.custom_tags,
     };
 
     updateMutation.mutate(submitData, {
@@ -162,18 +135,7 @@ export const useEditDiscussionState = () => {
     canEdit,
     formData,
     errors,
-    customTagInput,
-    setCustomTagInput,
-    specializations,
-    degrees,
-    systemTagOptions,
-    isLoadingTags,
-    updateMutation,
-    handleChange,
     toggleSystemTag,
-    addCustomTag,
-    removeCustomTag,
-    handleCustomTagKeyDown,
     handleSubmit,
   };
 };

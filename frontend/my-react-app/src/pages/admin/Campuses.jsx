@@ -88,6 +88,7 @@ const Campuses = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    if (createMutation.isPending || updateMutation.isPending) return;
     if (editingCampus) {
       updateMutation.mutate(formData);
     } else {

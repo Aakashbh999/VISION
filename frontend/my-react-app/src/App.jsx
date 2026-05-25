@@ -70,7 +70,6 @@ const CreateGroup = lazy(() => import("./pages/portal/CreateGroup"));
 const Clubs = lazy(() => import("./pages/portal/Clubs"));
 const Resources = lazy(() => import("./pages/portal/Resources"));
 const ManageContent = lazy(() => import("./pages/portal/ManageContent"));
-const Feed = lazy(() => import("./pages/portal/Feed"));
 const Profile = lazy(() => import("./pages/portal/Profile"));
 const GroupDetail = lazy(() => import("./pages/portal/GroupDetail"));
 const GroupProfile = lazy(() => import("./pages/portal/GroupProfile"));
@@ -141,7 +140,6 @@ const portalRoutes = [
   { path: "/clubs", element: <Clubs /> },
   { path: "/clubs/:slug", element: <ClubDetail /> },
   { path: "/resources", element: <Resources /> },
-  { path: "/feed", element: <Feed /> },
   { path: "/manage", element: <ManageContent /> },
   { path: "/profile/:userId", element: <Profile /> },
   { path: "/it-fields", element: <ITFields /> },
@@ -267,7 +265,6 @@ function AppContent() {
     "/resources",
     "/manage",
     "/profile",
-    "/feed",
     "/it-fields",
     "/academic-guide",
     "/it-jobs",

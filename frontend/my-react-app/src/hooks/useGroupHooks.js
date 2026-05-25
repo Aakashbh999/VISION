@@ -74,6 +74,9 @@ export const useGroupPostPolling = (groupId, section = "general") => {
     queryKey: ["groupPostsPolling", groupId, section],
     queryFn: async () => {
 
+      const queryState = queryClient.getQueryState(["groupPosts", groupId, section]);
+      if (queryState?.fetchStatus === "fetching") return null;
+
       const cachedData = queryClient.getQueryData(["groupPosts", groupId, section]);
       if (!cachedData || !cachedData.pages || cachedData.pages.length === 0) return null;
 

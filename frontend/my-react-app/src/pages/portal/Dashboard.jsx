@@ -21,7 +21,6 @@ import SurfaceCard, {
 } from "../../components/ui/SurfaceCard";
 import EmptyState from "../../components/ui/EmptyState";
 import ErrorState from "../../components/ui/ErrorState";
-import PrimaryPortalTabs from "../../components/portal/Dashboard/PrimaryPortalTabs";
 import VXPActivityGraph from "../../components/portal/Dashboard/VXPActivityGraph";
 import RecommendationList from "../../components/portal/Dashboard/RecommendationList";
 import StatCard from "../../components/portal/Dashboard/StatCard";
@@ -99,7 +98,10 @@ const Dashboard = () => {
 
   return (
     <div className="space-y-6 bg-[var(--bg-main)] text-[var(--text-main)]">
-      <PrimaryPortalTabs activeTab="dashboard" />
+      <div>
+        <h1 className="text-2xl font-black tracking-tight text-(--text-main)">Dashboard Overview</h1>
+        <p className="text-sm text-(--text-muted) mt-1">Track your academic and community progress.</p>
+      </div>
 
       {}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">

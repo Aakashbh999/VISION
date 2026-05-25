@@ -9,15 +9,6 @@ import SurfaceCard, {
 } from "../../ui/SurfaceCard";
 import { getFeedActivityConfig } from "../../../utils/feedActivity";
 
-const ViewFullFeedButton = () => (
-  <Link
-    to="/feed"
-    className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-(--bg-active) border border-(--border-main) text-(--text-main) text-sm font-bold hover:border-purple-400 hover:bg-(--bg-card) transition-all"
-  >
-    View full feed
-  </Link>
-);
-
 const ActivityFeedWidget = ({ feed }) => {
   if (!feed?.length) {
     return (
@@ -32,9 +23,6 @@ const ActivityFeedWidget = ({ feed }) => {
            <p className="text-sm font-bold text-(--text-muted)">The feed is quiet right now.</p>
           </div>
         </CardBody>
-        <CardFooter className="mt-6 pt-0 border-0">
-          <ViewFullFeedButton />
-        </CardFooter>
       </SurfaceCard>
     );
   }
@@ -93,14 +81,7 @@ const ActivityFeedWidget = ({ feed }) => {
         })}
       </CardBody>
 
-      <CardFooter className="mt-6 pt-6 border-(--border-main)/50">
-        <Link
-          to="/feed"
-          className="flex items-center justify-center gap-2 w-full py-3 rounded-2xl bg-purple-600 text-white text-sm font-black uppercase tracking-widest hover:bg-purple-700 transition-all shadow-lg shadow-purple-500/20 active:scale-95"
-        >
-          Explore Full Feed
-        </Link>
-      </CardFooter>
+
     </SurfaceCard>
   );
 };
