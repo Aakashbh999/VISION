@@ -19,7 +19,7 @@ import {
   Tag,
   ChevronDown,
   ChevronRight,
-  LogOut
+  LogOut,
 } from "lucide-react";
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
@@ -29,13 +29,13 @@ const MobileMenu = ({ isOpen, onClose, variant, user }) => {
   const navigate = useNavigate();
   const { user: authUser, logout } = useAuth();
   const [expandedCategories, setExpandedCategories] = useState({
-    "Reference Data": false
+    "Reference Data": false,
   });
 
   const toggleCategory = (categoryName) => {
-    setExpandedCategories(prev => ({
+    setExpandedCategories((prev) => ({
       ...prev,
-      [categoryName]: !prev[categoryName]
+      [categoryName]: !prev[categoryName],
     }));
   };
   const accountStatusLabel =
@@ -90,41 +90,111 @@ const MobileMenu = ({ isOpen, onClose, variant, user }) => {
     {
       title: "Core & Analytics",
       items: [
-        { id: "admin-dashboard", label: "Dashboard", icon: LayoutDashboard, href: "/admin/dashboard" },
-        { id: "reports", label: "Reports", icon: FileText, href: "/admin/reports" },
-      ]
+        {
+          id: "admin-dashboard",
+          label: "Dashboard",
+          icon: LayoutDashboard,
+          href: "/admin/dashboard",
+        },
+        {
+          id: "reports",
+          label: "Reports",
+          icon: FileText,
+          href: "/admin/reports",
+        },
+      ],
     },
     {
       title: "Users & Access",
       items: [
-        { id: "pending-approvals", label: "Pending Approvals", icon: Clock, href: "/admin/pending" },
-        { id: "students", label: "All Students", icon: Users, href: "/admin/students" },
-        { id: "whitelist", label: "Reg. Whitelist", icon: ShieldAlert, href: "/admin/registration-whitelist" },
-      ]
+        {
+          id: "pending-approvals",
+          label: "Pending Approvals",
+          icon: Clock,
+          href: "/admin/pending",
+        },
+        {
+          id: "students",
+          label: "All Students",
+          icon: Users,
+          href: "/admin/students",
+        },
+        {
+          id: "whitelist",
+          label: "Reg. Whitelist",
+          icon: ShieldAlert,
+          href: "/admin/registration-whitelist",
+        },
+      ],
     },
     {
       title: "Content Management",
       items: [
-        { id: "campuses", label: "Campuses", icon: LayoutDashboard, href: "/admin/campuses" },
-        { id: "roadmaps", label: "Roadmap Builder", icon: FileText, href: "/admin/roadmaps" },
-      ]
+        {
+          id: "campuses",
+          label: "Campuses",
+          icon: LayoutDashboard,
+          href: "/admin/campuses",
+        },
+        {
+          id: "roadmaps",
+          label: "Roadmap Builder",
+          icon: FileText,
+          href: "/admin/roadmaps",
+        },
+        {
+          id: "resources",
+          label: "All Resources",
+          icon: BookOpen,
+          href: "/admin/resources",
+        },
+      ],
     },
     {
       title: "Reference Data",
       collapsible: true,
       items: [
-        { id: "it-fields", label: "IT Fields", icon: Database, href: "/admin/reference/it-fields" },
-        { id: "academic-degrees", label: "Academic Guide", icon: BookOpen, href: "/admin/reference/academic-degrees" },
-        { id: "it-jobs", label: "IT Jobs", icon: Briefcase, href: "/admin/reference/it-jobs" },
-        { id: "it-clubs", label: "IT Clubs", icon: MonitorPlay, href: "/admin/reference/it-clubs" },
-        { id: "programs", label: "Programs", icon: GraduationCap, href: "/admin/reference/programs" },
-        { id: "tags", label: "System Tags", icon: Tag, href: "/admin/reference/tags" },
-      ]
-    }
+        {
+          id: "it-fields",
+          label: "IT Fields",
+          icon: Database,
+          href: "/admin/reference/it-fields",
+        },
+        {
+          id: "academic-degrees",
+          label: "Academic Guide",
+          icon: BookOpen,
+          href: "/admin/reference/academic-degrees",
+        },
+        {
+          id: "it-jobs",
+          label: "IT Jobs",
+          icon: Briefcase,
+          href: "/admin/reference/it-jobs",
+        },
+        {
+          id: "it-clubs",
+          label: "IT Clubs",
+          icon: MonitorPlay,
+          href: "/admin/reference/it-clubs",
+        },
+        {
+          id: "programs",
+          label: "Programs",
+          icon: GraduationCap,
+          href: "/admin/reference/programs",
+        },
+        {
+          id: "tags",
+          label: "System Tags",
+          icon: Tag,
+          href: "/admin/reference/tags",
+        },
+      ],
+    },
   ];
 
   if (authUser?.is_moderator || authUser?.role === "admin") {
-
     adminNavCategories[2].items.push({
       id: "pending-resources",
       label: "Resource Queue",
@@ -159,7 +229,6 @@ const MobileMenu = ({ isOpen, onClose, variant, user }) => {
         </button>
 
         {variant === "admin" && user ? (
-
           <>
             <nav className="mt-8 space-y-6 pb-20">
               {adminNavCategories.map((category) => (
@@ -182,7 +251,8 @@ const MobileMenu = ({ isOpen, onClose, variant, user }) => {
                     </h3>
                   )}
 
-                  {(!category.collapsible || expandedCategories[category.title]) && (
+                  {(!category.collapsible ||
+                    expandedCategories[category.title]) && (
                     <div className="space-y-1">
                       {category.items.map((item) => (
                         <Link
@@ -192,7 +262,9 @@ const MobileMenu = ({ isOpen, onClose, variant, user }) => {
                           className="flex items-center gap-3 px-4 py-2.5 rounded-xl text-[var(--text-muted)] hover:bg-blue-50 dark:hover:bg-blue-950/30 hover:text-blue-600 dark:hover:text-blue-300 transition-all duration-300 w-full group"
                         >
                           <item.icon className="w-4 h-4 shrink-0 transition-colors group-hover:text-blue-500" />
-                          <span className="text-sm font-medium">{item.label}</span>
+                          <span className="text-sm font-medium">
+                            {item.label}
+                          </span>
                         </Link>
                       ))}
                     </div>
@@ -202,7 +274,6 @@ const MobileMenu = ({ isOpen, onClose, variant, user }) => {
             </nav>
           </>
         ) : variant === "portal" && user ? (
-
           <>
             <nav className="space-y-4 mt-8">
               {portalNavItems.map((item) => (
@@ -236,7 +307,6 @@ const MobileMenu = ({ isOpen, onClose, variant, user }) => {
             </div>
           </>
         ) : (
-
           <>
             <nav className="space-y-4 mt-8">
               {publicNavItems.map((item) => (
