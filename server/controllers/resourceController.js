@@ -15,7 +15,7 @@
  */
 
 const pool = require("../config/db");
-const { notify, feed } = require("../utils/activityService");
+const { notify, feed, notifyAdmins } = require("../utils/activityService");
 const { successResponse, errorResponse } = require("../utils/response");
 const catchAsync = require("../utils/catchAsync");
 const logger = require("../utils/logger");
@@ -25,7 +25,6 @@ const {
   parseSystemTagIds,
   parseCustomTagNames,
   insertSystemTags,
-  insertCustomTags,
 } = require("../utils/tagUtils");
 
 /**
@@ -48,7 +47,7 @@ const {
  *   degree_id?: number - Academic degree
  *   url?: string - External link (for link type)
  *   system_tags?: string - JSON array of tag IDs
- *   custom_tags?: string - JSON array of tag names
+
  * }
  * @param {Object} res - Express response
  * @returns {Object} - Created resource with { resource_id, status, created_at }
@@ -65,7 +64,6 @@ exports.uploadResource = catchAsync(async (req, res) => {
     degree_id,
     url,
     system_tags: systemTagsRaw,
-    custom_tags: customTagsRaw,
   } = req.body;
   const { extractHashtagsAndSemester } = require("../utils/hashtagUtils");
 
@@ -73,13 +71,9 @@ exports.uploadResource = catchAsync(async (req, res) => {
     extractHashtagsAndSemester(description);
 
   const systemTagIds = parseSystemTagIds(systemTagsRaw);
-  const customTagNames = parseCustomTagNames(customTagsRaw);
 
   if (systemTagIds.length > 5) {
     return errorResponse(res, "You can select at most 5 system tags.", 400);
-  }
-  if (customTagNames.length > 2) {
-    return errorResponse(res, "You can add at most 2 custom tags.", 400);
   }
 
   const finalSemester = semester || extractedSemester;
@@ -203,7 +197,6 @@ exports.uploadResource = catchAsync(async (req, res) => {
     const resourceId = result.rows[0].resource_id;
 
     await insertSystemTags(client, resourceId, systemTagIds);
-    await insertCustomTags(client, resourceId, customTagNames);
 
     await client.query("COMMIT");
 
@@ -221,6 +214,17 @@ exports.uploadResource = catchAsync(async (req, res) => {
        WHERE r.resource_id = $1`,
       [resourceId],
     );
+
+    if (finalStatus === "pending") {
+      notifyAdmins({
+        actorId: userId,
+        type: 'new_resource_pending',
+        title: 'New Resource Uploaded',
+        message: `${fullResource.rows[0].uploader_name || 'A user'} uploaded a new resource "${normalizedTitle}" that requires approval`,
+        relatedType: 'resource',
+        relatedId: resourceId,
+      }).catch(err => logger.error({ err }, "Admin notification failed"));
+    }
 
     res.status(201).json({
       success: true,
@@ -880,11 +884,9 @@ exports.createResourceAdmin = catchAsync(async (req, res) => {
     difficulty_level = "beginner",
     status = "approved",
     system_tags: systemTagsRaw,
-    custom_tags: customTagsRaw,
   } = req.body;
 
   const systemTagIds = parseSystemTagIds(systemTagsRaw);
-  const customTagNames = parseCustomTagNames(customTagsRaw);
 
   const normalizedTitle = typeof title === "string" ? title.trim() : "";
   const normalizedResourceType = typeof resource_type === "string" ? resource_type.trim().toLowerCase() : "";
@@ -949,7 +951,6 @@ exports.createResourceAdmin = catchAsync(async (req, res) => {
     const resourceId = result.rows[0].resource_id;
 
     await insertSystemTags(client, resourceId, systemTagIds);
-    await insertCustomTags(client, resourceId, customTagNames);
 
     await client.query("COMMIT");
 
@@ -981,11 +982,9 @@ exports.updateResourceAdmin = catchAsync(async (req, res) => {
     status,
     rejection_reason,
     system_tags: systemTagsRaw,
-    custom_tags: customTagsRaw,
   } = req.body;
 
   const systemTagIds = parseSystemTagIds(systemTagsRaw);
-  const customTagNames = parseCustomTagNames(customTagsRaw);
 
   // Get current resource state
   const currentRes = await pool.query(
@@ -1066,7 +1065,6 @@ exports.updateResourceAdmin = catchAsync(async (req, res) => {
     // Update tags: replace all existing with the new set
     await client.query("DELETE FROM portal.resource_tags WHERE resource_id = $1", [id]);
     await insertSystemTags(client, id, systemTagIds);
-    await insertCustomTags(client, id, customTagNames);
 
     await client.query("COMMIT");
 

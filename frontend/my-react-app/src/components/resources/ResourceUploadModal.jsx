@@ -11,15 +11,9 @@ import TagSelectorSection from "../ui/TagSelectorSection";
 import { useSystemTags } from "../../hooks/useSystemTags";
 import { useDiscussionReferenceData } from "../../features/discussions/hooks/useDiscussionReferenceData";
 import { AcademicProgramFilter } from "../lib";
-import {
-  addUniqueCappedTag,
-  removeTag,
-  toggleCappedSelection,
-} from "../../utils/tagSelection";
-import { getApiErrorMessage } from "../../utils/apiError";
+import { toggleCappedSelection } from "../../utils/tagSelection";
 
 const SYSTEM_TAG_CAP = 5;
-const CUSTOM_TAG_CAP = 2;
 
 const ResourceUploadModal = ({ isOpen, onClose }) => {
   const [formData, setFormData] = useState({
@@ -30,12 +24,10 @@ const ResourceUploadModal = ({ isOpen, onClose }) => {
     program_id: "",
     url: "",
     system_tags: [],
-    custom_tags: [],
   });
   const { programs } = useDiscussionReferenceData();
   const [file, setFile] = useState(null);
   const [localError, setLocalError] = useState("");
-  const [customTagInput, setCustomTagInput] = useState("");
   const uploadMutation = useUploadResource();
   const { systemTagOptions, isLoadingTags } = useSystemTags(isOpen);
 
@@ -65,33 +57,6 @@ const ResourceUploadModal = ({ isOpen, onClose }) => {
     });
   };
 
-  const addCustomTag = () => {
-    const nextCustomTags = addUniqueCappedTag(
-      formData.custom_tags,
-      customTagInput,
-      CUSTOM_TAG_CAP,
-    );
-    if (nextCustomTags.length === formData.custom_tags.length) return;
-    setFormData((prev) => ({
-      ...prev,
-      custom_tags: nextCustomTags,
-    }));
-    setCustomTagInput("");
-  };
-
-  const removeCustomTag = (tag) => {
-    setFormData((prev) => ({
-      ...prev,
-      custom_tags: removeTag(prev.custom_tags, tag),
-    }));
-  };
-
-  const handleCustomTagKeyDown = (e) => {
-    if (e.key === "Enter") {
-      e.preventDefault();
-      addCustomTag();
-    }
-  };
 
   const resetForm = () => {
     setFormData({
@@ -102,15 +67,15 @@ const ResourceUploadModal = ({ isOpen, onClose }) => {
       program_id: "",
       url: "",
       system_tags: [],
-      custom_tags: [],
     });
     setFile(null);
     setLocalError("");
-    setCustomTagInput("");
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
+
+    if (uploadMutation.isPending) return;
 
     if (!formData.title.trim()) {
       setLocalError("Title is required.");
@@ -139,9 +104,6 @@ const ResourceUploadModal = ({ isOpen, onClose }) => {
 
     if (formData.system_tags.length > 0) {
       submitData.append("system_tags", JSON.stringify(formData.system_tags));
-    }
-    if (formData.custom_tags.length > 0) {
-      submitData.append("custom_tags", JSON.stringify(formData.custom_tags));
     }
 
     if (formData.resource_type === "link") {
@@ -218,19 +180,11 @@ const ResourceUploadModal = ({ isOpen, onClose }) => {
             </div>
 
             <TagSelectorSection
-              customTags={formData.custom_tags}
               systemTags={formData.system_tags}
-              customTagInput={customTagInput}
-              setCustomTagInput={setCustomTagInput}
-              customTagCap={CUSTOM_TAG_CAP}
               systemTagCap={SYSTEM_TAG_CAP}
               systemTagOptions={systemTagOptions}
               isLoadingTags={isLoadingTags}
-              customTagPlaceholder="Add custom tag (e.g. lab-report, final-exam)"
-              onAddCustomTag={addCustomTag}
-              onRemoveCustomTag={removeCustomTag}
               onToggleSystemTag={toggleSystemTag}
-              onCustomTagKeyDown={handleCustomTagKeyDown}
             />
 
             {}
@@ -332,7 +286,7 @@ const ResourceUploadModal = ({ isOpen, onClose }) => {
                     </div>
                   )}
                   <p className="text-xs text-(--text-muted) mt-2">
-                    Max size: 10MB (PDF, DOC, DOCX, Images, ZIP)
+                    Max size: 10MB (PDF, DOC, DOCX, Images)
                   </p>
                 </div>
               )}

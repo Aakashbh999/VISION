@@ -6,15 +6,11 @@ import {
   Image as ImageIcon,
   ImagePlus,
   Upload,
-  AlertCircle,
   Trash2,
 } from "lucide-react";
 import ButtonLoader from "../../../../components/ui/ButtonLoader";
 import TagSelectorSection from "../../../../components/ui/TagSelectorSection";
-import {
-  SYSTEM_TAG_CAP,
-  CUSTOM_TAG_CAP,
-} from "../../hooks/useCreateDiscussionState";
+import { SYSTEM_TAG_CAP } from "../../hooks/useCreateDiscussionState";
 
 const CreateDiscussionForm = ({
   fileInputRef,
@@ -27,12 +23,7 @@ const CreateDiscussionForm = ({
   specializations,
   systemTagOptions,
   isLoadingTags,
-  customTagInput,
-  setCustomTagInput,
   toggleSystemTag,
-  addCustomTag,
-  removeCustomTag,
-  handleCustomTagKeyDown,
   uploading,
   createMutation,
   onFileSelect,
@@ -128,19 +119,12 @@ const CreateDiscussionForm = ({
           </div>
 
           <TagSelectorSection
-            customTags={formData.custom_tags}
             systemTags={formData.system_tags}
-            customTagInput={customTagInput}
-            setCustomTagInput={setCustomTagInput}
-            customTagCap={CUSTOM_TAG_CAP}
             systemTagCap={SYSTEM_TAG_CAP}
             systemTagOptions={systemTagOptions}
             isLoadingTags={isLoadingTags}
-            customTagPlaceholder="Add custom tag (e.g. hackathon, feedback)"
-            onAddCustomTag={addCustomTag}
-            onRemoveCustomTag={removeCustomTag}
             onToggleSystemTag={toggleSystemTag}
-            onCustomTagKeyDown={handleCustomTagKeyDown}
+            label="Categorize your discussion"
           />
 
           <input
@@ -271,10 +255,6 @@ const CreateDiscussionForm = ({
           </AnimatePresence>
 
           <div className="flex items-center justify-between pt-4 border-t border-[var(--border-main)]">
-            <div className="flex items-center gap-2 text-[10px] font-bold text-[var(--text-muted)]">
-              <AlertCircle className="w-3.5 h-3.5" />
-              Your post will be filtered for profanity
-            </div>
             <button
               onClick={onSubmit}
               disabled={

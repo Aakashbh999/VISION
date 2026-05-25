@@ -93,6 +93,10 @@ exports.getNotifications = catchAsync(async (req, res) => {
              THEN '/profile/' || n.target_id::text
            WHEN n.target_type = 'resource'
              THEN '/resources'
+           WHEN n.type = 'new_student_pending'
+             THEN '/admin/pending'
+           WHEN n.type = 'new_resource_pending'
+             THEN '/admin/resources/pending'
            ELSE NULL
          END AS route_path,
          n.is_read,

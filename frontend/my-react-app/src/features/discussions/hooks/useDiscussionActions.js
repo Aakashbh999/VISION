@@ -163,6 +163,8 @@ export const useDiscussionActions = ({ user, queryClient }) => {
     event.preventDefault();
     event.stopPropagation();
 
+    if (likeMutation.isPending) return;
+
     if (!user) {
       toast.info("Log in to vote on discussions");
       return;
@@ -174,6 +176,8 @@ export const useDiscussionActions = ({ user, queryClient }) => {
   const handleDownvote = async (event, discussionId, currentVote) => {
     event.preventDefault();
     event.stopPropagation();
+
+    if (likeMutation.isPending) return;
 
     if (!user) {
       toast.info("Log in to vote on discussions");
@@ -190,6 +194,8 @@ export const useDiscussionActions = ({ user, queryClient }) => {
   const handleSave = async (event, discussionId, currentSaved = false) => {
     event.preventDefault();
     event.stopPropagation();
+
+    if (saveMutation.isPending) return;
 
     if (!user) {
       toast.info("Log in to save discussions");

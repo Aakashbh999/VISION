@@ -1,13 +1,11 @@
 import { Link } from "react-router-dom";
-import { ChevronLeft, Loader2, Plus, X, AlertTriangle, Tag } from "lucide-react";
-import { SYSTEM_TAG_CAP, CUSTOM_TAG_CAP } from "../../hooks/useCreateDiscussionState";
+import { ChevronLeft, Loader2, AlertTriangle, Tag } from "lucide-react";
+import { SYSTEM_TAG_CAP } from "../../hooks/useCreateDiscussionState";
 
 const EditDiscussionForm = ({
   id,
   formData,
   errors,
-  customTagInput,
-  setCustomTagInput,
   specializations,
   degrees,
   systemTagOptions,
@@ -15,9 +13,6 @@ const EditDiscussionForm = ({
   updateMutation,
   onChange,
   toggleSystemTag,
-  addCustomTag,
-  removeCustomTag,
-  handleCustomTagKeyDown,
   onSubmit,
 }) => {
   return (
@@ -128,7 +123,6 @@ const EditDiscussionForm = ({
           </div>
         </div>
 
-        {}
         <div>
           <div className="flex items-center justify-between mb-2">
             <label className="flex items-center gap-1.5 text-sm font-medium text-[var(--text-main)]">
@@ -172,71 +166,6 @@ const EditDiscussionForm = ({
               );
             })}
           </div>
-        </div>
-
-        {}
-        <div>
-          <div className="flex items-center justify-between mb-2">
-            <label className="text-sm font-medium text-[var(--text-main)]">
-              Custom Tags{" "}
-              <span className="text-[var(--text-muted)] text-xs font-normal">
-                (optional)
-              </span>
-            </label>
-            <span
-              className={`text-xs font-medium px-2 py-0.5 rounded-full ${
-                formData.custom_tags.length >= CUSTOM_TAG_CAP
-                  ? "bg-indigo-100 text-indigo-700"
-                  : "text-[var(--text-muted)]"
-              }`}
-            >
-              {formData.custom_tags.length}/{CUSTOM_TAG_CAP} added
-            </span>
-          </div>
-
-          {}
-          {formData.custom_tags.length > 0 && (
-            <div className="flex flex-wrap gap-2 mb-2">
-              {formData.custom_tags.map((tag) => (
-                <span
-                  key={tag}
-                  className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium bg-indigo-50 text-indigo-700 border border-indigo-200"
-                >
-                  {tag}
-                  <button
-                    type="button"
-                    onClick={() => removeCustomTag(tag)}
-                    className="hover:text-indigo-900 ml-0.5 transition-colors"
-                  >
-                    <X className="w-3 h-3" />
-                  </button>
-                </span>
-              ))}
-            </div>
-          )}
-
-          {}
-          {formData.custom_tags.length < CUSTOM_TAG_CAP && (
-            <div className="flex gap-2">
-              <input
-                type="text"
-                value={customTagInput}
-                onChange={(e) => setCustomTagInput(e.target.value)}
-                onKeyDown={handleCustomTagKeyDown}
-                placeholder="e.g. hackathon, feedback…"
-                maxLength={50}
-                className="flex-1 px-4 py-2 border border-[var(--border-main)] rounded-xl focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 outline-none transition-all bg-[var(--bg-main)] text-[var(--text-main)] text-sm"
-              />
-              <button
-                type="button"
-                onClick={addCustomTag}
-                disabled={!customTagInput.trim()}
-                className="px-3 py-2 bg-purple-50 text-purple-600 border border-purple-200 rounded-xl hover:bg-purple-100 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
-              >
-                <Plus className="w-4 h-4" />
-              </button>
-            </div>
-          )}
         </div>
 
         {errors.submit && (

@@ -198,7 +198,12 @@ export default function GroupProfilePage() {
   };
 
   if (groupLoading) {
-    return <LoadingSpinner label="Accessing circle workspace..." className="min-h-screen" />;
+    return (
+      <LoadingSpinner
+        label="Accessing circle workspace..."
+        className="min-h-screen"
+      />
+    );
   }
 
   if (groupError || !group) {
@@ -469,7 +474,6 @@ export default function GroupProfilePage() {
                   <LogOut className="w-4 h-4" /> Leave Circle
                 </button>
               )}
-
             </div>
           </div>
 
@@ -654,34 +658,34 @@ export default function GroupProfilePage() {
                             </p>
                           )}
                           {m.is_online && (
-                             <p className="text-[10px] font-bold text-emerald-600 uppercase tracking-wider mt-0.5">
-                               Online now
-                             </p>
-                           )}
-                         </div>
-                         {canManageUsers &&
-                           String(m.user_id) !== String(group?.creator_id) &&
-                           String(m.user_id) !==
-                             String(user?.portal_user_id) && (
-                             <button
-                               onClick={(e) => {
-                                 e.preventDefault();
-                                 e.stopPropagation();
-                                 if (
-                                   window.confirm(
-                                     `Remove ${m.full_name} from circle?`,
-                                   )
-                                 ) {
-                                   removeMemberMut.mutate(m.user_id);
-                                 }
-                               }}
-                               className="ml-auto p-1.5 rounded-lg text-rose-500 hover:bg-rose-50 transition-all"
-                               title="Remove member"
-                             >
-                               <UserMinus className="w-4 h-4" />
-                             </button>
-                           )}
-                       </Link>
+                            <p className="text-[10px] font-bold text-emerald-600 uppercase tracking-wider mt-0.5">
+                              Online now
+                            </p>
+                          )}
+                        </div>
+                        {canManageUsers &&
+                          String(m.user_id) !== String(group?.creator_id) &&
+                          String(m.user_id) !==
+                            String(user?.portal_user_id) && (
+                            <button
+                              onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                if (
+                                  window.confirm(
+                                    `Remove ${m.full_name} from circle?`,
+                                  )
+                                ) {
+                                  removeMemberMut.mutate(m.user_id);
+                                }
+                              }}
+                              className="ml-auto p-1.5 rounded-lg text-rose-500 hover:bg-rose-50 transition-all"
+                              title="Remove member"
+                            >
+                              <UserMinus className="w-4 h-4" />
+                            </button>
+                          )}
+                      </Link>
                     );
                   })}
                 </div>
@@ -762,9 +766,6 @@ export default function GroupProfilePage() {
                     }
                   />
                 </div>
-                <p className="text-[10px] text-purple-200 text-center mt-4 uppercase tracking-widest">
-                  You are the Admin
-                </p>
               </div>
             </Motion.div>
           )}

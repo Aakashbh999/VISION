@@ -40,6 +40,7 @@ const { calculateSemesterFromBatch } = require("../utils/academicUtils");
 const catchAsync = require("../utils/catchAsync");
 const env = require("../config/env");
 const logger = require("../utils/logger");
+const { notifyAdmins } = require("../utils/activityService");
 
 /**
  * Resolves the API base URL for email verification links
@@ -260,6 +261,16 @@ exports.register = catchAsync(async (req, res) => {
     } catch (emailErr) {
       logger.warn({ err: emailErr }, "Non-blocking verification email failure");
     }
+
+    // Notify admins about the new pending student
+    notifyAdmins({
+      actorId: portalUserId,
+      type: 'new_student_pending',
+      title: 'New Student Registration',
+      message: `${normalizedFullName} registered and is pending approval`,
+      relatedType: 'student',
+      relatedId: portalUserId,
+    }).catch(err => logger.error({ err }, "Admin notification failed"));
 
     res.status(201).json({
       message: "Registration successful. Please verify your email.",

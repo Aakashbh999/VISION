@@ -20,6 +20,7 @@ export const useGroupDetailState = () => {
   const messagesEndRef = useRef(null);
   const messagesContainerRef = useRef(null);
   const isInitialLoad = useRef(true);
+  const isSubmittingRef = useRef(false);
 
   const [newPost, setNewPost] = useState("");
   const [resourceFile, setResourceFile] = useState(null);
@@ -231,9 +232,12 @@ export const useGroupDetailState = () => {
   }, [feedPosts.length, scrollToBottom, activeSection]);
 
   const handlePostSubmit = (event) => {
-    event.preventDefault();
+    if (event && event.preventDefault) event.preventDefault();
     if (!isMember) return;
 
+    // Synchronous lock: prevents double-fire from mobile touchend+click
+    // or React batching delays before isPending updates
+    if (isSubmittingRef.current) return;
     if (createPostMutation.isPending) return;
 
     if (activeSection === "notice_board" && !canPostNotice) {
@@ -254,6 +258,8 @@ export const useGroupDetailState = () => {
       return;
     }
 
+    isSubmittingRef.current = true;
+
     createPostMutation.mutate(
       {
         content: newPost,
@@ -268,6 +274,10 @@ export const useGroupDetailState = () => {
           if (activeSection === "discussion" || activeSection === "general") {
             requestAnimationFrame(() => scrollToBottom("smooth"));
           }
+        },
+        onSettled: () => {
+          // Release the lock after the mutation completes (success or error)
+          isSubmittingRef.current = false;
         },
       },
     );

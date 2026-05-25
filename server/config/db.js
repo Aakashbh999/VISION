@@ -29,4 +29,8 @@ pool.on("connect", (client) => {
     .catch((err) => logger.error({ err }, "Error setting DB search path"));
 });
 
+pool.on("error", (err, client) => {
+  logger.error({ err }, "Unexpected error on idle client");
+});
+
 module.exports = pool;

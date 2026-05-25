@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { toast } from "react-toastify";
 import confetti from "canvas-confetti";
@@ -37,6 +37,7 @@ export const useDiscussionDetailState = () => {
     title: "",
   });
   const [showBackToTop, setShowBackToTop] = useState(false);
+  const isSubmittingRef = useRef(false);
 
   const { data, isLoading, error } = useDiscussion(id, commentSort);
   const addCommentMutation = useAddComment(id);
@@ -88,10 +89,12 @@ export const useDiscussionDetailState = () => {
 
   const handleReplySubmit = (event, parentId) => {
     event.preventDefault();
+    if (addCommentMutation.isPending || isSubmittingRef.current) return;
     if (!replyContent.trim()) {
       return;
     }
 
+    isSubmittingRef.current = true;
     addCommentMutation.mutate(
       { content: replyContent, parentId, website: websiteHoneypot },
       {
@@ -100,16 +103,21 @@ export const useDiscussionDetailState = () => {
           setReplyingTo(null);
           setWebsiteHoneypot("");
         },
+        onSettled: () => {
+          isSubmittingRef.current = false;
+        }
       },
     );
   };
 
   const handleCommentSubmit = (event) => {
     event.preventDefault();
+    if (addCommentMutation.isPending || isSubmittingRef.current) return;
     if (!commentContent.trim()) {
       return;
     }
 
+    isSubmittingRef.current = true;
     addCommentMutation.mutate(
       { content: commentContent, website: websiteHoneypot },
       {
@@ -117,6 +125,9 @@ export const useDiscussionDetailState = () => {
           setCommentContent("");
           setWebsiteHoneypot("");
         },
+        onSettled: () => {
+          isSubmittingRef.current = false;
+        }
       },
     );
   };
