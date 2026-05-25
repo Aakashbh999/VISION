@@ -5,6 +5,7 @@
  *
  * Features:
  * - Universal search across roadmaps, groups, clubs, resources, discussions, and users
+ * - Excludes roadmap-linked link resources from resource search/suggestions
  * - Relevance scoring (exact title match > tag match > description match)
  * - Autocomplete suggestions with instant fuzzy matching
  * - Result aggregation from multiple content types
@@ -231,6 +232,12 @@ exports.universalSearch = catchAsync(async (req, res) => {
             GROUP BY resource_id
           ) rs ON rs.resource_id = r.resource_id
           WHERE r.status = 'approved' AND r.deleted_at IS NULL
+            AND r.resource_type <> 'link'
+            AND NOT EXISTS (
+              SELECT 1
+              FROM portal.step_resource_map srm
+              WHERE srm.resource_id = r.resource_id
+            )
             AND (
               r.title % $1
               OR r.title ILIKE $2
@@ -443,7 +450,15 @@ exports.getSearchSuggestions = catchAsync(async (req, res) => {
         UNION ALL
         SELECT title AS suggestion, 'resource' AS type
           FROM portal.resources
-          WHERE (title % $1 OR title ILIKE $2) AND status = 'approved' AND deleted_at IS NULL
+          WHERE (title % $1 OR title ILIKE $2)
+            AND status = 'approved'
+            AND deleted_at IS NULL
+            AND resource_type <> 'link'
+            AND NOT EXISTS (
+              SELECT 1
+              FROM portal.step_resource_map srm
+              WHERE srm.resource_id = portal.resources.resource_id
+            )
         UNION ALL
         SELECT title AS suggestion, 'discussion' AS type
           FROM portal.discussions
