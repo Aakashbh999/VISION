@@ -15,6 +15,8 @@ import { toggleCappedSelection } from "../../utils/tagSelection";
 import { getApiErrorMessage } from "../../utils/apiError";
 
 const SYSTEM_TAG_CAP = 5;
+const MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024;
+const MAX_FILE_SIZE_LABEL = "10MB";
 
 const ResourceUploadModal = ({ isOpen, onClose }) => {
   const [formData, setFormData] = useState({
@@ -31,6 +33,13 @@ const ResourceUploadModal = ({ isOpen, onClose }) => {
   const [localError, setLocalError] = useState("");
   const uploadMutation = useUploadResource();
   const { systemTagOptions, isLoadingTags } = useSystemTags(isOpen);
+  const isFileTooLarge = Boolean(file && file.size > MAX_FILE_SIZE_BYTES);
+  const canSubmit =
+    !uploadMutation.isPending &&
+    !!formData.title.trim() &&
+    (formData.resource_type === "link"
+      ? !!formData.url.trim()
+      : !!file && !isFileTooLarge);
 
   if (!isOpen) return null;
 
@@ -41,10 +50,22 @@ const ResourceUploadModal = ({ isOpen, onClose }) => {
   };
 
   const handleFileChange = (e) => {
-    if (e.target.files[0]) {
-      if (localError) setLocalError("");
-      setFile(e.target.files[0]);
+    const selectedFile = e.target.files[0];
+
+    if (!selectedFile) {
+      return;
     }
+
+    if (selectedFile.size > MAX_FILE_SIZE_BYTES) {
+      setFile(selectedFile);
+      setLocalError(
+        `File is too large. Please choose a file smaller than ${MAX_FILE_SIZE_LABEL}.`,
+      );
+      return;
+    }
+
+    if (localError) setLocalError("");
+    setFile(selectedFile);
   };
 
   const toggleSystemTag = (tagId) => {
@@ -84,6 +105,13 @@ const ResourceUploadModal = ({ isOpen, onClose }) => {
 
     if (formData.resource_type !== "link" && !file) {
       setLocalError("Please upload a file or switch to External Link.");
+      return;
+    }
+
+    if (file && file.size > MAX_FILE_SIZE_BYTES) {
+      setLocalError(
+        `File is too large. Please choose a file smaller than ${MAX_FILE_SIZE_LABEL}.`,
+      );
       return;
     }
 
@@ -287,8 +315,14 @@ const ResourceUploadModal = ({ isOpen, onClose }) => {
                     </div>
                   )}
                   <p className="text-xs text-(--text-muted) mt-2">
-                    Max size: 10MB (PDF, DOC, DOCX, Images)
+                    Max size: {MAX_FILE_SIZE_LABEL} (PDF, DOC, DOCX, Images)
                   </p>
+                  {file && isFileTooLarge && (
+                    <p className="mt-2 text-xs font-medium text-red-600">
+                      Selected file exceeds {MAX_FILE_SIZE_LABEL}. Choose a
+                      smaller file to enable upload.
+                    </p>
+                  )}
                 </div>
               )}
             </div>
@@ -315,10 +349,7 @@ const ResourceUploadModal = ({ isOpen, onClose }) => {
             </button>
             <button
               type="submit"
-              disabled={
-                uploadMutation.isPending ||
-                (!file && formData.resource_type !== "link")
-              }
+              disabled={!canSubmit}
               className="px-5 py-2.5 text-sm font-medium bg-purple-600 text-white rounded-xl hover:bg-purple-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
             >
               {uploadMutation.isPending ? "Uploading…" : "Submit Resource"}
