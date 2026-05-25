@@ -525,18 +525,13 @@ const GroupDetailFeed = ({
                                     ).toLocaleDateString()}
                                   </span>
                                   {activeSection === "notice_board" &&
-                                    (isAdmin ||
-                                      String(post.user_id) ===
-                                        String(currentUserId) ||
-                                      post.user_id === group.created_by) && (
+                                    isAdmin && (
                                       <button
                                         type="button"
                                         onClick={() =>
                                           confirmAndDeletePost(
                                             post.post_id,
-                                            isAdmin
-                                              ? "Deleted by group admin"
-                                              : "Deleted by author",
+                                            "Deleted by group admin",
                                             "this notice",
                                           )
                                         }
