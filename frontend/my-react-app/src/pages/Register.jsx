@@ -448,7 +448,9 @@ const Register = () => {
                   >
                     <option value="TU">Tribhuvan University (TU)</option>
                     <option value="PU">Purbanchal University (PU)</option>
-                    <option value="Pokhara University (PU)">Pokhara University (PU)</option>
+                    <option value="Pokhara University (PU)">
+                      Pokhara University (PU)
+                    </option>
                     <option value="FWU">Far Western University (FWU)</option>
                     <option value="KU">Kathmandu University (KU)</option>
                   </select>
