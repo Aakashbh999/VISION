@@ -139,6 +139,12 @@ export const useEditDiscussionState = () => {
     canEdit,
     formData,
     errors,
+    specializations,
+    degrees,
+    systemTagOptions,
+    isLoadingTags,
+    updateMutation,
+    handleChange,
     toggleSystemTag,
     handleSubmit,
   };

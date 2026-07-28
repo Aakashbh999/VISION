@@ -12,7 +12,9 @@ const buildFilterConditions = (filters, startParamIndex = 1) => {
     const degreeId = parseInt(filters.degree, 10);
 
     if (degreeId >= 1 && degreeId <= 5) {
-      conditions.push(`(d.degree_id = $${paramIndex} OR d.program_id = $${paramIndex})`);
+      conditions.push(
+        `(d.degree_id = $${paramIndex} OR d.program_id = $${paramIndex})`,
+      );
     } else {
       conditions.push(`d.degree_id = $${paramIndex}`);
     }
@@ -28,7 +30,9 @@ const buildFilterConditions = (filters, startParamIndex = 1) => {
     const programId = parseInt(filters.program, 10);
 
     if (programId >= 1 && programId <= 5) {
-      conditions.push(`(d.program_id = $${paramIndex} OR d.degree_id = $${paramIndex})`);
+      conditions.push(
+        `(d.program_id = $${paramIndex} OR d.degree_id = $${paramIndex})`,
+      );
     } else {
       conditions.push(`d.program_id = $${paramIndex}`);
     }
