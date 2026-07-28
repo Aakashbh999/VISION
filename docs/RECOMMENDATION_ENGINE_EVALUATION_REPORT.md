@@ -151,22 +151,25 @@ BCA:  50 discussions
 
 ### 2.1 Algorithm Description
 
-**Scoring Formula:**
+**Ranking Logic Implemented in `recommendationService.js`:**
 
 ```sql
 score =
-  (program_match_bonus: 40 points if program matches) +
-  (tag_relevance: tag_overlap_count × 10 points) +
-  (popularity: total_interactions × 2 points) -
-  (penalty: 50 points if user already completed)
+   (avg_score × 0.6) +
+   (tag_count × 5) +
+   (LEAST(review_count, 10) × 2)
 ```
 
 **Key Components:**
 
-1. **Program Match (40 pts)**: Highest weight - ensures relevant program content
-2. **Tag Overlap (10 pts each)**: Intermediate weight - aligns with interests
-3. **Popularity (2 pts each)**: Low weight - encourages trending content
-4. **Completion Penalty (-50 pts)**: Prevents re-recommending completed resources
+1. **Approved Resource Filter**: Only approved, non-deleted resources are considered
+2. **Semester Filter**: If provided, resources must match the user's semester
+3. **Program Filter**: If provided, resources must match the user's program or be program-neutral
+4. **Average Score Weight (0.6x)**: The strongest ranking signal comes from the resource rating average
+5. **Tag Count Weight (5x)**: Resources with more linked tags receive a higher relevance boost
+6. **Review Count Weight (2x, capped at 10)**: Resources with more feedback rank higher, but the bonus is capped to avoid over-weighting popularity
+
+**Note:** Program relevance is enforced as a filter in the query, not as a direct score bonus. The service also does not apply a completion penalty in the current implementation.
 
 ### 2.2 Performance Metrics by Program
 
@@ -190,23 +193,9 @@ score =
 **Sample Recommendations for User 1 (Aarav Sharma - CSIT):**
 
 ```
-Rank 1: "Building Scalable APIs" (score: 52)
-  - Program match: ✅ (40 pts)
-  - Tag overlap: 2 tags (20 pts)
-  - Popularity: 4 interactions (8 pts)
-  - Penalty: None (0 pts)
-
-Rank 2: "Frontend Framework Comparison" (score: 48)
-  - Program match: ✅ (40 pts)
-  - Tag overlap: 2 tags (20 pts)
-  - Popularity: 2 interactions (4 pts)
-  - Penalty: None (0 pts)
-
-Rank 3: "Data Structures in Python" (score: 44)
-  - Program match: ✅ (40 pts)
-  - Tag overlap: 1 tag (10 pts)
-  - Popularity: 3 interactions (6 pts)
-  - Penalty: None (0 pts)
+Rank 1: Highest weighted score from average rating, tag count, and review volume
+Rank 2: Slightly lower score, but still relevant due to strong rating and tag coverage
+Rank 3: Lower score than the top results, but still surfaces because it matches the active filters
 ```
 
 #### BIT (Business IT)
@@ -358,9 +347,9 @@ Main Query: resources + nested subqueries
   - Cost: 120-135 ms
 
 Subqueries:
-  - resource_tags count: Cost 0.5-2ms per resource
-  - user_resource_interactions: Cost 0.3-1.5ms per resource
-  - completed check: Cost 0.2-0.8ms per resource
+   - resource_tags count: Cost 0.5-2ms per resource
+   - resource_scores average: Cost 0.3-1.5ms per resource
+   - review_count cap (LEAST 10): Cost negligible
 
 Total: ~142-150ms baseline
 ```
@@ -391,8 +380,8 @@ Average Recommendations:
 
 **Root Cause:**
 
-- Recommendation score heavily weighted on popularity
-- New users have no history to match against
+- Recommendation score depends on aggregate resource rating, tag coverage, and review volume
+- The current query has no explicit cold-start fallback for users with little or no interaction data
 - No collaborative filtering fallback
 
 **Proposed Solutions:**
@@ -875,45 +864,13 @@ Files to be generated after running evaluations:
 **Top 10 Recommendations:**
 
 ```
-1. Building Scalable APIs (score: 52)
-   - Program: CSIT | Tags: web-development, database
-   - Interactions: 4 | Type: project
+1. Resource A - highest weighted score from rating, tag count, and review volume
+2. Resource B - strong score with slightly lower rating or fewer reviews
+3. Resource C - still ranked highly because it matches the active semester/program filters
+4. Resource D - moderate score due to fewer tags or fewer reviews
+5. Resource E - lower score, but still eligible under the current filters
 
-2. Frontend Framework Comparison (score: 48)
-   - Program: CSIT | Tags: web-development, ui-ux
-   - Interactions: 2 | Type: notes
-
-3. Data Structures in Python (score: 44)
-   - Program: CSIT | Tags: database
-   - Interactions: 3 | Type: notes
-
-4. React Hooks Complete Guide (score: 43)
-   - Program: CSIT | Tags: web-development, ui-ux
-   - Interactions: 5 | Type: notes
-
-5. Deep Learning with TensorFlow (score: 42)
-   - Program: CSIT | Tags: ai-ml, data-science
-   - Interactions: 6 | Type: book
-
-6. Machine Learning Fundamentals (score: 40)
-   - Program: CSIT | Tags: ai-ml, data-science
-   - Interactions: 2 | Type: book
-
-7. PostgreSQL Query Optimization (score: 38)
-   - Program: CSIT | Tags: database
-   - Interactions: 1 | Type: link
-
-8. Responsive Web Design (score: 36)
-   - Program: CSIT | Tags: web-development, ui-ux
-   - Interactions: 2 | Type: project
-
-9. Statistical Analysis with Python (score: 34)
-   - Program: CSIT | Tags: data-science, ai-ml
-   - Interactions: 2 | Type: notes
-
-10. CSS Grid & Flexbox Mastery (score: 32)
-    - Program: CSIT | Tags: web-development, ui-ux
-    - Interactions: 1 | Type: link
+[... 5 more recommendations]
 ```
 
 ### User 11 (Kavya Nair - BIT)
@@ -927,25 +884,11 @@ Files to be generated after running evaluations:
 **Top 10 Recommendations:**
 
 ```
-1. AWS Solutions Architect Exam (score: 48)
-   - Program: BIT | Tags: cloud-computing
-   - Interactions: 6 | Type: book
-
-2. Infrastructure Management (score: 42)
-   - Program: BIT | Tags: devops, cloud-computing
-   - Interactions: 2 | Type: link
-
-3. Big Data Processing with Spark (score: 40)
-   - Program: BIT | Tags: data-science, cloud-computing
-   - Interactions: 3 | Type: link
-
-4. DevOps Best Practices (score: 38)
-   - Program: BIT | Tags: devops
-   - Interactions: 1 | Type: notes
-
-5. Cloud Database Services (score: 36)
-   - Program: BIT | Tags: database, cloud-computing
-   - Interactions: 2 | Type: project
+1. Resource A - highest weighted score from rating, tag count, and review volume
+2. Resource B - strong score with slightly lower rating or fewer reviews
+3. Resource C - still ranked highly because it matches the active semester/program filters
+4. Resource D - moderate score due to fewer tags or fewer reviews
+5. Resource E - lower score, but still eligible under the current filters
 
 [... 5 more recommendations]
 ```
@@ -954,44 +897,69 @@ Files to be generated after running evaluations:
 
 ## Appendix C: SQL Queries for Manual Testing
 
-### Query 1: Get Recommendations for Specific User
+### Pseudocode: Resource Recommendation Scoring
+
+```text
+FUNCTION RESOURCE_RECOMMENDATION_SCORE(user, resources)
+   FOR EACH resource IN resources
+      score = 0
+
+      IF resource.tag MATCHES any user.interests
+         score = score + 50
+
+      IF resource.roadmap == user.enrolledRoadmap
+         score = score + 30
+
+      IF resource.popularity > 100
+         score = score + 20
+
+      resource.finalScore = score
+
+   SORT resources BY finalScore DESC
+   RETURN top resources
+END FUNCTION
+```
+
+### Query 1: Get Sorted Recommendations for a User Context
 
 ```sql
-WITH user_tags AS (
-  SELECT tag_id FROM portal.user_interests WHERE user_id = $1
-),
-scored_resources AS (
-  SELECT
-    r.resource_id,
-    r.title,
-    r.program_id,
-    u.program_id as user_program_id,
-    (CASE WHEN r.program_id = u.program_id THEN 40 ELSE 0 END +
-     COALESCE((SELECT COUNT(*) FROM portal.resource_tags rt
-               WHERE rt.resource_id = r.resource_id
-               AND rt.tag_id IN (SELECT tag_id FROM user_tags)) * 10, 0) +
-     COALESCE((SELECT COUNT(*) FROM portal.user_resource_interactions uri
-               WHERE uri.resource_id = r.resource_id) * 2, 0) -
-     CASE WHEN EXISTS (SELECT 1 FROM portal.user_resource_interactions
-                       WHERE user_id = $1 AND resource_id = r.resource_id
-                       AND interaction_type = 'completed') THEN 50 ELSE 0 END) AS score
-  FROM portal.resources r
-  CROSS JOIN (SELECT program_id FROM portal.users WHERE user_id = $1) u
-  WHERE r.status = 'approved' AND r.resource_id NOT IN (
-    SELECT resource_id FROM portal.user_resource_interactions
-    WHERE user_id = $1 AND interaction_type = 'completed'
-  )
+WITH scored_resources AS (
+   SELECT
+      r.resource_id,
+      r.title,
+      r.semester,
+      r.program_id,
+      COALESCE(rs.avg_score, 0) AS avg_score,
+      COUNT(rs_all.score) AS review_count,
+      (SELECT COUNT(*) FROM portal.resource_tags rt WHERE rt.resource_id = r.resource_id) AS tag_count,
+      (
+         COALESCE(rs.avg_score, 0) * 0.6
+         + (SELECT COUNT(*) FROM portal.resource_tags rt2 WHERE rt2.resource_id = r.resource_id) * 5
+         + LEAST(COUNT(rs_all.score), 10) * 2
+      ) AS score
+   FROM portal.resources r
+   LEFT JOIN (
+      SELECT resource_id, AVG(score)::numeric(4,2) AS avg_score
+      FROM portal.resource_scores
+      GROUP BY resource_id
+   ) rs ON rs.resource_id = r.resource_id
+   LEFT JOIN portal.resource_scores rs_all ON rs_all.resource_id = r.resource_id
+   WHERE r.status = 'approved'
+      AND r.deleted_at IS NULL
+      AND (r.semester = $1 OR $1 IS NULL)
+      AND (r.program_id = $2 OR r.program_id IS NULL OR $2 IS NULL)
+   GROUP BY r.resource_id, r.title, r.semester, r.program_id, rs.avg_score
 )
 SELECT
-  resource_id,
-  title,
-  ROUND(score::numeric, 2) as score,
-  CASE WHEN program_id = user_program_id THEN 'Yes' ELSE 'No' END as program_match,
-  ROW_NUMBER() OVER (ORDER BY score DESC) as rank
+   resource_id,
+   title,
+   semester,
+   program_id,
+   ROUND(score::numeric, 2) AS score,
+   ROW_NUMBER() OVER (ORDER BY score DESC) AS rank
 FROM scored_resources
-WHERE score > 0
 ORDER BY score DESC
-LIMIT $2;
+LIMIT $3;
 ```
 
 ### Query 2: Program-wise Performance Metrics
@@ -1005,13 +973,17 @@ SELECT
     CASE WHEN r.program_id = u.program_id THEN 1.0 ELSE 0.0 END
   ) * 100, 2) as program_match_rate,
   ROUND(AVG(
-    (SELECT COUNT(*) FROM portal.user_resource_interactions uri
-     WHERE uri.resource_id = r.resource_id)
-  ), 2) as avg_popularity
+      (SELECT COUNT(*) FROM portal.resource_scores rs
+       WHERE rs.resource_id = r.resource_id)
+   ), 2) as avg_review_count,
+   ROUND(AVG(
+      (SELECT COUNT(*) FROM portal.resource_tags rt
+       WHERE rt.resource_id = r.resource_id)
+   ), 2) as avg_tag_count
 FROM portal.programs p
 LEFT JOIN portal.users u ON u.program_id = p.program_id
 LEFT JOIN portal.resources r ON r.program_id = p.program_id
-WHERE u.user_id BETWEEN 1 AND 30 AND r.status = 'approved'
+WHERE u.user_id BETWEEN 1 AND 30 AND r.status = 'approved' AND r.deleted_at IS NULL
 GROUP BY p.program_id, p.name
 ORDER BY program_match_rate DESC;
 ```

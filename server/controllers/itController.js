@@ -1,4 +1,4 @@
-/**
+ /**
  * IT Reference Data Controller
  * Provides paginated browsing of IT industry catalogs including fields, degrees, jobs, and clubs.
  * Used for career exploration and discovery features.
